@@ -133,9 +133,11 @@ listenable would be a type no widget and no `provider` could observe.
       with drift, so a stale pair compiles and then fails at the first statement. Both files come
       from the one drift release for that reason. The connection reports what the browser gave it
       and whether that survives a reload, because two of drift's four backings do not
-- [ ] `feat: add the identity tables` — the bound device, the reader, the origin server, the
+- [x] `feat: add the identity tables` — the bound device, the reader, the origin server, the
       known-server catalogue, and the hybrid clock's floor, which phase 2 left behind a port. The
-      device id lives here and not in the session store, because it survives logout
+      device id lives here and not in the session store, because it survives logout. The origin
+      server is a flag on the catalogue and not a table of its own — it is the node the reader is
+      signed in at, and a partial unique index is what keeps a device from having two
 - [ ] `feat: add the library tables` — `ebooks`, `collections` and `ebook_collections`, each with
       the revision columns spelled out: `vector_clock`, `updated_at`, `device_id`, `deleted`. The
       membership table carries the unique `(ebook_id, collection_id)` C06 requires, because the

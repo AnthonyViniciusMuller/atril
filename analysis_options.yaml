@@ -29,11 +29,6 @@ analyzer:
     # in it is a warning nobody can act on without editing a file that is
     # rewritten by `make gen`.
     - lib/data/services/api/generated/**
-    # drift's output, for the same reason. It is a `part` of the library that
-    # declares the tables, so what is excluded here is only the diagnostics
-    # raised inside the generated file itself — the code that uses it is
-    # analyzed as strictly as everything else.
-    - lib/**/*.g.dart
     - build/**
     - android/**
     - ios/**

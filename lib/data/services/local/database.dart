@@ -9,7 +9,7 @@
 /// therefore reaches no other replica, while the same change authored here and
 /// pushed reaches all of them.
 ///
-/// The tables arrive over the commits that follow this one: identity, the
+/// The tables arrive over the commits of this phase: identity, the
 /// library, what the reader wrote and where they stopped, the log this device
 /// owes, and the causal state that makes authoring the next change correct.
 /// What this file holds is the part that is true of all of them — the version
@@ -20,6 +20,9 @@ library;
 import 'package:drift/drift.dart';
 
 import 'connection/connection.dart';
+import 'converters.dart';
+import 'dao/identity_dao.dart';
+import 'tables/identity.dart';
 
 part 'database.g.dart';
 
@@ -28,7 +31,10 @@ part 'database.g.dart';
 /// It is constructed with an executor rather than opening one itself, so that
 /// a test can hand it an in-memory database and the entry point can hand it
 /// the platform's. The default is what the platform gives.
-@DriftDatabase(tables: <Type>[])
+@DriftDatabase(
+  tables: <Type>[BoundDevice, SignedInReader, KnownServers, ClockFloor],
+  daos: <Type>[IdentityDao],
+)
 class AtrilDatabase extends _$AtrilDatabase {
   /// The replica over [executor], or over the platform's own connection.
   AtrilDatabase([QueryExecutor? executor])
