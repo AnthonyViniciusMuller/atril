@@ -15,12 +15,14 @@ import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/themes/theme.dart';
 import 'package:atril/ui/core/ui/atril_app.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
-import 'package:atril/ui/onboarding/widgets/onboarding_screen.dart';
+import 'package:atril/ui/onboarding/widgets/server_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+
+import '../../onboarding/fake_server_repository.dart';
 
 /// A refresher nothing here reaches.
 final class _NeverAsked implements SessionRefresher {
@@ -49,6 +51,7 @@ Session _session() {
 /// graph, so what it is given is the part of the graph it reads.
 List<SingleChildWidget> _providers(SessionHolder session) =>
     <SingleChildWidget>[
+      ...onboardingProviders(),
       Provider<SessionHolder>.value(value: session),
       Provider<GoRouter>(
         create: (_) => atrilRouter(session: session),
@@ -157,6 +160,6 @@ void main() {
   ) async {
     await _pump(tester, signedIn: false);
 
-    expect(find.byType(OnboardingScreen), findsOneWidget);
+    expect(find.byType(ServerSelectionScreen), findsOneWidget);
   });
 }

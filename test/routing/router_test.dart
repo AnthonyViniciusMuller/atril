@@ -15,11 +15,14 @@ import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
-import 'package:atril/ui/onboarding/widgets/onboarding_screen.dart';
+import 'package:atril/ui/onboarding/widgets/server_selection_screen.dart';
 import 'package:atril/ui/settings/widgets/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../ui/onboarding/fake_server_repository.dart';
 
 /// A refresher nothing in this file reaches, since no test lets a token go
 /// stale: the guard reads the stored credential and never exchanges it.
@@ -48,10 +51,16 @@ SessionHolder _holder() =>
 /// Pumps [router] inside the app the entry point builds around it.
 Future<void> _pump(WidgetTester tester, GoRouter router) async {
   await tester.pumpWidget(
-    MaterialApp.router(
-      routerConfig: router,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+    MultiProvider(
+      // The onboarding screens read their repositories out of the tree, so a
+      // router test that lands on one has to supply them. Nothing here asserts
+      // anything about them: what is under test is where the redirect went.
+      providers: onboardingProviders(),
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -70,7 +79,7 @@ void main() {
 
       await _pump(tester, router);
 
-      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(ServerSelectionScreen), findsOneWidget);
       expect(find.byType(LibraryScreen), findsNothing);
     });
 
@@ -91,7 +100,7 @@ void main() {
       await _pump(tester, router);
 
       expect(find.byType(LibraryScreen), findsOneWidget);
-      expect(find.byType(OnboardingScreen), findsNothing);
+      expect(find.byType(ServerSelectionScreen), findsNothing);
     });
 
     testWidgets('lets a signed-in device through to any destination', (
@@ -138,7 +147,7 @@ void main() {
       await session.end();
       await tester.pumpAndSettle();
 
-      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(ServerSelectionScreen), findsOneWidget);
     });
 
     testWidgets('treats every location below onboarding as onboarding', (

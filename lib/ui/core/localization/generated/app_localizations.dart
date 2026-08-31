@@ -140,6 +140,72 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Ir para a biblioteca'**
   String get pageNotFoundAction;
+
+  /// Título da primeira tela que uma instalação nova mostra. O leitor escolhe em qual servidor Quire sua biblioteca fica, o que é a metade do identificador dele que diz onde ele está — não é uma preferência que possa ser adiada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Escolha seu servidor'**
+  String get onboardingServerTitle;
+
+  /// Parágrafo abaixo do título da tela de escolha de servidor. Explica por que a pergunta está sendo feita antes de qualquer outra, usando um identificador federado de exemplo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sua biblioteca fica em um servidor Quire. O endereço dele é a segunda metade do seu identificador, como em @ana:quire.exemplo.'**
+  String get onboardingServerExplanation;
+
+  /// Rótulo do campo onde o leitor digita o domínio do servidor, como quire.exemplo. É um domínio e não uma URL: o aplicativo descobre o resto lendo o documento que o servidor publica.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Domínio do servidor'**
+  String get onboardingServerFieldLabel;
+
+  /// Texto de exemplo dentro do campo de domínio, mostrado enquanto ele está vazio. É um domínio de exemplo e não deve ser traduzido para algo que pareça um endereço real.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'quire.exemplo'**
+  String get onboardingServerFieldHint;
+
+  /// Botão que busca o documento de descoberta do domínio digitado e passa a usar aquele servidor. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Continuar'**
+  String get onboardingServerContinue;
+
+  /// Título da lista de servidores que uma compilação de depuração já sabe alcançar — os dois nós que o `make dev-up` do Quire sobe ao lado. Não aparece em uma compilação de produção.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Federação de desenvolvimento'**
+  String get onboardingServerDevelopment;
+
+  /// Confirmação mostrada depois que a descoberta deu certo, nomeando o servidor que o aplicativo passou a usar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você vai entrar em {domain}.'**
+  String onboardingServerChosen(String domain);
+
+  /// Erro mostrado quando o domínio respondeu, mas com algo que não é um servidor Quire — inclusive um 404, que é um host que não é um nó. O leitor deve conferir o que digitou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} não publica um documento de descoberta do Quire.'**
+  String onboardingServerNotQuire(String domain);
+
+  /// Erro mostrado quando o domínio não respondeu à busca: sem rota, sem resposta ou tempo esgotado. É o único dos erros desta tela em que tentar de novo pode dar certo sem mudar nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} não respondeu. Verifique sua conexão e tente de novo.'**
+  String onboardingServerUnreachable(String domain);
+
+  /// Erro mostrado quando a busca foi redirecionada para http simples. O documento vale exatamente o que vale o canal por onde ele chegou, então o aplicativo recusa em vez de seguir.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A busca por {domain} foi redirecionada para uma conexão sem criptografia e foi recusada.'**
+  String onboardingServerInsecure(String domain);
+
+  /// Erro genérico da tela de escolha de servidor, para uma falha que não é nenhuma das outras três. O detalhe fica no log, que é onde ele pode ser lido por quem investiga.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível usar {domain}.'**
+  String onboardingServerFailed(String domain);
 }
 
 class _AppLocalizationsDelegate

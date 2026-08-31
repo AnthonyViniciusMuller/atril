@@ -437,10 +437,19 @@ listenable would be a type no widget and no `provider` could observe.
       URL for the browser, since the authority a node publishes is what a *peer* dials — and
       `Environment.endpointFor` overrides it for the local federation, whose published addresses
       resolve inside the compose network and nowhere a host can reach
-- [ ] `feat: add the server selection screen` — the first screen a new install shows, with the
+- [x] `feat: add the server selection screen` — the first screen a new install shows, with the
       development federation reachable in one tap in a debug build. The identifier is
       `@local_name:server` and the server half is which node the call was addressed to, so this
-      screen is not a preference — it is half of the reader's name
+      screen is not a preference — it is half of the reader's name. It is also the app's first
+      repository and its first view model, and both are the shape everything after them follows:
+      `ServerRepository` looks a node up, records it and points the connection at it in one call,
+      because a node recorded and not dialled is a row nothing acts on and a node dialled and not
+      recorded is a choice the next launch has forgotten. The choice is held in memory and not in
+      the catalogue: what the catalogue records is that a node was *discovered*, and what makes
+      one of its rows the reader's own is a login. The screen ends here rather than moving on,
+      because there is nowhere to move on to until the two commits below exist — a selection
+      screen showing what is selected is the whole of its job, and the two ways onward are added
+      by the commits that create somewhere for them to go
 - [ ] `feat: add registration` — UC14. `RegisterUser` against the discovered node, the local-name
       constraint validated client-side against the same regex the contract publishes, and the
       server's field-level rejections rendered on the fields that caused them

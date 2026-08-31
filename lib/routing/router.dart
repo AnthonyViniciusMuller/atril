@@ -35,7 +35,7 @@ import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
-import '../ui/onboarding/widgets/onboarding_screen.dart';
+import '../ui/onboarding/widgets/server_selection_screen.dart';
 import '../ui/settings/widgets/settings_screen.dart';
 import '../utils/logging.dart';
 import 'routes.dart';
@@ -80,7 +80,7 @@ GoRouter atrilRouter({
       GoRoute(
         path: Routes.onboarding,
         builder: (BuildContext context, GoRouterState state) =>
-            const OnboardingScreen(),
+            const ServerSelectionScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder:

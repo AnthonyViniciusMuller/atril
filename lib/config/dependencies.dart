@@ -30,6 +30,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../data/repositories/server/server_repository.dart';
+import '../data/repositories/server/server_repository_impl.dart';
 import '../data/services/api/auth_api.dart';
 import '../data/services/api/federation_api.dart';
 import '../data/services/api/library_api.dart';
@@ -151,6 +153,21 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
+      ),
+    ),
+
+    // The repositories. They are what a view model is given, and the only
+    // things above this file that a screen is allowed to reach for.
+    Provider<ServerRepository>(
+      create: (BuildContext context) => ServerRepositoryImpl(
+        discovery: context.read<WellKnownDiscovery>(),
+        identity: database.identityDao,
+        connection: context.read<NodeConnection>(),
+        // The one place the configuration reaches a repository, and it reaches
+        // it as a function: the local federation is dialled at the address the
+        // flavour names rather than the one it publishes, and nothing under
+        // `data/` should have to import a flavour to know that.
+        endpointFor: environment.endpointFor,
       ),
     ),
 

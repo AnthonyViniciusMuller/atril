@@ -8,5 +8,17 @@
 
   "pageNotFoundTitle": "Page not found",
   "pageNotFoundMessage": "The address {location} does not match any screen in this application.",
-  "pageNotFoundAction": "Go to the library"
+  "pageNotFoundAction": "Go to the library",
+
+  "onboardingServerTitle": "Choose your server",
+  "onboardingServerExplanation": "Your library lives on a Quire server. Its address is the second half of your identifier, as in @ana:quire.example.",
+  "onboardingServerFieldLabel": "Server domain",
+  "onboardingServerFieldHint": "quire.example",
+  "onboardingServerContinue": "Continue",
+  "onboardingServerDevelopment": "Development federation",
+  "onboardingServerChosen": "You will sign in at {domain}.",
+  "onboardingServerNotQuire": "{domain} does not publish a Quire discovery document.",
+  "onboardingServerUnreachable": "{domain} did not answer. Check your connection and try again.",
+  "onboardingServerInsecure": "The lookup of {domain} was redirected to an unencrypted connection and was refused.",
+  "onboardingServerFailed": "{domain} could not be used."
 }

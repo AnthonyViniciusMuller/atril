@@ -31,4 +31,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pageNotFoundAction => 'Go to the library';
+
+  @override
+  String get onboardingServerTitle => 'Choose your server';
+
+  @override
+  String get onboardingServerExplanation =>
+      'Your library lives on a Quire server. Its address is the second half of your identifier, as in @ana:quire.example.';
+
+  @override
+  String get onboardingServerFieldLabel => 'Server domain';
+
+  @override
+  String get onboardingServerFieldHint => 'quire.example';
+
+  @override
+  String get onboardingServerContinue => 'Continue';
+
+  @override
+  String get onboardingServerDevelopment => 'Development federation';
+
+  @override
+  String onboardingServerChosen(String domain) {
+    return 'You will sign in at $domain.';
+  }
+
+  @override
+  String onboardingServerNotQuire(String domain) {
+    return '$domain does not publish a Quire discovery document.';
+  }
+
+  @override
+  String onboardingServerUnreachable(String domain) {
+    return '$domain did not answer. Check your connection and try again.';
+  }
+
+  @override
+  String onboardingServerInsecure(String domain) {
+    return 'The lookup of $domain was redirected to an unencrypted connection and was refused.';
+  }
+
+  @override
+  String onboardingServerFailed(String domain) {
+    return '$domain could not be used.';
+  }
 }
