@@ -108,7 +108,7 @@ listenable would be a type no widget and no `provider` could observe.
       it is monotone on a browser whose wall clock has millisecond resolution. The floor leaves
       through a `HybridClockStore` port, because a stamp is synchronous and a database is not;
       the row it is written to arrives with the identity tables in phase 3
-- [ ] `feat: add the revision and the last writer wins rule` — the four fields every replicable
+- [x] `feat: add the revision and the last writer wins rule` — the four fields every replicable
       record carries, and the decision procedure: consult the clock, and only where it reports
       the two versions concurrent, break the tie on `(updated_at, device_id)`
 - [ ] `feat: add logging` — one logger, levels from the environment, and nothing written to
