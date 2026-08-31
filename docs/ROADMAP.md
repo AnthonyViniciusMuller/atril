@@ -586,9 +586,19 @@ that reason.
 
 ## Phase 8 — The library (UC01, UC02, UC03)
 
-- [ ] `feat: add the library repository` — a stream of the reader's collection out of the local
+- [x] `feat: add the library repository` — a stream of the reader's collection out of the local
       replica, sorted, filtered, and correct while offline because there is nothing else it could
-      be
+      be. The sort is not in SQL, and that is the finding: sqlite ships three collations and all
+      three are ASCII, so `NOCASE` folds `A` onto `a` and leaves `Á` alone — a shelf ordered by
+      the database would put *Sertão* after *Zweig* in the app's own language. A custom collation
+      registered into the connection would mend the five native targets and not the sixth, where
+      the database is a WebAssembly build, so the fold is Dart's in `utils/collation.dart` and
+      one behaviour serves six targets. It is the same fold the search of the last commit
+      matches through, because a search that matched differently from the way the results are
+      ordered would be two answers to one question. The join that narrows the collection to one
+      grouping stays in SQL, and the answers are `Stream<Result<…>>`: a stream that failed by
+      ending would be an exception crossing a layer boundary, and a list that stopped arriving
+      looks exactly like an empty collection
 - [ ] `feat: add the library screen` — a grid on a wide window and a list on a narrow one, with
       the empty state that tells a new reader what to do next
 - [ ] `feat: add e-book import` — a file picked, hashed with SHA-256 as it is read so the bytes

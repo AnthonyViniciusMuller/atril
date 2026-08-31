@@ -6461,6 +6461,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     'CREATE INDEX annotations_ebook ON annotations (ebook_id)',
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
+  late final LibraryDao libraryDao = LibraryDao(this as AtrilDatabase);
   late final SyncDao syncDao = SyncDao(this as AtrilDatabase);
   late final RecordsDao recordsDao = RecordsDao(this as AtrilDatabase);
   @override

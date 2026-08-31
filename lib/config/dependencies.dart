@@ -32,6 +32,8 @@ import 'package:provider/single_child_widget.dart';
 
 import '../data/repositories/auth/auth_repository.dart';
 import '../data/repositories/auth/auth_repository_impl.dart';
+import '../data/repositories/library/library_repository.dart';
+import '../data/repositories/library/library_repository_impl.dart';
 import '../data/repositories/server/server_repository.dart';
 import '../data/repositories/server/server_repository_impl.dart';
 import '../data/services/api/auth_api.dart';
@@ -208,6 +210,14 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         // `data/` should have to import a flavour to know that.
         endpointFor: environment.endpointFor,
       ),
+    ),
+
+    // The reader's collection, read out of the replica and never off a node.
+    // It is what makes UC01 answerable on a train: the seed of a freshly bound
+    // device is the one place the read RPCs are called, and after it this is
+    // the truth.
+    Provider<LibraryRepository>(
+      create: (_) => LibraryRepositoryImpl(library: database.libraryDao),
     ),
 
     Provider<AuthRepository>(
