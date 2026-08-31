@@ -246,4 +246,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetFailed => 'The password could not be reset.';
+
+  @override
+  String get libraryEmptyTitle => 'Your library is empty';
+
+  @override
+  String get libraryEmptyMessage =>
+      'Import an EPUB, PDF, MOBI, DJVU or CBZ file. It is kept on this device and sent to your server when there is a network.';
+
+  @override
+  String get libraryFilterEmptyTitle => 'No books on this shelf';
+
+  @override
+  String get libraryFilterEmptyMessage =>
+      'You have books, but none of them are filed here.';
+
+  @override
+  String get libraryShowAll => 'All books';
+
+  @override
+  String get librarySort => 'Sort';
+
+  @override
+  String get librarySortRecent => 'Recently added';
+
+  @override
+  String get librarySortTitle => 'Title';
+
+  @override
+  String get librarySortAuthor => 'Author';
+
+  @override
+  String get libraryUnknownAuthor => 'Unknown author';
+
+  @override
+  String get libraryReadFailed =>
+      'Your library could not be read on this device.';
+
+  @override
+  String libraryBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+      zero: 'No books',
+    );
+    return '$_temp0';
+  }
 }

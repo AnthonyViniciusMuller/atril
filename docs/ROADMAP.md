@@ -599,8 +599,16 @@ that reason.
       grouping stays in SQL, and the answers are `Stream<Result<…>>`: a stream that failed by
       ending would be an exception crossing a layer boundary, and a list that stopped arriving
       looks exactly like an empty collection
-- [ ] `feat: add the library screen` — a grid on a wide window and a list on a narrow one, with
-      the empty state that tells a new reader what to do next
+- [x] `feat: add the library screen` — a grid on a wide window and a list on a narrow one, with
+      the empty state that tells a new reader what to do next. There are **two** empty states and
+      not one, which is what the query object landed for: a reader with no books is told how to
+      start, and a reader whose shelf is empty is told which shelf and offered the way back to
+      the whole collection. A third state has no words at all — before the first answer the body
+      is blank rather than a spinner, because this is a query over rows the device already holds
+      and a progress indicator on screen for two frames is a flash a reader reads as a failure;
+      it is also what keeps `pumpAndSettle` from waiting forever on an animation nothing ends.
+      The grid threshold is the navigation surface's own `compactWidth`, so that the two layouts
+      change together rather than at two widths a dragged window crosses separately
 - [ ] `feat: add e-book import` — a file picked, hashed with SHA-256 as it is read so the bytes
       are never held twice, written to the blob store under that digest, and registered as an
       operation. The digest is what identifies the bytes across the federation, so importing the

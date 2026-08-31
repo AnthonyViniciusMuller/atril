@@ -1,24 +1,448 @@
-/// The reader's collection.
+/// The reader's collection (UC01).
 ///
-/// Phase 8 is what fills it: a grid on a wide window, a list on a narrow one,
-/// the empty state that tells a new reader what to do next, and the repository
-/// underneath that reads the local replica and is therefore correct offline.
-/// What is here now is the destination the shell's first branch points at, so
-/// that the route table and the navigation surface are testable before there
-/// is anything to navigate to.
+/// **A grid on a wide window and a list on a narrow one**, decided by the width
+/// the screen was given and never by the platform — the same rule
+/// `AdaptiveScaffold` states and for the same reason: a desktop window dragged
+/// to a third of the screen is a phone, and a browser is whatever the reader
+/// has made it this second. The threshold is the navigation surface's own, so
+/// that the two changes happen together rather than at two widths a reader
+/// would notice separately.
+///
+/// A grid and a list are two shapes of the same shelf. The grid is what a
+/// collection of covers wants; the list is what a narrow column can show
+/// without cutting a title in half, and it carries the author beside it, which
+/// a grid cell has no room for.
+///
+/// **Nothing on this screen refreshes.** There is nothing to refresh: the
+/// collection is watched out of the local replica, so a work that arrives by
+/// synchronization appears without being asked for and a work the reader
+/// imports appears through the same subscription. A pull-to-refresh here would
+/// be a gesture that runs a query that is already running.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../data/repositories/library/library_repository.dart';
+import '../../../domain/models/collection.dart';
+import '../../../domain/models/ebook.dart';
+import '../../../domain/models/library_query.dart';
 import '../../core/localization/localization.dart';
+import '../../core/ui/adaptive_scaffold.dart';
+import '../view_model/library_view_model.dart';
+
+/// The width from which the shelf is a grid.
+///
+/// It is [compactWidth] deliberately. Below it the navigation goes under the
+/// content and there is one column of room; above it there is space beside a
+/// cover for a second one. Two thresholds a few pixels apart would be two
+/// reflows as a window is dragged.
+const double gridWidth = compactWidth;
+
+/// How wide a cover is allowed to be before the grid adds a column.
+///
+/// A cover is taller than it is wide, and a shelf of them is read by scanning
+/// across; a cell much wider than this stops looking like a book.
+const double coverExtent = 180;
+
+/// The proportions of a cover, which are roughly those of a paperback.
+const double coverAspect = 2 / 3;
 
 /// The library screen.
-class LibraryScreen extends StatelessWidget {
+class LibraryScreen extends StatefulWidget {
   /// Creates the library screen.
   const LibraryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(AppLocalizations.of(context).navigationLibrary)),
+  State<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends State<LibraryScreen> {
+  late final LibraryViewModel _model = LibraryViewModel(
+    library: context.read<LibraryRepository>(),
   );
+
+  @override
+  void dispose() {
+    _model.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.navigationLibrary),
+        actions: <Widget>[
+          ListenableBuilder(
+            listenable: _model,
+            builder: (BuildContext context, Widget? _) =>
+                _SortMenu(model: _model),
+          ),
+        ],
+      ),
+      body: ListenableBuilder(
+        listenable: _model,
+        builder: (BuildContext context, Widget? _) => _LibraryBody(
+          model: _model,
+        ),
+      ),
+    );
+  }
+}
+
+/// The menu that chooses the order of the shelf.
+class _SortMenu extends StatelessWidget {
+  const _SortMenu({required this.model});
+
+  final LibraryViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopupMenuButton<LibrarySort>(
+      icon: const Icon(Icons.sort),
+      tooltip: l10n.librarySort,
+      initialValue: model.query.sort,
+      onSelected: model.sortBy,
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<LibrarySort>>[
+        PopupMenuItem<LibrarySort>(
+          value: LibrarySort.recentlyImported,
+          child: Text(l10n.librarySortRecent),
+        ),
+        PopupMenuItem<LibrarySort>(
+          value: LibrarySort.title,
+          child: Text(l10n.librarySortTitle),
+        ),
+        PopupMenuItem<LibrarySort>(
+          value: LibrarySort.author,
+          child: Text(l10n.librarySortAuthor),
+        ),
+      ],
+    );
+  }
+}
+
+/// The shelf, the filter above it, or whichever emptiness applies.
+class _LibraryBody extends StatelessWidget {
+  const _LibraryBody({required this.model});
+
+  final LibraryViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final works = model.ebooks;
+
+    if (works == null) {
+      // The first answer has not arrived, and the screen deliberately shows
+      // *nothing* rather than a spinner. This is a query over rows this device
+      // already holds — a frame or two, never a wait on a node — and a
+      // progress indicator on screen for two frames is a flash a reader reads
+      // as something having gone wrong. It is also not the empty state: a
+      // reader who has not been told anything yet must not be told to start
+      // importing.
+      //
+      // The failure is the one thing worth saying, and the exception's own
+      // words are not part of it: it is a query against this device's own
+      // database, so what a reader can do about it is the same whatever sqlite
+      // said, and what sqlite said is developer prose in one language. It is
+      // logged.
+      return model.error == null
+          ? const SizedBox.shrink()
+          : _Message(icon: Icons.error_outline, title: l10n.libraryReadFailed);
+    }
+
+    return Column(
+      children: <Widget>[
+        if (model.collections.isNotEmpty)
+          _ShelfFilter(
+            collections: model.collections,
+            counts: model.filingCounts,
+            selected: model.query.collectionId,
+            onSelected: model.showCollection,
+          ),
+        Expanded(
+          child: works.isEmpty
+              ? _EmptyShelf(model: model)
+              : _Shelf(works: works),
+        ),
+      ],
+    );
+  }
+}
+
+/// The row of groupings above the shelf.
+class _ShelfFilter extends StatelessWidget {
+  const _ShelfFilter({
+    required this.collections,
+    required this.counts,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<Collection> collections;
+  final Map<String, int> counts;
+  final String? selected;
+  final void Function(String? collectionId) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return SizedBox(
+      height: 56,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: ChoiceChip(
+              label: Text(l10n.libraryShowAll),
+              selected: selected == null,
+              onSelected: (_) => onSelected(null),
+            ),
+          ),
+          for (final collection in collections)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              // The count rides on the chip as a badge rather than inside its
+              // label. A shelf is chosen by how much is on it as often as by
+              // what it is called, and a label built by interpolating a number
+              // into a name is a sentence in no language's word order.
+              child: Badge.count(
+                count: counts[collection.id] ?? 0,
+                isLabelVisible: (counts[collection.id] ?? 0) > 0,
+                child: ChoiceChip(
+                  label: Text(collection.name),
+                  tooltip: l10n.libraryBookCount(counts[collection.id] ?? 0),
+                  selected: selected == collection.id,
+                  onSelected: (_) => onSelected(collection.id),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The two emptinesses, which are two different things to say.
+class _EmptyShelf extends StatelessWidget {
+  const _EmptyShelf({required this.model});
+
+  final LibraryViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    if (model.isEmpty) {
+      return _Message(
+        icon: Icons.local_library_outlined,
+        title: l10n.libraryEmptyTitle,
+        message: l10n.libraryEmptyMessage,
+      );
+    }
+
+    return _Message(
+      icon: Icons.filter_list_off,
+      title: l10n.libraryFilterEmptyTitle,
+      message: l10n.libraryFilterEmptyMessage,
+      action: TextButton(
+        onPressed: () => model.showCollection(null),
+        child: Text(l10n.libraryShowAll),
+      ),
+    );
+  }
+}
+
+/// Something the screen has to say instead of a shelf.
+class _Message extends StatelessWidget {
+  const _Message({
+    required this.icon,
+    required this.title,
+    this.message,
+    this.action,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 48, color: theme.colorScheme.outline),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+              if (message case final String message) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (action case final Widget action) ...<Widget>[
+                const SizedBox(height: 16),
+                action,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The works, as a grid or as a list.
+class _Shelf extends StatelessWidget {
+  const _Shelf({required this.works});
+
+  final List<Ebook> works;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) =>
+        constraints.maxWidth < gridWidth
+        ? ListView.builder(
+            itemCount: works.length,
+            itemBuilder: (BuildContext context, int index) =>
+                _WorkTile(work: works[index]),
+          )
+        : GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: coverExtent,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              // Room for the cover and for the two lines under it.
+              childAspectRatio: 0.52,
+            ),
+            itemCount: works.length,
+            itemBuilder: (BuildContext context, int index) =>
+                _WorkCard(work: works[index]),
+          ),
+  );
+}
+
+/// One work, in the narrow shape.
+class _WorkTile extends StatelessWidget {
+  const _WorkTile({required this.work});
+
+  final Ebook work;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: SizedBox(
+      width: 40,
+      child: AspectRatio(
+        aspectRatio: coverAspect,
+        child: _Cover(work: work),
+      ),
+    ),
+    title: Text(work.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+    subtitle: Text(
+      work.author ?? AppLocalizations.of(context).libraryUnknownAuthor,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    ),
+  );
+}
+
+/// One work, in the wide shape.
+class _WorkCard extends StatelessWidget {
+  const _WorkCard({required this.work});
+
+  final Ebook work;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: AspectRatio(
+            aspectRatio: coverAspect,
+            child: _Cover(work: work),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          work.title,
+          style: theme.textTheme.bodyMedium,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          work.author ?? AppLocalizations.of(context).libraryUnknownAuthor,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+/// What stands in for a cover.
+///
+/// There is no cover yet: extracting one out of the OPF is two commits below,
+/// and a work whose file this device has never held will not have one at all.
+/// So the placeholder says the one thing about the work that is always known —
+/// which format it is — rather than showing a grey rectangle that could be a
+/// cover still loading.
+class _Cover extends StatelessWidget {
+  const _Cover({required this.work});
+
+  final Ebook work;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Center(
+        child: Text(
+          // The format's own name, which is not a user-visible string in the
+          // sense the rule is about: it is `epub`, `pdf`, `mobi` — the same
+          // token the contract, the node's column and this schema all spell,
+          // and translating it would name a format nothing else calls that.
+          work.format?.wireName.toUpperCase() ?? '', // l10n-ignore
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
 }

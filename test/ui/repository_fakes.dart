@@ -12,7 +12,11 @@ import 'dart:async';
 
 import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
+import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
+import 'package:atril/domain/models/collection.dart';
+import 'package:atril/domain/models/ebook.dart';
+import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/domain/models/server.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/result.dart';
@@ -168,6 +172,64 @@ final class FakeAuthRepository implements AuthRepository {
   );
 }
 
+
+/// A [LibraryRepository] that answers from memory.
+///
+/// The works and the groupings are broadcast controllers rather than fields,
+/// because what the screen is written against is a *stream*: a test that set a
+/// list and pumped would be exercising a repository this app does not have.
+/// Nothing is emitted until a test says so, which is also how the state before
+/// the first answer — the one that is neither empty nor full — is reached.
+final class FakeLibraryRepository implements LibraryRepository {
+  /// The works, as the screen sees them arrive.
+  final StreamController<Result<List<Ebook>>> works =
+      StreamController<Result<List<Ebook>>>.broadcast();
+
+  /// The groupings.
+  final StreamController<Result<List<Collection>>> groupings =
+      StreamController<Result<List<Collection>>>.broadcast();
+
+  /// How many works are filed under each grouping.
+  final StreamController<Result<Map<String, int>>> counts =
+      StreamController<Result<Map<String, int>>>.broadcast();
+
+  /// Every query the screen has asked, in order.
+  final List<LibraryQuery> queries = <LibraryQuery>[];
+
+  @override
+  Stream<Result<List<Ebook>>> watchEbooks([
+    LibraryQuery query = const LibraryQuery(),
+  ]) {
+    queries.add(query);
+
+    return works.stream;
+  }
+
+  @override
+  Stream<Result<Ebook?>> watchEbook(String id) => works.stream.map(
+    (result) => switch (result) {
+      Ok<List<Ebook>>(:final value) => Result<Ebook?>.ok(
+        value.where((work) => work.id == id).firstOrNull,
+      ),
+      Error<List<Ebook>>(:final error) => Result<Ebook?>.error(error),
+    },
+  );
+
+  @override
+  Future<Result<Ebook?>> ebook(String id) async =>
+      const Result<Ebook?>.ok(null);
+
+  @override
+  Stream<Result<List<Collection>>> watchCollections() => groupings.stream;
+
+  @override
+  Stream<Result<Map<String, int>>> watchFilingCounts() => counts.stream;
+
+  @override
+  Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId) =>
+      groupings.stream;
+}
+
 /// What an onboarding screen reads out of the tree.
 ///
 /// The environment defaults to a shipped one, so a test that says nothing gets
@@ -177,9 +239,11 @@ final class FakeAuthRepository implements AuthRepository {
 List<SingleChildWidget> repositoryProviders({
   ServerRepository? servers,
   AuthRepository? auth,
+  LibraryRepository? library,
   Environment? environment,
 }) => <SingleChildWidget>[
   Provider<Environment>.value(value: environment ?? Environment.production()),
   Provider<ServerRepository>.value(value: servers ?? FakeServerRepository()),
   Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
+  Provider<LibraryRepository>.value(value: library ?? FakeLibraryRepository()),
 ];

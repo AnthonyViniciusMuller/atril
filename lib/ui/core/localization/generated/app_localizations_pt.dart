@@ -247,6 +247,54 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get resetFailed => 'Não foi possível redefinir a senha.';
+
+  @override
+  String get libraryEmptyTitle => 'Sua biblioteca está vazia';
+
+  @override
+  String get libraryEmptyMessage =>
+      'Importe um arquivo EPUB, PDF, MOBI, DJVU ou CBZ. Ele fica guardado neste dispositivo e é enviado ao seu servidor quando houver rede.';
+
+  @override
+  String get libraryFilterEmptyTitle => 'Nenhum livro nesta estante';
+
+  @override
+  String get libraryFilterEmptyMessage =>
+      'Você tem livros, mas nenhum está arquivado aqui.';
+
+  @override
+  String get libraryShowAll => 'Todos os livros';
+
+  @override
+  String get librarySort => 'Ordenar';
+
+  @override
+  String get librarySortRecent => 'Adicionados recentemente';
+
+  @override
+  String get librarySortTitle => 'Título';
+
+  @override
+  String get librarySortAuthor => 'Autor';
+
+  @override
+  String get libraryUnknownAuthor => 'Autor desconhecido';
+
+  @override
+  String get libraryReadFailed =>
+      'Não foi possível ler sua biblioteca neste dispositivo.';
+
+  @override
+  String libraryBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livros',
+      one: '1 livro',
+      zero: 'Nenhum livro',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -491,4 +539,52 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get resetFailed => 'Não foi possível redefinir a senha.';
+
+  @override
+  String get libraryEmptyTitle => 'Sua biblioteca está vazia';
+
+  @override
+  String get libraryEmptyMessage =>
+      'Importe um arquivo EPUB, PDF, MOBI, DJVU ou CBZ. Ele fica guardado neste dispositivo e é enviado ao seu servidor quando houver rede.';
+
+  @override
+  String get libraryFilterEmptyTitle => 'Nenhum livro nesta estante';
+
+  @override
+  String get libraryFilterEmptyMessage =>
+      'Você tem livros, mas nenhum está arquivado aqui.';
+
+  @override
+  String get libraryShowAll => 'Todos os livros';
+
+  @override
+  String get librarySort => 'Ordenar';
+
+  @override
+  String get librarySortRecent => 'Adicionados recentemente';
+
+  @override
+  String get librarySortTitle => 'Título';
+
+  @override
+  String get librarySortAuthor => 'Autor';
+
+  @override
+  String get libraryUnknownAuthor => 'Autor desconhecido';
+
+  @override
+  String get libraryReadFailed =>
+      'Não foi possível ler sua biblioteca neste dispositivo.';
+
+  @override
+  String libraryBookCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livros',
+      one: '1 livro',
+      zero: 'Nenhum livro',
+    );
+    return '$_temp0';
+  }
 }

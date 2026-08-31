@@ -72,5 +72,18 @@
   "resetSubmit": "Reset password",
   "resetTokenInvalid": "That code is not valid. It may have expired or already been used — ask for another.",
   "resetDone": "Password reset. Sign in with the new one.",
-  "resetFailed": "The password could not be reset."
+  "resetFailed": "The password could not be reset.",
+
+  "libraryEmptyTitle": "Your library is empty",
+  "libraryEmptyMessage": "Import an EPUB, PDF, MOBI, DJVU or CBZ file. It is kept on this device and sent to your server when there is a network.",
+  "libraryFilterEmptyTitle": "No books on this shelf",
+  "libraryFilterEmptyMessage": "You have books, but none of them are filed here.",
+  "libraryShowAll": "All books",
+  "librarySort": "Sort",
+  "librarySortRecent": "Recently added",
+  "librarySortTitle": "Title",
+  "librarySortAuthor": "Author",
+  "libraryUnknownAuthor": "Unknown author",
+  "libraryReadFailed": "Your library could not be read on this device.",
+  "libraryBookCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}"
 }

@@ -494,6 +494,78 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível redefinir a senha.'**
   String get resetFailed;
+
+  /// Título do estado vazio da tela da biblioteca, mostrado a quem ainda não importou nenhum livro. É a primeira tela que um leitor recém-cadastrado vê depois de entrar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sua biblioteca está vazia'**
+  String get libraryEmptyTitle;
+
+  /// Corpo do estado vazio da biblioteca. Diz o que fazer em seguida e, de passagem, a promessa central do aplicativo: o livro é gravado aqui primeiro e sincronizado depois, então importar sem rede funciona.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Importe um arquivo EPUB, PDF, MOBI, DJVU ou CBZ. Ele fica guardado neste dispositivo e é enviado ao seu servidor quando houver rede.'**
+  String get libraryEmptyMessage;
+
+  /// Título mostrado quando o leitor tem livros, mas nenhum deles está arquivado na estante escolhida. É diferente do estado vazio da biblioteca inteira: aqui o acervo não está vazio, o filtro é que não encontrou nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhum livro nesta estante'**
+  String get libraryFilterEmptyTitle;
+
+  /// Corpo do estado vazio de uma estante, acompanhado do botão que volta para o acervo inteiro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você tem livros, mas nenhum está arquivado aqui.'**
+  String get libraryFilterEmptyMessage;
+
+  /// Rótulo do filtro que mostra o acervo inteiro, sem estante nenhuma escolhida. Aparece como o primeiro de uma fileira de estantes e também como o botão de saída do estado vazio de uma estante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todos os livros'**
+  String get libraryShowAll;
+
+  /// Rótulo do menu que escolhe a ordem da lista de livros. Rótulo curto, usado como dica do botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ordenar'**
+  String get librarySort;
+
+  /// Opção de ordenação: o livro importado mais recentemente primeiro. É a ordem padrão, porque num acervo que cresce por importação a chegada mais nova é a mais procurada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Adicionados recentemente'**
+  String get librarySortRecent;
+
+  /// Opção de ordenação: em ordem alfabética de título.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Título'**
+  String get librarySortTitle;
+
+  /// Opção de ordenação: em ordem alfabética de autor. Os livros cujo arquivo não disse o autor ficam no fim.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autor'**
+  String get librarySortAuthor;
+
+  /// Mostrado no lugar do autor quando o arquivo não disse qual é. É diferente de um autor em branco: um é ausência de informação e o outro seria uma afirmação de que não há autor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autor desconhecido'**
+  String get libraryUnknownAuthor;
+
+  /// Erro mostrado quando a consulta ao banco local falha. Não tem nada a ver com rede: o acervo é lido daqui, então uma falha aqui é do próprio dispositivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler sua biblioteca neste dispositivo.'**
+  String get libraryReadFailed;
+
+  /// Quantos livros a listagem atual tem. Aparece abaixo do título da tela e ao lado do nome de uma estante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{count, plural, =0{Nenhum livro} =1{1 livro} other{{count} livros}}'**
+  String libraryBookCount(int count);
 }
 
 class _AppLocalizationsDelegate
