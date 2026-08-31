@@ -126,14 +126,23 @@ authored under one host has to resolve under another. Two CFI implementations wo
 almost always and disagree as annotations landing on the wrong paragraph after a sync, so there
 is one engine and the split is only in what gives it a DOM.
 
-### The channel is chosen by conditional export
+### Three things are chosen by conditional export
 
 `ClientChannel` over HTTP/2 does not exist in a browser and `GrpcWebClientChannel` does not exist
 outside one. `data/services/channel/channel.dart` is a conditional export over `channel_io.dart`
-and `channel_web.dart`, both exposing one factory. This is the only conditional import in the
-app; everything else that differs per platform (the blob store, the secure store) differs behind
-an interface with two implementations, because a `dart:io` import inside a repository is a
-repository that cannot be tested on web.
+and `channel_web.dart`, both exposing one factory.
+
+The same shape, and only the same shape, is used twice more: `data/services/local/connection/`
+opens a file on the five native targets and a WebAssembly build of sqlite over the
+origin-private file system in a browser, and `data/services/storage/` holds the e-book bytes on
+a filesystem or in that same origin-private store. All three are cases where the losing branch
+*cannot be compiled at all* — a `dart:io` import does not parse for the web target and a
+`package:web` one does not parse for the others — so an interface chosen at run time would not
+help: both implementations would still have to compile.
+
+Everything else that merely behaves differently per platform (the secure store, the storage
+budget's units, the reader's host) differs behind an interface with two implementations, because
+a `dart:io` import inside a repository is a repository that cannot be tested on web.
 
 ### There is no `main_staging.dart`
 

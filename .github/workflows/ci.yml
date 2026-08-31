@@ -84,9 +84,19 @@ jobs:
       # exactly the case where it would be untracked.
       - name: Check that the generated contract is current
         run: |
-          make gen
+          make gen-proto
           git add --intent-to-add -- lib/data/services/api/generated
           git diff --exit-code -- lib/data/services/api/generated
+
+      # drift generates the row classes, the companions and the DAOs from the
+      # table declarations, and that output is committed for the same reason:
+      # a column added without regenerating compiles against the previous shape
+      # and fails somewhere else entirely.
+      - name: Check that the generated database code is current
+        run: |
+          make gen-drift
+          git add --intent-to-add -- 'lib/**/*.g.dart'
+          git diff --exit-code -- 'lib/**/*.g.dart'
 
       # The formatter is checked before the analyzer because a reformatting
       # diff buried in a feature commit is a review that reads the whitespace.

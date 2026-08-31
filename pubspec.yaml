@@ -54,6 +54,24 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # The local replica, and the reason architecture.md calls it the mechanism
+  # rather than a cache: every change is authored here and pushed, because a
+  # change made through the node's write RPCs replicates to nobody (C21).
+  #
+  # `sqlite3` is a direct dependency and not drift's alone: from its version 3
+  # it builds and bundles SQLite itself through Dart's build hooks, which is
+  # what retired `sqlite3_flutter_libs`, and the Android temporary directory is
+  # set through its API in the connection.
+  drift: ^2.34.3
+  sqlite3: ^3.5.2
+
+  # Where the database file goes on each of the five native targets, and how a
+  # path is joined without assuming a separator. `path_provider` is what knows
+  # that application support is not the documents directory a file manager
+  # shows the reader.
+  path_provider: ^2.1.6
+  path: ^1.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,6 +82,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # drift's tables are Dart classes and its queries are generated from them, so
+  # `make gen` runs build_runner as well as protoc. The output is committed for
+  # the reason the generated contract is, and CI regenerates and diffs it.
+  drift_dev: ^2.34.5
+  build_runner: ^2.16.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

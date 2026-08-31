@@ -116,7 +116,11 @@ tools:
 # a red build with nothing wrong in it.
 ## gen: regenerate everything that is generated and committed
 .PHONY: gen
-gen:
+gen: gen-proto gen-drift
+
+## gen-proto: regenerate the dart stubs from the vendored contract
+.PHONY: gen-proto
+gen-proto:
 	@command -v $(PROTOC) >/dev/null || { \
 		echo "protoc is not on the PATH — install $(PROTOC_VERSION)" >&2; \
 		exit 1; \
@@ -130,6 +134,17 @@ gen:
 	@PATH="$(PATH):$(PUB_BIN)" $(PROTOC) -I proto --dart_out=grpc:$(GEN_DIR) $(PROTO_DIR)/*.proto
 	@$(DART) format $(GEN_DIR) >/dev/null
 	@echo "generated $(GEN_DIR) from $(PROTO_DIR)"
+
+# drift's tables are Dart classes and everything that reads them — the row
+# classes, the companions, the DAOs — is generated from those declarations into
+# a .g.dart beside each one. The output is committed and checked in CI for the
+# same reason the contract's is: a table edited without regenerating compiles
+# against the previous shape and fails a long way from the edit.
+#
+## gen-drift: regenerate the drift database code
+.PHONY: gen-drift
+gen-drift:
+	$(DART) run build_runner build
 
 ## fmt: format the Dart sources in place
 .PHONY: fmt
@@ -150,17 +165,17 @@ test:
 	$(FLUTTER) test
 
 # Generated code is not this project's code, and a percentage that counts it
-# measures protoc. lcov.info is a flat list of per-file records, so dropping the
-# ones under $(GEN_DIR) means dropping the SF: line and everything after it up
-# to the next one.
+# measures protoc and drift. lcov.info is a flat list of per-file records, so
+# dropping one means dropping its SF: line and everything after it up to the
+# next one.
 ## coverage: the tests with an lcov report, generated code excluded
 .PHONY: coverage
 coverage:
 	$(FLUTTER) test --coverage
-	@awk '/^SF:/ { skip = index($$0, "$(GEN_DIR)/") > 0 } !skip' \
+	@awk '/^SF:/ { skip = index($$0, "$(GEN_DIR)/") > 0 || /\.g\.dart$$/ } !skip' \
 		coverage/lcov.info > coverage/lcov.info.filtered
 	@mv coverage/lcov.info.filtered coverage/lcov.info
-	@echo "coverage/lcov.info written, without $(GEN_DIR)"
+	@echo "coverage/lcov.info written, without the generated code"
 
 # --- running -----------------------------------------------------------------
 

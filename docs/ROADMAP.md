@@ -118,8 +118,14 @@ listenable would be a type no widget and no `provider` could observe.
 
 `drift` over SQLite, and the one place in the app that holds the reader's collection.
 
-- [ ] `feat: add the drift database` — the connection, the schema version, and the migration
-      strategy. Native through `sqlite3_flutter_libs`
+- [x] `feat: add the drift database` — the connection, the schema version, and the migration
+      strategy. ~~Native through `sqlite3_flutter_libs`~~: that package reached its end of life
+      when `sqlite3` 3.x began building and bundling SQLite itself through Dart's build hooks,
+      and its last release contains no code at all — drift 2.32 moved to it and says so in its
+      changelog. Native is `sqlite3` directly, opened on a background isolate. The connection is
+      a conditional export for the reason `architecture.md` now gives at its own heading: a
+      `dart:io` import does not parse for the web target, so the two cannot be implementations
+      of an interface picked at run time
 - [ ] `build: add the drift web worker assets` — `sqlite3.wasm` and `drift_worker.js` under
       `web/`, and the web connection that picks OPFS where it is available and IndexedDB where it
       is not. Committed with the version they were built from
