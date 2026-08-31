@@ -1,0 +1,5 @@
+# The Quire commit this copy was refreshed from, recorded by `make
+# proto-sync`. It is provenance and not a pin: what CI enforces is that
+# the .proto files match Quire's main branch, not that this line is
+# current.
+901792d5f214b9fc24cbd70ee88033d978330355

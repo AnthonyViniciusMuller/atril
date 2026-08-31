@@ -20,6 +20,30 @@ env:
   FLUTTER_VERSION: 3.47.1
 
 jobs:
+  # The contract is a copy of Quire's proto/quire/v1, and a copy is only worth
+  # having if something notices when it stops matching. Quire is where quire.v1
+  # is written, so this job clones it and fails when the vendored files have
+  # fallen behind — the fix being `make proto-sync`, rather than a client
+  # generated against a protocol the node no longer speaks.
+  #
+  # It is deliberately checked against the default branch and not against a
+  # pinned revision: a pin would only catch the copy being hand-edited here,
+  # which is the rarer of the two ways it goes wrong.
+  contract:
+    name: vendored contract is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check out the Quire contract
+        uses: actions/checkout@v7
+        with:
+          repository: AnthonyViniciusMuller/quire
+          path: .quire
+
+      - name: Compare the vendored copy with Quire
+        run: make proto-check QUIRE=.quire
+
   check:
     name: format, analyze and test
     runs-on: ubuntu-latest

@@ -38,11 +38,48 @@ help:
 deps:
 	$(FLUTTER) pub get
 
-## proto: refresh the vendored contract from the Quire checkout (QUIRE=../quire)
-.PHONY: proto
-proto:
-	@echo "not yet: phase 1 vendors proto/quire/v1 and implements this target" >&2
-	@exit 1
+# The contract is vendored into proto/quire/v1 rather than submoduled, for the
+# reason quire/buf.gen.yaml gives on the other side: what is public is the
+# contract, and a peer implements it from the .proto files rather than by
+# importing anybody's generated types. A copy is only worth having if something
+# notices when it stops matching, so there are two targets — one to refresh it
+# and one to prove it has not drifted, which is what CI runs.
+PROTO_DIR := proto/quire/v1
+
+## proto-sync: refresh the vendored contract from a Quire checkout (QUIRE=../quire)
+.PHONY: proto-sync
+# The copy is deleted before it is written, for the reason buf.gen.yaml sets
+# `clean: true` next door: a file dropped from the contract would otherwise
+# survive here, be generated from, and be present on both sides of every drift
+# check.
+proto-sync: guard-quire
+	@mkdir -p $(PROTO_DIR)
+	@rm -f $(PROTO_DIR)/*.proto
+	@cp $(QUIRE)/proto/quire/v1/*.proto $(PROTO_DIR)/
+	@{ \
+		echo '# The Quire commit this copy was refreshed from, recorded by `make'; \
+		echo '# proto-sync`. It is provenance and not a pin: what CI enforces is that'; \
+		echo "# the .proto files match Quire's main branch, not that this line is"; \
+		echo '# current.'; \
+		git -C $(QUIRE) rev-parse HEAD; \
+	} > $(PROTO_DIR)/REVISION
+	@echo "synced $(PROTO_DIR) from $(QUIRE) at $$(git -C $(QUIRE) rev-parse --short HEAD)"
+
+## proto-check: fail when the vendored contract differs from a Quire checkout
+.PHONY: proto-check
+proto-check: guard-quire
+	@diff -ru --exclude=REVISION $(PROTO_DIR) $(QUIRE)/proto/quire/v1 || { \
+		echo "the vendored contract has drifted — run 'make proto-sync'" >&2; \
+		exit 1; \
+	}
+	@echo "the vendored contract matches $(QUIRE)"
+
+.PHONY: guard-quire
+guard-quire:
+	@test -d $(QUIRE)/proto/quire/v1 || { \
+		echo "no contract under $(QUIRE) — point QUIRE at a Quire checkout" >&2; \
+		exit 1; \
+	}
 
 ## gen: regenerate everything that is generated and committed
 .PHONY: gen

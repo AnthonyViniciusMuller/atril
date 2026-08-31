@@ -69,7 +69,7 @@ Then, here:
 
 ## Phase 1 — The contract
 
-- [ ] `build: vendor the quire protobuf contracts` — the six `.proto` files copied into
+- [x] `build: vendor the quire protobuf contracts` — the six `.proto` files copied into
       `proto/quire/v1`, with a `make proto-sync` that refreshes them from a Quire checkout and a
       CI check that fails when the copy has drifted. They are copied and not submoduled for the
       reason `buf.gen.yaml` gives on the other side: what is public is the contract, and a peer
