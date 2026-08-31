@@ -346,11 +346,25 @@ listenable would be a type no widget and no `provider` could observe.
       silently — as a tap on *Settings* opening the annotations. Three destinations and not four:
       collections live inside the library (phase 8) and the sync status is a line in the shell
       with a screen behind it (phase 11)
-- [ ] `feat: add the entry points and the dependency graph` — `main.dart`,
-      `main_development.dart`, and one `providers` function per environment. Nothing below
-      `main` reads a compile-time constant, for the reason Quire gives about `os.Getenv`: the
-      configuration surface is one struct, and a widget that reads the environment is a widget
-      that cannot be tested
+- [x] `feat: add the entry points and the dependency graph` — `main.dart`,
+      `main_development.dart`, and ~~one `providers` function per environment~~: the split
+      belongs one layer up. The difference between the two builds is entirely an `Environment`,
+      and two graph functions differing only in which factory they called would be two things to
+      keep in step for no second behaviour — so it is `Environment.production` /
+      `Environment.development` and one `providersFor(environment)`. Nothing below `main` reads a
+      compile-time constant, for the reason Quire gives about `os.Getenv`: the configuration
+      surface is one struct, and a widget that reads the environment is a widget that cannot be
+      tested. There are two such constants and they are both read at the edge — `ATRIL_LOG_LEVEL`
+      in `config/environment.dart`, and the local federation's certificate authority in
+      `main_development.dart`. The second is a **flag and not a vendored file**: Quire generates
+      those certificates before every `make dev-up` and does not commit them, so a copy here would
+      be stale by the next run; the PEM is base64 in one `--dart-define`, which `make run-linux`
+      and `make run-web` fill from the Quire checkout. A production build knows no node, and
+      `initialEndpoint` carries no address rather than `null` — an absent endpoint and an endpoint
+      with no address are the same state, and `NodeEndpoint` already names the second. Two things
+      in the graph are lazy on purpose: a device with no session reaches onboarding without
+      dialling a node nobody has chosen, and the session/auth-client cycle is closed by resolving
+      the refresher on first use rather than by a `late final`
 - [ ] `feat: add the desktop window configuration` — a minimum size and a remembered one on
       Linux, macOS and Windows, so the adaptive layout has a floor to be correct at
 

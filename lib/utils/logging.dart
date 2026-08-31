@@ -35,10 +35,13 @@ const String logHierarchy = 'atril';
 /// The level a build defaults to, read at compile time from
 /// `--dart-define=ATRIL_LOG_LEVEL=...`.
 ///
-/// It is the only compile-time constant this app reads, and it is read here so
-/// that nothing below `main` has to: phase 5's environment struct passes a level
-/// to [installLogging] explicitly, and this is what it falls back to.
-const String _configuredLevel = String.fromEnvironment('ATRIL_LOG_LEVEL');
+/// It is one of the two compile-time constants this app reads — the other is
+/// the development certificate authority, in `main_development.dart` — and it
+/// is read here so that nothing below `main` has to. `config/environment.dart`
+/// resolves it against the flavour's own default and passes the answer to
+/// [installLogging]; this is what a caller that passed nothing falls back to,
+/// which is every test.
+const String configuredLogLevel = String.fromEnvironment('ATRIL_LOG_LEVEL');
 
 /// The levels a build may ask for by name, lowercase, as the node spells them.
 ///
@@ -80,7 +83,7 @@ Level logLevelFrom(String? name, {Level fallback = Level.INFO}) =>
 /// [level] defaults to what `ATRIL_LOG_LEVEL` asked for, and to [Level.INFO]
 /// when the build asked for nothing.
 void installLogging({Level? level, LogSink? sink}) {
-  Logger.root.level = level ?? logLevelFrom(_configuredLevel);
+  Logger.root.level = level ?? logLevelFrom(configuredLogLevel);
 
   _subscription?.cancel();
   _subscription = Logger.root.onRecord.listen(sink ?? _emit);

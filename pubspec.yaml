@@ -58,6 +58,18 @@ dependencies:
   fixnum: ^1.1.1
   grpc: ^5.1.0
 
+  # Dependency injection, as the architecture guide's own sample does it: one
+  # graph built at the entry point, `context.read<T>()` where a view model is
+  # constructed, and `dispose` called for us when a provider goes away. It is
+  # also what closes the one real cycle in this app — the session holds the
+  # client that refreshes it and the client makes its calls under the session —
+  # since a provider is created on first read and not before.
+  #
+  # `ChangeNotifier` is already this project's idiom: `Command` extends it, and
+  # a view model that exposes commands is a listenable a `Consumer` can watch
+  # without anything being adapted to anything.
+  provider: ^6.1.5
+
   # Navigation, as the architecture guide's own sample does it: one route
   # table, addressable locations, and a redirect that runs before a route is
   # built. The redirect is the reason it is this package and not `Navigator`

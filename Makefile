@@ -7,10 +7,29 @@ DART    ?= dart
 # The Quire checkout the contract is vendored from. Phase 1 is what reads it.
 QUIRE   ?= ../quire
 
-# The entry point `run-linux` and `run-web` start. Phase 5 adds
-# lib/main_development.dart — the one pointed at `make dev-up` next door — and
-# makes it the default here; until then there is only one.
-ENTRY   ?= lib/main.dart
+# The entry point `run-linux` and `run-web` start. It is the development one,
+# because the two targets below exist to run against `make dev-up`; pass
+# ENTRY=lib/main.dart to start the shipped configuration, which knows no node
+# until a reader names one.
+ENTRY   ?= lib/main_development.dart
+
+# The certificate authority the local federation's certificates are issued
+# under, handed to the development entry point as a build flag.
+#
+# It is a flag and not a file in this repository because Quire generates these
+# certificates — `make dev-certs` runs before every `make dev-up` and they are
+# not committed — so a vendored copy would be stale the next time anybody
+# started the federation, and the failure would be a handshake error rather
+# than a missing file. base64 is what fits a multi-line PEM into one
+# `--dart-define`, and `tr -d` rather than `base64 -w0` because the flag is
+# not GNU's on a macOS host.
+#
+# An absent file leaves the flag empty, which is a development build that
+# trusts the platform's store: the web target needs nothing else, since the
+# gRPC-Web lane is plain HTTP on a loopback address.
+DEV_CA_FILE ?= $(QUIRE)/deploy/docker/certs/quire-a.example.crt.pem
+DEV_CA      := $(shell test -f $(DEV_CA_FILE) && base64 < $(DEV_CA_FILE) | tr -d '\n')
+DEV_DEFINES := --dart-define=ATRIL_DEV_CA=$(DEV_CA)
 
 # `flutter build macos` and `flutter build windows` need the host they target,
 # so `build-all` builds what this machine can and leaves the rest to the six
@@ -254,12 +273,12 @@ coverage:
 ## run-linux: run against the local federation over the native gRPC lane
 .PHONY: run-linux
 run-linux:
-	$(FLUTTER) run -d linux -t $(ENTRY)
+	$(FLUTTER) run -d linux -t $(ENTRY) $(DEV_DEFINES)
 
 ## run-web: run against the local federation over the gRPC-Web lane
 .PHONY: run-web
 run-web:
-	$(FLUTTER) run -d chrome -t $(ENTRY)
+	$(FLUTTER) run -d chrome -t $(ENTRY) $(DEV_DEFINES)
 
 # --- building ----------------------------------------------------------------
 
