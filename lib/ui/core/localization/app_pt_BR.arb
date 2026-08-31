@@ -125,5 +125,85 @@
         "example": "quire-a.example"
       }
     }
+  },
+
+  "onboardingServerConfirm": "Continuar em {domain}",
+  "@onboardingServerConfirm": {
+    "description": "Botão que leva o leitor da tela de escolha de servidor para a tela de entrada, nomeando o servidor escolhido. Só aparece depois que a descoberta deu certo.",
+    "placeholders": {
+      "domain": {
+        "type": "String",
+        "example": "quire-a.example"
+      }
+    }
+  },
+
+  "signInTitle": "Entrar",
+  "@signInTitle": {
+    "description": "Título da tela de entrada, onde o leitor se autentica no servidor que escolheu. Também é o rótulo do botão que envia o formulário."
+  },
+
+  "signInAt": "Entrando em {domain}.",
+  "@signInAt": {
+    "description": "Linha abaixo do título da tela de entrada, nomeando o servidor a que as credenciais serão enviadas. Está ali porque a senha vai para esse servidor e para nenhum outro.",
+    "placeholders": {
+      "domain": {
+        "type": "String",
+        "example": "quire-a.example"
+      }
+    }
+  },
+
+  "signInIdentifierLabel": "Nome de usuário ou e-mail",
+  "@signInIdentifierLabel": {
+    "description": "Rótulo do campo onde o leitor se identifica. O contrato aceita as duas metades — o nome local ou o endereço — e é o cliente que decide qual foi digitado, porque um nome local não pode conter arroba e um endereço precisa."
+  },
+
+  "signInPasswordLabel": "Senha",
+  "@signInPasswordLabel": {
+    "description": "Rótulo do campo de senha da tela de entrada."
+  },
+
+  "signInSubmit": "Entrar",
+  "@signInSubmit": {
+    "description": "Botão que envia as credenciais ao servidor escolhido. Rótulo curto."
+  },
+
+
+  "signInInvalidCredentials": "Nome de usuário ou senha incorretos.",
+  "@signInInvalidCredentials": {
+    "description": "Erro mostrado quando o servidor recusou as credenciais. É deliberadamente o mesmo texto para um leitor que não existe e para uma senha errada: dizer qual das duas falhou permitiria descobrir quem tem conta no servidor."
+  },
+
+  "signInDeviceRevoked": "Este dispositivo foi desvinculado da conta. Peça a outro dispositivo para vinculá-lo de novo.",
+  "@signInDeviceRevoked": {
+    "description": "Erro mostrado quando o servidor reconheceu as credenciais mas recusou este dispositivo, porque ele foi desvinculado. O registro dele continua existindo, então a saída é vincular de novo a partir de um dispositivo já autenticado."
+  },
+
+  "signInUnreachable": "Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.",
+  "@signInUnreachable": {
+    "description": "Erro mostrado quando o servidor não respondeu à tentativa de entrada. É o único erro desta tela em que tentar de novo pode dar certo sem mudar nada.",
+    "placeholders": {
+      "domain": {
+        "type": "String",
+        "example": "quire-a.example"
+      }
+    }
+  },
+
+  "signInFailed": "Não foi possível entrar.",
+  "@signInFailed": {
+    "description": "Erro genérico da tela de entrada, para uma falha que não é nenhuma das outras. O detalhe fica no log, que é onde quem investiga pode lê-lo."
+  },
+
+  "deviceDefaultName": "Atril em {platform}",
+  "@deviceDefaultName": {
+    "description": "O nome que este dispositivo recebe na lista de dispositivos do leitor quando ele é vinculado pela primeira vez. O parâmetro é o nome próprio da plataforma — Android, iOS, Web, Linux, macOS, Windows — que não se traduz; o que esta mensagem decide é a frase em volta dele.",
+    "placeholders": {
+      "platform": {
+        "type": "String",
+        "example": "Linux"
+      }
+    }
   }
 }

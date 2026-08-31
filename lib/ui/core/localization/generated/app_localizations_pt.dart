@@ -75,6 +75,48 @@ class AppLocalizationsPt extends AppLocalizations {
   String onboardingServerFailed(String domain) {
     return 'Não foi possível usar $domain.';
   }
+
+  @override
+  String onboardingServerConfirm(String domain) {
+    return 'Continuar em $domain';
+  }
+
+  @override
+  String get signInTitle => 'Entrar';
+
+  @override
+  String signInAt(String domain) {
+    return 'Entrando em $domain.';
+  }
+
+  @override
+  String get signInIdentifierLabel => 'Nome de usuário ou e-mail';
+
+  @override
+  String get signInPasswordLabel => 'Senha';
+
+  @override
+  String get signInSubmit => 'Entrar';
+
+  @override
+  String get signInInvalidCredentials => 'Nome de usuário ou senha incorretos.';
+
+  @override
+  String get signInDeviceRevoked =>
+      'Este dispositivo foi desvinculado da conta. Peça a outro dispositivo para vinculá-lo de novo.';
+
+  @override
+  String signInUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
+  }
+
+  @override
+  String get signInFailed => 'Não foi possível entrar.';
+
+  @override
+  String deviceDefaultName(String platform) {
+    return 'Atril em $platform';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -146,5 +188,47 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String onboardingServerFailed(String domain) {
     return 'Não foi possível usar $domain.';
+  }
+
+  @override
+  String onboardingServerConfirm(String domain) {
+    return 'Continuar em $domain';
+  }
+
+  @override
+  String get signInTitle => 'Entrar';
+
+  @override
+  String signInAt(String domain) {
+    return 'Entrando em $domain.';
+  }
+
+  @override
+  String get signInIdentifierLabel => 'Nome de usuário ou e-mail';
+
+  @override
+  String get signInPasswordLabel => 'Senha';
+
+  @override
+  String get signInSubmit => 'Entrar';
+
+  @override
+  String get signInInvalidCredentials => 'Nome de usuário ou senha incorretos.';
+
+  @override
+  String get signInDeviceRevoked =>
+      'Este dispositivo foi desvinculado da conta. Peça a outro dispositivo para vinculá-lo de novo.';
+
+  @override
+  String signInUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
+  }
+
+  @override
+  String get signInFailed => 'Não foi possível entrar.';
+
+  @override
+  String deviceDefaultName(String platform) {
+    return 'Atril em $platform';
   }
 }

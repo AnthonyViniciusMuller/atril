@@ -7,8 +7,10 @@
 library;
 
 import 'package:atril/config/environment.dart';
+import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
 import 'package:atril/domain/models/server.dart';
+import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/result.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -27,6 +29,23 @@ final class FakeServerRepository implements ServerRepository {
   @override
   Future<Result<ServerDescriptor?>> current() async =>
       Result<ServerDescriptor?>.ok(node);
+
+  /// Every domain it was asked to adopt as the reader's origin.
+  final List<String> adopted = <String>[];
+
+  @override
+  Future<Result<ServerDescriptor>> adoptOrigin(String domain) async {
+    adopted.add(domain);
+
+    final descriptor = ServerDescriptor(
+      domain: domain,
+      baseUrl: 'https://$domain',
+    );
+
+    node = descriptor;
+
+    return Result<ServerDescriptor>.ok(descriptor);
+  }
 
   @override
   Future<Result<ServerDescriptor>> choose(ServerChoice choice) async {
@@ -50,6 +69,37 @@ final class FakeServerRepository implements ServerRepository {
   }
 }
 
+/// An [AuthRepository] that answers from memory.
+final class FakeAuthRepository implements AuthRepository {
+  /// Every set of credentials it was handed, in order.
+  final List<Credentials> attempts = <Credentials>[];
+
+  /// What the next sign-in fails with, or `null` to let it succeed.
+  Exception? refusal;
+
+  @override
+  Future<Result<User>> signIn(Credentials credentials) async {
+    attempts.add(credentials);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<User>.error(refused);
+    }
+
+    return Result<User>.ok(
+      User(
+        id: '22222222-2222-4222-8222-222222222222',
+        localName: credentials.identifier,
+        displayName: credentials.identifier,
+        originServerDomain: 'quire-a.example',
+        federatedId: '@${credentials.identifier}:quire-a.example',
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+  }
+}
+
 /// What an onboarding screen reads out of the tree.
 ///
 /// The environment defaults to a shipped one, so a test that says nothing gets
@@ -58,8 +108,10 @@ final class FakeServerRepository implements ServerRepository {
 /// appear in production.
 List<SingleChildWidget> onboardingProviders({
   ServerRepository? servers,
+  AuthRepository? auth,
   Environment? environment,
 }) => <SingleChildWidget>[
   Provider<Environment>.value(value: environment ?? Environment.production()),
   Provider<ServerRepository>.value(value: servers ?? FakeServerRepository()),
+  Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
 ];

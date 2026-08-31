@@ -36,6 +36,7 @@ import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
 import '../ui/onboarding/widgets/server_selection_screen.dart';
+import '../ui/onboarding/widgets/sign_in_screen.dart';
 import '../ui/settings/widgets/settings_screen.dart';
 import '../utils/logging.dart';
 import 'routes.dart';
@@ -81,6 +82,17 @@ GoRouter atrilRouter({
         path: Routes.onboarding,
         builder: (BuildContext context, GoRouterState state) =>
             const ServerSelectionScreen(),
+        // Nested, so that a reader who reaches the sign-in screen has the
+        // server selection behind it: the way back from *this is not my node*
+        // is the screen that asked, and a browser's back button lands there
+        // whether or not this app accounts for it.
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.signInSegment,
+            builder: (BuildContext context, GoRouterState state) =>
+                const SignInScreen(),
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder:

@@ -30,6 +30,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../data/repositories/auth/auth_repository.dart';
+import '../data/repositories/auth/auth_repository_impl.dart';
 import '../data/repositories/server/server_repository.dart';
 import '../data/repositories/server/server_repository_impl.dart';
 import '../data/services/api/auth_api.dart';
@@ -48,6 +50,7 @@ import '../data/services/storage/secure_session_store.dart';
 import '../data/services/storage/session_store.dart';
 import '../routing/router.dart';
 import 'environment.dart';
+import 'platform.dart';
 
 /// The graph of [environment].
 ///
@@ -168,6 +171,18 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         // flavour names rather than the one it publishes, and nothing under
         // `data/` should have to import a flavour to know that.
         endpointFor: environment.endpointFor,
+      ),
+    ),
+
+    Provider<AuthRepository>(
+      create: (BuildContext context) => AuthRepositoryImpl(
+        auth: context.read<AuthApi>(),
+        identity: database.identityDao,
+        servers: context.read<ServerRepository>(),
+        session: context.read<SessionHolder>(),
+        // Read at the edge, like every other thing this app learns from the
+        // platform rather than from the reader.
+        platform: devicePlatform,
       ),
     ),
 

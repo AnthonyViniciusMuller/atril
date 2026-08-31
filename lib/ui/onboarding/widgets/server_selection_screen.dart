@@ -14,12 +14,14 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../config/environment.dart';
 import '../../../data/repositories/server/server_repository.dart';
 import '../../../data/services/discovery/well_known.dart';
 import '../../../domain/models/server.dart';
+import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -142,6 +144,11 @@ class _ServerSelectionScreenState extends State<ServerSelectionScreen> {
             ),
           ),
         ],
+      ),
+      const SizedBox(height: 16),
+      FilledButton.tonal(
+        onPressed: () => context.go(Routes.signIn),
+        child: Text(l10n.onboardingServerConfirm(chosen.domain)),
       ),
     ];
   }

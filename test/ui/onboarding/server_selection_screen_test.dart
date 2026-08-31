@@ -113,6 +113,24 @@ void main() {
     expect(field.decoration?.errorText, contains('example.com'));
   });
 
+  testWidgets('leads on to signing in once a node is chosen', (
+    WidgetTester tester,
+  ) async {
+    final servers = FakeServerRepository();
+
+    await pump(tester, servers: servers);
+
+    // Nothing to go on to until a node has been chosen: the way onward names
+    // the node it leads to.
+    expect(find.byType(FilledButton), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'quire-a.example');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FilledButton), findsNWidgets(2));
+  });
+
   testWidgets('shows the node a returning device is already pointed at', (
     WidgetTester tester,
   ) async {

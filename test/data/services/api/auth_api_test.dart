@@ -65,7 +65,7 @@ void main() {
 
       // A device being bound for the first time learns the identifier its
       // vector-clock entries are counted under from here.
-      expect(signIn.device.id, 'd-minted');
+      expect(signIn.device.id, fakeMintedDeviceId);
       expect(signIn.device.name, 'a laptop');
     },
   );

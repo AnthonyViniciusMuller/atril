@@ -206,6 +206,72 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível usar {domain}.'**
   String onboardingServerFailed(String domain);
+
+  /// Botão que leva o leitor da tela de escolha de servidor para a tela de entrada, nomeando o servidor escolhido. Só aparece depois que a descoberta deu certo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Continuar em {domain}'**
+  String onboardingServerConfirm(String domain);
+
+  /// Título da tela de entrada, onde o leitor se autentica no servidor que escolheu. Também é o rótulo do botão que envia o formulário.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Entrar'**
+  String get signInTitle;
+
+  /// Linha abaixo do título da tela de entrada, nomeando o servidor a que as credenciais serão enviadas. Está ali porque a senha vai para esse servidor e para nenhum outro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Entrando em {domain}.'**
+  String signInAt(String domain);
+
+  /// Rótulo do campo onde o leitor se identifica. O contrato aceita as duas metades — o nome local ou o endereço — e é o cliente que decide qual foi digitado, porque um nome local não pode conter arroba e um endereço precisa.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome de usuário ou e-mail'**
+  String get signInIdentifierLabel;
+
+  /// Rótulo do campo de senha da tela de entrada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha'**
+  String get signInPasswordLabel;
+
+  /// Botão que envia as credenciais ao servidor escolhido. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Entrar'**
+  String get signInSubmit;
+
+  /// Erro mostrado quando o servidor recusou as credenciais. É deliberadamente o mesmo texto para um leitor que não existe e para uma senha errada: dizer qual das duas falhou permitiria descobrir quem tem conta no servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome de usuário ou senha incorretos.'**
+  String get signInInvalidCredentials;
+
+  /// Erro mostrado quando o servidor reconheceu as credenciais mas recusou este dispositivo, porque ele foi desvinculado. O registro dele continua existindo, então a saída é vincular de novo a partir de um dispositivo já autenticado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este dispositivo foi desvinculado da conta. Peça a outro dispositivo para vinculá-lo de novo.'**
+  String get signInDeviceRevoked;
+
+  /// Erro mostrado quando o servidor não respondeu à tentativa de entrada. É o único erro desta tela em que tentar de novo pode dar certo sem mudar nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.'**
+  String signInUnreachable(String domain);
+
+  /// Erro genérico da tela de entrada, para uma falha que não é nenhuma das outras. O detalhe fica no log, que é onde quem investiga pode lê-lo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível entrar.'**
+  String get signInFailed;
+
+  /// O nome que este dispositivo recebe na lista de dispositivos do leitor quando ele é vinculado pela primeira vez. O parâmetro é o nome próprio da plataforma — Android, iOS, Web, Linux, macOS, Windows — que não se traduz; o que esta mensagem decide é a frase em volta dele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Atril em {platform}'**
+  String deviceDefaultName(String platform);
 }
 
 class _AppLocalizationsDelegate

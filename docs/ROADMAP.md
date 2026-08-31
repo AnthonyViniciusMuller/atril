@@ -450,14 +450,28 @@ listenable would be a type no widget and no `provider` could observe.
       because there is nowhere to move on to until the two commits below exist — a selection
       screen showing what is selected is the whole of its job, and the two ways onward are added
       by the commits that create somewhere for them to go
-- [ ] `feat: add registration` — UC14. `RegisterUser` against the discovered node, the local-name
-      constraint validated client-side against the same regex the contract publishes, and the
-      server's field-level rejections rendered on the fields that caused them
-- [ ] `feat: add login and device binding` — UC07. The `DeviceBinding` carries this device's id
+**The next two are in the other order.** Registration was written down first and login has to
+land first: `RegisterUser` returns no session, so a reader who has just created an account goes
+to the sign-in screen — which means registration is reached *from* login and returns to it, and
+a registration commit landing first would end at a route that matches nothing.
+
+- [x] `feat: add login and device binding` — UC07. The `DeviceBinding` carries this device's id
       when it has one and its name and platform when it does not, and the reply is where a new
       device learns the id its vector-clock entries will be counted under. The platform string is
       free-form by design, so it says `android`, `ios`, `web`, `linux`, `macos` or `windows` and
-      the node is not redeployed to add a seventh
+      the node is not redeployed to add a seventh; it is read at the edge, in `config/platform.dart`,
+      because a repository that asked the framework what platform it was on could not be tested as
+      any other. Everything is written before the session is adopted — the device identity, the
+      origin node, the reader's row — since a device the shell believes is signed in and that
+      cannot say who as is a library it cannot fill. The screen navigates nowhere on success:
+      adopting the session is what the guard watches, and a screen that also pushed a route would
+      be a second answer to where a signed-in device belongs. `ServerRepository.adoptOrigin` is
+      the piece that was not obvious — the node answers with the domain the reader is *named* at,
+      which is allowed to differ from the one that was typed (an apex redirecting to a canonical
+      host), and a reader's row needs a catalogue entry to reference either way
+- [ ] `feat: add registration` — UC14. `RegisterUser` against the discovered node, the local-name
+      constraint validated client-side against the same regex the contract publishes, and the
+      server's field-level rejections rendered on the fields that caused them
 - [ ] `feat: add logout` — clears the session and nothing else. The device id, the local replica
       and the pending log stay, because logging out is not unbinding
 - [ ] `feat: add password recovery` — UC08. Two screens: request, and reset from a token. The

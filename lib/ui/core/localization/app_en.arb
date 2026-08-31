@@ -20,5 +20,17 @@
   "onboardingServerNotQuire": "{domain} does not publish a Quire discovery document.",
   "onboardingServerUnreachable": "{domain} did not answer. Check your connection and try again.",
   "onboardingServerInsecure": "The lookup of {domain} was redirected to an unencrypted connection and was refused.",
-  "onboardingServerFailed": "{domain} could not be used."
+  "onboardingServerFailed": "{domain} could not be used.",
+
+  "onboardingServerConfirm": "Continue at {domain}",
+  "signInTitle": "Sign in",
+  "signInAt": "Signing in at {domain}.",
+  "signInIdentifierLabel": "Username or e-mail",
+  "signInPasswordLabel": "Password",
+  "signInSubmit": "Sign in",
+  "signInInvalidCredentials": "Wrong username or password.",
+  "signInDeviceRevoked": "This device was unbound from the account. Ask another device to bind it again.",
+  "signInUnreachable": "{domain} could not be reached. Check your connection and try again.",
+  "signInFailed": "Signing in did not work.",
+  "deviceDefaultName": "Atril on {platform}"
 }

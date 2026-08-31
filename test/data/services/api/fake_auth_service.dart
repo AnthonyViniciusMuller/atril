@@ -10,6 +10,16 @@ import 'package:atril/data/services/api/generated/quire/v1/auth.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
+/// The reader this node hosts.
+///
+/// It is a uuid and not a readable name because it is stored: the local
+/// identity tables hold exactly thirty-six characters, which is what the node
+/// mints and what a test that writes one has to send.
+const String fakeReaderId = '22222222-2222-4222-8222-222222222222';
+
+/// The identifier this node mints for a device being bound for the first time.
+const String fakeMintedDeviceId = '33333333-3333-4333-8333-333333333333';
+
 /// The node, as far as a session is concerned.
 final class FakeAuthService extends AuthServiceBase {
   /// The node issuing tokens numbered from [issued].
@@ -82,7 +92,7 @@ final class FakeAuthService extends AuthServiceBase {
     return LoginResponse(
       session: _session(),
       user: User(
-        id: 'a-reader',
+        id: fakeReaderId,
         localName: 'reader',
         displayName: 'A Reader',
         originServerDomain: 'quire-a.example',
@@ -94,7 +104,9 @@ final class FakeAuthService extends AuthServiceBase {
       // from now on. A device being bound for the first time sends none and
       // learns it here.
       device: Device(
-        id: request.device.hasDeviceId() ? request.device.deviceId : 'd-minted',
+        id: request.device.hasDeviceId()
+            ? request.device.deviceId
+            : fakeMintedDeviceId,
         name: request.device.name,
         platform: request.device.platform,
         active: true,
@@ -125,7 +137,7 @@ final class FakeAuthService extends AuthServiceBase {
     _authenticate(call);
 
     return GetUserResponse(
-      user: User(id: 'a-reader', localName: 'reader'),
+      user: User(id: fakeReaderId, localName: 'reader'),
     );
   }
 

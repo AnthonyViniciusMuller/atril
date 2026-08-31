@@ -51,4 +51,16 @@ abstract interface class ServerRepository {
   /// row nothing acts on, and a node dialled and not recorded is a choice the
   /// next launch has forgotten.
   Future<Result<ServerDescriptor>> choose(ServerChoice choice);
+
+  /// Records that the reader who has just signed in is hosted at [domain], and
+  /// makes that node the origin in this device's catalogue.
+  ///
+  /// It is a separate call from [choose] because the two answer different
+  /// questions. A choice is where this device is *pointed*; an origin is where
+  /// the reader is *named*, and only a login can establish that — which is also
+  /// why the domain comes from the node's own reply rather than from what was
+  /// typed. The two are the same domain in every ordinary case and are allowed
+  /// to differ: a node identified by one host may be served from another, and
+  /// an apex that redirects to a canonical name is the shape that produces it.
+  Future<Result<ServerDescriptor>> adoptOrigin(String domain);
 }

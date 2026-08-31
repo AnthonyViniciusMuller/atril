@@ -22,6 +22,18 @@ abstract final class Routes {
   /// tests it as a prefix rather than for equality.
   static const String onboarding = '/onboarding';
 
+  /// Where a reader signs in, and where the onboarding of a device that has
+  /// chosen a node continues.
+  ///
+  /// It is below [onboarding] and not beside it, so that the guard — which
+  /// tests the prefix — lets a signed-out device reach the screen it is being
+  /// sent to use.
+  static const String signIn = '$onboarding/sign-in';
+
+  /// The path segment [signIn] is declared under, which `go_router` wants
+  /// relative to its parent.
+  static const String signInSegment = 'sign-in';
+
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 

@@ -75,4 +75,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String onboardingServerFailed(String domain) {
     return '$domain could not be used.';
   }
+
+  @override
+  String onboardingServerConfirm(String domain) {
+    return 'Continue at $domain';
+  }
+
+  @override
+  String get signInTitle => 'Sign in';
+
+  @override
+  String signInAt(String domain) {
+    return 'Signing in at $domain.';
+  }
+
+  @override
+  String get signInIdentifierLabel => 'Username or e-mail';
+
+  @override
+  String get signInPasswordLabel => 'Password';
+
+  @override
+  String get signInSubmit => 'Sign in';
+
+  @override
+  String get signInInvalidCredentials => 'Wrong username or password.';
+
+  @override
+  String get signInDeviceRevoked =>
+      'This device was unbound from the account. Ask another device to bind it again.';
+
+  @override
+  String signInUnreachable(String domain) {
+    return '$domain could not be reached. Check your connection and try again.';
+  }
+
+  @override
+  String get signInFailed => 'Signing in did not work.';
+
+  @override
+  String deviceDefaultName(String platform) {
+    return 'Atril on $platform';
+  }
 }
