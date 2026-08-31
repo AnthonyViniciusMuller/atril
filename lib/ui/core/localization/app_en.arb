@@ -4,5 +4,9 @@
   "appTitle": "Atril",
   "navigationLibrary": "Library",
   "navigationAnnotations": "Annotations",
-  "navigationSettings": "Settings"
+  "navigationSettings": "Settings",
+
+  "pageNotFoundTitle": "Page not found",
+  "pageNotFoundMessage": "The address {location} does not match any screen in this application.",
+  "pageNotFoundAction": "Go to the library"
 }

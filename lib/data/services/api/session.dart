@@ -96,6 +96,25 @@ final class SessionHolder {
   /// The refresh in flight, which is what makes a refresh single-flight.
   Future<Session?>? _refreshing;
 
+  /// What has been announced on [signedIn], so that a refresh — which adopts
+  /// a session on a device that was already signed in — does not announce a
+  /// transition that did not happen.
+  bool? _announced;
+
+  final StreamController<bool> _signedIn = StreamController<bool>.broadcast();
+
+  /// Whether this device is signed in, each time the answer changes.
+  ///
+  /// It exists for the shell's redirect and for nothing else. A guard that ran
+  /// only when the reader navigated would leave a signed-out device sitting on
+  /// the library screen until they touched something — which is precisely the
+  /// case that matters, because what signs a device out without the reader
+  /// asking is a refresh credential the node refused.
+  ///
+  /// It carries no session and no credential: what a router is entitled to
+  /// know is whether there is one.
+  Stream<bool> get signedIn => _signedIn.stream;
+
   /// Whether this device holds a credential it could still exchange.
   ///
   /// It is the question the shell's redirect asks, and it is answered without
@@ -134,8 +153,13 @@ final class SessionHolder {
     _loaded = true;
 
     await store.clear();
+    _announce(false);
     _log.info('the session ends');
   }
+
+  /// Closes [signedIn]. The session itself needs no teardown; this is the one
+  /// thing that outlives a call.
+  Future<void> dispose() => _signedIn.close();
 
   /// The access token a call should present, or `null` when this device is
   /// signed out.
@@ -264,6 +288,18 @@ final class SessionHolder {
     _credential = credential;
     _loaded = true;
     _session = session;
+
+    _announce(true);
+  }
+
+  /// Announces [signedIn] where it is not what was announced last.
+  void _announce(bool value) {
+    if (_announced == value || _signedIn.isClosed) {
+      return;
+    }
+
+    _announced = value;
+    _signedIn.add(value);
   }
 
   /// The stored credential, read once and remembered.

@@ -19,5 +19,26 @@
   "navigationSettings": "Configurações",
   "@navigationSettings": {
     "description": "O destino de navegação que reúne a conta, os dispositivos, os servidores conhecidos e o estado da sincronização. Rótulo curto, usado também como título da tela."
+  },
+
+  "pageNotFoundTitle": "Página não encontrada",
+  "@pageNotFoundTitle": {
+    "description": "Título da tela mostrada quando o endereço aberto não corresponde a nenhuma rota. Acontece sobretudo no navegador, onde o leitor pode digitar ou colar um endereço, ou voltar a um que não existe mais."
+  },
+
+  "pageNotFoundMessage": "O endereço {location} não corresponde a nenhuma tela deste aplicativo.",
+  "@pageNotFoundMessage": {
+    "description": "Corpo da tela de endereço inexistente. Mostra o endereço pedido para que o leitor reconheça o que digitou ou de onde veio o link.",
+    "placeholders": {
+      "location": {
+        "type": "String",
+        "example": "/biblioteca/42"
+      }
+    }
+  },
+
+  "pageNotFoundAction": "Ir para a biblioteca",
+  "@pageNotFoundAction": {
+    "description": "Botão da tela de endereço inexistente, que leva o leitor de volta ao acervo. É a única saída oferecida, porque um endereço inválido não tem histórico para onde voltar."
   }
 }

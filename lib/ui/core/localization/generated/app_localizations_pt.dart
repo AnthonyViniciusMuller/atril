@@ -20,6 +20,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get navigationSettings => 'Configurações';
+
+  @override
+  String get pageNotFoundTitle => 'Página não encontrada';
+
+  @override
+  String pageNotFoundMessage(String location) {
+    return 'O endereço $location não corresponde a nenhuma tela deste aplicativo.';
+  }
+
+  @override
+  String get pageNotFoundAction => 'Ir para a biblioteca';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -37,4 +48,15 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get navigationSettings => 'Configurações';
+
+  @override
+  String get pageNotFoundTitle => 'Página não encontrada';
+
+  @override
+  String pageNotFoundMessage(String location) {
+    return 'O endereço $location não corresponde a nenhuma tela deste aplicativo.';
+  }
+
+  @override
+  String get pageNotFoundAction => 'Ir para a biblioteca';
 }

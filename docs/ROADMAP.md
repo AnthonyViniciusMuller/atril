@@ -320,8 +320,20 @@ listenable would be a type no widget and no `provider` could observe.
       hold is the Brazilian text. Its four "untranslated" messages are written to a file under
       `build/` rather than onto the terminal, which is why holding `app_en.arb` to the template is
       a test and not the tool's own report
-- [ ] `feat: add routing` — `go_router`, the route table, and the redirect that sends a device
-      with no session to onboarding and one with a session away from it
+- [x] `feat: add routing` — `go_router`, the route table, and the redirect that sends a device
+      with no session to onboarding and one with a session away from it. The guard tests
+      `/onboarding` as a *prefix*, because phase 6 hangs registration, login and recovery below it
+      and an equality would bounce a signed-out device off the screens it is being sent to use.
+      The three shell destinations are branches of one `StatefulShellRoute`, so each keeps its own
+      navigator and a reader comes back to the library rather than starting it over; the shell
+      itself is a parameter, so this file holds the table and the guard and phase 5's next commit
+      supplies the surface. Not in the plan: `SessionHolder` gained a `signedIn` stream and a
+      `dispose`. A redirect that only ran on navigation would leave a device signed out by a
+      refused refresh credential sitting on the library until the reader touched something, and
+      what `GoRouter` wants for that is a `Listenable` — which `SessionHolder` cannot be, since it
+      imports nothing from Flutter. The adapter is in `routing/`. There is also a not-found
+      screen, for the one target with an address bar: `go_router`'s own error page is a stack
+      trace on a red background, and a pasted link has no history to offer a back button
 - [ ] `feat: add the adaptive scaffold` — one navigation surface expressed three ways:
       `NavigationBar` on a phone, `NavigationRail` on a tablet or a small window, and an extended
       rail on a desktop. Chosen by width and not by platform, because a resized desktop window is

@@ -58,6 +58,18 @@ dependencies:
   fixnum: ^1.1.1
   grpc: ^5.1.0
 
+  # Navigation, as the architecture guide's own sample does it: one route
+  # table, addressable locations, and a redirect that runs before a route is
+  # built. The redirect is the reason it is this package and not `Navigator`
+  # directly — the question *may this device see this screen* is asked in one
+  # place about every location, and the alternative is each screen checking for
+  # itself and one of them eventually not.
+  #
+  # It also gives the web target real URLs, which is not a nicety there: a
+  # browser has a back button and an address bar whether or not this app
+  # accounts for them.
+  go_router: ^17.4.0
+
   # The one logging substrate, and the closest thing Dart has to the log/slog
   # the node is written against: named loggers in a hierarchy, a level per
   # logger, and records a single listener decides what to do with. utils/logging

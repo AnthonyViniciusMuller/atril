@@ -122,6 +122,24 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Configurações'**
   String get navigationSettings;
+
+  /// Título da tela mostrada quando o endereço aberto não corresponde a nenhuma rota. Acontece sobretudo no navegador, onde o leitor pode digitar ou colar um endereço, ou voltar a um que não existe mais.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Página não encontrada'**
+  String get pageNotFoundTitle;
+
+  /// Corpo da tela de endereço inexistente. Mostra o endereço pedido para que o leitor reconheça o que digitou ou de onde veio o link.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O endereço {location} não corresponde a nenhuma tela deste aplicativo.'**
+  String pageNotFoundMessage(String location);
+
+  /// Botão da tela de endereço inexistente, que leva o leitor de volta ao acervo. É a única saída oferecida, porque um endereço inválido não tem histórico para onde voltar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ir para a biblioteca'**
+  String get pageNotFoundAction;
 }
 
 class _AppLocalizationsDelegate

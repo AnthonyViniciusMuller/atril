@@ -20,4 +20,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navigationSettings => 'Settings';
+
+  @override
+  String get pageNotFoundTitle => 'Page not found';
+
+  @override
+  String pageNotFoundMessage(String location) {
+    return 'The address $location does not match any screen in this application.';
+  }
+
+  @override
+  String get pageNotFoundAction => 'Go to the library';
 }
