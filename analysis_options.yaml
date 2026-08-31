@@ -1,38 +1,45 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# The analyzer configuration. `flutter_lints` is the floor; everything below it
+# is a rule this project wants argued for rather than inherited.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  # The three strict modes turn the places the analyzer would otherwise fall
+  # back on `dynamic` into diagnostics. This project maps generated protobuf
+  # messages onto domain models by hand, and an implicit downcast in a mapper
+  # is the failure that surfaces as a widget rendering the wrong field rather
+  # than as a compile error.
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  errors:
+    # Logging goes through the logger phase 2 adds, and nowhere else. A `print`
+    # left behind is invisible on five of the six targets and is the browser's
+    # console on the sixth.
+    avoid_print: error
+
+  # `flutter analyze` fails on an `info`, so the lints below do not need
+  # promoting to be enforced; only `avoid_print` is raised, because a stray
+  # `print` should also stop an IDE rather than tint a line yellow.
   exclude:
     - build/**
     - android/**
     - ios/**
+    - linux/**
+    - macos/**
     - web/**
     - windows/**
-    - macos/**
-    - linux/**
 
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
-
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # An omitted return type reads as `dynamic` and infers as whatever the body
+    # happens to produce. Every boundary in this project is typed on purpose.
+    - always_declare_return_types
+    # A local that is never reassigned says so. It is the cheapest way to keep
+    # the reconciler's per-field decisions readable.
+    - prefer_final_locals
+    # One argument per line, so that adding a field is a one-line diff and a
+    # review sees the field rather than the reflow around it.
+    - require_trailing_commas

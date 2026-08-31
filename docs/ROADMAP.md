@@ -52,10 +52,14 @@ Then, here:
       later diff is this project and not the template. All six platform directories
 - [x] `docs: add architecture and implementation roadmap` — this file and
       [`architecture.md`](architecture.md)
-- [ ] `build: tighten the analyzer` — `flutter_lints` plus the rules this project wants argued
+- [x] `build: tighten the analyzer` — `flutter_lints` plus the rules this project wants argued
       for rather than inherited: `always_declare_return_types`, `prefer_final_locals`,
-      `require_trailing_commas`, and `avoid_print` promoted to an error. `errors: missing_return:
-      error` and the strict language modes in `analysis_options.yaml`
+      `require_trailing_commas`, and `avoid_print` promoted to an error, with the three strict
+      language modes, in `analysis_options.yaml`. ~~`errors: missing_return: error`~~ is not
+      part of it: `missing_return` was replaced by `body_might_complete_normally` when Dart
+      became null-safe, and that diagnostic is already an error by default, so the line would
+      configure a code the analyzer no longer has. Checked against Dart 3.13.1 rather than
+      assumed
 - [ ] `ci: add analyze, test and build workflow` — `dart format --set-exit-if-changed`,
       `flutter analyze`, `flutter test`, and a build of each of the six targets. The Apple
       targets need a macOS runner; if none is available the workflow says so in a comment rather
