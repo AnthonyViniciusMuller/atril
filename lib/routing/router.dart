@@ -35,6 +35,7 @@ import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
+import '../ui/onboarding/widgets/register_screen.dart';
 import '../ui/onboarding/widgets/server_selection_screen.dart';
 import '../ui/onboarding/widgets/sign_in_screen.dart';
 import '../ui/settings/widgets/settings_screen.dart';
@@ -90,7 +91,15 @@ GoRouter atrilRouter({
           GoRoute(
             path: Routes.signInSegment,
             builder: (BuildContext context, GoRouterState state) =>
-                const SignInScreen(),
+                SignInScreen(
+                  identifier:
+                      state.uri.queryParameters[Routes.identifierParameter],
+                ),
+          ),
+          GoRoute(
+            path: Routes.registerSegment,
+            builder: (BuildContext context, GoRouterState state) =>
+                const RegisterScreen(),
           ),
         ],
       ),

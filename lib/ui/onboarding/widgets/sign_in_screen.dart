@@ -12,12 +12,14 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../config/platform.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../../data/repositories/server/server_repository.dart';
 import '../../../domain/models/user.dart';
+import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -37,8 +39,15 @@ const String codeDeviceRevoked = 'device_revoked';
 
 /// The sign-in screen.
 class SignInScreen extends StatefulWidget {
-  /// Creates the sign-in screen.
-  const SignInScreen({super.key});
+  /// Creates the sign-in screen, with the identifier field filled in with
+  /// [identifier] where something knows it already.
+  ///
+  /// It is what a registration hands on: a reader who has just created an
+  /// account should not have to type the name they chose a second time.
+  const SignInScreen({this.identifier, super.key});
+
+  /// The identifier to start with, or `null`.
+  final String? identifier;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -46,7 +55,9 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   late final SignInViewModel _model;
-  final TextEditingController _identifier = TextEditingController();
+  late final TextEditingController _identifier = TextEditingController(
+    text: widget.identifier,
+  );
   final TextEditingController _password = TextEditingController();
 
   @override
@@ -128,6 +139,13 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(l10n.signInSubmit),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: running
+                        ? null
+                        : () => context.go(Routes.register),
+                    child: Text(l10n.signInRegister),
                   ),
                 ],
               );

@@ -44,8 +44,49 @@ final class Credentials {
   String toString() => 'Credentials($identifier, $deviceName)';
 }
 
+/// What a reader hands over to create an account.
+final class Registration {
+  /// The account `@localName` at the node this device is talking to.
+  const Registration({
+    required this.localName,
+    required this.displayName,
+    required this.email,
+    required this.password,
+  });
+
+  /// The first half of the federated identifier. The second half is not a
+  /// parameter: it is which node the call was addressed to.
+  final String localName;
+
+  /// What the reader calls themselves, and the only name meant to be shown.
+  final String displayName;
+
+  /// The address recovery is sent to (UC08).
+  final String email;
+
+  /// The password, which reaches nothing but the node.
+  final String password;
+
+  /// The registration, without the credential.
+  @override
+  String toString() => 'Registration($localName)';
+}
+
 /// The reader signed in on this device.
 abstract interface class AuthRepository {
+  /// UC14. Creates the reader on the node this device is talking to.
+  ///
+  /// It does not sign them in, because the node does not: `RegisterUser`
+  /// answers with the reader and no session, so what follows a registration is
+  /// a login like anybody else's.
+  ///
+  /// The four inputs are checked here before anything travels, against the same
+  /// rules the node publishes. It is not distrust of the node — the node checks
+  /// them again and is the only authority on a name being *taken* — it is that
+  /// a reader who typed a capital letter into a local name should be told so by
+  /// the field, and not by a round trip.
+  Future<Result<User>> register(Registration registration);
+
   /// Signs [credentials] in, binds this device, and adopts the session.
   ///
   /// Everything it writes it writes before the session is adopted: the device

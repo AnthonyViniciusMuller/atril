@@ -32,5 +32,22 @@
   "signInDeviceRevoked": "This device was unbound from the account. Ask another device to bind it again.",
   "signInUnreachable": "{domain} could not be reached. Check your connection and try again.",
   "signInFailed": "Signing in did not work.",
-  "deviceDefaultName": "Atril on {platform}"
+  "deviceDefaultName": "Atril on {platform}",
+
+  "signInRegister": "Create an account",
+  "registerTitle": "Create an account",
+  "registerAt": "The account will be created at {domain}, and your identifier will be @name:{domain}.",
+  "registerLocalNameLabel": "Username",
+  "registerDisplayNameLabel": "Display name",
+  "registerEmailLabel": "E-mail",
+  "registerPasswordLabel": "Password",
+  "registerSubmit": "Create account",
+  "registerLocalNameInvalid": "Use only lower-case letters, digits and . - _, starting and ending with a letter or a digit.",
+  "registerLocalNameTaken": "That name belongs to somebody else on this server. The same name on another server is free.",
+  "registerDisplayNameInvalid": "The display name cannot be blank.",
+  "registerEmailInvalid": "Enter a valid e-mail address.",
+  "registerEmailTaken": "That address is already registered on this server.",
+  "registerPasswordInvalid": "The password must be at least 8 characters long.",
+  "registerFailed": "The account could not be created.",
+  "registerUnreachable": "{domain} could not be reached. Check your connection and try again."
 }

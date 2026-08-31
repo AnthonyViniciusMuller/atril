@@ -81,12 +81,19 @@ void main() {
   });
 
   test('the translations are not left as the template', () {
-    // A copied ARB whose values were never translated passes every other
-    // check here. `appTitle` is exempt: it is a proper noun and is the same
-    // word in both.
-    const Set<String> properNouns = <String>{'appTitle'};
+    // A copied ARB whose values were never translated passes every other check
+    // here. What is exempt is what is genuinely the same in both languages: a
+    // proper noun, and the handful of words Portuguese borrowed unchanged. The
+    // set is written out rather than inferred, so that adding to it is a
+    // decision somebody made about one message.
+    const Set<String> sameInBoth = <String>{
+      // The name of the app.
+      'appTitle',
+      // Portuguese writes it exactly as English does, hyphen included.
+      'registerEmailLabel',
+    };
 
-    for (final message in messagesOf(template).difference(properNouns)) {
+    for (final message in messagesOf(template).difference(sameInBoth)) {
       expect(
         english[message],
         isNot(template[message]),

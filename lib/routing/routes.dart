@@ -34,6 +34,23 @@ abstract final class Routes {
   /// relative to its parent.
   static const String signInSegment = 'sign-in';
 
+  /// Where a reader with no account creates one.
+  ///
+  /// It is reached from [signIn] and returns to it, because `RegisterUser`
+  /// answers with the reader and no session: what follows a registration is a
+  /// login like anybody else's.
+  static const String register = '$onboarding/register';
+
+  /// The path segment [register] is declared under.
+  static const String registerSegment = 'register';
+
+  /// The query parameter [signIn] pre-fills its identifier from.
+  ///
+  /// It is how a registration hands the reader on without the two screens
+  /// holding a shared object: a location carries what the next screen needs,
+  /// which is also what makes the hand-off survive a reload in a browser.
+  static const String identifierParameter = 'identifier';
+
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 

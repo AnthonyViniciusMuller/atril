@@ -272,6 +272,102 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Atril em {platform}'**
   String deviceDefaultName(String platform);
+
+  /// Ação secundária da tela de entrada, para quem ainda não tem conta no servidor escolhido. Leva à tela de cadastro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Criar uma conta'**
+  String get signInRegister;
+
+  /// Título da tela de cadastro, onde o leitor cria uma conta no servidor que escolheu.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Criar uma conta'**
+  String get registerTitle;
+
+  /// Linha abaixo do título da tela de cadastro. Nomeia o servidor e explica que o domínio dele passa a ser a segunda metade do identificador do leitor — não é uma escolha que possa ser mudada depois sem migrar de servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A conta será criada em {domain}, e seu identificador será @nome:{domain}.'**
+  String registerAt(String domain);
+
+  /// Rótulo do campo do nome local, a primeira metade do identificador federado. Só aceita letras minúsculas, dígitos e os separadores ponto, hífen e sublinhado, porque o valor vai embutido em URLs, em tokens e em buscas .well-known.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome de usuário'**
+  String get registerLocalNameLabel;
+
+  /// Rótulo do campo do nome que o leitor quer que apareça. É o único nome pensado para ser mostrado, e aceita qualquer texto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome exibido'**
+  String get registerDisplayNameLabel;
+
+  /// Rótulo do campo de endereço. É para onde a recuperação de senha é enviada, e é o único dado pessoal que não sai do servidor de origem.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'E-mail'**
+  String get registerEmailLabel;
+
+  /// Rótulo do campo de senha da tela de cadastro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha'**
+  String get registerPasswordLabel;
+
+  /// Botão que envia o cadastro ao servidor escolhido. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Criar conta'**
+  String get registerSubmit;
+
+  /// Erro do campo de nome de usuário quando ele não tem a forma que o servidor aceita. Diz a regra inteira em vez de qual parte foi quebrada, porque a regra é curta e o leitor precisa dela para corrigir.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Use apenas letras minúsculas, dígitos e . - _, começando e terminando com letra ou dígito.'**
+  String get registerLocalNameInvalid;
+
+  /// Erro do campo de nome de usuário quando o servidor recusou por já existir. A segunda frase não é consolo: em uma federação, o identificador só é único dentro de um servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esse nome já é de outra pessoa neste servidor. O mesmo nome em outro servidor está livre.'**
+  String get registerLocalNameTaken;
+
+  /// Erro do campo de nome exibido. É o único caso que o esquema não recusa sozinho, e um nome em branco deixaria o leitor sem nada para mostrar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O nome exibido não pode ficar em branco.'**
+  String get registerDisplayNameInvalid;
+
+  /// Erro do campo de e-mail quando o endereço não tem a forma mínima que o servidor aceita: algo, uma arroba, algo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Digite um endereço de e-mail válido.'**
+  String get registerEmailInvalid;
+
+  /// Erro do campo de e-mail quando o servidor recusou por já existir.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esse endereço já está cadastrado neste servidor.'**
+  String get registerEmailTaken;
+
+  /// Erro do campo de senha. O piso de oito caracteres é o que a NIST SP 800-63B pede de um segredo memorizado; a mensagem não pede maiúsculas nem símbolos porque o mesmo documento retirou essa exigência.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A senha precisa ter pelo menos 8 caracteres.'**
+  String get registerPasswordInvalid;
+
+  /// Erro geral da tela de cadastro, para uma falha que nenhum campo explica. O detalhe fica no log.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível criar a conta.'**
+  String get registerFailed;
+
+  /// Erro geral da tela de cadastro quando o servidor não respondeu. É o único desta tela em que tentar de novo pode dar certo sem mudar nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.'**
+  String registerUnreachable(String domain);
 }
 
 class _AppLocalizationsDelegate

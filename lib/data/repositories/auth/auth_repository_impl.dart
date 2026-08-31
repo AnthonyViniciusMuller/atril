@@ -5,6 +5,7 @@ library;
 import '../../../domain/models/device.dart';
 import '../../../domain/models/server.dart';
 import '../../../domain/models/user.dart';
+import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
 import '../../services/api/auth_api.dart';
@@ -18,6 +19,9 @@ final _log = loggerFor('data/auth');
 
 /// The operation a sign-in reports under.
 const String opSignIn = 'identity/session: sign in';
+
+/// The operation a registration reports under.
+const String opRegisterUser = 'identity/user: register';
 
 /// The reader signed in on this device.
 final class AuthRepositoryImpl implements AuthRepository {
@@ -56,6 +60,58 @@ final class AuthRepositoryImpl implements AuthRepository {
   final String platform;
 
   final DateTime Function() _clock;
+
+  @override
+  Future<Result<User>> register(Registration registration) async {
+    final localName = canonicalLocalName(registration.localName);
+    final displayName = registration.displayName.trim();
+    final email = registration.email.trim();
+
+    // Every violation and not the first one: a form that reported one field at
+    // a time would make the reader submit four times to learn four things the
+    // client already knew.
+    final refused = <String, String>{
+      if (localNameViolation(localName) case final String why)
+        'local_name': why,
+      if (displayNameViolation(displayName) case final String why)
+        'display_name': why,
+      if (emailViolation(email) case final String why) 'email': why,
+      if (passwordViolation(registration.password) case final String why)
+        'password': why,
+    };
+
+    if (refused.isNotEmpty) {
+      return Result<User>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'the registration was refused before it was sent',
+          op: opRegisterUser,
+        ).withFields(<FieldFailure>[
+          for (final MapEntry<String, String> entry in refused.entries)
+            FieldFailure(entry.key, entry.value),
+        ]),
+      );
+    }
+
+    try {
+      final user = await auth.registerUser(
+        localName: localName,
+        displayName: displayName,
+        email: email,
+        password: registration.password,
+      );
+
+      // Nothing is written here. A registration is an account on a node, not a
+      // reader on this device: what makes this device that reader's is the
+      // login that follows, and a row written now would describe somebody
+      // nobody has proved they are.
+      _log.info('${user.federatedId} was created');
+
+      return Result<User>.ok(user);
+    } on Exception catch (error) {
+      return Result<User>.error(failureFrom(error, op: opRegisterUser));
+    }
+  }
 
   @override
   Future<Result<User>> signIn(Credentials credentials) async {

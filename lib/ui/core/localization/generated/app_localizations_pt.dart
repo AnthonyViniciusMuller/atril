@@ -117,6 +117,63 @@ class AppLocalizationsPt extends AppLocalizations {
   String deviceDefaultName(String platform) {
     return 'Atril em $platform';
   }
+
+  @override
+  String get signInRegister => 'Criar uma conta';
+
+  @override
+  String get registerTitle => 'Criar uma conta';
+
+  @override
+  String registerAt(String domain) {
+    return 'A conta será criada em $domain, e seu identificador será @nome:$domain.';
+  }
+
+  @override
+  String get registerLocalNameLabel => 'Nome de usuário';
+
+  @override
+  String get registerDisplayNameLabel => 'Nome exibido';
+
+  @override
+  String get registerEmailLabel => 'E-mail';
+
+  @override
+  String get registerPasswordLabel => 'Senha';
+
+  @override
+  String get registerSubmit => 'Criar conta';
+
+  @override
+  String get registerLocalNameInvalid =>
+      'Use apenas letras minúsculas, dígitos e . - _, começando e terminando com letra ou dígito.';
+
+  @override
+  String get registerLocalNameTaken =>
+      'Esse nome já é de outra pessoa neste servidor. O mesmo nome em outro servidor está livre.';
+
+  @override
+  String get registerDisplayNameInvalid =>
+      'O nome exibido não pode ficar em branco.';
+
+  @override
+  String get registerEmailInvalid => 'Digite um endereço de e-mail válido.';
+
+  @override
+  String get registerEmailTaken =>
+      'Esse endereço já está cadastrado neste servidor.';
+
+  @override
+  String get registerPasswordInvalid =>
+      'A senha precisa ter pelo menos 8 caracteres.';
+
+  @override
+  String get registerFailed => 'Não foi possível criar a conta.';
+
+  @override
+  String registerUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -230,5 +287,62 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String deviceDefaultName(String platform) {
     return 'Atril em $platform';
+  }
+
+  @override
+  String get signInRegister => 'Criar uma conta';
+
+  @override
+  String get registerTitle => 'Criar uma conta';
+
+  @override
+  String registerAt(String domain) {
+    return 'A conta será criada em $domain, e seu identificador será @nome:$domain.';
+  }
+
+  @override
+  String get registerLocalNameLabel => 'Nome de usuário';
+
+  @override
+  String get registerDisplayNameLabel => 'Nome exibido';
+
+  @override
+  String get registerEmailLabel => 'E-mail';
+
+  @override
+  String get registerPasswordLabel => 'Senha';
+
+  @override
+  String get registerSubmit => 'Criar conta';
+
+  @override
+  String get registerLocalNameInvalid =>
+      'Use apenas letras minúsculas, dígitos e . - _, começando e terminando com letra ou dígito.';
+
+  @override
+  String get registerLocalNameTaken =>
+      'Esse nome já é de outra pessoa neste servidor. O mesmo nome em outro servidor está livre.';
+
+  @override
+  String get registerDisplayNameInvalid =>
+      'O nome exibido não pode ficar em branco.';
+
+  @override
+  String get registerEmailInvalid => 'Digite um endereço de e-mail válido.';
+
+  @override
+  String get registerEmailTaken =>
+      'Esse endereço já está cadastrado neste servidor.';
+
+  @override
+  String get registerPasswordInvalid =>
+      'A senha precisa ter pelo menos 8 caracteres.';
+
+  @override
+  String get registerFailed => 'Não foi possível criar a conta.';
+
+  @override
+  String registerUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
   }
 }

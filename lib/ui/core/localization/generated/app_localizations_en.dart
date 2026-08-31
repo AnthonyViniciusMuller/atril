@@ -117,4 +117,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String deviceDefaultName(String platform) {
     return 'Atril on $platform';
   }
+
+  @override
+  String get signInRegister => 'Create an account';
+
+  @override
+  String get registerTitle => 'Create an account';
+
+  @override
+  String registerAt(String domain) {
+    return 'The account will be created at $domain, and your identifier will be @name:$domain.';
+  }
+
+  @override
+  String get registerLocalNameLabel => 'Username';
+
+  @override
+  String get registerDisplayNameLabel => 'Display name';
+
+  @override
+  String get registerEmailLabel => 'E-mail';
+
+  @override
+  String get registerPasswordLabel => 'Password';
+
+  @override
+  String get registerSubmit => 'Create account';
+
+  @override
+  String get registerLocalNameInvalid =>
+      'Use only lower-case letters, digits and . - _, starting and ending with a letter or a digit.';
+
+  @override
+  String get registerLocalNameTaken =>
+      'That name belongs to somebody else on this server. The same name on another server is free.';
+
+  @override
+  String get registerDisplayNameInvalid => 'The display name cannot be blank.';
+
+  @override
+  String get registerEmailInvalid => 'Enter a valid e-mail address.';
+
+  @override
+  String get registerEmailTaken =>
+      'That address is already registered on this server.';
+
+  @override
+  String get registerPasswordInvalid =>
+      'The password must be at least 8 characters long.';
+
+  @override
+  String get registerFailed => 'The account could not be created.';
+
+  @override
+  String registerUnreachable(String domain) {
+    return '$domain could not be reached. Check your connection and try again.';
+  }
 }

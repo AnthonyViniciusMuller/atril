@@ -205,5 +205,97 @@
         "example": "Linux"
       }
     }
+  },
+
+  "signInRegister": "Criar uma conta",
+  "@signInRegister": {
+    "description": "Ação secundária da tela de entrada, para quem ainda não tem conta no servidor escolhido. Leva à tela de cadastro."
+  },
+
+  "registerTitle": "Criar uma conta",
+  "@registerTitle": {
+    "description": "Título da tela de cadastro, onde o leitor cria uma conta no servidor que escolheu."
+  },
+
+  "registerAt": "A conta será criada em {domain}, e seu identificador será @nome:{domain}.",
+  "@registerAt": {
+    "description": "Linha abaixo do título da tela de cadastro. Nomeia o servidor e explica que o domínio dele passa a ser a segunda metade do identificador do leitor — não é uma escolha que possa ser mudada depois sem migrar de servidor.",
+    "placeholders": {
+      "domain": {
+        "type": "String",
+        "example": "quire-a.example"
+      }
+    }
+  },
+
+  "registerLocalNameLabel": "Nome de usuário",
+  "@registerLocalNameLabel": {
+    "description": "Rótulo do campo do nome local, a primeira metade do identificador federado. Só aceita letras minúsculas, dígitos e os separadores ponto, hífen e sublinhado, porque o valor vai embutido em URLs, em tokens e em buscas .well-known."
+  },
+
+  "registerDisplayNameLabel": "Nome exibido",
+  "@registerDisplayNameLabel": {
+    "description": "Rótulo do campo do nome que o leitor quer que apareça. É o único nome pensado para ser mostrado, e aceita qualquer texto."
+  },
+
+  "registerEmailLabel": "E-mail",
+  "@registerEmailLabel": {
+    "description": "Rótulo do campo de endereço. É para onde a recuperação de senha é enviada, e é o único dado pessoal que não sai do servidor de origem."
+  },
+
+  "registerPasswordLabel": "Senha",
+  "@registerPasswordLabel": {
+    "description": "Rótulo do campo de senha da tela de cadastro."
+  },
+
+  "registerSubmit": "Criar conta",
+  "@registerSubmit": {
+    "description": "Botão que envia o cadastro ao servidor escolhido. Rótulo curto."
+  },
+
+  "registerLocalNameInvalid": "Use apenas letras minúsculas, dígitos e . - _, começando e terminando com letra ou dígito.",
+  "@registerLocalNameInvalid": {
+    "description": "Erro do campo de nome de usuário quando ele não tem a forma que o servidor aceita. Diz a regra inteira em vez de qual parte foi quebrada, porque a regra é curta e o leitor precisa dela para corrigir."
+  },
+
+  "registerLocalNameTaken": "Esse nome já é de outra pessoa neste servidor. O mesmo nome em outro servidor está livre.",
+  "@registerLocalNameTaken": {
+    "description": "Erro do campo de nome de usuário quando o servidor recusou por já existir. A segunda frase não é consolo: em uma federação, o identificador só é único dentro de um servidor."
+  },
+
+  "registerDisplayNameInvalid": "O nome exibido não pode ficar em branco.",
+  "@registerDisplayNameInvalid": {
+    "description": "Erro do campo de nome exibido. É o único caso que o esquema não recusa sozinho, e um nome em branco deixaria o leitor sem nada para mostrar."
+  },
+
+  "registerEmailInvalid": "Digite um endereço de e-mail válido.",
+  "@registerEmailInvalid": {
+    "description": "Erro do campo de e-mail quando o endereço não tem a forma mínima que o servidor aceita: algo, uma arroba, algo."
+  },
+
+  "registerEmailTaken": "Esse endereço já está cadastrado neste servidor.",
+  "@registerEmailTaken": {
+    "description": "Erro do campo de e-mail quando o servidor recusou por já existir."
+  },
+
+  "registerPasswordInvalid": "A senha precisa ter pelo menos 8 caracteres.",
+  "@registerPasswordInvalid": {
+    "description": "Erro do campo de senha. O piso de oito caracteres é o que a NIST SP 800-63B pede de um segredo memorizado; a mensagem não pede maiúsculas nem símbolos porque o mesmo documento retirou essa exigência."
+  },
+
+  "registerFailed": "Não foi possível criar a conta.",
+  "@registerFailed": {
+    "description": "Erro geral da tela de cadastro, para uma falha que nenhum campo explica. O detalhe fica no log."
+  },
+
+  "registerUnreachable": "Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.",
+  "@registerUnreachable": {
+    "description": "Erro geral da tela de cadastro quando o servidor não respondeu. É o único desta tela em que tentar de novo pode dar certo sem mudar nada.",
+    "placeholders": {
+      "domain": {
+        "type": "String",
+        "example": "quire-a.example"
+      }
+    }
   }
 }

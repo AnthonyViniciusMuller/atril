@@ -469,9 +469,18 @@ a registration commit landing first would end at a route that matches nothing.
       the piece that was not obvious — the node answers with the domain the reader is *named* at,
       which is allowed to differ from the one that was typed (an apex redirecting to a canonical
       host), and a reader's row needs a catalogue entry to reference either way
-- [ ] `feat: add registration` — UC14. `RegisterUser` against the discovered node, the local-name
-      constraint validated client-side against the same regex the contract publishes, and the
-      server's field-level rejections rendered on the fields that caused them
+- [x] `feat: add registration` — UC14. `RegisterUser` against the discovered node, the four
+      constraints validated client-side against the same rules the contract publishes — written
+      out rather than compiled as a pattern, as `internal/identity/domain/user` writes them, so
+      that a violation can say which part was broken — and the server's field-level rejections
+      rendered on the fields that caused them. One mapping serves both, because the field names
+      are the contract's own: a `BadRequest` names `local_name`, and so does the check that ran
+      before anything travelled. Every violation is reported and not the first, since a form
+      answering one field at a time makes the reader submit four times to learn four things the
+      client already knew. Nothing is written locally: a registration is an account on a node and
+      not a reader on this device, and what makes this device that reader's is the login that
+      follows — which is where the screen hands them, with the name they chose carried in the
+      location so that the hand-off survives a reload in a browser
 - [ ] `feat: add logout` — clears the session and nothing else. The device id, the local replica
       and the pending log stay, because logging out is not unbinding
 - [ ] `feat: add password recovery` — UC08. Two screens: request, and reset from a token. The

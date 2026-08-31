@@ -15,6 +15,7 @@ import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
+import 'package:atril/ui/onboarding/widgets/register_screen.dart';
 import 'package:atril/ui/onboarding/widgets/server_selection_screen.dart';
 import 'package:atril/ui/settings/widgets/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -159,7 +160,7 @@ void main() {
       final session = _holder();
       final router = atrilRouter(
         session: session,
-        initialLocation: '${Routes.onboarding}/register',
+        initialLocation: Routes.register,
       );
 
       addTearDown(router.dispose);
@@ -167,9 +168,7 @@ void main() {
 
       await _pump(tester, router);
 
-      // No such route exists yet, so what proves the guard let it through is
-      // that the router got as far as failing to match it.
-      expect(find.byType(NotFoundScreen), findsOneWidget);
+      expect(find.byType(RegisterScreen), findsOneWidget);
     });
   });
 

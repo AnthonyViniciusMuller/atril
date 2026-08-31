@@ -43,6 +43,12 @@ final class FakeAuthService extends AuthServiceBase {
   /// How many refreshes this node has served.
   int refreshes = 0;
 
+  /// Every registration this node was sent, in order.
+  final List<RegisterUserRequest> registered = <RegisterUserRequest>[];
+
+  /// The local name this node answers `ALREADY_EXISTS` for.
+  static const String takenLocalName = 'taken';
+
   /// Issues the next pair, as a rotation does.
   Session rotate() {
     _issued++;
@@ -142,6 +148,33 @@ final class FakeAuthService extends AuthServiceBase {
   }
 
   @override
+  Future<RegisterUserResponse> registerUser(
+    ServiceCall call,
+    RegisterUserRequest request,
+  ) async {
+    _record(call);
+    registered.add(request);
+
+    if (request.localName == takenLocalName) {
+      throw GrpcError.alreadyExists('that name is already taken here');
+    }
+
+    // Public, and answering with no session: what follows a registration is a
+    // login like anybody else's.
+    return RegisterUserResponse(
+      user: User(
+        id: fakeReaderId,
+        localName: request.localName,
+        displayName: request.displayName,
+        originServerDomain: 'quire-a.example',
+        federatedId: '@${request.localName}:quire-a.example',
+        email: request.email,
+        createdAt: Timestamp.fromDateTime(DateTime.utc(2026, 1, 2, 3, 4, 5)),
+      ),
+    );
+  }
+
+  @override
   Future<LogoutResponse> logout(ServiceCall call, LogoutRequest request) async {
     _record(call);
 
@@ -153,12 +186,6 @@ final class FakeAuthService extends AuthServiceBase {
   // is louder than a null.
 
   Never _unimplemented() => throw GrpcError.unimplemented('not in this fake');
-
-  @override
-  Future<RegisterUserResponse> registerUser(
-    ServiceCall call,
-    RegisterUserRequest request,
-  ) async => _unimplemented();
 
   @override
   Future<UpdateUserResponse> updateUser(

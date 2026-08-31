@@ -105,14 +105,14 @@ void main() {
   test('a refusal arrives as the vocabulary, naming the operation', () async {
     await expectLater(
       api.registerUser(
-        localName: 'reader',
+        localName: FakeAuthService.takenLocalName,
         displayName: 'A Reader',
         email: 'reader@quire-a.example',
         password: 'a passphrase',
       ),
       throwsA(
         isA<AppException>()
-            .having((e) => e.kind, 'kind', ErrorKind.unimplemented)
+            .having((e) => e.kind, 'kind', ErrorKind.alreadyExists)
             .having((e) => e.op, 'op', opRegister),
       ),
     );

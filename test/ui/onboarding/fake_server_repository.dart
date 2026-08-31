@@ -77,6 +77,22 @@ final class FakeAuthRepository implements AuthRepository {
   /// What the next sign-in fails with, or `null` to let it succeed.
   Exception? refusal;
 
+  /// Every registration it was handed, in order.
+  final List<Registration> registrations = <Registration>[];
+
+  @override
+  Future<Result<User>> register(Registration registration) async {
+    registrations.add(registration);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<User>.error(refused);
+    }
+
+    return Result<User>.ok(_reader(registration.localName));
+  }
+
   @override
   Future<Result<User>> signIn(Credentials credentials) async {
     attempts.add(credentials);
@@ -87,17 +103,17 @@ final class FakeAuthRepository implements AuthRepository {
       return Result<User>.error(refused);
     }
 
-    return Result<User>.ok(
-      User(
-        id: '22222222-2222-4222-8222-222222222222',
-        localName: credentials.identifier,
-        displayName: credentials.identifier,
-        originServerDomain: 'quire-a.example',
-        federatedId: '@${credentials.identifier}:quire-a.example',
-        createdAt: DateTime.utc(2026),
-      ),
-    );
+    return Result<User>.ok(_reader(credentials.identifier));
   }
+
+  User _reader(String localName) => User(
+    id: '22222222-2222-4222-8222-222222222222',
+    localName: localName,
+    displayName: localName,
+    originServerDomain: 'quire-a.example',
+    federatedId: '@$localName:quire-a.example',
+    createdAt: DateTime.utc(2026),
+  );
 }
 
 /// What an onboarding screen reads out of the tree.

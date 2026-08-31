@@ -182,6 +182,62 @@ void main() {
     expect(await database.identityDao.reader(), isNull);
   });
 
+  group('registration', () {
+    const Registration valid = Registration(
+      localName: 'ana',
+      displayName: 'Ana Maria',
+      email: 'ana@quire-a.example',
+      password: 'a passphrase',
+    );
+
+    test('creates the reader and signs nobody in', () async {
+      final result = await auth.register(valid);
+
+      expect(result.errorOrNull, isNull);
+
+      // A registration is an account on a node, not a reader on this device:
+      // what makes this device that reader's is the login that follows.
+      expect(await session.isSignedIn, isFalse);
+      expect(await database.identityDao.reader(), isNull);
+    });
+
+    test('folds the local name to the form uniqueness is decided on', () async {
+      // The node folds too. Doing it here as well is what registers a reader
+      // who capitalizes their own name instead of rejecting them.
+      final result = await auth.register(
+        const Registration(
+          localName: '  Ana  ',
+          displayName: 'Ana Maria',
+          email: 'ana@quire-a.example',
+          password: 'a passphrase',
+        ),
+      );
+
+      expect(result.errorOrNull, isNull);
+    });
+
+    test('reports every violation it found, before anything travels', () async {
+      // A form that reported one field at a time would make the reader submit
+      // four times to learn four things this device already knew.
+      final result = await auth.register(
+        const Registration(
+          localName: 'Ana Maria',
+          displayName: '',
+          email: 'ana',
+          password: 'short',
+        ),
+      );
+
+      final refusal = result.errorOrNull! as AppException;
+
+      expect(refusal.kind, ErrorKind.invalidArgument);
+      expect(
+        refusal.fields.map((FieldFailure failure) => failure.name),
+        <String>['local_name', 'display_name', 'email', 'password'],
+      );
+    });
+  });
+
   test('an origin the device never discovered is refused', () async {
     // A node answering for a domain nothing looked up, on a device that has
     // chosen nothing, is a claim with no record behind it.
