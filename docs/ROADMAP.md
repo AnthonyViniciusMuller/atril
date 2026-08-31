@@ -560,10 +560,18 @@ that reason.
       delta restating a title the reader never touched carries this device's claim to it, and the
       next merge against a device that *did* change it is settled by a tie-break rather than by
       what anybody meant
-- [ ] `feat: resolve the associative entities by natural key` — C18. An operation on a filing
+- [x] `feat: resolve the associative entities by natural key` — C18. An operation on a filing
       carries `(ebook_id, collection_id)` in its delta and an operation on a position carries
       `ebook_id`, the device half being the authoring device by C05. The surrogate id is
-      provenance
+      provenance, and it is read back out of `record_versions` rather than minted per write —
+      checked against `internal/sync/infra/service/records/{membership,progress}.go` rather than
+      assumed, which is also where the third finding came from: **the node ignores the kind of
+      change on both of them.** A filing is a register, so filing and unfiling are the two
+      directions and there is no update between them; a position is refused only a deletion, and
+      insert against update is not distinguished at all. So the author derives the position's
+      kind instead of asking for it — a position has exactly one writer (C05), so whether there
+      is one to update is exactly whether this device has written one before, which is a question
+      no caller should have to answer
 - [ ] `test: pin the write path against the contract` — a test that walks `lib/` and fails if
       anything calls one of the eleven write RPCs. It is the executable form of the rule in
       [`architecture.md`](architecture.md), and it is what makes the rule survive a future session

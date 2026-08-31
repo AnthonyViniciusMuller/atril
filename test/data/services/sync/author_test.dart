@@ -19,6 +19,7 @@ const String _work = 'aaaaaaaa-1111-4111-8111-111111111111';
 const String _shelf = 'bbbbbbbb-1111-4111-8111-111111111111';
 const String _hash =
     '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+const String _locator = 'epubcfi(/6/14[chap05ref]!/4[body01]/10[para05]/1:1)';
 
 final DateTime _at = DateTime.utc(2026, 3, 14, 15, 9, 26);
 
@@ -99,6 +100,16 @@ Operation _remote({
   vectorClock: VectorClock.of(<String, int>{_there: counter}),
   createdAt: _at.add(at),
 );
+
+/// The two records C18 is about need both halves of their pair to exist.
+Future<void> _shelve(_Fixture fixture) async {
+  await fixture.author.write(Change.insert(TargetEntity.ebook, _work, _import));
+  await fixture.author.write(
+    Change.insert(TargetEntity.collection, _shelf, <String, Object?>{
+      fieldName: 'Para reler',
+    }),
+  );
+}
 
 void main() {
   group('a change this device authors', () {
@@ -271,6 +282,219 @@ void main() {
         operation.createdAt.isAfter(_at.add(const Duration(days: 30))),
         isTrue,
       );
+    });
+  });
+
+  group('a filing', () {
+    test(
+      'is addressed by its pair and named by what this replica minted',
+      () async {
+        final fixture = await _open();
+
+        await _shelve(fixture);
+
+        final operation = await fixture.author.write(
+          Change.filing(ebookId: _work, collectionId: _shelf),
+        );
+
+        expect(operation.entity, TargetEntity.ebookCollection);
+        expect(operation.kind, OperationKind.insert);
+        expect(operation.delta, <String, Object?>{
+          fieldEbookId: _work,
+          fieldCollectionId: _shelf,
+        });
+
+        final stored = await fixture.database
+            .select(fixture.database.ebookCollections)
+            .getSingle();
+
+        expect(stored.id, operation.targetId);
+        expect(stored.ebookId, _work);
+        expect(stored.collectionId, _shelf);
+        expect(stored.deleted, isFalse);
+      },
+    );
+
+    test('keeps the identifier this device minted for it', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+
+      final filed = await fixture.author.write(
+        Change.filing(ebookId: _work, collectionId: _shelf),
+      );
+      final unfiled = await fixture.author.write(
+        Change.unfiling(ebookId: _work, collectionId: _shelf),
+      );
+      final refiled = await fixture.author.write(
+        Change.filing(ebookId: _work, collectionId: _shelf),
+      );
+
+      expect(unfiled.targetId, filed.targetId);
+      expect(refiled.targetId, filed.targetId);
+
+      final rows = await fixture.database
+          .select(fixture.database.ebookCollections)
+          .get();
+
+      expect(rows, hasLength(1));
+      expect(rows.single.deleted, isFalse);
+      expect(refiled.vectorClock, VectorClock.of(<String, int>{_here: 3}));
+    });
+
+    test('is a register and not a row, so unfiling tombstones it', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+      await fixture.author.write(
+        Change.filing(ebookId: _work, collectionId: _shelf),
+      );
+      final unfiled = await fixture.author.write(
+        Change.unfiling(ebookId: _work, collectionId: _shelf),
+      );
+
+      expect(unfiled.kind, OperationKind.delete);
+
+      final stored = await fixture.database
+          .select(fixture.database.ebookCollections)
+          .getSingle();
+
+      expect(stored.deleted, isTrue);
+    });
+
+    test('reuses the identifier a seed already minted', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+
+      // What `ReplicaSeeder` leaves behind: a row with no causal history, and
+      // the identifier this replica filed it under.
+      const String seeded = 'ffffffff-1111-4111-8111-111111111111';
+
+      await fixture.database.recordsDao.remember(
+        RecordKey.filing(ebookId: _work, collectionId: _shelf),
+        recordId: seeded,
+        clock: VectorClock.empty,
+      );
+
+      final operation = await fixture.author.write(
+        Change.filing(ebookId: _work, collectionId: _shelf),
+      );
+
+      expect(operation.targetId, seeded);
+    });
+  });
+
+  group('a reading position', () {
+    test('carries the work and never the device', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+
+      final operation = await fixture.author.write(
+        Change.position(
+          ebookId: _work,
+          delta: <String, Object?>{fieldLocator: _locator, fieldPercent: 12.5},
+        ),
+      );
+
+      expect(operation.entity, TargetEntity.readingProgress);
+      expect(operation.delta.containsKey(fieldEbookId), isTrue);
+      expect(operation.delta.containsKey('device_id'), isFalse);
+
+      final stored = await fixture.database
+          .select(fixture.database.progress)
+          .getSingle();
+
+      expect(stored.deviceId, _here);
+      expect(stored.locator, _locator);
+      expect(stored.percent, 12.5);
+    });
+
+    test('is inserted once and updated after, without being asked', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+
+      final first = await fixture.author.write(
+        Change.position(
+          ebookId: _work,
+          delta: <String, Object?>{fieldLocator: _locator},
+        ),
+      );
+      final second = await fixture.author.write(
+        Change.position(
+          ebookId: _work,
+          delta: <String, Object?>{fieldLocator: 'epubcfi(/6/16!/4/2/2:0)'},
+        ),
+      );
+
+      expect(first.kind, OperationKind.insert);
+      expect(second.kind, OperationKind.update);
+      expect(second.targetId, first.targetId);
+      expect(second.vectorClock, VectorClock.of(<String, int>{_here: 2}));
+
+      final rows = await fixture.database
+          .select(fixture.database.progress)
+          .get();
+
+      expect(rows, hasLength(1));
+      expect(rows.single.locator, 'epubcfi(/6/16!/4/2/2:0)');
+    });
+
+    test('leaves another device\'s position alone', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+
+      await fixture.reconciler.reconcile(
+        _remote(
+          targetId: 'dddddddd-1111-4111-8111-111111111111',
+          entity: TargetEntity.readingProgress,
+          delta: <String, Object?>{
+            fieldEbookId: _work,
+            fieldLocator: 'epubcfi(/6/2!/4/2/2:0)',
+          },
+        ),
+      );
+
+      await fixture.author.write(
+        Change.position(
+          ebookId: _work,
+          delta: <String, Object?>{fieldLocator: _locator},
+        ),
+      );
+
+      final rows = await fixture.database
+          .select(fixture.database.progress)
+          .get();
+      final byDevice = <String, String>{
+        for (final row in rows) row.deviceId: row.locator,
+      };
+
+      expect(byDevice, <String, String>{
+        _here: _locator,
+        _there: 'epubcfi(/6/2!/4/2/2:0)',
+      });
+    });
+
+    test('remembers a version only for the position it owns', () async {
+      final fixture = await _open();
+
+      await _shelve(fixture);
+      await fixture.author.write(
+        Change.position(
+          ebookId: _work,
+          delta: <String, Object?>{fieldLocator: _locator},
+        ),
+      );
+
+      final version = await fixture.database.recordsDao.versionOf(
+        RecordKey.position(ebookId: _work),
+      );
+
+      expect(version, isNotNull);
+      expect(version!.vectorClock, VectorClock.of(<String, int>{_here: 1}));
     });
   });
 

@@ -29,6 +29,15 @@
 /// still what performs it, and that is a narrowing of the rule rather than a
 /// departure from it.
 ///
+/// **Three records are named and two are described.** A work, a grouping and a
+/// mark carry the identifier one device minted, and every replica calls them
+/// that. A filing and a reading position do not: each replica mints its own
+/// identifier for the row, so what identifies them across the federation is the
+/// natural key their delta carries — the pair, and the work plus the authoring
+/// device. C18 is the finding, and the identifier this device minted is
+/// remembered and reused, so that the log does not fill with new names for one
+/// record.
+///
 /// **The instant is stamped twice over.** [HybridClock.now] gives an instant
 /// later than everything this device has stamped or observed, and
 /// [Revision.next] raises it again to one step past the version the change was
@@ -39,6 +48,11 @@
 /// on not existing.
 library;
 
+// The composed `where` of the two records addressed by their natural key needs
+// drift's own operators on a boolean expression, which are an extension this
+// library carries.
+import 'package:drift/drift.dart';
+
 import '../../../domain/crdt/hybrid_clock.dart';
 import '../../../domain/crdt/revision.dart';
 import '../../../domain/models/operation.dart';
@@ -47,6 +61,7 @@ import '../../../utils/errors.dart';
 import '../../../utils/identifiers.dart';
 import '../../../utils/logging.dart';
 import '../local/database.dart';
+import 'delta.dart';
 import 'reconciler.dart';
 
 final _log = loggerFor('data/sync');
@@ -90,17 +105,77 @@ final class Change {
   factory Change.delete(TargetEntity entity, String id) =>
       Change._(RecordKey.record(entity, id), OperationKind.delete, const {});
 
+  /// A work this device is filing under a grouping (C06, C18).
+  ///
+  /// The pair travels in the delta because the pair is the record: every
+  /// replica mints its own identifier for the row, so the identifier the
+  /// operation names is provenance and the pair is what resolves it. It costs
+  /// nothing to carry — a device filing a work holds both halves by definition.
+  factory Change.filing({
+    required String ebookId,
+    required String collectionId,
+  }) => Change._(
+    RecordKey.filing(ebookId: ebookId, collectionId: collectionId),
+    OperationKind.insert,
+    _pair(ebookId, collectionId),
+  );
+
+  /// A work this device is taking out of a grouping.
+  ///
+  /// It is the same record and the same pair, tombstoned. Filing a work and
+  /// filing it again are one request and so are their opposites: what the kind
+  /// of the change decides is which way the register goes, which is why there
+  /// is no update between the two.
+  factory Change.unfiling({
+    required String ebookId,
+    required String collectionId,
+  }) => Change._(
+    RecordKey.filing(ebookId: ebookId, collectionId: collectionId),
+    OperationKind.delete,
+    _pair(ebookId, collectionId),
+  );
+
+  /// Where this device stopped in a work (C05, C18).
+  ///
+  /// The delta carries the work and the caller carries the rest. The device
+  /// half of the natural key is deliberately not in it: it is the device that
+  /// authored the operation, which is the only device that may write the row,
+  /// and a delta that named one would let a change move another device's
+  /// bookmark.
+  ///
+  /// The kind is the author's to decide, because it is a question the caller
+  /// should not have to answer. A position has exactly one writer, so whether
+  /// there is one to update is exactly whether this device has written one
+  /// before — and there is no removal at all: a reader who stops reading a work
+  /// leaves their position where it was.
+  factory Change.position({
+    required String ebookId,
+    required Map<String, Object?> delta,
+  }) => Change._(RecordKey.position(ebookId: ebookId), null, <String, Object?>{
+    fieldEbookId: ebookId.toLowerCase(),
+    ...delta,
+  });
+
+  static Map<String, Object?> _pair(String ebookId, String collectionId) =>
+      <String, Object?>{
+        fieldEbookId: ebookId.toLowerCase(),
+        fieldCollectionId: collectionId.toLowerCase(),
+      };
+
   /// The record, addressed the way every replica resolves it.
   final RecordKey key;
 
-  /// What the change does to it.
-  final OperationKind kind;
+  /// What the change does to it, or `null` where the author decides.
+  ///
+  /// The reading position is the only record whose kind is derived, and
+  /// [Change.position] says why.
+  final OperationKind? kind;
 
   /// The fields it claims.
   final Map<String, Object?> delta;
 
   @override
-  String toString() => '$kind $key';
+  String toString() => '${kind ?? 'a write'} $key';
 }
 
 /// The one entry point for a change to a replicable record.
@@ -172,13 +247,14 @@ final class OperationAuthor {
     final reading = clock.now();
 
     return database.transaction(() async {
+      final stampedAt = await _lastStampedAt(change, device);
       final previous = Revision(
         // What this device last saw, which is not always what the row holds: a
         // change authored here and not yet pushed is a version the row does not
         // reflect if it lost the merge, and stamping the next one underneath it
         // would let this device tick the same counter twice.
         vectorClock: await database.recordsDao.clockOf(change.key),
-        updatedAt: await _lastStampedAt(change),
+        updatedAt: stampedAt,
         deviceId: device,
       );
       final revision = previous.next(device, reading);
@@ -188,7 +264,7 @@ final class OperationAuthor {
         deviceId: device,
         entity: change.key.entity,
         targetId: await _targetId(change),
-        kind: change.kind,
+        kind: change.kind ?? _kindOf(stampedAt),
         delta: change.delta,
         vectorClock: revision.vectorClock,
         createdAt: revision.updatedAt,
@@ -224,15 +300,20 @@ final class OperationAuthor {
   /// The identifier the operation names the record by.
   ///
   /// For a work, a grouping and a mark it is the record's own, minted once by
-  /// whichever device created it and used by every replica. The two entities
-  /// C18 is about are addressed by their natural key instead, and they land in
-  /// the commit after this one.
+  /// whichever device created it and used by every replica.
+  ///
+  /// For the two C18 is about it is neither identity nor arbitrary: the record
+  /// is resolved by the natural key in the delta, and this is the name *this*
+  /// replica files the row under. It is remembered and reused, which is the
+  /// half of C18 that matters on every write — a device that minted a new one
+  /// per write would fill its log, and every peer's, with new names for one
+  /// record.
   Future<String> _targetId(Change change) async => switch (change.key.entity) {
     TargetEntity.ebook ||
     TargetEntity.collection ||
     TargetEntity.annotation => change.key.identity,
-    TargetEntity.ebookCollection ||
-    TargetEntity.readingProgress => throw _notYetAddressable(change),
+    TargetEntity.ebookCollection || TargetEntity.readingProgress =>
+      await database.recordsDao.identifierFor(change.key, mint: _mint),
   };
 
   /// The instant the version this change is derived from was stamped at, or the
@@ -241,8 +322,9 @@ final class OperationAuthor {
   /// It is read from the record and not from the causal state beside it,
   /// because it is the record's own floor: the timestamp another replica will
   /// order this change against is the one stored on the row.
-  Future<DateTime> _lastStampedAt(Change change) async {
+  Future<DateTime> _lastStampedAt(Change change, String device) async {
     final id = change.key.identity;
+    final delta = Delta(change.delta);
 
     final at = switch (change.key.entity) {
       TargetEntity.ebook => (await (database.select(
@@ -254,15 +336,39 @@ final class OperationAuthor {
       TargetEntity.annotation => (await (database.select(
         database.annotations,
       )..where((row) => row.id.equals(id))).getSingleOrNull())?.updatedAt,
-      TargetEntity.ebookCollection ||
-      TargetEntity.readingProgress => throw _notYetAddressable(change),
+      // The pair, which the delta carries because the pair is the record.
+      TargetEntity.ebookCollection =>
+        (await (database.select(database.ebookCollections)..where(
+                  (row) =>
+                      row.ebookId.equals(delta.requiredId(fieldEbookId)) &
+                      row.collectionId.equals(
+                        delta.requiredId(fieldCollectionId),
+                      ),
+                ))
+                .getSingleOrNull())
+            ?.updatedAt,
+      // The work from the delta and the device from the operation, never the
+      // other way round: the only position this device may write is its own.
+      TargetEntity.readingProgress =>
+        (await (database.select(database.progress)..where(
+                  (row) =>
+                      row.ebookId.equals(delta.requiredId(fieldEbookId)) &
+                      row.deviceId.equals(device),
+                ))
+                .getSingleOrNull())
+            ?.updatedAt,
     };
 
     return at ?? Revision.zero.updatedAt;
   }
 
-  UnsupportedError _notYetAddressable(Change change) => UnsupportedError(
-    'a ${change.key.entity} is addressed by its natural key, which this build '
-    'cannot author yet',
-  );
+  /// What a change whose caller did not say is doing.
+  ///
+  /// It is the reading position and only it, and the question is answerable
+  /// here precisely because of C05: the row has exactly one writer, so a record
+  /// this device has never stamped is a record that does not exist.
+  OperationKind _kindOf(DateTime stampedAt) =>
+      stampedAt.isAtSameMomentAs(Revision.zero.updatedAt)
+      ? OperationKind.insert
+      : OperationKind.update;
 }
