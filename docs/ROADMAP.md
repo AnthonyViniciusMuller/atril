@@ -84,7 +84,9 @@ Then, here:
 ## Phase 2 — The shared core
 
 The part of `internal/shared` a device cannot be correct without. Pure Dart, no Flutter import,
-and the most heavily tested code in the app.
+and the most heavily tested code in the app. `Command` is the one exception, and it is unavoidable:
+it extends `ChangeNotifier`, which lives in `package:flutter/foundation.dart`, and a hand-written
+listenable would be a type no widget and no `provider` could observe.
 
 - [x] `feat: add the result type` — the guide's sealed `Result<T>`, its `Ok`/`Error` cases, and
       the extensions the view models use
@@ -92,7 +94,7 @@ and the most heavily tested code in the app.
       `internal/shared/errs` uses, the machine-readable code, and the per-field validation
       failures. This is the type every layer boundary carries; the gRPC mapping arrives in
       phase 4
-- [ ] `feat: add the command type` — `Command0` and `Command1`, with `running`, `error` and
+- [x] `feat: add the command type` — `Command0` and `Command1`, with `running`, `error` and
       `completed`, so a view model exposes actions and not methods
 - [ ] `feat: add the vector clock` — a `Map<String, int>` wrapper, its pointwise-maximum merge,
       and a comparison returning *before*, *after*, *equal* or *concurrent*. A device absent and
