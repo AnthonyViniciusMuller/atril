@@ -74,7 +74,7 @@ Then, here:
       CI check that fails when the copy has drifted. They are copied and not submoduled for the
       reason `buf.gen.yaml` gives on the other side: what is public is the contract, and a peer
       implements it from the files rather than by importing anyone's types
-- [ ] `build: generate dart stubs with protoc-gen-dart` — `dart pub global activate
+- [x] `build: generate dart stubs with protoc-gen-dart` — `dart pub global activate
       protoc_plugin`, pinned; the generation wired into `make gen`; the output under
       `lib/data/services/api/generated` and committed, with a CI drift check that regenerates and
       diffs. Generated code is excluded from the analyzer and from coverage

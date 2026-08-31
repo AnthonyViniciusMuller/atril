@@ -31,6 +31,19 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # The runtime the generated contract under lib/data/services/api/generated is
+  # compiled against. `grpc` carries both channels the app needs — ClientChannel
+  # over HTTP/2 for the five native targets and GrpcWebClientChannel for the
+  # browser — which is why one package covers a split that architecture.md
+  # describes as the only conditional import in the project.
+  #
+  # `fixnum` is a direct dependency and not an incidental one: an int64 field
+  # arrives as Int64 and has to stay Int64 until the mapper, so this package is
+  # named in the signatures data/model is written against.
+  protobuf: ^6.0.0
+  fixnum: ^1.1.1
+  grpc: ^5.1.0
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8

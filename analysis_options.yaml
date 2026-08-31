@@ -24,6 +24,11 @@ analyzer:
   # promoting to be enforced; only `avoid_print` is raised, because a stray
   # `print` should also stop an IDE rather than tint a line yellow.
   exclude:
+    # Generated code is protoc's output and not this project's source. It does
+    # not declare return types the way the lints below require, and a warning
+    # in it is a warning nobody can act on without editing a file that is
+    # rewritten by `make gen`.
+    - lib/data/services/api/generated/**
     - build/**
     - android/**
     - ios/**

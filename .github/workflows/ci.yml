@@ -19,6 +19,11 @@ env:
   # build failure only when the code is at fault.
   FLUTTER_VERSION: 3.47.1
 
+  # Kept equal to PROTOC_VERSION in the Makefile. Two protoc releases embed two
+  # different descriptors in the generated .pbjson.dart files, so a runner on a
+  # different one reports a contract that has changed when nothing has.
+  PROTOC_VERSION: '36.0'
+
 jobs:
   # The contract is a copy of Quire's proto/quire/v1, and a copy is only worth
   # having if something notices when it stops matching. Quire is where quire.v1
@@ -58,6 +63,30 @@ jobs:
 
       - name: Resolve dependencies
         run: flutter pub get
+
+      - name: Set up protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install the pinned code generator
+        run: make tools
+
+      # The generated contract is committed, so an RPC added to the .proto and
+      # not regenerated would compile against a stale signature and fail a long
+      # way from the edit. This is the check Quire runs over its own stubs, and
+      # it runs before the formatter and the analyzer so that both of them see
+      # the code the contract currently describes.
+      #
+      # `--intent-to-add` first, because `git diff` says nothing about a file
+      # that is untracked, and a generated file that has just appeared is
+      # exactly the case where it would be untracked.
+      - name: Check that the generated contract is current
+        run: |
+          make gen
+          git add --intent-to-add -- lib/data/services/api/generated
+          git diff --exit-code -- lib/data/services/api/generated
 
       # The formatter is checked before the analyzer because a reformatting
       # diff buried in a feature commit is a review that reads the whitespace.
