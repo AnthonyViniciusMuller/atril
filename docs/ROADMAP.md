@@ -211,10 +211,20 @@ listenable would be a type no widget and no `provider` could observe.
       port is refused rather than defaulted to 443: the contract publishes `host:port`, so a bare
       host is a node saying something this client cannot act on, and a guess would be dialling
       somewhere nobody named
-- [ ] `feat: add the session interceptor` — the bearer token on every call, a single-flight
+- [x] `feat: add the session interceptor` — the bearer token on every call, a single-flight
       refresh on `UNAUTHENTICATED` that retries the call once, and the rotation the contract
       requires: the refresh credential presented is consumed and the reply carries its
-      replacement
+      replacement, which is why the store is written before the session is adopted. The token is
+      attached through a metadata provider rather than as static metadata, so a token that went
+      stale between the client being built and the call being sent is refreshed before the
+      request leaves. ~~All of it in the interceptor~~: `interceptUnary` has to return a
+      `ResponseFuture`, which can only be built around a `ClientCall`, so an interceptor cannot
+      answer with the result of a *second* call — the retry lives beside the call instead, in
+      `SessionHolder.retrying`, and the clients wrap the two together. The skip list is the
+      node's own `authn.PublicMethods()`, and it is not a convenience: `RefreshSession` asking
+      for a token would refresh in order to refresh. Only the refresh credential is persisted —
+      an access token written to disk outlives nothing useful — so a cold start exchanges before
+      its first call, and `isSignedIn` is answered without a round trip
 - [ ] `feat: map grpc status onto the error vocabulary` — `GrpcError` to `AppException`, keeping
       the code and the field failures the node sends, so a rejected registration reaches a form
       as something it can point at
