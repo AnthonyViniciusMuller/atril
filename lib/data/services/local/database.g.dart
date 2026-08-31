@@ -1769,6 +1769,2014 @@ class ClockFloorCompanion extends UpdateCompanion<ClockFloorRow> {
   }
 }
 
+class $EbooksTable extends Ebooks with TableInfo<$EbooksTable, EbookRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EbooksTable(this.attachedDatabase, [this._alias]);
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>($EbooksTable.$convertervectorClock);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> updatedAt =
+      GeneratedColumn<int>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($EbooksTable.$converterupdatedAt);
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 255,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorMeta = const VerificationMeta('author');
+  @override
+  late final GeneratedColumn<String> author = GeneratedColumn<String>(
+    'author',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 255),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _publisherMeta = const VerificationMeta(
+    'publisher',
+  );
+  @override
+  late final GeneratedColumn<String> publisher = GeneratedColumn<String>(
+    'publisher',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 255),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _languageMeta = const VerificationMeta(
+    'language',
+  );
+  @override
+  late final GeneratedColumn<String> language = GeneratedColumn<String>(
+    'language',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 20),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _formatMeta = const VerificationMeta('format');
+  @override
+  late final GeneratedColumn<String> format = GeneratedColumn<String>(
+    'format',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 10,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 64,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraMetadataMeta = const VerificationMeta(
+    'extraMetadata',
+  );
+  @override
+  late final GeneratedColumn<String> extraMetadata = GeneratedColumn<String>(
+    'extra_metadata',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> importedAt =
+      GeneratedColumn<int>(
+        'imported_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($EbooksTable.$converterimportedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    title,
+    author,
+    publisher,
+    language,
+    format,
+    contentHash,
+    sizeBytes,
+    extraMetadata,
+    importedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ebooks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EbookRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('author')) {
+      context.handle(
+        _authorMeta,
+        author.isAcceptableOrUnknown(data['author']!, _authorMeta),
+      );
+    }
+    if (data.containsKey('publisher')) {
+      context.handle(
+        _publisherMeta,
+        publisher.isAcceptableOrUnknown(data['publisher']!, _publisherMeta),
+      );
+    }
+    if (data.containsKey('language')) {
+      context.handle(
+        _languageMeta,
+        language.isAcceptableOrUnknown(data['language']!, _languageMeta),
+      );
+    }
+    if (data.containsKey('format')) {
+      context.handle(
+        _formatMeta,
+        format.isAcceptableOrUnknown(data['format']!, _formatMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_formatMeta);
+    }
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    }
+    if (data.containsKey('extra_metadata')) {
+      context.handle(
+        _extraMetadataMeta,
+        extraMetadata.isAcceptableOrUnknown(
+          data['extra_metadata']!,
+          _extraMetadataMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EbookRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EbookRow(
+      vectorClock: $EbooksTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      updatedAt: $EbooksTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      author: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author'],
+      ),
+      publisher: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}publisher'],
+      ),
+      language: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language'],
+      ),
+      format: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}format'],
+      )!,
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      ),
+      extraMetadata: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra_metadata'],
+      ),
+      importedAt: $EbooksTable.$converterimportedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}imported_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $EbooksTable createAlias(String alias) {
+    return $EbooksTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $converterupdatedAt =
+      const InstantConverter();
+  static TypeConverter<DateTime, int> $converterimportedAt =
+      const InstantConverter();
+}
+
+class EbookRow extends DataClass implements Insertable<EbookRow> {
+  /// The causal version of the record, as the JSON object the node stores in
+  /// `jsonb`. The reconciler consults it first and consults nothing else unless
+  /// it reports two versions concurrent.
+  final VectorClock vectorClock;
+
+  /// The first half of the tie-break, on the hybrid clock C01 describes. It is
+  /// not a wall clock reading, and nothing renders it to a reader.
+  final DateTime updatedAt;
+
+  /// The second half: the device whose write the record currently reflects,
+  /// never the one that created it (C10).
+  final String deviceId;
+
+  /// The tombstone. A record removed outright is resurrected by the next
+  /// replica that had not yet heard about the deletion, so deletion is a write
+  /// like any other and reconciles like one.
+  final bool deleted;
+
+  /// The identifier the device that imported the work minted, and the one
+  /// every annotation and every reading position references. It travels: a
+  /// work is created once, and no replica ever mints another for it.
+  final String id;
+
+  /// What the work is called.
+  final String title;
+
+  /// Absent rather than empty when the file did not say. A work whose author is
+  /// unknown and one whose author is the empty string are different claims, and
+  /// the contract spells the difference with `optional`.
+  final String? author;
+
+  /// Absent rather than empty, as [author] is.
+  final String? publisher;
+
+  /// Absent rather than empty, as [author] is.
+  final String? language;
+
+  /// One of [ebookFormats].
+  final String format;
+
+  /// The digest of the file, lowercase hex sha-256.
+  ///
+  /// It is what identifies the bytes across the whole federation — the same
+  /// work imported by two devices converges on one stored object — and it is
+  /// deliberately not a reference to anything this device holds. A device that
+  /// has the row and not the file is the ordinary state of a book that has not
+  /// been downloaded yet.
+  final String contentHash;
+
+  /// The length of the file, absent until something has seen it.
+  final int? sizeBytes;
+
+  /// The metadata a format carries and the contract does not name — series,
+  /// ISBN, subjects (RF05).
+  ///
+  /// It is an object and never a scalar, which the check below enforces as the
+  /// node's `jsonb` constraint does. It is stored as the text the delta carried
+  /// rather than decoded, because per-field reconciliation replaces this field
+  /// whole and nothing here reads inside it.
+  final String? extraMetadata;
+
+  /// When the work entered the collection. A wall clock instant the reader is
+  /// shown, and not the hybrid one the merge orders by.
+  final DateTime importedAt;
+  const EbookRow({
+    required this.vectorClock,
+    required this.updatedAt,
+    required this.deviceId,
+    required this.deleted,
+    required this.id,
+    required this.title,
+    this.author,
+    this.publisher,
+    this.language,
+    required this.format,
+    required this.contentHash,
+    this.sizeBytes,
+    this.extraMetadata,
+    required this.importedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    {
+      map['vector_clock'] = Variable<String>(
+        $EbooksTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['updated_at'] = Variable<int>(
+        $EbooksTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['deleted'] = Variable<bool>(deleted);
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || author != null) {
+      map['author'] = Variable<String>(author);
+    }
+    if (!nullToAbsent || publisher != null) {
+      map['publisher'] = Variable<String>(publisher);
+    }
+    if (!nullToAbsent || language != null) {
+      map['language'] = Variable<String>(language);
+    }
+    map['format'] = Variable<String>(format);
+    map['content_hash'] = Variable<String>(contentHash);
+    if (!nullToAbsent || sizeBytes != null) {
+      map['size_bytes'] = Variable<int>(sizeBytes);
+    }
+    if (!nullToAbsent || extraMetadata != null) {
+      map['extra_metadata'] = Variable<String>(extraMetadata);
+    }
+    {
+      map['imported_at'] = Variable<int>(
+        $EbooksTable.$converterimportedAt.toSql(importedAt),
+      );
+    }
+    return map;
+  }
+
+  EbooksCompanion toCompanion(bool nullToAbsent) {
+    return EbooksCompanion(
+      vectorClock: Value(vectorClock),
+      updatedAt: Value(updatedAt),
+      deviceId: Value(deviceId),
+      deleted: Value(deleted),
+      id: Value(id),
+      title: Value(title),
+      author: author == null && nullToAbsent
+          ? const Value.absent()
+          : Value(author),
+      publisher: publisher == null && nullToAbsent
+          ? const Value.absent()
+          : Value(publisher),
+      language: language == null && nullToAbsent
+          ? const Value.absent()
+          : Value(language),
+      format: Value(format),
+      contentHash: Value(contentHash),
+      sizeBytes: sizeBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sizeBytes),
+      extraMetadata: extraMetadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(extraMetadata),
+      importedAt: Value(importedAt),
+    );
+  }
+
+  factory EbookRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EbookRow(
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      author: serializer.fromJson<String?>(json['author']),
+      publisher: serializer.fromJson<String?>(json['publisher']),
+      language: serializer.fromJson<String?>(json['language']),
+      format: serializer.fromJson<String>(json['format']),
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      sizeBytes: serializer.fromJson<int?>(json['sizeBytes']),
+      extraMetadata: serializer.fromJson<String?>(json['extraMetadata']),
+      importedAt: serializer.fromJson<DateTime>(json['importedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'deleted': serializer.toJson<bool>(deleted),
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'author': serializer.toJson<String?>(author),
+      'publisher': serializer.toJson<String?>(publisher),
+      'language': serializer.toJson<String?>(language),
+      'format': serializer.toJson<String>(format),
+      'contentHash': serializer.toJson<String>(contentHash),
+      'sizeBytes': serializer.toJson<int?>(sizeBytes),
+      'extraMetadata': serializer.toJson<String?>(extraMetadata),
+      'importedAt': serializer.toJson<DateTime>(importedAt),
+    };
+  }
+
+  EbookRow copyWith({
+    VectorClock? vectorClock,
+    DateTime? updatedAt,
+    String? deviceId,
+    bool? deleted,
+    String? id,
+    String? title,
+    Value<String?> author = const Value.absent(),
+    Value<String?> publisher = const Value.absent(),
+    Value<String?> language = const Value.absent(),
+    String? format,
+    String? contentHash,
+    Value<int?> sizeBytes = const Value.absent(),
+    Value<String?> extraMetadata = const Value.absent(),
+    DateTime? importedAt,
+  }) => EbookRow(
+    vectorClock: vectorClock ?? this.vectorClock,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deviceId: deviceId ?? this.deviceId,
+    deleted: deleted ?? this.deleted,
+    id: id ?? this.id,
+    title: title ?? this.title,
+    author: author.present ? author.value : this.author,
+    publisher: publisher.present ? publisher.value : this.publisher,
+    language: language.present ? language.value : this.language,
+    format: format ?? this.format,
+    contentHash: contentHash ?? this.contentHash,
+    sizeBytes: sizeBytes.present ? sizeBytes.value : this.sizeBytes,
+    extraMetadata: extraMetadata.present
+        ? extraMetadata.value
+        : this.extraMetadata,
+    importedAt: importedAt ?? this.importedAt,
+  );
+  EbookRow copyWithCompanion(EbooksCompanion data) {
+    return EbookRow(
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      author: data.author.present ? data.author.value : this.author,
+      publisher: data.publisher.present ? data.publisher.value : this.publisher,
+      language: data.language.present ? data.language.value : this.language,
+      format: data.format.present ? data.format.value : this.format,
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      extraMetadata: data.extraMetadata.present
+          ? data.extraMetadata.value
+          : this.extraMetadata,
+      importedAt: data.importedAt.present
+          ? data.importedAt.value
+          : this.importedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbookRow(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('author: $author, ')
+          ..write('publisher: $publisher, ')
+          ..write('language: $language, ')
+          ..write('format: $format, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('extraMetadata: $extraMetadata, ')
+          ..write('importedAt: $importedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    title,
+    author,
+    publisher,
+    language,
+    format,
+    contentHash,
+    sizeBytes,
+    extraMetadata,
+    importedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EbookRow &&
+          other.vectorClock == this.vectorClock &&
+          other.updatedAt == this.updatedAt &&
+          other.deviceId == this.deviceId &&
+          other.deleted == this.deleted &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.author == this.author &&
+          other.publisher == this.publisher &&
+          other.language == this.language &&
+          other.format == this.format &&
+          other.contentHash == this.contentHash &&
+          other.sizeBytes == this.sizeBytes &&
+          other.extraMetadata == this.extraMetadata &&
+          other.importedAt == this.importedAt);
+}
+
+class EbooksCompanion extends UpdateCompanion<EbookRow> {
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> updatedAt;
+  final Value<String> deviceId;
+  final Value<bool> deleted;
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String?> author;
+  final Value<String?> publisher;
+  final Value<String?> language;
+  final Value<String> format;
+  final Value<String> contentHash;
+  final Value<int?> sizeBytes;
+  final Value<String?> extraMetadata;
+  final Value<DateTime> importedAt;
+  final Value<int> rowid;
+  const EbooksCompanion({
+    this.vectorClock = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.author = const Value.absent(),
+    this.publisher = const Value.absent(),
+    this.language = const Value.absent(),
+    this.format = const Value.absent(),
+    this.contentHash = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.extraMetadata = const Value.absent(),
+    this.importedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EbooksCompanion.insert({
+    required VectorClock vectorClock,
+    required DateTime updatedAt,
+    required String deviceId,
+    this.deleted = const Value.absent(),
+    required String id,
+    required String title,
+    this.author = const Value.absent(),
+    this.publisher = const Value.absent(),
+    this.language = const Value.absent(),
+    required String format,
+    required String contentHash,
+    this.sizeBytes = const Value.absent(),
+    this.extraMetadata = const Value.absent(),
+    required DateTime importedAt,
+    this.rowid = const Value.absent(),
+  }) : vectorClock = Value(vectorClock),
+       updatedAt = Value(updatedAt),
+       deviceId = Value(deviceId),
+       id = Value(id),
+       title = Value(title),
+       format = Value(format),
+       contentHash = Value(contentHash),
+       importedAt = Value(importedAt);
+  static Insertable<EbookRow> custom({
+    Expression<String>? vectorClock,
+    Expression<int>? updatedAt,
+    Expression<String>? deviceId,
+    Expression<bool>? deleted,
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? author,
+    Expression<String>? publisher,
+    Expression<String>? language,
+    Expression<String>? format,
+    Expression<String>? contentHash,
+    Expression<int>? sizeBytes,
+    Expression<String>? extraMetadata,
+    Expression<int>? importedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deleted != null) 'deleted': deleted,
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (author != null) 'author': author,
+      if (publisher != null) 'publisher': publisher,
+      if (language != null) 'language': language,
+      if (format != null) 'format': format,
+      if (contentHash != null) 'content_hash': contentHash,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (extraMetadata != null) 'extra_metadata': extraMetadata,
+      if (importedAt != null) 'imported_at': importedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EbooksCompanion copyWith({
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? updatedAt,
+    Value<String>? deviceId,
+    Value<bool>? deleted,
+    Value<String>? id,
+    Value<String>? title,
+    Value<String?>? author,
+    Value<String?>? publisher,
+    Value<String?>? language,
+    Value<String>? format,
+    Value<String>? contentHash,
+    Value<int?>? sizeBytes,
+    Value<String?>? extraMetadata,
+    Value<DateTime>? importedAt,
+    Value<int>? rowid,
+  }) {
+    return EbooksCompanion(
+      vectorClock: vectorClock ?? this.vectorClock,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deviceId: deviceId ?? this.deviceId,
+      deleted: deleted ?? this.deleted,
+      id: id ?? this.id,
+      title: title ?? this.title,
+      author: author ?? this.author,
+      publisher: publisher ?? this.publisher,
+      language: language ?? this.language,
+      format: format ?? this.format,
+      contentHash: contentHash ?? this.contentHash,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      extraMetadata: extraMetadata ?? this.extraMetadata,
+      importedAt: importedAt ?? this.importedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $EbooksTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(
+        $EbooksTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (author.present) {
+      map['author'] = Variable<String>(author.value);
+    }
+    if (publisher.present) {
+      map['publisher'] = Variable<String>(publisher.value);
+    }
+    if (language.present) {
+      map['language'] = Variable<String>(language.value);
+    }
+    if (format.present) {
+      map['format'] = Variable<String>(format.value);
+    }
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (extraMetadata.present) {
+      map['extra_metadata'] = Variable<String>(extraMetadata.value);
+    }
+    if (importedAt.present) {
+      map['imported_at'] = Variable<int>(
+        $EbooksTable.$converterimportedAt.toSql(importedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbooksCompanion(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('author: $author, ')
+          ..write('publisher: $publisher, ')
+          ..write('language: $language, ')
+          ..write('format: $format, ')
+          ..write('contentHash: $contentHash, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('extraMetadata: $extraMetadata, ')
+          ..write('importedAt: $importedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CollectionsTable extends Collections
+    with TableInfo<$CollectionsTable, CollectionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CollectionsTable(this.attachedDatabase, [this._alias]);
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>($CollectionsTable.$convertervectorClock);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> updatedAt =
+      GeneratedColumn<int>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($CollectionsTable.$converterupdatedAt);
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 120,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('collection'),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> createdAt =
+      GeneratedColumn<int>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($CollectionsTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    name,
+    kind,
+    description,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'collections';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CollectionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CollectionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CollectionRow(
+      vectorClock: $CollectionsTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      updatedAt: $CollectionsTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      createdAt: $CollectionsTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $CollectionsTable createAlias(String alias) {
+    return $CollectionsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $converterupdatedAt =
+      const InstantConverter();
+  static TypeConverter<DateTime, int> $convertercreatedAt =
+      const InstantConverter();
+}
+
+class CollectionRow extends DataClass implements Insertable<CollectionRow> {
+  /// The causal version of the record, as the JSON object the node stores in
+  /// `jsonb`. The reconciler consults it first and consults nothing else unless
+  /// it reports two versions concurrent.
+  final VectorClock vectorClock;
+
+  /// The first half of the tie-break, on the hybrid clock C01 describes. It is
+  /// not a wall clock reading, and nothing renders it to a reader.
+  final DateTime updatedAt;
+
+  /// The second half: the device whose write the record currently reflects,
+  /// never the one that created it (C10).
+  final String deviceId;
+
+  /// The tombstone. A record removed outright is resurrected by the next
+  /// replica that had not yet heard about the deletion, so deletion is a write
+  /// like any other and reconciles like one.
+  final bool deleted;
+
+  /// The identifier the device that created the grouping minted.
+  final String id;
+
+  /// What the reader called it.
+  final String name;
+
+  /// One of [collectionKinds]. A collection is a grouping the reader defined
+  /// and a category is a subject they filed under; they are one structure with
+  /// two meanings, which is what lets RF05 offer both without a second entity.
+  final String kind;
+
+  /// What the reader said it is for, if anything.
+  final String? description;
+
+  /// When it was created, on a wall clock.
+  final DateTime createdAt;
+  const CollectionRow({
+    required this.vectorClock,
+    required this.updatedAt,
+    required this.deviceId,
+    required this.deleted,
+    required this.id,
+    required this.name,
+    required this.kind,
+    this.description,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    {
+      map['vector_clock'] = Variable<String>(
+        $CollectionsTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['updated_at'] = Variable<int>(
+        $CollectionsTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['deleted'] = Variable<bool>(deleted);
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    {
+      map['created_at'] = Variable<int>(
+        $CollectionsTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  CollectionsCompanion toCompanion(bool nullToAbsent) {
+    return CollectionsCompanion(
+      vectorClock: Value(vectorClock),
+      updatedAt: Value(updatedAt),
+      deviceId: Value(deviceId),
+      deleted: Value(deleted),
+      id: Value(id),
+      name: Value(name),
+      kind: Value(kind),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CollectionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CollectionRow(
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      kind: serializer.fromJson<String>(json['kind']),
+      description: serializer.fromJson<String?>(json['description']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'deleted': serializer.toJson<bool>(deleted),
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'kind': serializer.toJson<String>(kind),
+      'description': serializer.toJson<String?>(description),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CollectionRow copyWith({
+    VectorClock? vectorClock,
+    DateTime? updatedAt,
+    String? deviceId,
+    bool? deleted,
+    String? id,
+    String? name,
+    String? kind,
+    Value<String?> description = const Value.absent(),
+    DateTime? createdAt,
+  }) => CollectionRow(
+    vectorClock: vectorClock ?? this.vectorClock,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deviceId: deviceId ?? this.deviceId,
+    deleted: deleted ?? this.deleted,
+    id: id ?? this.id,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    description: description.present ? description.value : this.description,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CollectionRow copyWithCompanion(CollectionsCompanion data) {
+    return CollectionRow(
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CollectionRow(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    name,
+    kind,
+    description,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CollectionRow &&
+          other.vectorClock == this.vectorClock &&
+          other.updatedAt == this.updatedAt &&
+          other.deviceId == this.deviceId &&
+          other.deleted == this.deleted &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.kind == this.kind &&
+          other.description == this.description &&
+          other.createdAt == this.createdAt);
+}
+
+class CollectionsCompanion extends UpdateCompanion<CollectionRow> {
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> updatedAt;
+  final Value<String> deviceId;
+  final Value<bool> deleted;
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> kind;
+  final Value<String?> description;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CollectionsCompanion({
+    this.vectorClock = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CollectionsCompanion.insert({
+    required VectorClock vectorClock,
+    required DateTime updatedAt,
+    required String deviceId,
+    this.deleted = const Value.absent(),
+    required String id,
+    required String name,
+    this.kind = const Value.absent(),
+    this.description = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : vectorClock = Value(vectorClock),
+       updatedAt = Value(updatedAt),
+       deviceId = Value(deviceId),
+       id = Value(id),
+       name = Value(name),
+       createdAt = Value(createdAt);
+  static Insertable<CollectionRow> custom({
+    Expression<String>? vectorClock,
+    Expression<int>? updatedAt,
+    Expression<String>? deviceId,
+    Expression<bool>? deleted,
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? kind,
+    Expression<String>? description,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deleted != null) 'deleted': deleted,
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (kind != null) 'kind': kind,
+      if (description != null) 'description': description,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CollectionsCompanion copyWith({
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? updatedAt,
+    Value<String>? deviceId,
+    Value<bool>? deleted,
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<String?>? description,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CollectionsCompanion(
+      vectorClock: vectorClock ?? this.vectorClock,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deviceId: deviceId ?? this.deviceId,
+      deleted: deleted ?? this.deleted,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      kind: kind ?? this.kind,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $CollectionsTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(
+        $CollectionsTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(
+        $CollectionsTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CollectionsCompanion(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('kind: $kind, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $EbookCollectionsTable extends EbookCollections
+    with TableInfo<$EbookCollectionsTable, EbookCollectionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EbookCollectionsTable(this.attachedDatabase, [this._alias]);
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>(
+        $EbookCollectionsTable.$convertervectorClock,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> updatedAt =
+      GeneratedColumn<int>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($EbookCollectionsTable.$converterupdatedAt);
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ebookIdMeta = const VerificationMeta(
+    'ebookId',
+  );
+  @override
+  late final GeneratedColumn<String> ebookId = GeneratedColumn<String>(
+    'ebook_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ebooks (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _collectionIdMeta = const VerificationMeta(
+    'collectionId',
+  );
+  @override
+  late final GeneratedColumn<String> collectionId = GeneratedColumn<String>(
+    'collection_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES collections (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    ebookId,
+    collectionId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ebook_collections';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EbookCollectionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('ebook_id')) {
+      context.handle(
+        _ebookIdMeta,
+        ebookId.isAcceptableOrUnknown(data['ebook_id']!, _ebookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ebookIdMeta);
+    }
+    if (data.containsKey('collection_id')) {
+      context.handle(
+        _collectionIdMeta,
+        collectionId.isAcceptableOrUnknown(
+          data['collection_id']!,
+          _collectionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {ebookId, collectionId},
+  ];
+  @override
+  EbookCollectionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EbookCollectionRow(
+      vectorClock: $EbookCollectionsTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      updatedAt: $EbookCollectionsTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ebookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ebook_id'],
+      )!,
+      collectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection_id'],
+      )!,
+    );
+  }
+
+  @override
+  $EbookCollectionsTable createAlias(String alias) {
+    return $EbookCollectionsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $converterupdatedAt =
+      const InstantConverter();
+}
+
+class EbookCollectionRow extends DataClass
+    implements Insertable<EbookCollectionRow> {
+  /// The causal version of the record, as the JSON object the node stores in
+  /// `jsonb`. The reconciler consults it first and consults nothing else unless
+  /// it reports two versions concurrent.
+  final VectorClock vectorClock;
+
+  /// The first half of the tie-break, on the hybrid clock C01 describes. It is
+  /// not a wall clock reading, and nothing renders it to a reader.
+  final DateTime updatedAt;
+
+  /// The second half: the device whose write the record currently reflects,
+  /// never the one that created it (C10).
+  final String deviceId;
+
+  /// The tombstone. A record removed outright is resurrected by the next
+  /// replica that had not yet heard about the deletion, so deletion is a write
+  /// like any other and reconciles like one.
+  final bool deleted;
+
+  /// The surrogate identifier this device minted for the pair. It is
+  /// provenance, not identity.
+  final String id;
+
+  /// The work.
+  final String ebookId;
+
+  /// The grouping.
+  final String collectionId;
+  const EbookCollectionRow({
+    required this.vectorClock,
+    required this.updatedAt,
+    required this.deviceId,
+    required this.deleted,
+    required this.id,
+    required this.ebookId,
+    required this.collectionId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    {
+      map['vector_clock'] = Variable<String>(
+        $EbookCollectionsTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['updated_at'] = Variable<int>(
+        $EbookCollectionsTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['deleted'] = Variable<bool>(deleted);
+    map['id'] = Variable<String>(id);
+    map['ebook_id'] = Variable<String>(ebookId);
+    map['collection_id'] = Variable<String>(collectionId);
+    return map;
+  }
+
+  EbookCollectionsCompanion toCompanion(bool nullToAbsent) {
+    return EbookCollectionsCompanion(
+      vectorClock: Value(vectorClock),
+      updatedAt: Value(updatedAt),
+      deviceId: Value(deviceId),
+      deleted: Value(deleted),
+      id: Value(id),
+      ebookId: Value(ebookId),
+      collectionId: Value(collectionId),
+    );
+  }
+
+  factory EbookCollectionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EbookCollectionRow(
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      id: serializer.fromJson<String>(json['id']),
+      ebookId: serializer.fromJson<String>(json['ebookId']),
+      collectionId: serializer.fromJson<String>(json['collectionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'deleted': serializer.toJson<bool>(deleted),
+      'id': serializer.toJson<String>(id),
+      'ebookId': serializer.toJson<String>(ebookId),
+      'collectionId': serializer.toJson<String>(collectionId),
+    };
+  }
+
+  EbookCollectionRow copyWith({
+    VectorClock? vectorClock,
+    DateTime? updatedAt,
+    String? deviceId,
+    bool? deleted,
+    String? id,
+    String? ebookId,
+    String? collectionId,
+  }) => EbookCollectionRow(
+    vectorClock: vectorClock ?? this.vectorClock,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deviceId: deviceId ?? this.deviceId,
+    deleted: deleted ?? this.deleted,
+    id: id ?? this.id,
+    ebookId: ebookId ?? this.ebookId,
+    collectionId: collectionId ?? this.collectionId,
+  );
+  EbookCollectionRow copyWithCompanion(EbookCollectionsCompanion data) {
+    return EbookCollectionRow(
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      id: data.id.present ? data.id.value : this.id,
+      ebookId: data.ebookId.present ? data.ebookId.value : this.ebookId,
+      collectionId: data.collectionId.present
+          ? data.collectionId.value
+          : this.collectionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbookCollectionRow(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('collectionId: $collectionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    ebookId,
+    collectionId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EbookCollectionRow &&
+          other.vectorClock == this.vectorClock &&
+          other.updatedAt == this.updatedAt &&
+          other.deviceId == this.deviceId &&
+          other.deleted == this.deleted &&
+          other.id == this.id &&
+          other.ebookId == this.ebookId &&
+          other.collectionId == this.collectionId);
+}
+
+class EbookCollectionsCompanion extends UpdateCompanion<EbookCollectionRow> {
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> updatedAt;
+  final Value<String> deviceId;
+  final Value<bool> deleted;
+  final Value<String> id;
+  final Value<String> ebookId;
+  final Value<String> collectionId;
+  final Value<int> rowid;
+  const EbookCollectionsCompanion({
+    this.vectorClock = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.id = const Value.absent(),
+    this.ebookId = const Value.absent(),
+    this.collectionId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EbookCollectionsCompanion.insert({
+    required VectorClock vectorClock,
+    required DateTime updatedAt,
+    required String deviceId,
+    this.deleted = const Value.absent(),
+    required String id,
+    required String ebookId,
+    required String collectionId,
+    this.rowid = const Value.absent(),
+  }) : vectorClock = Value(vectorClock),
+       updatedAt = Value(updatedAt),
+       deviceId = Value(deviceId),
+       id = Value(id),
+       ebookId = Value(ebookId),
+       collectionId = Value(collectionId);
+  static Insertable<EbookCollectionRow> custom({
+    Expression<String>? vectorClock,
+    Expression<int>? updatedAt,
+    Expression<String>? deviceId,
+    Expression<bool>? deleted,
+    Expression<String>? id,
+    Expression<String>? ebookId,
+    Expression<String>? collectionId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deleted != null) 'deleted': deleted,
+      if (id != null) 'id': id,
+      if (ebookId != null) 'ebook_id': ebookId,
+      if (collectionId != null) 'collection_id': collectionId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EbookCollectionsCompanion copyWith({
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? updatedAt,
+    Value<String>? deviceId,
+    Value<bool>? deleted,
+    Value<String>? id,
+    Value<String>? ebookId,
+    Value<String>? collectionId,
+    Value<int>? rowid,
+  }) {
+    return EbookCollectionsCompanion(
+      vectorClock: vectorClock ?? this.vectorClock,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deviceId: deviceId ?? this.deviceId,
+      deleted: deleted ?? this.deleted,
+      id: id ?? this.id,
+      ebookId: ebookId ?? this.ebookId,
+      collectionId: collectionId ?? this.collectionId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $EbookCollectionsTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(
+        $EbookCollectionsTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ebookId.present) {
+      map['ebook_id'] = Variable<String>(ebookId.value);
+    }
+    if (collectionId.present) {
+      map['collection_id'] = Variable<String>(collectionId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbookCollectionsCompanion(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('collectionId: $collectionId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -1776,9 +3784,22 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $KnownServersTable knownServers = $KnownServersTable(this);
   late final $SignedInReaderTable signedInReader = $SignedInReaderTable(this);
   late final $ClockFloorTable clockFloor = $ClockFloorTable(this);
+  late final $EbooksTable ebooks = $EbooksTable(this);
+  late final $CollectionsTable collections = $CollectionsTable(this);
+  late final $EbookCollectionsTable ebookCollections = $EbookCollectionsTable(
+    this,
+  );
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
+  );
+  late final Index ebooksContentHash = Index(
+    'ebooks_content_hash',
+    'CREATE INDEX ebooks_content_hash ON ebooks (content_hash)',
+  );
+  late final Index ebookCollectionsCollection = Index(
+    'ebook_collections_collection',
+    'CREATE INDEX ebook_collections_collection ON ebook_collections (collection_id)',
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
   @override
@@ -1790,8 +3811,30 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     knownServers,
     signedInReader,
     clockFloor,
+    ebooks,
+    collections,
+    ebookCollections,
     knownServersOrigin,
+    ebooksContentHash,
+    ebookCollectionsCollection,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ebook_collections', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'collections',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ebook_collections', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$BoundDeviceTableCreateCompanionBuilder =
@@ -2891,6 +4934,1337 @@ typedef $$ClockFloorTableProcessedTableManager =
       ClockFloorRow,
       PrefetchHooks Function()
     >;
+typedef $$EbooksTableCreateCompanionBuilder = EbooksCompanion Function({
+  required VectorClock vectorClock,
+  required DateTime updatedAt,
+  required String deviceId,
+  Value<bool> deleted,
+  required String id,
+  required String title,
+  Value<String?> author,
+  Value<String?> publisher,
+  Value<String?> language,
+  required String format,
+  required String contentHash,
+  Value<int?> sizeBytes,
+  Value<String?> extraMetadata,
+  required DateTime importedAt,
+  Value<int> rowid,
+});
+typedef $$EbooksTableUpdateCompanionBuilder = EbooksCompanion Function({
+  Value<VectorClock> vectorClock,
+  Value<DateTime> updatedAt,
+  Value<String> deviceId,
+  Value<bool> deleted,
+  Value<String> id,
+  Value<String> title,
+  Value<String?> author,
+  Value<String?> publisher,
+  Value<String?> language,
+  Value<String> format,
+  Value<String> contentHash,
+  Value<int?> sizeBytes,
+  Value<String?> extraMetadata,
+  Value<DateTime> importedAt,
+  Value<int> rowid,
+});
+
+final class $$EbooksTableReferences
+    extends BaseReferences<_$AtrilDatabase, $EbooksTable, EbookRow> {
+  $$EbooksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$EbookCollectionsTable, List<EbookCollectionRow>>
+  _ebookCollectionsRefsTable(_$AtrilDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.ebookCollections,
+        aliasName: 'ebooks__id__ebook_collections__ebook_id',
+      );
+
+  $$EbookCollectionsTableProcessedTableManager get ebookCollectionsRefs {
+    final manager = $$EbookCollectionsTableTableManager(
+      $_db,
+      $_db.ebookCollections,
+    ).filter((f) => f.ebookId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _ebookCollectionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$EbooksTableFilterComposer
+    extends Composer<_$AtrilDatabase, $EbooksTable> {
+  $$EbooksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get author => $composableBuilder(
+    column: $table.author,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get publisher => $composableBuilder(
+    column: $table.publisher,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get language => $composableBuilder(
+    column: $table.language,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get format => $composableBuilder(
+    column: $table.format,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extraMetadata => $composableBuilder(
+    column: $table.extraMetadata,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get importedAt =>
+      $composableBuilder(
+        column: $table.importedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  Expression<bool> ebookCollectionsRefs(
+    Expression<bool> Function($$EbookCollectionsTableFilterComposer f) f,
+  ) {
+    final $$EbookCollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCollections,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EbooksTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $EbooksTable> {
+  $$EbooksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get author => $composableBuilder(
+    column: $table.author,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get publisher => $composableBuilder(
+    column: $table.publisher,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get language => $composableBuilder(
+    column: $table.language,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get format => $composableBuilder(
+    column: $table.format,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extraMetadata => $composableBuilder(
+    column: $table.extraMetadata,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EbooksTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $EbooksTable> {
+  $$EbooksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get author =>
+      $composableBuilder(column: $table.author, builder: (column) => column);
+
+  GeneratedColumn<String> get publisher =>
+      $composableBuilder(column: $table.publisher, builder: (column) => column);
+
+  GeneratedColumn<String> get language =>
+      $composableBuilder(column: $table.language, builder: (column) => column);
+
+  GeneratedColumn<String> get format =>
+      $composableBuilder(column: $table.format, builder: (column) => column);
+
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get extraMetadata => $composableBuilder(
+    column: $table.extraMetadata,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get importedAt =>
+      $composableBuilder(
+        column: $table.importedAt,
+        builder: (column) => column,
+      );
+
+  Expression<T> ebookCollectionsRefs<T extends Object>(
+    Expression<T> Function($$EbookCollectionsTableAnnotationComposer a) f,
+  ) {
+    final $$EbookCollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCollections,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$EbooksTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $EbooksTable,
+          EbookRow,
+          $$EbooksTableFilterComposer,
+          $$EbooksTableOrderingComposer,
+          $$EbooksTableAnnotationComposer,
+          $$EbooksTableCreateCompanionBuilder,
+          $$EbooksTableUpdateCompanionBuilder,
+          (EbookRow, $$EbooksTableReferences),
+          EbookRow,
+          PrefetchHooks Function({bool ebookCollectionsRefs})
+        > {
+  $$EbooksTableTableManager(_$AtrilDatabase db, $EbooksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EbooksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EbooksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EbooksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> author = const Value.absent(),
+                Value<String?> publisher = const Value.absent(),
+                Value<String?> language = const Value.absent(),
+                Value<String> format = const Value.absent(),
+                Value<String> contentHash = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
+                Value<String?> extraMetadata = const Value.absent(),
+                Value<DateTime> importedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EbooksCompanion(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                title: title,
+                author: author,
+                publisher: publisher,
+                language: language,
+                format: format,
+                contentHash: contentHash,
+                sizeBytes: sizeBytes,
+                extraMetadata: extraMetadata,
+                importedAt: importedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required VectorClock vectorClock,
+                required DateTime updatedAt,
+                required String deviceId,
+                Value<bool> deleted = const Value.absent(),
+                required String id,
+                required String title,
+                Value<String?> author = const Value.absent(),
+                Value<String?> publisher = const Value.absent(),
+                Value<String?> language = const Value.absent(),
+                required String format,
+                required String contentHash,
+                Value<int?> sizeBytes = const Value.absent(),
+                Value<String?> extraMetadata = const Value.absent(),
+                required DateTime importedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => EbooksCompanion.insert(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                title: title,
+                author: author,
+                publisher: publisher,
+                language: language,
+                format: format,
+                contentHash: contentHash,
+                sizeBytes: sizeBytes,
+                extraMetadata: extraMetadata,
+                importedAt: importedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$EbooksTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookCollectionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (ebookCollectionsRefs) db.ebookCollections,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (ebookCollectionsRefs)
+                    await $_getPrefetchedData<
+                      EbookRow,
+                      $EbooksTable,
+                      EbookCollectionRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$EbooksTableReferences
+                          ._ebookCollectionsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$EbooksTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).ebookCollectionsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.ebookId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EbooksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $EbooksTable,
+      EbookRow,
+      $$EbooksTableFilterComposer,
+      $$EbooksTableOrderingComposer,
+      $$EbooksTableAnnotationComposer,
+      $$EbooksTableCreateCompanionBuilder,
+      $$EbooksTableUpdateCompanionBuilder,
+      (EbookRow, $$EbooksTableReferences),
+      EbookRow,
+      PrefetchHooks Function({bool ebookCollectionsRefs})
+    >;
+typedef $$CollectionsTableCreateCompanionBuilder =
+    CollectionsCompanion Function({
+      required VectorClock vectorClock,
+      required DateTime updatedAt,
+      required String deviceId,
+      Value<bool> deleted,
+      required String id,
+      required String name,
+      Value<String> kind,
+      Value<String?> description,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$CollectionsTableUpdateCompanionBuilder =
+    CollectionsCompanion Function({
+      Value<VectorClock> vectorClock,
+      Value<DateTime> updatedAt,
+      Value<String> deviceId,
+      Value<bool> deleted,
+      Value<String> id,
+      Value<String> name,
+      Value<String> kind,
+      Value<String?> description,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$CollectionsTableReferences
+    extends BaseReferences<_$AtrilDatabase, $CollectionsTable, CollectionRow> {
+  $$CollectionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$EbookCollectionsTable, List<EbookCollectionRow>>
+  _ebookCollectionsRefsTable(_$AtrilDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.ebookCollections,
+        aliasName: 'collections__id__ebook_collections__collection_id',
+      );
+
+  $$EbookCollectionsTableProcessedTableManager get ebookCollectionsRefs {
+    final manager = $$EbookCollectionsTableTableManager(
+      $_db,
+      $_db.ebookCollections,
+    ).filter((f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _ebookCollectionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CollectionsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $CollectionsTable> {
+  $$CollectionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  Expression<bool> ebookCollectionsRefs(
+    Expression<bool> Function($$EbookCollectionsTableFilterComposer f) f,
+  ) {
+    final $$EbookCollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCollections,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CollectionsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $CollectionsTable> {
+  $$CollectionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CollectionsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $CollectionsTable> {
+  $$CollectionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> ebookCollectionsRefs<T extends Object>(
+    Expression<T> Function($$EbookCollectionsTableAnnotationComposer a) f,
+  ) {
+    final $$EbookCollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCollections,
+      getReferencedColumn: (t) => t.collectionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CollectionsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $CollectionsTable,
+          CollectionRow,
+          $$CollectionsTableFilterComposer,
+          $$CollectionsTableOrderingComposer,
+          $$CollectionsTableAnnotationComposer,
+          $$CollectionsTableCreateCompanionBuilder,
+          $$CollectionsTableUpdateCompanionBuilder,
+          (CollectionRow, $$CollectionsTableReferences),
+          CollectionRow,
+          PrefetchHooks Function({bool ebookCollectionsRefs})
+        > {
+  $$CollectionsTableTableManager(_$AtrilDatabase db, $CollectionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CollectionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CollectionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CollectionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CollectionsCompanion(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                name: name,
+                kind: kind,
+                description: description,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required VectorClock vectorClock,
+                required DateTime updatedAt,
+                required String deviceId,
+                Value<bool> deleted = const Value.absent(),
+                required String id,
+                required String name,
+                Value<String> kind = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CollectionsCompanion.insert(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                name: name,
+                kind: kind,
+                description: description,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CollectionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookCollectionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (ebookCollectionsRefs) db.ebookCollections,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (ebookCollectionsRefs)
+                    await $_getPrefetchedData<
+                      CollectionRow,
+                      $CollectionsTable,
+                      EbookCollectionRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CollectionsTableReferences
+                          ._ebookCollectionsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CollectionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).ebookCollectionsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.collectionId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CollectionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $CollectionsTable,
+      CollectionRow,
+      $$CollectionsTableFilterComposer,
+      $$CollectionsTableOrderingComposer,
+      $$CollectionsTableAnnotationComposer,
+      $$CollectionsTableCreateCompanionBuilder,
+      $$CollectionsTableUpdateCompanionBuilder,
+      (CollectionRow, $$CollectionsTableReferences),
+      CollectionRow,
+      PrefetchHooks Function({bool ebookCollectionsRefs})
+    >;
+typedef $$EbookCollectionsTableCreateCompanionBuilder =
+    EbookCollectionsCompanion Function({
+      required VectorClock vectorClock,
+      required DateTime updatedAt,
+      required String deviceId,
+      Value<bool> deleted,
+      required String id,
+      required String ebookId,
+      required String collectionId,
+      Value<int> rowid,
+    });
+typedef $$EbookCollectionsTableUpdateCompanionBuilder =
+    EbookCollectionsCompanion Function({
+      Value<VectorClock> vectorClock,
+      Value<DateTime> updatedAt,
+      Value<String> deviceId,
+      Value<bool> deleted,
+      Value<String> id,
+      Value<String> ebookId,
+      Value<String> collectionId,
+      Value<int> rowid,
+    });
+
+final class $$EbookCollectionsTableReferences
+    extends
+        BaseReferences<
+          _$AtrilDatabase,
+          $EbookCollectionsTable,
+          EbookCollectionRow
+        > {
+  $$EbookCollectionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $EbooksTable _ebookIdTable(_$AtrilDatabase db) =>
+      db.ebooks.createAlias('ebook_collections__ebook_id__ebooks__id');
+
+  $$EbooksTableProcessedTableManager get ebookId {
+    final $_column = $_itemColumn<String>('ebook_id')!;
+
+    final manager = $$EbooksTableTableManager(
+      $_db,
+      $_db.ebooks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ebookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CollectionsTable _collectionIdTable(_$AtrilDatabase db) => db
+      .collections
+      .createAlias('ebook_collections__collection_id__collections__id');
+
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
+    final manager = $$CollectionsTableTableManager(
+      $_db,
+      $_db.collections,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EbookCollectionsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $EbookCollectionsTable> {
+  $$EbookCollectionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EbooksTableFilterComposer get ebookId {
+    final $$EbooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableFilterComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CollectionsTableFilterComposer get collectionId {
+    final $$CollectionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableFilterComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCollectionsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $EbookCollectionsTable> {
+  $$EbookCollectionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EbooksTableOrderingComposer get ebookId {
+    final $$EbooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CollectionsTableOrderingComposer get collectionId {
+    final $$CollectionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCollectionsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $EbookCollectionsTable> {
+  $$EbookCollectionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$EbooksTableAnnotationComposer get ebookId {
+    final $$EbooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CollectionsTableAnnotationComposer get collectionId {
+    final $$CollectionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.collectionId,
+      referencedTable: $db.collections,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CollectionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.collections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCollectionsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $EbookCollectionsTable,
+          EbookCollectionRow,
+          $$EbookCollectionsTableFilterComposer,
+          $$EbookCollectionsTableOrderingComposer,
+          $$EbookCollectionsTableAnnotationComposer,
+          $$EbookCollectionsTableCreateCompanionBuilder,
+          $$EbookCollectionsTableUpdateCompanionBuilder,
+          (EbookCollectionRow, $$EbookCollectionsTableReferences),
+          EbookCollectionRow,
+          PrefetchHooks Function({bool ebookId, bool collectionId})
+        > {
+  $$EbookCollectionsTableTableManager(
+    _$AtrilDatabase db,
+    $EbookCollectionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EbookCollectionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EbookCollectionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EbookCollectionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> ebookId = const Value.absent(),
+                Value<String> collectionId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EbookCollectionsCompanion(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                ebookId: ebookId,
+                collectionId: collectionId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required VectorClock vectorClock,
+                required DateTime updatedAt,
+                required String deviceId,
+                Value<bool> deleted = const Value.absent(),
+                required String id,
+                required String ebookId,
+                required String collectionId,
+                Value<int> rowid = const Value.absent(),
+              }) => EbookCollectionsCompanion.insert(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                ebookId: ebookId,
+                collectionId: collectionId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EbookCollectionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookId = false, collectionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ebookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ebookId,
+                        referencedTable: $$EbookCollectionsTableReferences
+                            ._ebookIdTable(db),
+                        referencedColumn: $$EbookCollectionsTableReferences
+                            ._ebookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (collectionId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.collectionId,
+                        referencedTable: $$EbookCollectionsTableReferences
+                            ._collectionIdTable(db),
+                        referencedColumn: $$EbookCollectionsTableReferences
+                            ._collectionIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EbookCollectionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $EbookCollectionsTable,
+      EbookCollectionRow,
+      $$EbookCollectionsTableFilterComposer,
+      $$EbookCollectionsTableOrderingComposer,
+      $$EbookCollectionsTableAnnotationComposer,
+      $$EbookCollectionsTableCreateCompanionBuilder,
+      $$EbookCollectionsTableUpdateCompanionBuilder,
+      (EbookCollectionRow, $$EbookCollectionsTableReferences),
+      EbookCollectionRow,
+      PrefetchHooks Function({bool ebookId, bool collectionId})
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -2903,4 +6277,10 @@ class $AtrilDatabaseManager {
       $$SignedInReaderTableTableManager(_db, _db.signedInReader);
   $$ClockFloorTableTableManager get clockFloor =>
       $$ClockFloorTableTableManager(_db, _db.clockFloor);
+  $$EbooksTableTableManager get ebooks =>
+      $$EbooksTableTableManager(_db, _db.ebooks);
+  $$CollectionsTableTableManager get collections =>
+      $$CollectionsTableTableManager(_db, _db.collections);
+  $$EbookCollectionsTableTableManager get ebookCollections =>
+      $$EbookCollectionsTableTableManager(_db, _db.ebookCollections);
 }

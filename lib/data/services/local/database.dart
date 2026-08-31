@@ -19,10 +19,15 @@ library;
 
 import 'package:drift/drift.dart';
 
+// The generated part of this library names the types the converters in
+// `converters.dart` map columns onto, so their imports belong here rather than
+// only where the tables declare them.
+import '../../../domain/crdt/vector_clock.dart';
 import 'connection/connection.dart';
 import 'converters.dart';
 import 'dao/identity_dao.dart';
 import 'tables/identity.dart';
+import 'tables/library.dart';
 
 part 'database.g.dart';
 
@@ -32,7 +37,15 @@ part 'database.g.dart';
 /// a test can hand it an in-memory database and the entry point can hand it
 /// the platform's. The default is what the platform gives.
 @DriftDatabase(
-  tables: <Type>[BoundDevice, SignedInReader, KnownServers, ClockFloor],
+  tables: <Type>[
+    BoundDevice,
+    SignedInReader,
+    KnownServers,
+    ClockFloor,
+    Ebooks,
+    Collections,
+    EbookCollections,
+  ],
   daos: <Type>[IdentityDao],
 )
 class AtrilDatabase extends _$AtrilDatabase {

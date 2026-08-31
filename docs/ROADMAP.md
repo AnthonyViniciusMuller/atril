@@ -138,10 +138,12 @@ listenable would be a type no widget and no `provider` could observe.
       device id lives here and not in the session store, because it survives logout. The origin
       server is a flag on the catalogue and not a table of its own — it is the node the reader is
       signed in at, and a partial unique index is what keeps a device from having two
-- [ ] `feat: add the library tables` — `ebooks`, `collections` and `ebook_collections`, each with
+- [x] `feat: add the library tables` — `ebooks`, `collections` and `ebook_collections`, each with
       the revision columns spelled out: `vector_clock`, `updated_at`, `device_id`, `deleted`. The
       membership table carries the unique `(ebook_id, collection_id)` C06 requires, because the
-      pair and not the row is the record
+      pair and not the row is the record. The four columns are a mixin and not four copies: the
+      reconciler reads them generically, so one spelled differently on one table would be a
+      record the merge quietly skipped
 - [ ] `feat: add the reading tables` — `annotations` with a full revision, and `progress` with a
       clock and a timestamp and neither tie-break field, per C05, unique on
       `(ebook_id, device_id)`
