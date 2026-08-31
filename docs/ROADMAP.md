@@ -126,9 +126,13 @@ listenable would be a type no widget and no `provider` could observe.
       a conditional export for the reason `architecture.md` now gives at its own heading: a
       `dart:io` import does not parse for the web target, so the two cannot be implementations
       of an interface picked at run time
-- [ ] `build: add the drift web worker assets` — `sqlite3.wasm` and `drift_worker.js` under
+- [x] `build: add the drift web worker assets` — `sqlite3.wasm` and `drift_worker.js` under
       `web/`, and the web connection that picks OPFS where it is available and IndexedDB where it
-      is not. Committed with the version they were built from
+      is not. Committed with the version they were built from, and with the check that fails when
+      a drift upgrade leaves them behind — the worker and the package talk a protocol versioned
+      with drift, so a stale pair compiles and then fails at the first statement. Both files come
+      from the one drift release for that reason. The connection reports what the browser gave it
+      and whether that survives a reload, because two of drift's four backings do not
 - [ ] `feat: add the identity tables` — the bound device, the reader, the origin server, the
       known-server catalogue, and the hybrid clock's floor, which phase 2 left behind a port. The
       device id lives here and not in the session store, because it survives logout

@@ -146,6 +146,44 @@ gen-proto:
 gen-drift:
 	$(DART) run build_runner build
 
+# The web build serves sqlite compiled to WebAssembly and drift's worker beside
+# the app, because a browser has no file to open a database on. Neither can be
+# built here and neither is on pub, so both are committed under web/ — see
+# web/README.md — and both come from the one drift release, since the worker
+# and the package talk a protocol versioned with drift.
+#
+# The pin below is what the committed files were downloaded for. It is checked
+# against the drift pubspec.lock resolves rather than trusted: upgrading drift
+# without refreshing the worker produces a build that compiles and then fails
+# at its first statement, which is the failure worth spending a CI step on.
+DRIFT_VERSION ?= 2.34.3
+DRIFT_RELEASE := https://github.com/simolus3/drift/releases/download/drift-$(DRIFT_VERSION)
+
+## web-assets: refresh sqlite3.wasm and drift_worker.js from the pinned drift release
+.PHONY: web-assets
+web-assets:
+	@curl -fsSL -o web/sqlite3.wasm $(DRIFT_RELEASE)/sqlite3.wasm
+	@curl -fsSL -o web/drift_worker.js $(DRIFT_RELEASE)/drift_worker.js
+	@echo "web/sqlite3.wasm and web/drift_worker.js are from drift $(DRIFT_VERSION):"
+	@shasum -a 256 web/sqlite3.wasm web/drift_worker.js 2>/dev/null \
+		|| sha256sum web/sqlite3.wasm web/drift_worker.js
+
+## web-assets-check: fail when the committed web assets are from another drift release
+.PHONY: web-assets-check
+web-assets-check:
+	@resolved=$$(awk '/^  drift:$$/ { found = 1 } \
+		found && /^    version:/ { gsub(/[":]/, "", $$2); print $$2; exit }' pubspec.lock); \
+	test "$$resolved" = "$(DRIFT_VERSION)" || { \
+		echo "pubspec.lock resolves drift $$resolved and web/ holds the assets of $(DRIFT_VERSION)" >&2; \
+		echo "run 'make web-assets DRIFT_VERSION=$$resolved' and update web/README.md" >&2; \
+		exit 1; \
+	}
+	@test -s web/sqlite3.wasm -a -s web/drift_worker.js || { \
+		echo "web/sqlite3.wasm or web/drift_worker.js is missing — run 'make web-assets'" >&2; \
+		exit 1; \
+	}
+	@echo "the web assets match drift $(DRIFT_VERSION)"
+
 ## fmt: format the Dart sources in place
 .PHONY: fmt
 fmt:

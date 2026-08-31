@@ -53,3 +53,15 @@ QueryExecutor openConnection({String name = defaultDatabaseName}) {
     );
   });
 }
+
+/// What is holding the replica. On a native target it is a file, and there is
+/// nothing further to say about it.
+String get replicaStorage => 'file';
+
+/// Whether the replica survives being closed and reopened.
+///
+/// It always does here. The counterpart in `connection_web.dart` is where the
+/// answer can be no, and this getter exists so that a caller — the offline
+/// pinning of phase 8 — asks the question once rather than asking whether it
+/// is running in a browser.
+bool get replicaIsDurable => true;

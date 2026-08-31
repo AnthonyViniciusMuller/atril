@@ -98,6 +98,13 @@ jobs:
           git add --intent-to-add -- 'lib/**/*.g.dart'
           git diff --exit-code -- 'lib/**/*.g.dart'
 
+      # The web build serves sqlite as WebAssembly and drift's worker beside
+      # the app, and those two files are committed. A drift upgrade that did
+      # not refresh them produces a build that compiles and then fails at its
+      # first statement in a browser, which no other job here would catch.
+      - name: Check that the web assets match the resolved drift
+        run: make web-assets-check
+
       # The formatter is checked before the analyzer because a reformatting
       # diff buried in a feature commit is a review that reads the whitespace.
       - name: Check formatting
