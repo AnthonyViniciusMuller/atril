@@ -32,6 +32,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/services/api/session.dart';
 import '../ui/annotations/widgets/annotations_screen.dart';
+import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
 import '../ui/onboarding/widgets/onboarding_screen.dart';
@@ -54,8 +55,9 @@ typedef ShellBuilder = Widget Function(
 /// The router of the app.
 ///
 /// [session] is what the guard asks. [shellBuilder] wraps the three
-/// destinations; where none is given the branch is shown on its own, which is
-/// a working app reachable by location and no way to walk between the three.
+/// destinations and defaults to [AdaptiveScaffold]; a test that only cares
+/// where a redirect lands passes something simpler rather than laying out a
+/// rail it is not looking at.
 ///
 /// [refresh] is what makes the router re-run the guard. It defaults to
 /// [SessionHolder.signedIn], and its subscription lives as long as that stream
@@ -81,11 +83,14 @@ GoRouter atrilRouter({
             const OnboardingScreen(),
       ),
       StatefulShellRoute.indexedStack(
-        builder: (
-          BuildContext context,
-          GoRouterState state,
-          StatefulNavigationShell navigation,
-        ) => shellBuilder?.call(context, navigation) ?? navigation,
+        builder:
+            (
+              BuildContext context,
+              GoRouterState state,
+              StatefulNavigationShell navigation,
+            ) =>
+                shellBuilder?.call(context, navigation) ??
+                AdaptiveScaffold(navigation: navigation),
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             routes: <RouteBase>[

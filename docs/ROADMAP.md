@@ -334,10 +334,18 @@ listenable would be a type no widget and no `provider` could observe.
       imports nothing from Flutter. The adapter is in `routing/`. There is also a not-found
       screen, for the one target with an address bar: `go_router`'s own error page is a stack
       trace on a red background, and a pasted link has no history to offer a back button
-- [ ] `feat: add the adaptive scaffold` — one navigation surface expressed three ways:
+- [x] `feat: add the adaptive scaffold` — one navigation surface expressed three ways:
       `NavigationBar` on a phone, `NavigationRail` on a tablet or a small window, and an extended
       rail on a desktop. Chosen by width and not by platform, because a resized desktop window is
-      a phone and a tablet in landscape is not
+      a phone and a tablet in landscape is not. The thresholds are Material 3's, at 600 and at
+      1200 rather than at 840: an extended rail is 256 pixels, and spending that out of 840 leaves
+      a catalogue less room than the rail saved. It measures the space it was *given* and not the
+      window, which is the number that decides whether a rail fits when something else is beside
+      it. The destinations are one list in the order the router declares its branches, because a
+      surface reports the index it was tapped at and two orderings written separately disagree
+      silently — as a tap on *Settings* opening the annotations. Three destinations and not four:
+      collections live inside the library (phase 8) and the sync status is a line in the shell
+      with a screen behind it (phase 11)
 - [ ] `feat: add the entry points and the dependency graph` — `main.dart`,
       `main_development.dart`, and one `providers` function per environment. Nothing below
       `main` reads a compile-time constant, for the reason Quire gives about `os.Getenv`: the
