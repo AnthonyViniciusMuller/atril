@@ -3777,6 +3777,1143 @@ class EbookCollectionsCompanion extends UpdateCompanion<EbookCollectionRow> {
   }
 }
 
+class $AnnotationsTable extends Annotations
+    with TableInfo<$AnnotationsTable, AnnotationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnnotationsTable(this.attachedDatabase, [this._alias]);
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>($AnnotationsTable.$convertervectorClock);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> updatedAt =
+      GeneratedColumn<int>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AnnotationsTable.$converterupdatedAt);
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ebookIdMeta = const VerificationMeta(
+    'ebookId',
+  );
+  @override
+  late final GeneratedColumn<String> ebookId = GeneratedColumn<String>(
+    'ebook_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ebooks (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locatorMeta = const VerificationMeta(
+    'locator',
+  );
+  @override
+  late final GeneratedColumn<String> locator = GeneratedColumn<String>(
+    'locator',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 255,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    ebookId,
+    kind,
+    content,
+    locator,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'annotations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AnnotationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('ebook_id')) {
+      context.handle(
+        _ebookIdMeta,
+        ebookId.isAcceptableOrUnknown(data['ebook_id']!, _ebookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ebookIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('text')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['text']!, _contentMeta),
+      );
+    }
+    if (data.containsKey('locator')) {
+      context.handle(
+        _locatorMeta,
+        locator.isAcceptableOrUnknown(data['locator']!, _locatorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_locatorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AnnotationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AnnotationRow(
+      vectorClock: $AnnotationsTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      updatedAt: $AnnotationsTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ebookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ebook_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text'],
+      ),
+      locator: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}locator'],
+      )!,
+    );
+  }
+
+  @override
+  $AnnotationsTable createAlias(String alias) {
+    return $AnnotationsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $converterupdatedAt =
+      const InstantConverter();
+}
+
+class AnnotationRow extends DataClass implements Insertable<AnnotationRow> {
+  /// The causal version of the record, as the JSON object the node stores in
+  /// `jsonb`. The reconciler consults it first and consults nothing else unless
+  /// it reports two versions concurrent.
+  final VectorClock vectorClock;
+
+  /// The first half of the tie-break, on the hybrid clock C01 describes. It is
+  /// not a wall clock reading, and nothing renders it to a reader.
+  final DateTime updatedAt;
+
+  /// The second half: the device whose write the record currently reflects,
+  /// never the one that created it (C10).
+  final String deviceId;
+
+  /// The tombstone. A record removed outright is resurrected by the next
+  /// replica that had not yet heard about the deletion, so deletion is a write
+  /// like any other and reconciles like one.
+  final bool deleted;
+
+  /// The identifier the device that made the mark minted.
+  final String id;
+
+  /// The work the mark is in.
+  ///
+  /// A mark is made in a work and stays in it: it is not among the fields an
+  /// update may write, because a note that moved between books would be a note
+  /// about a passage that is not there.
+  final String ebookId;
+
+  /// One of [annotationKinds].
+  final String kind;
+
+  /// Required for a note, which is otherwise an empty note; optional on the
+  /// other two.
+  ///
+  /// The column is named `text` because that is what the contract, the delta
+  /// and the node's own column call it. The getter cannot be: it would shadow
+  /// the column builder it is declared with.
+  final String? content;
+
+  /// The passage, expressed so that it survives the format: a CFI in an EPUB, a
+  /// page in a PDF.
+  ///
+  /// It is the one value in this schema that is authored by a renderer rather
+  /// than by the app, and it is replicated to the reader's other devices, which
+  /// is the whole reason phase 9 insists on one CFI implementation across the
+  /// six targets. Two of them would disagree here, and the disagreement would
+  /// arrive as a highlight on the wrong paragraph.
+  final String locator;
+  const AnnotationRow({
+    required this.vectorClock,
+    required this.updatedAt,
+    required this.deviceId,
+    required this.deleted,
+    required this.id,
+    required this.ebookId,
+    required this.kind,
+    this.content,
+    required this.locator,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    {
+      map['vector_clock'] = Variable<String>(
+        $AnnotationsTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['updated_at'] = Variable<int>(
+        $AnnotationsTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['deleted'] = Variable<bool>(deleted);
+    map['id'] = Variable<String>(id);
+    map['ebook_id'] = Variable<String>(ebookId);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || content != null) {
+      map['text'] = Variable<String>(content);
+    }
+    map['locator'] = Variable<String>(locator);
+    return map;
+  }
+
+  AnnotationsCompanion toCompanion(bool nullToAbsent) {
+    return AnnotationsCompanion(
+      vectorClock: Value(vectorClock),
+      updatedAt: Value(updatedAt),
+      deviceId: Value(deviceId),
+      deleted: Value(deleted),
+      id: Value(id),
+      ebookId: Value(ebookId),
+      kind: Value(kind),
+      content: content == null && nullToAbsent
+          ? const Value.absent()
+          : Value(content),
+      locator: Value(locator),
+    );
+  }
+
+  factory AnnotationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AnnotationRow(
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      id: serializer.fromJson<String>(json['id']),
+      ebookId: serializer.fromJson<String>(json['ebookId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      content: serializer.fromJson<String?>(json['content']),
+      locator: serializer.fromJson<String>(json['locator']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'deleted': serializer.toJson<bool>(deleted),
+      'id': serializer.toJson<String>(id),
+      'ebookId': serializer.toJson<String>(ebookId),
+      'kind': serializer.toJson<String>(kind),
+      'content': serializer.toJson<String?>(content),
+      'locator': serializer.toJson<String>(locator),
+    };
+  }
+
+  AnnotationRow copyWith({
+    VectorClock? vectorClock,
+    DateTime? updatedAt,
+    String? deviceId,
+    bool? deleted,
+    String? id,
+    String? ebookId,
+    String? kind,
+    Value<String?> content = const Value.absent(),
+    String? locator,
+  }) => AnnotationRow(
+    vectorClock: vectorClock ?? this.vectorClock,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deviceId: deviceId ?? this.deviceId,
+    deleted: deleted ?? this.deleted,
+    id: id ?? this.id,
+    ebookId: ebookId ?? this.ebookId,
+    kind: kind ?? this.kind,
+    content: content.present ? content.value : this.content,
+    locator: locator ?? this.locator,
+  );
+  AnnotationRow copyWithCompanion(AnnotationsCompanion data) {
+    return AnnotationRow(
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      id: data.id.present ? data.id.value : this.id,
+      ebookId: data.ebookId.present ? data.ebookId.value : this.ebookId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      content: data.content.present ? data.content.value : this.content,
+      locator: data.locator.present ? data.locator.value : this.locator,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnotationRow(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('kind: $kind, ')
+          ..write('content: $content, ')
+          ..write('locator: $locator')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    vectorClock,
+    updatedAt,
+    deviceId,
+    deleted,
+    id,
+    ebookId,
+    kind,
+    content,
+    locator,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AnnotationRow &&
+          other.vectorClock == this.vectorClock &&
+          other.updatedAt == this.updatedAt &&
+          other.deviceId == this.deviceId &&
+          other.deleted == this.deleted &&
+          other.id == this.id &&
+          other.ebookId == this.ebookId &&
+          other.kind == this.kind &&
+          other.content == this.content &&
+          other.locator == this.locator);
+}
+
+class AnnotationsCompanion extends UpdateCompanion<AnnotationRow> {
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> updatedAt;
+  final Value<String> deviceId;
+  final Value<bool> deleted;
+  final Value<String> id;
+  final Value<String> ebookId;
+  final Value<String> kind;
+  final Value<String?> content;
+  final Value<String> locator;
+  final Value<int> rowid;
+  const AnnotationsCompanion({
+    this.vectorClock = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.id = const Value.absent(),
+    this.ebookId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.content = const Value.absent(),
+    this.locator = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AnnotationsCompanion.insert({
+    required VectorClock vectorClock,
+    required DateTime updatedAt,
+    required String deviceId,
+    this.deleted = const Value.absent(),
+    required String id,
+    required String ebookId,
+    required String kind,
+    this.content = const Value.absent(),
+    required String locator,
+    this.rowid = const Value.absent(),
+  }) : vectorClock = Value(vectorClock),
+       updatedAt = Value(updatedAt),
+       deviceId = Value(deviceId),
+       id = Value(id),
+       ebookId = Value(ebookId),
+       kind = Value(kind),
+       locator = Value(locator);
+  static Insertable<AnnotationRow> custom({
+    Expression<String>? vectorClock,
+    Expression<int>? updatedAt,
+    Expression<String>? deviceId,
+    Expression<bool>? deleted,
+    Expression<String>? id,
+    Expression<String>? ebookId,
+    Expression<String>? kind,
+    Expression<String>? content,
+    Expression<String>? locator,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deleted != null) 'deleted': deleted,
+      if (id != null) 'id': id,
+      if (ebookId != null) 'ebook_id': ebookId,
+      if (kind != null) 'kind': kind,
+      if (content != null) 'text': content,
+      if (locator != null) 'locator': locator,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AnnotationsCompanion copyWith({
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? updatedAt,
+    Value<String>? deviceId,
+    Value<bool>? deleted,
+    Value<String>? id,
+    Value<String>? ebookId,
+    Value<String>? kind,
+    Value<String?>? content,
+    Value<String>? locator,
+    Value<int>? rowid,
+  }) {
+    return AnnotationsCompanion(
+      vectorClock: vectorClock ?? this.vectorClock,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deviceId: deviceId ?? this.deviceId,
+      deleted: deleted ?? this.deleted,
+      id: id ?? this.id,
+      ebookId: ebookId ?? this.ebookId,
+      kind: kind ?? this.kind,
+      content: content ?? this.content,
+      locator: locator ?? this.locator,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $AnnotationsTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(
+        $AnnotationsTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ebookId.present) {
+      map['ebook_id'] = Variable<String>(ebookId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (content.present) {
+      map['text'] = Variable<String>(content.value);
+    }
+    if (locator.present) {
+      map['locator'] = Variable<String>(locator.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnotationsCompanion(')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deleted: $deleted, ')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('kind: $kind, ')
+          ..write('content: $content, ')
+          ..write('locator: $locator, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProgressTable extends Progress
+    with TableInfo<$ProgressTable, ProgressRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProgressTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ebookIdMeta = const VerificationMeta(
+    'ebookId',
+  );
+  @override
+  late final GeneratedColumn<String> ebookId = GeneratedColumn<String>(
+    'ebook_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ebooks (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _locatorMeta = const VerificationMeta(
+    'locator',
+  );
+  @override
+  late final GeneratedColumn<String> locator = GeneratedColumn<String>(
+    'locator',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 255,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _percentMeta = const VerificationMeta(
+    'percent',
+  );
+  @override
+  late final GeneratedColumn<double> percent = GeneratedColumn<double>(
+    'percent',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>($ProgressTable.$convertervectorClock);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> updatedAt =
+      GeneratedColumn<int>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ProgressTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ebookId,
+    deviceId,
+    locator,
+    percent,
+    vectorClock,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'progress';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProgressRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('ebook_id')) {
+      context.handle(
+        _ebookIdMeta,
+        ebookId.isAcceptableOrUnknown(data['ebook_id']!, _ebookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ebookIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('locator')) {
+      context.handle(
+        _locatorMeta,
+        locator.isAcceptableOrUnknown(data['locator']!, _locatorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_locatorMeta);
+    }
+    if (data.containsKey('percent')) {
+      context.handle(
+        _percentMeta,
+        percent.isAcceptableOrUnknown(data['percent']!, _percentMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {ebookId, deviceId},
+  ];
+  @override
+  ProgressRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProgressRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ebookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ebook_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      locator: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}locator'],
+      )!,
+      percent: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}percent'],
+      ),
+      vectorClock: $ProgressTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      updatedAt: $ProgressTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ProgressTable createAlias(String alias) {
+    return $ProgressTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $converterupdatedAt =
+      const InstantConverter();
+}
+
+class ProgressRow extends DataClass implements Insertable<ProgressRow> {
+  /// The surrogate identifier this device minted for the pair below.
+  ///
+  /// It is provenance and not identity, exactly as a filing's is (C18): the
+  /// record is addressed across the federation by `(ebook_id, device_id)`, and
+  /// a device that forgot the identifier it minted would mint another on every
+  /// write.
+  final String id;
+
+  /// The work the position is in.
+  final String ebookId;
+
+  /// The device the position belongs to, and half of the row's natural key.
+  ///
+  /// It is not a tie-break. Nothing here ever ties, and the column is not the
+  /// `device_id` [RevisionColumns] carries even though it is spelled the same:
+  /// that one is whichever device wrote last, and this one is whose position
+  /// this is.
+  final String deviceId;
+
+  /// Where the reader stopped, in the same format-independent form an
+  /// annotation's passage uses.
+  final String locator;
+
+  /// How far through, 0 to 100.
+  ///
+  /// Derived from the locator and stored anyway, so that a device which cannot
+  /// open a format can still report that the reader is forty percent through
+  /// it. It is absent where nothing could compute it.
+  final double? percent;
+
+  /// The causal version. Because the row has one writer it always has exactly
+  /// one entry, and it grows by one on every write.
+  final VectorClock vectorClock;
+
+  /// When the position was written, on the hybrid clock.
+  final DateTime updatedAt;
+  const ProgressRow({
+    required this.id,
+    required this.ebookId,
+    required this.deviceId,
+    required this.locator,
+    this.percent,
+    required this.vectorClock,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['ebook_id'] = Variable<String>(ebookId);
+    map['device_id'] = Variable<String>(deviceId);
+    map['locator'] = Variable<String>(locator);
+    if (!nullToAbsent || percent != null) {
+      map['percent'] = Variable<double>(percent);
+    }
+    {
+      map['vector_clock'] = Variable<String>(
+        $ProgressTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['updated_at'] = Variable<int>(
+        $ProgressTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  ProgressCompanion toCompanion(bool nullToAbsent) {
+    return ProgressCompanion(
+      id: Value(id),
+      ebookId: Value(ebookId),
+      deviceId: Value(deviceId),
+      locator: Value(locator),
+      percent: percent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(percent),
+      vectorClock: Value(vectorClock),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ProgressRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProgressRow(
+      id: serializer.fromJson<String>(json['id']),
+      ebookId: serializer.fromJson<String>(json['ebookId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      locator: serializer.fromJson<String>(json['locator']),
+      percent: serializer.fromJson<double?>(json['percent']),
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ebookId': serializer.toJson<String>(ebookId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'locator': serializer.toJson<String>(locator),
+      'percent': serializer.toJson<double?>(percent),
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ProgressRow copyWith({
+    String? id,
+    String? ebookId,
+    String? deviceId,
+    String? locator,
+    Value<double?> percent = const Value.absent(),
+    VectorClock? vectorClock,
+    DateTime? updatedAt,
+  }) => ProgressRow(
+    id: id ?? this.id,
+    ebookId: ebookId ?? this.ebookId,
+    deviceId: deviceId ?? this.deviceId,
+    locator: locator ?? this.locator,
+    percent: percent.present ? percent.value : this.percent,
+    vectorClock: vectorClock ?? this.vectorClock,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ProgressRow copyWithCompanion(ProgressCompanion data) {
+    return ProgressRow(
+      id: data.id.present ? data.id.value : this.id,
+      ebookId: data.ebookId.present ? data.ebookId.value : this.ebookId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      locator: data.locator.present ? data.locator.value : this.locator,
+      percent: data.percent.present ? data.percent.value : this.percent,
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProgressRow(')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('locator: $locator, ')
+          ..write('percent: $percent, ')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ebookId,
+    deviceId,
+    locator,
+    percent,
+    vectorClock,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProgressRow &&
+          other.id == this.id &&
+          other.ebookId == this.ebookId &&
+          other.deviceId == this.deviceId &&
+          other.locator == this.locator &&
+          other.percent == this.percent &&
+          other.vectorClock == this.vectorClock &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ProgressCompanion extends UpdateCompanion<ProgressRow> {
+  final Value<String> id;
+  final Value<String> ebookId;
+  final Value<String> deviceId;
+  final Value<String> locator;
+  final Value<double?> percent;
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ProgressCompanion({
+    this.id = const Value.absent(),
+    this.ebookId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.locator = const Value.absent(),
+    this.percent = const Value.absent(),
+    this.vectorClock = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProgressCompanion.insert({
+    required String id,
+    required String ebookId,
+    required String deviceId,
+    required String locator,
+    this.percent = const Value.absent(),
+    required VectorClock vectorClock,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ebookId = Value(ebookId),
+       deviceId = Value(deviceId),
+       locator = Value(locator),
+       vectorClock = Value(vectorClock),
+       updatedAt = Value(updatedAt);
+  static Insertable<ProgressRow> custom({
+    Expression<String>? id,
+    Expression<String>? ebookId,
+    Expression<String>? deviceId,
+    Expression<String>? locator,
+    Expression<double>? percent,
+    Expression<String>? vectorClock,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ebookId != null) 'ebook_id': ebookId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (locator != null) 'locator': locator,
+      if (percent != null) 'percent': percent,
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProgressCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ebookId,
+    Value<String>? deviceId,
+    Value<String>? locator,
+    Value<double?>? percent,
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ProgressCompanion(
+      id: id ?? this.id,
+      ebookId: ebookId ?? this.ebookId,
+      deviceId: deviceId ?? this.deviceId,
+      locator: locator ?? this.locator,
+      percent: percent ?? this.percent,
+      vectorClock: vectorClock ?? this.vectorClock,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ebookId.present) {
+      map['ebook_id'] = Variable<String>(ebookId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (locator.present) {
+      map['locator'] = Variable<String>(locator.value);
+    }
+    if (percent.present) {
+      map['percent'] = Variable<double>(percent.value);
+    }
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $ProgressTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(
+        $ProgressTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProgressCompanion(')
+          ..write('id: $id, ')
+          ..write('ebookId: $ebookId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('locator: $locator, ')
+          ..write('percent: $percent, ')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -3789,6 +4926,8 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $EbookCollectionsTable ebookCollections = $EbookCollectionsTable(
     this,
   );
+  late final $AnnotationsTable annotations = $AnnotationsTable(this);
+  late final $ProgressTable progress = $ProgressTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
@@ -3800,6 +4939,10 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final Index ebookCollectionsCollection = Index(
     'ebook_collections_collection',
     'CREATE INDEX ebook_collections_collection ON ebook_collections (collection_id)',
+  );
+  late final Index annotationsEbook = Index(
+    'annotations_ebook',
+    'CREATE INDEX annotations_ebook ON annotations (ebook_id)',
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
   @override
@@ -3814,9 +4957,12 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     ebooks,
     collections,
     ebookCollections,
+    annotations,
+    progress,
     knownServersOrigin,
     ebooksContentHash,
     ebookCollectionsCollection,
+    annotationsEbook,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3833,6 +4979,20 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('ebook_collections', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('annotations', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('progress', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -4993,6 +6153,42 @@ final class $$EbooksTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$AnnotationsTable, List<AnnotationRow>>
+  _annotationsRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
+    db.annotations,
+    aliasName: 'ebooks__id__annotations__ebook_id',
+  );
+
+  $$AnnotationsTableProcessedTableManager get annotationsRefs {
+    final manager = $$AnnotationsTableTableManager(
+      $_db,
+      $_db.annotations,
+    ).filter((f) => f.ebookId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_annotationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ProgressTable, List<ProgressRow>>
+  _progressRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
+    db.progress,
+    aliasName: 'ebooks__id__progress__ebook_id',
+  );
+
+  $$ProgressTableProcessedTableManager get progressRefs {
+    final manager = $$ProgressTableTableManager(
+      $_db,
+      $_db.progress,
+    ).filter((f) => f.ebookId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_progressRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$EbooksTableFilterComposer
@@ -5093,6 +6289,56 @@ class $$EbooksTableFilterComposer
           }) => $$EbookCollectionsTableFilterComposer(
             $db: $db,
             $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> annotationsRefs(
+    Expression<bool> Function($$AnnotationsTableFilterComposer f) f,
+  ) {
+    final $$AnnotationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.annotations,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnnotationsTableFilterComposer(
+            $db: $db,
+            $table: $db.annotations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> progressRefs(
+    Expression<bool> Function($$ProgressTableFilterComposer f) f,
+  ) {
+    final $$ProgressTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.progress,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProgressTableFilterComposer(
+            $db: $db,
+            $table: $db.progress,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5268,6 +6514,56 @@ class $$EbooksTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> annotationsRefs<T extends Object>(
+    Expression<T> Function($$AnnotationsTableAnnotationComposer a) f,
+  ) {
+    final $$AnnotationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.annotations,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnnotationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.annotations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> progressRefs<T extends Object>(
+    Expression<T> Function($$ProgressTableAnnotationComposer a) f,
+  ) {
+    final $$ProgressTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.progress,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProgressTableAnnotationComposer(
+            $db: $db,
+            $table: $db.progress,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$EbooksTableTableManager
@@ -5283,7 +6579,11 @@ class $$EbooksTableTableManager
           $$EbooksTableUpdateCompanionBuilder,
           (EbookRow, $$EbooksTableReferences),
           EbookRow,
-          PrefetchHooks Function({bool ebookCollectionsRefs})
+          PrefetchHooks Function({
+            bool ebookCollectionsRefs,
+            bool annotationsRefs,
+            bool progressRefs,
+          })
         > {
   $$EbooksTableTableManager(_$AtrilDatabase db, $EbooksTable table)
     : super(
@@ -5370,37 +6670,89 @@ class $$EbooksTableTableManager
                     (e.readTable(table), $$EbooksTableReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback: ({ebookCollectionsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (ebookCollectionsRefs) db.ebookCollections,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (ebookCollectionsRefs)
-                    await $_getPrefetchedData<
-                      EbookRow,
-                      $EbooksTable,
-                      EbookCollectionRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$EbooksTableReferences
-                          ._ebookCollectionsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$EbooksTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).ebookCollectionsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.ebookId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                ebookCollectionsRefs = false,
+                annotationsRefs = false,
+                progressRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (ebookCollectionsRefs) db.ebookCollections,
+                    if (annotationsRefs) db.annotations,
+                    if (progressRefs) db.progress,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (ebookCollectionsRefs)
+                        await $_getPrefetchedData<
+                          EbookRow,
+                          $EbooksTable,
+                          EbookCollectionRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EbooksTableReferences
+                              ._ebookCollectionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EbooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).ebookCollectionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ebookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (annotationsRefs)
+                        await $_getPrefetchedData<
+                          EbookRow,
+                          $EbooksTable,
+                          AnnotationRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EbooksTableReferences
+                              ._annotationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EbooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).annotationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ebookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (progressRefs)
+                        await $_getPrefetchedData<
+                          EbookRow,
+                          $EbooksTable,
+                          ProgressRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EbooksTableReferences
+                              ._progressRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EbooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).progressRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ebookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -5417,7 +6769,11 @@ typedef $$EbooksTableProcessedTableManager =
       $$EbooksTableUpdateCompanionBuilder,
       (EbookRow, $$EbooksTableReferences),
       EbookRow,
-      PrefetchHooks Function({bool ebookCollectionsRefs})
+      PrefetchHooks Function({
+        bool ebookCollectionsRefs,
+        bool annotationsRefs,
+        bool progressRefs,
+      })
     >;
 typedef $$CollectionsTableCreateCompanionBuilder =
     CollectionsCompanion Function({
@@ -6265,6 +7621,758 @@ typedef $$EbookCollectionsTableProcessedTableManager =
       EbookCollectionRow,
       PrefetchHooks Function({bool ebookId, bool collectionId})
     >;
+typedef $$AnnotationsTableCreateCompanionBuilder =
+    AnnotationsCompanion Function({
+      required VectorClock vectorClock,
+      required DateTime updatedAt,
+      required String deviceId,
+      Value<bool> deleted,
+      required String id,
+      required String ebookId,
+      required String kind,
+      Value<String?> content,
+      required String locator,
+      Value<int> rowid,
+    });
+typedef $$AnnotationsTableUpdateCompanionBuilder =
+    AnnotationsCompanion Function({
+      Value<VectorClock> vectorClock,
+      Value<DateTime> updatedAt,
+      Value<String> deviceId,
+      Value<bool> deleted,
+      Value<String> id,
+      Value<String> ebookId,
+      Value<String> kind,
+      Value<String?> content,
+      Value<String> locator,
+      Value<int> rowid,
+    });
+
+final class $$AnnotationsTableReferences
+    extends BaseReferences<_$AtrilDatabase, $AnnotationsTable, AnnotationRow> {
+  $$AnnotationsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $EbooksTable _ebookIdTable(_$AtrilDatabase db) =>
+      db.ebooks.createAlias('annotations__ebook_id__ebooks__id');
+
+  $$EbooksTableProcessedTableManager get ebookId {
+    final $_column = $_itemColumn<String>('ebook_id')!;
+
+    final manager = $$EbooksTableTableManager(
+      $_db,
+      $_db.ebooks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ebookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AnnotationsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $AnnotationsTable> {
+  $$AnnotationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locator => $composableBuilder(
+    column: $table.locator,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EbooksTableFilterComposer get ebookId {
+    final $$EbooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableFilterComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnnotationsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $AnnotationsTable> {
+  $$AnnotationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locator => $composableBuilder(
+    column: $table.locator,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EbooksTableOrderingComposer get ebookId {
+    final $$EbooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnnotationsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $AnnotationsTable> {
+  $$AnnotationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<String> get locator =>
+      $composableBuilder(column: $table.locator, builder: (column) => column);
+
+  $$EbooksTableAnnotationComposer get ebookId {
+    final $$EbooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnnotationsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $AnnotationsTable,
+          AnnotationRow,
+          $$AnnotationsTableFilterComposer,
+          $$AnnotationsTableOrderingComposer,
+          $$AnnotationsTableAnnotationComposer,
+          $$AnnotationsTableCreateCompanionBuilder,
+          $$AnnotationsTableUpdateCompanionBuilder,
+          (AnnotationRow, $$AnnotationsTableReferences),
+          AnnotationRow,
+          PrefetchHooks Function({bool ebookId})
+        > {
+  $$AnnotationsTableTableManager(_$AtrilDatabase db, $AnnotationsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AnnotationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AnnotationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AnnotationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> ebookId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<String> locator = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnnotationsCompanion(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                ebookId: ebookId,
+                kind: kind,
+                content: content,
+                locator: locator,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required VectorClock vectorClock,
+                required DateTime updatedAt,
+                required String deviceId,
+                Value<bool> deleted = const Value.absent(),
+                required String id,
+                required String ebookId,
+                required String kind,
+                Value<String?> content = const Value.absent(),
+                required String locator,
+                Value<int> rowid = const Value.absent(),
+              }) => AnnotationsCompanion.insert(
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                deviceId: deviceId,
+                deleted: deleted,
+                id: id,
+                ebookId: ebookId,
+                kind: kind,
+                content: content,
+                locator: locator,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$AnnotationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ebookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ebookId,
+                        referencedTable: $$AnnotationsTableReferences
+                            ._ebookIdTable(db),
+                        referencedColumn: $$AnnotationsTableReferences
+                            ._ebookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$AnnotationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $AnnotationsTable,
+      AnnotationRow,
+      $$AnnotationsTableFilterComposer,
+      $$AnnotationsTableOrderingComposer,
+      $$AnnotationsTableAnnotationComposer,
+      $$AnnotationsTableCreateCompanionBuilder,
+      $$AnnotationsTableUpdateCompanionBuilder,
+      (AnnotationRow, $$AnnotationsTableReferences),
+      AnnotationRow,
+      PrefetchHooks Function({bool ebookId})
+    >;
+typedef $$ProgressTableCreateCompanionBuilder = ProgressCompanion Function({
+  required String id,
+  required String ebookId,
+  required String deviceId,
+  required String locator,
+  Value<double?> percent,
+  required VectorClock vectorClock,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$ProgressTableUpdateCompanionBuilder = ProgressCompanion Function({
+  Value<String> id,
+  Value<String> ebookId,
+  Value<String> deviceId,
+  Value<String> locator,
+  Value<double?> percent,
+  Value<VectorClock> vectorClock,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$ProgressTableReferences
+    extends BaseReferences<_$AtrilDatabase, $ProgressTable, ProgressRow> {
+  $$ProgressTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $EbooksTable _ebookIdTable(_$AtrilDatabase db) =>
+      db.ebooks.createAlias('progress__ebook_id__ebooks__id');
+
+  $$EbooksTableProcessedTableManager get ebookId {
+    final $_column = $_itemColumn<String>('ebook_id')!;
+
+    final manager = $$EbooksTableTableManager(
+      $_db,
+      $_db.ebooks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ebookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ProgressTableFilterComposer
+    extends Composer<_$AtrilDatabase, $ProgressTable> {
+  $$ProgressTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locator => $composableBuilder(
+    column: $table.locator,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get percent => $composableBuilder(
+    column: $table.percent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$EbooksTableFilterComposer get ebookId {
+    final $$EbooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableFilterComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProgressTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $ProgressTable> {
+  $$ProgressTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locator => $composableBuilder(
+    column: $table.locator,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get percent => $composableBuilder(
+    column: $table.percent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EbooksTableOrderingComposer get ebookId {
+    final $$EbooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProgressTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $ProgressTable> {
+  $$ProgressTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get locator =>
+      $composableBuilder(column: $table.locator, builder: (column) => column);
+
+  GeneratedColumn<double> get percent =>
+      $composableBuilder(column: $table.percent, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$EbooksTableAnnotationComposer get ebookId {
+    final $$EbooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProgressTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $ProgressTable,
+          ProgressRow,
+          $$ProgressTableFilterComposer,
+          $$ProgressTableOrderingComposer,
+          $$ProgressTableAnnotationComposer,
+          $$ProgressTableCreateCompanionBuilder,
+          $$ProgressTableUpdateCompanionBuilder,
+          (ProgressRow, $$ProgressTableReferences),
+          ProgressRow,
+          PrefetchHooks Function({bool ebookId})
+        > {
+  $$ProgressTableTableManager(_$AtrilDatabase db, $ProgressTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProgressTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProgressTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ebookId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> locator = const Value.absent(),
+                Value<double?> percent = const Value.absent(),
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProgressCompanion(
+                id: id,
+                ebookId: ebookId,
+                deviceId: deviceId,
+                locator: locator,
+                percent: percent,
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ebookId,
+                required String deviceId,
+                required String locator,
+                Value<double?> percent = const Value.absent(),
+                required VectorClock vectorClock,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ProgressCompanion.insert(
+                id: id,
+                ebookId: ebookId,
+                deviceId: deviceId,
+                locator: locator,
+                percent: percent,
+                vectorClock: vectorClock,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ProgressTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ebookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ebookId,
+                        referencedTable: $$ProgressTableReferences
+                            ._ebookIdTable(db),
+                        referencedColumn: $$ProgressTableReferences
+                            ._ebookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ProgressTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $ProgressTable,
+      ProgressRow,
+      $$ProgressTableFilterComposer,
+      $$ProgressTableOrderingComposer,
+      $$ProgressTableAnnotationComposer,
+      $$ProgressTableCreateCompanionBuilder,
+      $$ProgressTableUpdateCompanionBuilder,
+      (ProgressRow, $$ProgressTableReferences),
+      ProgressRow,
+      PrefetchHooks Function({bool ebookId})
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -6283,4 +8391,8 @@ class $AtrilDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$EbookCollectionsTableTableManager get ebookCollections =>
       $$EbookCollectionsTableTableManager(_db, _db.ebookCollections);
+  $$AnnotationsTableTableManager get annotations =>
+      $$AnnotationsTableTableManager(_db, _db.annotations);
+  $$ProgressTableTableManager get progress =>
+      $$ProgressTableTableManager(_db, _db.progress);
 }

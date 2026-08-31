@@ -28,6 +28,7 @@ import 'converters.dart';
 import 'dao/identity_dao.dart';
 import 'tables/identity.dart';
 import 'tables/library.dart';
+import 'tables/reading.dart';
 
 part 'database.g.dart';
 
@@ -45,6 +46,8 @@ part 'database.g.dart';
     Ebooks,
     Collections,
     EbookCollections,
+    Annotations,
+    Progress,
   ],
   daos: <Type>[IdentityDao],
 )

@@ -144,9 +144,11 @@ listenable would be a type no widget and no `provider` could observe.
       pair and not the row is the record. The four columns are a mixin and not four copies: the
       reconciler reads them generically, so one spelled differently on one table would be a
       record the merge quietly skipped
-- [ ] `feat: add the reading tables` — `annotations` with a full revision, and `progress` with a
+- [x] `feat: add the reading tables` — `annotations` with a full revision, and `progress` with a
       clock and a timestamp and neither tie-break field, per C05, unique on
-      `(ebook_id, device_id)`
+      `(ebook_id, device_id)`. `progress` deliberately does not reuse the revision mixin: its
+      `device_id` is the row's own key and not a record of who wrote last, and a table offering a
+      tie-break would invite the reconciler to apply one where nothing ties
 - [ ] `feat: add the operation log and the node cursors` — what this device authored and has not
       handed over, in the order it authored it, and the last position pulled from each node. The
       cursor is keyed by the node dialed: a position is that node's own order and two of them
