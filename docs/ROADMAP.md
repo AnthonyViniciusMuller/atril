@@ -549,11 +549,17 @@ that reason.
       later version with an earlier instant — the one edge C01's acyclicity argument depends on
       not existing. This commit authors the three records addressed by their own identifier; the
       two C18 is about land two commits below
-- [ ] `feat: add the delta vocabulary` — ~~the field names~~ landed in phase 3 with the
+- [x] `feat: add the delta vocabulary` — ~~the field names~~ landed in phase 3 with the
       reconciler, in `data/services/sync/delta.dart`, because a reconciler cannot decode a change
       without them. What is left here is the authoring side: writing a delta that claims exactly
       the fields the reader changed, where a field left unnamed keeps whatever device wrote it
-      last and a field named as JSON null is a field the reader cleared
+      last and a field named as JSON null is a field the reader cleared. `DeltaWriter` is the
+      mirror of `Delta`, in the same file and on the same encoding, and every claim optionally
+      takes the value the record already holds so that one that changed nothing is not made. That
+      is worth more than the bytes: reconciliation is per record and not per field (C17), so a
+      delta restating a title the reader never touched carries this device's claim to it, and the
+      next merge against a device that *did* change it is settled by a tie-break rather than by
+      what anybody meant
 - [ ] `feat: resolve the associative entities by natural key` — C18. An operation on a filing
       carries `(ebook_id, collection_id)` in its delta and an operation on a position carries
       `ebook_id`, the device half being the authoring device by C05. The surrogate id is

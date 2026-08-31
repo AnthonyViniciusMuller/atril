@@ -10,9 +10,15 @@
 /// nothing about the shape of `carga_delta` at all, which is C19.
 ///
 /// The names below are `internal/sync/infra/service/records`' own, spelled once
-/// here so that the reconciler and the operation author of phase 7 cannot spell
-/// them two ways. A field spelled differently is a field claimed on nobody's
-/// record: it would be stored, replicated, and applied by nothing.
+/// here so that the reconciler and the operation author cannot spell them two
+/// ways. A field spelled differently is a field claimed on nobody's record: it
+/// would be stored, replicated, and applied by nothing.
+///
+/// The file has two halves and they are the two directions a delta travels.
+/// [Delta] reads one that arrived; [DeltaWriter] writes one this device is
+/// authoring. They agree on the encoding — an instant is microseconds either
+/// way — because a value written in one shape and read in another is a field
+/// that survives the wire and not the round trip.
 library;
 
 /// The title of a work.
@@ -206,4 +212,193 @@ extension type const Delta(Map<String, Object?> fields) {
 
   /// The identifier [field] claims, refusing one that names nothing.
   String requiredId(String field) => requiredText(field).toLowerCase();
+}
+
+/// A delta under construction: the fields a change claims, and nothing else.
+///
+/// It is the authoring half of this file, and the whole of what it is for is
+/// the three states [Delta] distinguishes on the way back. A field this writer
+/// was never given stays unnamed, and keeps whatever device wrote it last. A
+/// field given a value is a field the change wrote. A field given `null` — or
+/// [clear] — is a field the change *cleared*, which is a claim and not a
+/// silence.
+///
+/// Every claim optionally takes the value the record already holds, and a claim
+/// that matches it is not made at all:
+///
+/// ```dart
+/// final changes = DeltaWriter()
+///   ..text(fieldTitle, form.title, current: row.title)
+///   ..text(fieldAuthor, form.author, current: row.author);
+///
+/// if (changes.isNotEmpty) {
+///   await author.write(Change.update(TargetEntity.ebook, row.id, changes.fields));
+/// }
+/// ```
+///
+/// That is the rule the phase this landed in is named for, and it is worth more
+/// than the bytes it saves. Reconciliation is per record and not per field
+/// (C17): a delta that restated a title the reader never touched would carry
+/// this device's claim to it, and the next merge against a device that *did*
+/// change it would be decided by a tie-break rather than by what anybody meant.
+/// A change that claims only what changed cannot lose an edit it did not make.
+///
+/// The writer knows nothing about which fields a record requires, because it
+/// does not know which record it is building one for. A delta missing a field
+/// the row cannot exist without is refused by the reconciler, which does.
+final class DeltaWriter {
+  /// An empty delta.
+  DeltaWriter();
+
+  final Map<String, Object?> _fields = <String, Object?>{};
+
+  /// The fields claimed so far, in the order they were claimed.
+  ///
+  /// It is a copy: a writer handed to something that could keep writing to the
+  /// map behind an operation would be a change that grew after it was logged.
+  Map<String, Object?> get fields => Map<String, Object?>.of(_fields);
+
+  /// The delta as it stands, read through the same vocabulary that reads one
+  /// off the wire.
+  Delta get delta => Delta(fields);
+
+  /// Whether the change claims nothing at all.
+  ///
+  /// An update that claims nothing is not a change, and the operation author
+  /// refuses one: it would tick a clock and stamp an instant to tell every
+  /// replica that nothing happened, and leave the record reflecting this device
+  /// for a write it did not make.
+  bool get isEmpty => _fields.isEmpty;
+
+  /// Whether the change claims anything.
+  bool get isNotEmpty => _fields.isNotEmpty;
+
+  /// Whether [field] has been claimed, however it was claimed.
+  bool claims(String field) => _fields.containsKey(field);
+
+  /// Claims [field] as cleared.
+  ///
+  /// It is [text] with `null` said out loud, and it is worth a method because
+  /// the difference between clearing a field and leaving it alone is invisible
+  /// at a call site that passes a variable which happens to be null.
+  void clear(String field) => _fields[field] = null;
+
+  /// Claims [field] as [value], or as cleared where it is `null`.
+  void text(String field, String? value, {Object? current = _unstated}) =>
+      _claim(field, value, current);
+
+  /// Claims [field] as an identifier, in the canonical lowercase text every
+  /// replica compares them as.
+  ///
+  /// It refuses one that names nothing, because a delta that carried an empty
+  /// identifier would be an operation the node resolves to no record and this
+  /// device could not tell apart from one it never wrote.
+  void id(String field, String value, {Object? current = _unstated}) {
+    if (value.trim().isEmpty) {
+      throw DeltaException(field, 'is an identifier that names nothing');
+    }
+
+    _claim(
+      field,
+      value.toLowerCase(),
+      current is String ? current.toLowerCase() : current,
+    );
+  }
+
+  /// Claims [field] as a whole number, or as cleared where it is `null`.
+  void integer(String field, int? value, {Object? current = _unstated}) =>
+      _claim(field, value, current);
+
+  /// Claims [field] as a number, or as cleared where it is `null`.
+  void number(String field, double? value, {Object? current = _unstated}) =>
+      _claim(field, value, current);
+
+  /// Claims [field] as an instant, or as cleared where it is `null`.
+  ///
+  /// It travels as the microseconds [Delta.instant] reads back, and in UTC,
+  /// because the value is compared against instants stamped on other devices in
+  /// other zones.
+  void instant(String field, DateTime? value, {Object? current = _unstated}) =>
+      _claim(
+        field,
+        value?.toUtc().microsecondsSinceEpoch,
+        current is DateTime ? current.toUtc().microsecondsSinceEpoch : current,
+      );
+
+  /// Claims [field] as an object, or as cleared where it is `null`.
+  ///
+  /// An object and never a scalar, which the column it lands in constrains and
+  /// [Delta.object] checks on the way back. [current] is the decoded object and
+  /// not the text a row stores it as, and the two are compared structurally: a
+  /// map that differs only in the order its keys were built in is the same
+  /// metadata and is not a change the reader made.
+  void object(
+    String field,
+    Map<String, Object?>? value, {
+    Object? current = _unstated,
+  }) => _claim(field, value, current);
+
+  void _claim(String field, Object? value, Object? current) {
+    if (!identical(current, _unstated) && _same(value, current)) {
+      return;
+    }
+
+    _fields[field] = value;
+  }
+
+  @override
+  String toString() => 'DeltaWriter(${_fields.keys.join(', ')})';
+}
+
+/// The stand-in for a current value nobody passed.
+///
+/// A sentinel and not `null`, because `null` is a value a record legitimately
+/// holds: a claim of `null` against a field that is already `null` is a claim
+/// worth dropping, and one against a field that is not is a field the reader
+/// cleared.
+const Object _unstated = Object();
+
+/// Whether two decoded JSON values are the same claim.
+///
+/// Structural, because the values here are the ones the wire carries: a map and
+/// a list compare by what they hold, and two instants compare as instants
+/// rather than as the zones they were written in.
+bool _same(Object? a, Object? b) {
+  if (identical(a, b)) {
+    return true;
+  }
+
+  if (a is Map<Object?, Object?> && b is Map<Object?, Object?>) {
+    if (a.length != b.length) {
+      return false;
+    }
+
+    for (final entry in a.entries) {
+      if (!b.containsKey(entry.key) || !_same(entry.value, b[entry.key])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (a is List<Object?> && b is List<Object?>) {
+    if (a.length != b.length) {
+      return false;
+    }
+
+    for (var index = 0; index < a.length; index++) {
+      if (!_same(a[index], b[index])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (a is DateTime && b is DateTime) {
+    return a.isAtSameMomentAs(b);
+  }
+
+  return a == b;
 }
