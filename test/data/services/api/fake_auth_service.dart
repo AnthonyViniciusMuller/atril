@@ -43,6 +43,15 @@ final class FakeAuthService extends AuthServiceBase {
   /// How many refreshes this node has served.
   int refreshes = 0;
 
+  /// Every address a recovery was asked for, in order.
+  final List<String> recoveries = <String>[];
+
+  /// Every password this node was asked to set through a reset, in order.
+  final List<String> reset = <String>[];
+
+  /// The recovery credential this node will take.
+  static const String recoveryToken = 'recovery-1';
+
   /// Every refresh credential this node was asked to revoke, in order.
   final List<String> loggedOut = <String>[];
 
@@ -178,6 +187,35 @@ final class FakeAuthService extends AuthServiceBase {
   }
 
   @override
+  Future<RequestPasswordRecoveryResponse> requestPasswordRecovery(
+    ServiceCall call,
+    RequestPasswordRecoveryRequest request,
+  ) async {
+    _record(call);
+    recoveries.add(request.email);
+
+    // Empty, and empty on purpose: the same outcome whether or not the address
+    // is registered here.
+    return RequestPasswordRecoveryResponse();
+  }
+
+  @override
+  Future<ResetPasswordResponse> resetPassword(
+    ServiceCall call,
+    ResetPasswordRequest request,
+  ) async {
+    _record(call);
+
+    if (request.recoveryToken != recoveryToken) {
+      throw GrpcError.invalidArgument('that credential is not one of ours');
+    }
+
+    reset.add(request.newPassword);
+
+    return ResetPasswordResponse();
+  }
+
+  @override
   Future<LogoutResponse> logout(ServiceCall call, LogoutRequest request) async {
     _record(call);
     loggedOut.add(request.refreshToken);
@@ -213,18 +251,6 @@ final class FakeAuthService extends AuthServiceBase {
   Future<DeleteUserResponse> deleteUser(
     ServiceCall call,
     DeleteUserRequest request,
-  ) async => _unimplemented();
-
-  @override
-  Future<RequestPasswordRecoveryResponse> requestPasswordRecovery(
-    ServiceCall call,
-    RequestPasswordRecoveryRequest request,
-  ) async => _unimplemented();
-
-  @override
-  Future<ResetPasswordResponse> resetPassword(
-    ServiceCall call,
-    ResetPasswordRequest request,
   ) async => _unimplemented();
 
   @override

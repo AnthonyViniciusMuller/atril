@@ -54,5 +54,23 @@
   "settingsAccountSection": "Account",
   "settingsSignedInAs": "You are signed in as {federatedId}.",
   "settingsSignOut": "Sign out",
-  "settingsSignOutExplanation": "Your library stays on this device. Signing out ends the session and deletes nothing."
+  "settingsSignOutExplanation": "Your library stays on this device. Signing out ends the session and deletes nothing.",
+
+  "signInForgot": "I forgot my password",
+  "recoveryTitle": "Recover your password",
+  "recoveryExplanation": "Enter the e-mail of your account at {domain}. If there is an account with that address, we will send a code to reset the password.",
+  "recoveryEmailLabel": "E-mail address",
+  "recoverySubmit": "Send code",
+  "recoverySent": "If there is an account with that address, the code is on its way. Check the spam folder too.",
+  "recoveryHaveCode": "I already have a code",
+  "recoveryUnreachable": "{domain} could not be reached. Check your connection and try again.",
+  "recoveryFailed": "The recovery could not be requested.",
+  "resetTitle": "Set a new password",
+  "resetExplanation": "Paste the code you received by e-mail and choose a new password. Every session on every one of your devices will be ended.",
+  "resetTokenLabel": "Recovery code",
+  "resetPasswordLabel": "New password",
+  "resetSubmit": "Reset password",
+  "resetTokenInvalid": "That code is not valid. It may have expired or already been used — ask for another.",
+  "resetDone": "Password reset. Sign in with the new one.",
+  "resetFailed": "The password could not be reset."
 }

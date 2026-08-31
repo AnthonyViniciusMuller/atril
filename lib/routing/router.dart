@@ -35,6 +35,8 @@ import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
+import '../ui/onboarding/widgets/password_reset_screen.dart';
+import '../ui/onboarding/widgets/recovery_screen.dart';
 import '../ui/onboarding/widgets/register_screen.dart';
 import '../ui/onboarding/widgets/server_selection_screen.dart';
 import '../ui/onboarding/widgets/sign_in_screen.dart';
@@ -94,12 +96,27 @@ GoRouter atrilRouter({
                 SignInScreen(
                   identifier:
                       state.uri.queryParameters[Routes.identifierParameter],
+                  done: state.uri.queryParameters[Routes.doneParameter],
                 ),
           ),
           GoRoute(
             path: Routes.registerSegment,
             builder: (BuildContext context, GoRouterState state) =>
                 const RegisterScreen(),
+          ),
+          GoRoute(
+            path: Routes.recoverSegment,
+            builder: (BuildContext context, GoRouterState state) =>
+                const RecoveryScreen(),
+            routes: <RouteBase>[
+              GoRoute(
+                path: Routes.resetPasswordSegment,
+                builder: (BuildContext context, GoRouterState state) =>
+                    PasswordResetScreen(
+                      token: state.uri.queryParameters[Routes.tokenParameter],
+                    ),
+              ),
+            ],
           ),
         ],
       ),

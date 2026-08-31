@@ -492,9 +492,19 @@ a registration commit landing first would end at a route that matches nothing.
       and the app's first view model over a stream: the reader is read from the local database,
       so it is right offline, and it stops naming them the moment a refused credential ends the
       session under them
-- [ ] `feat: add password recovery` — UC08. Two screens: request, and reset from a token. The
+- [x] `feat: add password recovery` — UC08. Two screens: request, and reset from a token. The
       request reports the same outcome whether or not the address is registered, and the screen
-      does not helpfully say otherwise
+      does not helpfully say otherwise — the confirmation is worded to be true either way, the
+      only failure it can show is one about reaching the node, and the address is not logged,
+      since whether an address is registered somewhere is the fact the whole call is built not to
+      reveal. What *is* checked is the shape of what was typed, which is a different question and
+      is safe to answer. The reset is a location of its own rather than a step inside the
+      request, because the code arrives in a mail client — as often as not on another device —
+      and a link can carry the credential in the location. The node answers one refusal for four
+      states (never issued, spent, expired, somebody else's), and the screen repeats that
+      indistinction rather than inventing an explanation. A successful reset clears this device's
+      session as well: the node has ended every session of every device, and keeping this one
+      would be presenting a credential it has already thrown away, on every call
 - [ ] `feat: seed a newly bound device` — the one place the read RPCs are called: `ListEbooks`,
       `ListCollections`, `ListAnnotations` and `ListReadingProgress`, straight into the local
       replica, before the first pull. A device bound to a reader with a history has to start

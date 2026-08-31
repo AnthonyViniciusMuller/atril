@@ -40,14 +40,20 @@ const String codeDeviceRevoked = 'device_revoked';
 /// The sign-in screen.
 class SignInScreen extends StatefulWidget {
   /// Creates the sign-in screen, with the identifier field filled in with
-  /// [identifier] where something knows it already.
+  /// [identifier] where something knows it already and a note about what
+  /// [done] finished.
   ///
-  /// It is what a registration hands on: a reader who has just created an
-  /// account should not have to type the name they chose a second time.
-  const SignInScreen({this.identifier, super.key});
+  /// Both come from the location, which is what a registration and a password
+  /// reset hand on with: a reader who has just created an account should not
+  /// have to type the name they chose a second time, and one who has just reset
+  /// their password should be told why they are looking at a login screen.
+  const SignInScreen({this.identifier, this.done, super.key});
 
   /// The identifier to start with, or `null`.
   final String? identifier;
+
+  /// What was just finished elsewhere, or `null`.
+  final String? done;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -100,6 +106,16 @@ class _SignInScreenState extends State<SignInScreen> {
               return ListView(
                 padding: const EdgeInsets.all(24),
                 children: <Widget>[
+                  if (widget.done == Routes.passwordWasReset)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        l10n.resetDone,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   if (node != null)
                     Text(
                       l10n.signInAt(node.domain),
@@ -146,6 +162,12 @@ class _SignInScreenState extends State<SignInScreen> {
                         ? null
                         : () => context.go(Routes.register),
                     child: Text(l10n.signInRegister),
+                  ),
+                  TextButton(
+                    onPressed: running
+                        ? null
+                        : () => context.go(Routes.recover),
+                    child: Text(l10n.signInForgot),
                   ),
                 ],
               );

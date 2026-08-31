@@ -95,6 +95,31 @@ abstract interface class AuthRepository {
   /// the shell believes is signed in and that cannot say who as.
   Future<Result<User>> signIn(Credentials credentials);
 
+  /// UC08, first half. Asks the node to send a recovery credential to
+  /// [email].
+  ///
+  /// It answers the same way whether or not the address is registered there,
+  /// and this client keeps that promise: nothing it returns and nothing the
+  /// screen shows distinguishes the two. An interface that helpfully said *no
+  /// such account* would turn a recovery form into a way of finding out who
+  /// has one.
+  ///
+  /// The address is checked for shape before it is sent, which is a different
+  /// question and is safe to answer: it is about what was typed and not about
+  /// who exists.
+  Future<Result<void>> requestPasswordRecovery(String email);
+
+  /// UC08, second half. Spends [recoveryToken] and sets [newPassword].
+  ///
+  /// It ends every session of every one of the reader's devices, which is the
+  /// point: a password is reset by somebody who has lost control of the old
+  /// one, and leaving the sessions it opened alive would leave whoever took it
+  /// signed in.
+  Future<Result<void>> resetPassword({
+    required String recoveryToken,
+    required String newPassword,
+  });
+
   /// The reader signed in on this device, and `null` on one where nobody is.
   ///
   /// It is a stream because the answer changes without anybody on this screen

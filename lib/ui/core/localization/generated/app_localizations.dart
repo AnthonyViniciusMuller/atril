@@ -392,6 +392,108 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.'**
   String get settingsSignOutExplanation;
+
+  /// Ação secundária da tela de entrada, para quem não lembra a senha. Leva à tela que pede o envio de um código de recuperação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esqueci minha senha'**
+  String get signInForgot;
+
+  /// Título da tela que pede o envio de um código de recuperação para o endereço cadastrado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Recuperar a senha'**
+  String get recoveryTitle;
+
+  /// Parágrafo da tela de recuperação. A frase é condicional de propósito: o servidor responde a mesma coisa exista ou não a conta, e uma tela que dissesse o contrário transformaria este formulário em uma forma de descobrir quem tem conta ali.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe o e-mail da sua conta em {domain}. Se houver uma conta com esse endereço, enviaremos um código para redefinir a senha.'**
+  String recoveryExplanation(String domain);
+
+  /// Rótulo do campo de endereço na tela de recuperação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'E-mail'**
+  String get recoveryEmailLabel;
+
+  /// Botão que pede ao servidor o envio do código de recuperação. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Enviar código'**
+  String get recoverySubmit;
+
+  /// Confirmação mostrada depois do pedido. Diz o mesmo exista ou não a conta — é a mesma promessa que o servidor faz, e uma confirmação que só aparecesse para endereços cadastrados diria por omissão exatamente o que a tela não deve dizer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Se houver uma conta com esse endereço, o código já está a caminho. Confira também a caixa de spam.'**
+  String get recoverySent;
+
+  /// Ação que leva à tela de redefinição, para quem já recebeu o código por e-mail. Está aqui porque o código chega em outro dispositivo tão frequentemente quanto neste.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Já tenho um código'**
+  String get recoveryHaveCode;
+
+  /// Erro mostrado quando o servidor não respondeu ao pedido de recuperação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.'**
+  String recoveryUnreachable(String domain);
+
+  /// Erro geral da tela de recuperação, para uma falha que o campo de e-mail não explica.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível pedir a recuperação.'**
+  String get recoveryFailed;
+
+  /// Título da tela que troca a senha usando o código recebido por e-mail.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Definir uma nova senha'**
+  String get resetTitle;
+
+  /// Parágrafo da tela de redefinição. A segunda frase é um aviso e não um detalhe: quem redefine a senha perdeu o controle da anterior, e deixar vivas as sessões que ela abriu deixaria conectado quem a tomou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cole o código que você recebeu por e-mail e escolha uma nova senha. Todas as sessões de todos os seus dispositivos serão encerradas.'**
+  String get resetExplanation;
+
+  /// Rótulo do campo onde o leitor cola o código recebido por e-mail.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Código de recuperação'**
+  String get resetTokenLabel;
+
+  /// Rótulo do campo da nova senha na tela de redefinição.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nova senha'**
+  String get resetPasswordLabel;
+
+  /// Botão que gasta o código e grava a nova senha. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Redefinir senha'**
+  String get resetSubmit;
+
+  /// Erro do campo de código. O servidor responde a mesma coisa para um código que nunca existiu, um já gasto, um expirado e um de outra conta, porque distinguir seria contar algo sobre uma conta que quem pergunta não provou ser sua; a mensagem repete essa indistinção em vez de inventar uma explicação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esse código não vale. Ele pode ter expirado ou já ter sido usado — peça outro.'**
+  String get resetTokenInvalid;
+
+  /// Confirmação mostrada depois da redefinição, na tela de entrada para onde o leitor é levado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha redefinida. Entre com a nova senha.'**
+  String get resetDone;
+
+  /// Erro geral da tela de redefinição, para uma falha que nenhum dos dois campos explica.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível redefinir a senha.'**
+  String get resetFailed;
 }
 
 class _AppLocalizationsDelegate

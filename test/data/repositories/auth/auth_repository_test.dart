@@ -14,6 +14,7 @@ import 'package:atril/data/services/channel/channel.dart';
 import 'package:atril/data/services/discovery/well_known.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/session_store.dart';
+import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:drift/native.dart';
@@ -303,6 +304,89 @@ void main() {
         '@reader:quire-a.example',
       );
     });
+  });
+
+  group('recovering a password', () {
+    test('asks the node to send a credential', () async {
+      final result = await auth.requestPasswordRecovery(
+        '  Ana@Quire-A.example  ',
+      );
+
+      expect(result.errorOrNull, isNull);
+      expect(service.recoveries, <String>['Ana@Quire-A.example']);
+    });
+
+    test(
+      'refuses an address that is not one before anything travels',
+      () async {
+        // The shape of what was typed is a different question from who exists,
+        // and it is safe to answer.
+        final result = await auth.requestPasswordRecovery('ana');
+
+        expect(
+          result.errorOrNull,
+          isA<AppException>().having((e) => e.code, 'code', codeInvalidEmail),
+        );
+        expect(service.recoveries, isEmpty);
+      },
+    );
+
+    test('spends the credential and sets the password', () async {
+      final result = await auth.resetPassword(
+        recoveryToken: FakeAuthService.recoveryToken,
+        newPassword: 'a new passphrase',
+      );
+
+      expect(result.errorOrNull, isNull);
+      expect(service.reset, <String>['a new passphrase']);
+    });
+
+    test(
+      'ends this device\'s session, which the node has ended anyway',
+      () async {
+        await auth.signIn(credentials);
+        expect(await session.isSignedIn, isTrue);
+
+        await auth.resetPassword(
+          recoveryToken: FakeAuthService.recoveryToken,
+          newPassword: 'a new passphrase',
+        );
+
+        // The node ended every session of every device. Keeping this one would
+        // be presenting a credential it has already thrown away, on every call.
+        expect(await session.isSignedIn, isFalse);
+      },
+    );
+
+    test(
+      'refuses a reset with no credential and one with a short password',
+      () async {
+        final missing = await auth.resetPassword(
+          recoveryToken: '   ',
+          newPassword: 'a new passphrase',
+        );
+
+        expect(
+          missing.errorOrNull,
+          isA<AppException>().having((e) => e.code, 'code', codeNoCredential),
+        );
+
+        final short = await auth.resetPassword(
+          recoveryToken: FakeAuthService.recoveryToken,
+          newPassword: 'short',
+        );
+
+        expect(
+          short.errorOrNull,
+          isA<AppException>().having(
+            (e) => e.code,
+            'code',
+            codeInvalidPassword,
+          ),
+        );
+        expect(service.reset, isEmpty);
+      },
+    );
   });
 
   test('an origin the device never discovered is refused', () async {

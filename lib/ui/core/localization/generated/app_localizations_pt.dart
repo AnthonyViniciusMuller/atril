@@ -189,6 +189,64 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsSignOutExplanation =>
       'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.';
+
+  @override
+  String get signInForgot => 'Esqueci minha senha';
+
+  @override
+  String get recoveryTitle => 'Recuperar a senha';
+
+  @override
+  String recoveryExplanation(String domain) {
+    return 'Informe o e-mail da sua conta em $domain. Se houver uma conta com esse endereço, enviaremos um código para redefinir a senha.';
+  }
+
+  @override
+  String get recoveryEmailLabel => 'E-mail';
+
+  @override
+  String get recoverySubmit => 'Enviar código';
+
+  @override
+  String get recoverySent =>
+      'Se houver uma conta com esse endereço, o código já está a caminho. Confira também a caixa de spam.';
+
+  @override
+  String get recoveryHaveCode => 'Já tenho um código';
+
+  @override
+  String recoveryUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
+  }
+
+  @override
+  String get recoveryFailed => 'Não foi possível pedir a recuperação.';
+
+  @override
+  String get resetTitle => 'Definir uma nova senha';
+
+  @override
+  String get resetExplanation =>
+      'Cole o código que você recebeu por e-mail e escolha uma nova senha. Todas as sessões de todos os seus dispositivos serão encerradas.';
+
+  @override
+  String get resetTokenLabel => 'Código de recuperação';
+
+  @override
+  String get resetPasswordLabel => 'Nova senha';
+
+  @override
+  String get resetSubmit => 'Redefinir senha';
+
+  @override
+  String get resetTokenInvalid =>
+      'Esse código não vale. Ele pode ter expirado ou já ter sido usado — peça outro.';
+
+  @override
+  String get resetDone => 'Senha redefinida. Entre com a nova senha.';
+
+  @override
+  String get resetFailed => 'Não foi possível redefinir a senha.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -375,4 +433,62 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get settingsSignOutExplanation =>
       'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.';
+
+  @override
+  String get signInForgot => 'Esqueci minha senha';
+
+  @override
+  String get recoveryTitle => 'Recuperar a senha';
+
+  @override
+  String recoveryExplanation(String domain) {
+    return 'Informe o e-mail da sua conta em $domain. Se houver uma conta com esse endereço, enviaremos um código para redefinir a senha.';
+  }
+
+  @override
+  String get recoveryEmailLabel => 'E-mail';
+
+  @override
+  String get recoverySubmit => 'Enviar código';
+
+  @override
+  String get recoverySent =>
+      'Se houver uma conta com esse endereço, o código já está a caminho. Confira também a caixa de spam.';
+
+  @override
+  String get recoveryHaveCode => 'Já tenho um código';
+
+  @override
+  String recoveryUnreachable(String domain) {
+    return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
+  }
+
+  @override
+  String get recoveryFailed => 'Não foi possível pedir a recuperação.';
+
+  @override
+  String get resetTitle => 'Definir uma nova senha';
+
+  @override
+  String get resetExplanation =>
+      'Cole o código que você recebeu por e-mail e escolha uma nova senha. Todas as sessões de todos os seus dispositivos serão encerradas.';
+
+  @override
+  String get resetTokenLabel => 'Código de recuperação';
+
+  @override
+  String get resetPasswordLabel => 'Nova senha';
+
+  @override
+  String get resetSubmit => 'Redefinir senha';
+
+  @override
+  String get resetTokenInvalid =>
+      'Esse código não vale. Ele pode ter expirado ou já ter sido usado — peça outro.';
+
+  @override
+  String get resetDone => 'Senha redefinida. Entre com a nova senha.';
+
+  @override
+  String get resetFailed => 'Não foi possível redefinir a senha.';
 }

@@ -51,6 +51,39 @@ abstract final class Routes {
   /// which is also what makes the hand-off survive a reload in a browser.
   static const String identifierParameter = 'identifier';
 
+  /// Where a reader asks for a recovery credential (UC08, first half).
+  static const String recover = '$onboarding/recover';
+
+  /// The path segment [recover] is declared under.
+  static const String recoverSegment = 'recover';
+
+  /// Where a reader spends a recovery credential and chooses a new password
+  /// (UC08, second half).
+  ///
+  /// It is a location of its own and not a step inside [recover], because the
+  /// code arrives in a mail client — as often as not on another device — and a
+  /// reader coming back to this app has to be able to reach the second half
+  /// without going through the first again.
+  static const String resetPassword = '$recover/reset';
+
+  /// The path segment [resetPassword] is declared under, relative to
+  /// [recover].
+  static const String resetPasswordSegment = 'reset';
+
+  /// The query parameter [resetPassword] reads a credential from, so that a
+  /// link in the mail can carry one.
+  static const String tokenParameter = 'token';
+
+  /// The query parameter [signIn] shows a confirmation from.
+  ///
+  /// A reader who has just reset their password is sent to sign in, and a
+  /// screen that said nothing about why would look like one that had lost the
+  /// reset.
+  static const String doneParameter = 'done';
+
+  /// The value [doneParameter] carries after a password reset.
+  static const String passwordWasReset = 'password-reset';
+
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 

@@ -188,4 +188,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsSignOutExplanation =>
       'Your library stays on this device. Signing out ends the session and deletes nothing.';
+
+  @override
+  String get signInForgot => 'I forgot my password';
+
+  @override
+  String get recoveryTitle => 'Recover your password';
+
+  @override
+  String recoveryExplanation(String domain) {
+    return 'Enter the e-mail of your account at $domain. If there is an account with that address, we will send a code to reset the password.';
+  }
+
+  @override
+  String get recoveryEmailLabel => 'E-mail address';
+
+  @override
+  String get recoverySubmit => 'Send code';
+
+  @override
+  String get recoverySent =>
+      'If there is an account with that address, the code is on its way. Check the spam folder too.';
+
+  @override
+  String get recoveryHaveCode => 'I already have a code';
+
+  @override
+  String recoveryUnreachable(String domain) {
+    return '$domain could not be reached. Check your connection and try again.';
+  }
+
+  @override
+  String get recoveryFailed => 'The recovery could not be requested.';
+
+  @override
+  String get resetTitle => 'Set a new password';
+
+  @override
+  String get resetExplanation =>
+      'Paste the code you received by e-mail and choose a new password. Every session on every one of your devices will be ended.';
+
+  @override
+  String get resetTokenLabel => 'Recovery code';
+
+  @override
+  String get resetPasswordLabel => 'New password';
+
+  @override
+  String get resetSubmit => 'Reset password';
+
+  @override
+  String get resetTokenInvalid =>
+      'That code is not valid. It may have expired or already been used — ask for another.';
+
+  @override
+  String get resetDone => 'Password reset. Sign in with the new one.';
+
+  @override
+  String get resetFailed => 'The password could not be reset.';
 }

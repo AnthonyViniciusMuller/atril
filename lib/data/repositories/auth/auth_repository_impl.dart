@@ -24,6 +24,22 @@ const String opSignIn = 'identity/session: sign in';
 /// The operation a registration reports under.
 const String opRegisterUser = 'identity/user: register';
 
+/// The operation a request for a recovery credential reports under.
+const String opRecoverPassword = 'identity/user: request recovery';
+
+/// The operation a password reset reports under.
+const String opResetPassword = 'identity/user: reset password';
+
+/// The node's code for a reset that presents nothing.
+const String codeNoCredential = 'no_credential';
+
+/// The node's code for a recovery credential it will not take.
+///
+/// One answer for four states — never issued, already spent, expired, or for
+/// somebody else — because which of them it was is a fact about an account the
+/// caller has not proved anything about.
+const String codeInvalidCredential = 'invalid_credential';
+
 /// The reader signed in on this device.
 final class AuthRepositoryImpl implements AuthRepository {
   /// The repository over [auth], [identity], [servers] and [session].
@@ -111,6 +127,75 @@ final class AuthRepositoryImpl implements AuthRepository {
       return Result<User>.ok(user);
     } on Exception catch (error) {
       return Result<User>.error(failureFrom(error, op: opRegisterUser));
+    }
+  }
+
+  @override
+  Future<Result<void>> requestPasswordRecovery(String email) async {
+    final address = email.trim();
+    final violation = emailViolation(address);
+
+    if (violation != null) {
+      return Result<void>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'the address "$address" $violation',
+          code: codeInvalidEmail,
+          op: opRecoverPassword,
+        ).withField('email', violation),
+      );
+    }
+
+    try {
+      await auth.requestPasswordRecovery(address);
+
+      return const Result<void>.ok(null);
+    } on Exception catch (error) {
+      return Result<void>.error(failureFrom(error, op: opRecoverPassword));
+    }
+  }
+
+  @override
+  Future<Result<void>> resetPassword({
+    required String recoveryToken,
+    required String newPassword,
+  }) async {
+    final token = recoveryToken.trim();
+    final violation = passwordViolation(newPassword);
+
+    if (token.isEmpty) {
+      return Result<void>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'the reset presents no recovery credential',
+          code: codeNoCredential,
+          op: opResetPassword,
+        ).withField('recovery_token', 'it must not be empty'),
+      );
+    }
+
+    if (violation != null) {
+      return Result<void>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'the new password $violation',
+          code: codeInvalidPassword,
+          op: opResetPassword,
+        ).withField('password', violation),
+      );
+    }
+
+    try {
+      await auth.resetPassword(recoveryToken: token, newPassword: newPassword);
+
+      // Every session of every device is over, including this one's if it had
+      // one. Clearing it here is what stops this device from presenting a
+      // credential the node has already thrown away on every call it makes.
+      await session.end();
+
+      return const Result<void>.ok(null);
+    } on Exception catch (error) {
+      return Result<void>.error(failureFrom(error, op: opResetPassword));
     }
   }
 

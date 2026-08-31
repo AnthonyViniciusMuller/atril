@@ -110,6 +110,37 @@ final class FakeAuthRepository implements AuthRepository {
     return Result<User>.ok(_reader(credentials.identifier));
   }
 
+  /// Every address a recovery was asked for, in order.
+  final List<String> recoveries = <String>[];
+
+  /// Every reset it was asked to make, as `(token, password)`.
+  final List<(String, String)> resets = <(String, String)>[];
+
+  @override
+  Future<Result<void>> requestPasswordRecovery(String email) async {
+    recoveries.add(email);
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  @override
+  Future<Result<void>> resetPassword({
+    required String recoveryToken,
+    required String newPassword,
+  }) async {
+    resets.add((recoveryToken, newPassword));
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
   /// How many times it was asked to sign out.
   int signOuts = 0;
 
