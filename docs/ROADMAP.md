@@ -88,7 +88,7 @@ and the most heavily tested code in the app.
 
 - [x] `feat: add the result type` — the guide's sealed `Result<T>`, its `Ok`/`Error` cases, and
       the extensions the view models use
-- [ ] `feat: add the error vocabulary` — one `AppException` with the `Kind` values
+- [x] `feat: add the error vocabulary` — one `AppException` with the `Kind` values
       `internal/shared/errs` uses, the machine-readable code, and the per-field validation
       failures. This is the type every layer boundary carries; the gRPC mapping arrives in
       phase 4
