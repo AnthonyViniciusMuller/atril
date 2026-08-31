@@ -103,9 +103,11 @@ listenable would be a type no widget and no `provider` could observe.
       associative, and the partial order agrees with it. The property tests
       `internal/shared/crdt` carries, written again against the same laws, because a client that
       merges differently converges differently
-- [ ] `feat: add the hybrid logical clock` — `t = max(wall clock, greatest observed + 1µs)`, per
+- [x] `feat: add the hybrid logical clock` — `t = max(wall clock, greatest observed + 1µs)`, per
       C01. It persists its floor, so a fresh launch does not begin having observed nothing, and
-      it is monotone on a browser whose wall clock has millisecond resolution
+      it is monotone on a browser whose wall clock has millisecond resolution. The floor leaves
+      through a `HybridClockStore` port, because a stamp is synchronous and a database is not;
+      the row it is written to arrives with the identity tables in phase 3
 - [ ] `feat: add the revision and the last writer wins rule` — the four fields every replicable
       record carries, and the decision procedure: consult the clock, and only where it reports
       the two versions concurrent, break the tie on `(updated_at, device_id)`
@@ -121,9 +123,9 @@ listenable would be a type no widget and no `provider` could observe.
 - [ ] `build: add the drift web worker assets` — `sqlite3.wasm` and `drift_worker.js` under
       `web/`, and the web connection that picks OPFS where it is available and IndexedDB where it
       is not. Committed with the version they were built from
-- [ ] `feat: add the identity tables` — the bound device, the reader, the origin server, and the
-      known-server catalogue. The device id lives here and not in the session store, because it
-      survives logout
+- [ ] `feat: add the identity tables` — the bound device, the reader, the origin server, the
+      known-server catalogue, and the hybrid clock's floor, which phase 2 left behind a port. The
+      device id lives here and not in the session store, because it survives logout
 - [ ] `feat: add the library tables` — `ebooks`, `collections` and `ebook_collections`, each with
       the revision columns spelled out: `vector_clock`, `updated_at`, `device_id`, `deleted`. The
       membership table carries the unique `(ebook_id, collection_id)` C06 requires, because the
