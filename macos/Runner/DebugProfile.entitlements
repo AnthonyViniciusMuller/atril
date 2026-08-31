@@ -10,6 +10,14 @@
 	     line compiles, launches, and cannot reach a node. -->
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- The keychain is where the refresh credential goes on this target, and
+	     a sandboxed app reaches it only through an access group it is
+	     entitled to. Without this the store raises at the first write, which
+	     is the moment the reader signs in. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)dev.quire.atril</string>
+	</array>
 	<key>com.apple.security.cs.allow-jit</key>
 	<true/>
 	<key>com.apple.security.network.server</key>

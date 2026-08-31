@@ -72,6 +72,25 @@ dependencies:
   path_provider: ^2.1.6
   path: ^1.9.1
 
+  # Where the refresh credential is kept between two runs of the app. It is
+  # one package covering all six targets and not five: the web implementation
+  # is `localStorage` with an AES key that is itself in `localStorage`, which
+  # is obfuscation and not secrecy, and `SecureSessionStore` says so where a
+  # reader can be told. That is the honest shape of the promise a browser can
+  # keep, and it is the reason the store is an interface with more than one
+  # implementation behind it.
+  #
+  # On Linux it is libsecret, so a build host needs `libsecret-1-dev` and
+  # `libjsoncpp-dev`; CI installs both beside the GTK headers.
+  #
+  # Held below 11 deliberately, and not because 11 is new: its Android archive
+  # declares that it must be compiled against SDK 37, and the Android Gradle
+  # plugin this Flutter release ships names 36 as the highest it supports. The
+  # build fails at `checkDebugAarMetadata` and the fix would be a toolchain
+  # ahead of the pinned Flutter rather than a line in this file. Raise it when
+  # `flutter --version` brings an AGP that compiles against 37.
+  flutter_secure_storage: ^10.3.1
+
   # The browser's own APIs, typed. It is what the web half of the blob store
   # reaches the origin-private file system through, and what the storage budget
   # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`

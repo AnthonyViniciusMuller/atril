@@ -245,9 +245,20 @@ listenable would be a type no widget and no `provider` could observe.
       generates our own, which is also what lets a test build the trailer a node sends and read
       it back over a socket. A reason scoped to another domain is ignored rather than branched
       on: a detail attached by a gateway means what that gateway meant by it
-- [ ] `feat: add the session store` — the refresh credential in `flutter_secure_storage` on the
+- [x] `feat: add the session store` — the refresh credential in `flutter_secure_storage` on the
       five native targets. On the web there is no secure storage, only `localStorage`; the store
-      says so in one comment and the settings screen says so to the reader
+      says so in one comment and the settings screen says so to the reader. ~~Two
+      implementations~~: the package's own web backing *is* `localStorage`, with an AES key that
+      is itself in `localStorage`, so one implementation is already the split — what the web
+      target lacks is secrecy and not a store, and `isSecure` is the flag phase 5's settings
+      screen reads. The interface and the in-memory one landed with the interceptor, which
+      needed something to hold. The credential is one JSON value under one key, because every
+      platform's store writes one key at a time and two keys is a state where the token has
+      rotated and the expiry has not. Three things the package costs elsewhere: the Linux build
+      links libsecret, so CI installs its headers beside GTK's; the sandboxed macOS build needs a
+      keychain access group or the store raises at the first write; and it is held at 10, because
+      11's Android archive demands compile SDK 37 and the Gradle plugin this Flutter release
+      ships supports 36 — found by building the target rather than by reading the changelog
 - [ ] `feat: add the api clients` — one thin client per gRPC service over the generated stubs,
       and the mappers between the wire types and the domain models
 - [ ] `feat: add connectivity awareness` — whether a node is reachable, as a stream. Not
