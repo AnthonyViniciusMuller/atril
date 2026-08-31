@@ -31,6 +31,7 @@ import 'package:provider/provider.dart';
 
 import 'config/dependencies.dart';
 import 'config/environment.dart';
+import 'config/window.dart';
 import 'ui/core/ui/atril_app.dart';
 import 'utils/logging.dart';
 
@@ -58,6 +59,10 @@ Future<void> main() async {
     'starting $environment, '
     '${certificateAuthority == null ? 'trusting the platform store' : 'trusting a pinned authority'}',
   );
+
+  // A no-op on the three targets with no window to configure, so neither
+  // entry point has to decide which platform it is.
+  await configureDesktopWindow();
 
   runApp(
     MultiProvider(

@@ -137,6 +137,28 @@ dependencies:
   # is no point in trying at all.
   connectivity_plus: ^7.3.1
 
+  # The window on Linux, macOS and Windows: its minimum size, the size it was
+  # left at, and the moment it is ready to be shown. Flutter's own embedders
+  # expose none of that to Dart — the three runners set a size in C++, Swift
+  # and C++ respectively, before any of this app's code has run — so a floor
+  # that the adaptive layout can be argued about would otherwise be three
+  # native edits nobody reading `lib/` would find.
+  #
+  # It registers on the three desktop targets only, and nothing outside
+  # `config/window.dart` reaches it; the guard there is `defaultTargetPlatform`
+  # and not `dart:io`, which does not parse for the web target.
+  window_manager: ^0.5.1
+
+  # Where a per-device preference goes when it is not part of the replica.
+  #
+  # The window's size is the first of them, and it is deliberately not a drift
+  # table: the local database is the reader's library — the records that
+  # replicate, the log that carries them and the causal state that makes the
+  # next change correct — and how wide somebody left a window on one machine
+  # is none of those. It also has to be readable before `runApp`, which is
+  # before the database is opened.
+  shared_preferences: ^2.5.3
+
   # The browser's own APIs, typed. It is what the web half of the blob store
   # reaches the origin-private file system through, and what the storage budget
   # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`
@@ -153,6 +175,19 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # The in-memory preference backend the plugin publishes for exactly this,
+  # so that `PreferencesWindowStore` is tested rather than the memory twin
+  # beside it — the branch worth covering is a run that wrote a width and no
+  # height, and only the real store has it.
+  shared_preferences_platform_interface: ^2.4.2
+
+  # Virtual time, for the two places this app waits on purpose: the debounce
+  # that keeps a dragged window edge from writing a preference per frame, and
+  # phase 11's backoff. It is already here under flutter_test; it is named so
+  # that a test importing it depends on it rather than on somebody else's
+  # dependency.
+  fake_async: ^1.3.3
 
   # What `tool/check_hardcoded_strings.dart` reads the UI with. Dart ships no
   # lint for a user-visible string written into a widget, and a grep cannot

@@ -365,8 +365,24 @@ listenable would be a type no widget and no `provider` could observe.
       in the graph are lazy on purpose: a device with no session reaches onboarding without
       dialling a node nobody has chosen, and the session/auth-client cycle is closed by resolving
       the refresher on first use rather than by a `late final`
-- [ ] `feat: add the desktop window configuration` — a minimum size and a remembered one on
-      Linux, macOS and Windows, so the adaptive layout has a floor to be correct at
+- [x] `feat: add the desktop window configuration` — a minimum size and a remembered one on
+      Linux, macOS and Windows, so the adaptive layout has a floor to be correct at. The floor is
+      400×600 and is deliberately *below* the compact threshold: a narrow desktop window is meant
+      to become the phone layout, and a minimum above 600 would be the app refusing the case the
+      scaffold was written for. The three embedders set an initial size in C++, Swift and C++
+      before any Dart runs and impose no minimum at all, so without `window_manager` this would be
+      three native edits nobody reading `lib/` would find. The size is remembered and the
+      **position is not** — a window restored to coordinates that were on a second monitor is a
+      window the reader cannot find, and the failure is silent and needs a settings reset to
+      escape. It goes to `shared_preferences` and not to a drift table: the local database is the
+      replica, a window's width replicates to nobody, and it has to be readable before `runApp`.
+      Writing is debounced, because a dragged edge delivers a resize per frame
+
+- [ ] `docs: record what the shell settled` — `architecture.md` still describes
+      `config/dependencies.dart` as "one function per environment", which this phase found to be
+      one layer too low, and it names none of what the shell added: the routing directory, the
+      window store's place outside the replica, and the fact that the no-hardcoded-strings rule is
+      enforced by a tool in `tool/` because Dart ships no lint for it
 
 ## Phase 6 — Onboarding (UC13, UC14, UC07, UC08)
 
