@@ -211,6 +211,15 @@ listenable would be a type no widget and no `provider` could observe.
       port is refused rather than defaulted to 443: the contract publishes `host:port`, so a bare
       host is a node saying something this client cannot act on, and a guess would be dialling
       somewhere nobody named
+- [x] `build: let a shipped build reach the network` — not in the plan, and found by reading what
+      the scaffold actually grants once there was something to dial. `flutter create` puts
+      `android.permission.INTERNET` in the debug and profile manifests and not in the one merged
+      into a release, because what needs it there is the tooling's own socket; and the macOS
+      entitlements grant `com.apple.security.network.server` and not
+      `com.apple.security.network.client`, which is the one the sandbox checks an outgoing
+      connection against. Either way the app compiles, launches, and cannot reach a node — on two
+      of the six targets, in the build that ships
+
 - [x] `feat: add the session interceptor` — the bearer token on every call, a single-flight
       refresh on `UNAUTHENTICATED` that retries the call once, and the rotation the contract
       requires: the refresh credential presented is consumed and the reply carries its

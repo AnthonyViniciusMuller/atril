@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Every build of this app dials a node, and this is the only manifest of
+         the three that is merged into a release. `flutter create` grants the
+         permission in the debug and profile manifests alone, because what
+         needs it there is the tooling's own socket, so an app that works all
+         the way through development is refused at its first call once it
+         ships. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="atril"
         android:name="${applicationName}"

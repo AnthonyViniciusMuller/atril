@@ -4,5 +4,11 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- The sandbox refuses an outgoing connection without it, and the
+	     template grants only the server entitlement, which is what the
+	     tooling's own socket needs during development. A build without this
+	     line compiles, launches, and cannot reach a node. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
