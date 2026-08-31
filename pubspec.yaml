@@ -72,6 +72,12 @@ dependencies:
   path_provider: ^2.1.6
   path: ^1.9.1
 
+  # The browser's own APIs, typed. It is what the web half of the blob store
+  # reaches the origin-private file system through, and what the storage budget
+  # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`
+  # file imports it: it does not parse for the other five targets.
+  web: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -88,6 +94,7 @@ dev_dependencies:
   # the reason the generated contract is, and CI regenerates and diffs it.
   drift_dev: ^2.34.5
   build_runner: ^2.16.0
+  crypto: ^3.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

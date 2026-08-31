@@ -180,8 +180,13 @@ listenable would be a type no widget and no `provider` could observe.
       of the test pins that as behaviour rather than folklore, and `architecture.md` records it
       beside the other findings the node will not tell us. The tombstone case is separate and
       explicit, as planned
-- [ ] `feat: add the blob store` — the e-book bytes, keyed by content hash, behind an interface
-      with a filesystem implementation and a browser one
+- [x] `feat: add the blob store` — the e-book bytes, keyed by content hash, behind an interface
+      with a filesystem implementation and a browser one. A write is staged and published under
+      the digest the caller computed while streaming, because an import hashes the file as it
+      reads it and cannot address the bytes until the last of them has been read — which is also
+      what makes a write atomic. A browser with no origin-private file system is reported rather
+      than worked around: it can still list, sync and stream, and phase 8 asks before offering to
+      keep a book
 - [ ] `feat: report the storage budget` — what the store holds and what it may hold, as a number
       the interface answers. On the web that is `navigator.storage.estimate()`; on the five
       native targets it is the free space on the volume. It exists because the web build spends
