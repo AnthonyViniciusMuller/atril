@@ -14,6 +14,7 @@ import 'package:atril/data/services/channel/channel.dart';
 import 'package:atril/data/services/discovery/well_known.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/session_store.dart';
+import 'package:atril/data/services/sync/seed.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
@@ -239,6 +240,67 @@ void main() {
     });
   });
 
+  group('seeding', () {
+    /// A seeder that records what it was asked to fill.
+    late List<String> seeded;
+
+    AuthRepository withSeeder({bool failing = false}) {
+      seeded = <String>[];
+
+      return AuthRepositoryImpl(
+        auth: AuthApi(connection: connection, session: session),
+        identity: database.identityDao,
+        servers: servers,
+        session: session,
+        platform: 'linux',
+        seeder: _RecordingSeeder(seeded, failing),
+        clock: () => _at,
+      );
+    }
+
+    test(
+      'fills the replica of a device being bound for the first time',
+      () async {
+        final repository = withSeeder();
+
+        await repository.signIn(credentials);
+
+        expect(seeded, <String>[fakeMintedDeviceId]);
+      },
+    );
+
+    test('does not fill one that was already bound', () async {
+      // A device that has signed in here before holds the replica already, and
+      // re-seeding it would be asking the node to repeat a history this
+      // device's own log can reconstruct.
+      await database.identityDao.bindDevice(
+        id: _existing,
+        name: 'the reading tablet',
+        platform: 'android',
+        at: _at,
+      );
+
+      final repository = withSeeder();
+
+      await repository.signIn(credentials);
+
+      expect(seeded, isEmpty);
+    });
+
+    test('signs the reader in even when the seed fails', () async {
+      // The reader is signed in — the node said so, and everything that makes
+      // this device theirs is written. A failed seed costs a library that
+      // fills in later; refusing the login would cost a reader who cannot get
+      // in because one page of their annotations timed out.
+      final repository = withSeeder(failing: true);
+
+      final result = await repository.signIn(credentials);
+
+      expect(result.errorOrNull, isNull);
+      expect(await session.isSignedIn, isTrue);
+    });
+  });
+
   group('signing out', () {
     test('clears the session and nothing else', () async {
       await auth.signIn(credentials);
@@ -428,4 +490,29 @@ void main() {
       );
     },
   );
+}
+
+/// A seeder that records the devices it was asked to fill.
+final class _RecordingSeeder implements ReplicaSeed {
+  _RecordingSeeder(this._seeded, this._failing);
+
+  final List<String> _seeded;
+  final bool _failing;
+
+  @override
+  Future<SeedSummary> seed({required String deviceId}) async {
+    _seeded.add(deviceId);
+
+    if (_failing) {
+      throw const AppException(kind: ErrorKind.unavailable);
+    }
+
+    return const SeedSummary(
+      ebooks: 0,
+      collections: 0,
+      filings: 0,
+      annotations: 0,
+      positions: 0,
+    );
+  }
 }

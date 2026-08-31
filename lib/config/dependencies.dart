@@ -44,6 +44,7 @@ import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
 import '../data/services/discovery/well_known.dart';
 import '../data/services/local/database.dart';
+import '../data/services/sync/seed.dart';
 import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
 import '../data/services/storage/secure_session_store.dart';
@@ -183,6 +184,13 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         // Read at the edge, like every other thing this app learns from the
         // platform rather than from the reader.
         platform: devicePlatform,
+        // The one place the read RPCs are called, and only for a device being
+        // bound for the first time.
+        seeder: ReplicaSeeder(
+          database: database,
+          library: context.read<LibraryApi>(),
+          reading: context.read<ReadingApi>(),
+        ),
       ),
     ),
 

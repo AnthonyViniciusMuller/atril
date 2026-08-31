@@ -13,6 +13,7 @@ import '../../services/api/errors.dart';
 import '../../services/api/session.dart';
 import '../../services/local/dao/identity_dao.dart';
 import '../../services/local/database.dart';
+import '../../services/sync/seed.dart';
 import '../server/server_repository.dart';
 import 'auth_repository.dart';
 
@@ -53,6 +54,7 @@ final class AuthRepositoryImpl implements AuthRepository {
     required this.servers,
     required this.session,
     required this.platform,
+    this.seeder,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -75,6 +77,13 @@ final class AuthRepositoryImpl implements AuthRepository {
 
   /// The platform string sent at binding.
   final String platform;
+
+  /// What fills the replica of a device that has just been bound for the first
+  /// time, where anything is listening.
+  ///
+  /// It is nullable so that a test can sign in without a node's whole library
+  /// behind it; the composition root always passes one.
+  final ReplicaSeed? seeder;
 
   final DateTime Function() _clock;
 
@@ -127,6 +136,28 @@ final class AuthRepositoryImpl implements AuthRepository {
       return Result<User>.ok(user);
     } on Exception catch (error) {
       return Result<User>.error(failureFrom(error, op: opRegisterUser));
+    }
+  }
+
+  /// Fills the replica of a device that has just been bound.
+  ///
+  /// A failure here does not fail the sign-in, and the asymmetry is deliberate.
+  /// The reader *is* signed in — the node said so, and everything that makes
+  /// this device theirs is written — while the seed is a convenience the sync
+  /// loop of phase 11 can reach without: what a failed seed costs is a library
+  /// that fills in later, and what refusing the login would cost is a reader
+  /// who cannot get in at all because one page of their annotations timed out.
+  Future<void> _seed(String deviceId) async {
+    final replica = seeder;
+
+    if (replica == null) {
+      return;
+    }
+
+    try {
+      await replica.seed(deviceId: deviceId);
+    } on Exception catch (error) {
+      _log.warning('the replica of $deviceId was not seeded', error);
     }
   }
 
@@ -293,6 +324,13 @@ final class AuthRepositoryImpl implements AuthRepository {
       _log.info(
         '${signIn.user.federatedId} is signed in on ${signIn.device.id}',
       );
+
+      // Only a device that had no identity a moment ago. One that has signed in
+      // here before holds the replica already, and re-seeding it would be this
+      // device asking the node to repeat a history its own log can reconstruct.
+      if (bound == null) {
+        await _seed(signIn.device.id);
+      }
 
       return Result<User>.ok(signIn.user);
     } on Exception catch (error) {

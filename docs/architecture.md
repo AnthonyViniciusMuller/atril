@@ -41,6 +41,14 @@ The read calls (`ListEbooks`, `ListCollections`, `ListAnnotations`, `ListReading
 used exactly once per record: to seed a freshly bound device before its first pull. After that
 the local replica is the truth and the log is how it changes.
 
+The seed writes what the node said. A work, a grouping and a mark carry their `Revision` on the
+wire and a position its `Version`, so those four reconcile from the seeded row exactly as if they
+had been pulled. The filing of a work under a grouping carries none — there is no
+`ListEbookCollections` and no `EbookCollection` message, and the membership is visible only
+through the filters on the two list calls — so it is seeded with no causal history at all, and
+the first operation about it supersedes the row. It is there so that a reader's shelves are not
+empty on a new device, and it yields to the first thing the log says about it.
+
 **Holding a replica means owning a reconciler.** Applying a pulled operation to the local
 database is the same computation `internal/shared/crdt` performs on the node: compare vector
 clocks, and where they are concurrent, break the tie on `(updated_at, device_id)` per field. A
@@ -119,7 +127,10 @@ has a formal specification elsewhere. They get a package, no Flutter import, and
 
 Applying an operation is not something a view triggers, so it has no view model above it and does
 not fit the guide's `use_cases/`. It lives in `data/services/sync/`, beside the loop that feeds
-it, and it is the only writer to the replicated tables other than the operation author.
+it, and it is one of the three writers to the replicated tables — the operation author is the
+second, and the seed of a freshly bound device is the third. The seed is the only one that runs
+once per device: `data/services/sync/seed.dart` reads the four list calls into the replica before
+the first pull, and after it the reconciler and the author are the only writers there are.
 
 ### The EPUB engine is one file; only its host varies
 

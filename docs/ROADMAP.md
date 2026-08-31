@@ -505,11 +505,28 @@ a registration commit landing first would end at a route that matches nothing.
       indistinction rather than inventing an explanation. A successful reset clears this device's
       session as well: the node has ended every session of every device, and keeping this one
       would be presenting a credential it has already thrown away, on every call
-- [ ] `feat: seed a newly bound device` — the one place the read RPCs are called: `ListEbooks`,
+- [x] `feat: seed a newly bound device` — the one place the read RPCs are called: `ListEbooks`,
       `ListCollections`, `ListAnnotations` and `ListReadingProgress`, straight into the local
       replica, before the first pull. A device bound to a reader with a history has to start
       somewhere, and pulling from position zero would only replay what the log has — which, until
-      C21 closes, is not everything
+      C21 closes, is not everything. What is written is what the node said: a work, a grouping and
+      a mark carry their `Revision` on the wire and a position its `Version`, so those four
+      reconcile from the seeded row exactly as if they had been pulled. **The filing is the
+      exception, and the contract is why**: there is no `ListEbookCollections` and no
+      `EbookCollection` message, so a membership is visible only through the filters on the two
+      list calls and neither carries a revision for it. A filing is therefore seeded with no
+      causal history at all — the empty clock and the epoch — which makes the first operation
+      about it supersede the seeded row: it is there so a reader's shelves are not empty on a new
+      device, and it yields to the first thing the log says. Its surrogate identifier is minted
+      here, which is what C18 says a replica must do, and `utils/identifiers.dart` is that minter
+      — sixteen lines over `Random.secure` rather than a package, and what phase 7 will author
+      records with. A record in a format or of a kind this build cannot name is skipped loudly
+      rather than written as something it is not, which is the same answer the reconciler gives
+      the operation that would have created it. The seed is not one transaction — every write is
+      an upsert keyed by an identifier the node chose, so an interrupted run is finished by the
+      next — and its failure does not fail the sign-in: a failed seed costs a library that fills
+      in later, and refusing the login would cost a reader who cannot get in because one page of
+      their annotations timed out
 
 ## Phase 7 — Authoring a change (UC09, UC10)
 
