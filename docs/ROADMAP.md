@@ -295,9 +295,16 @@ listenable would be a type no widget and no `provider` could observe.
 
 ## Phase 5 — The shell
 
-- [ ] `feat: add the theme` — Material 3, a light and a dark scheme, and the type scale the
+- [x] `feat: add the theme` — Material 3, a light and a dark scheme, and the type scale the
       reader inherits. Named colours only; a hex literal in a widget is a theme that will
-      disagree with itself
+      disagree with itself. One seed and not a palette: Material derives the forty-odd roles
+      from a source colour, so two schemes from one seed cannot drift apart in hue and a test
+      says so. The scale is a modification of the baseline rather than fifteen styles written
+      out — a copy of the baseline stops tracking the framework and records nothing this app
+      decided; what it decided is a line height on the three body styles and no extra tracking
+      on the titles. There is no third theme and no theme *setting*: the device already knows
+      whether the reader wants dark, and a page's own background belongs to the engine phase 9
+      renders it in
 - [ ] `feat: add localization` — `flutter_localizations`, `app_pt_BR.arb` and `app_en.arb`, and
       the lint that fails the build on a hardcoded string
 - [ ] `feat: add routing` — `go_router`, the route table, and the redirect that sends a device
