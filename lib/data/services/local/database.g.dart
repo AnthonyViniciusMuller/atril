@@ -4914,6 +4914,909 @@ class ProgressCompanion extends UpdateCompanion<ProgressRow> {
   }
 }
 
+class $PendingOperationsTable extends PendingOperations
+    with TableInfo<$PendingOperationsTable, PendingOperationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingOperationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _sequenceMeta = const VerificationMeta(
+    'sequence',
+  );
+  @override
+  late final GeneratedColumn<int> sequence = GeneratedColumn<int>(
+    'sequence',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetEntityMeta = const VerificationMeta(
+    'targetEntity',
+  );
+  @override
+  late final GeneratedColumn<String> targetEntity = GeneratedColumn<String>(
+    'target_entity',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 40,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetIdMeta = const VerificationMeta(
+    'targetId',
+  );
+  @override
+  late final GeneratedColumn<String> targetId = GeneratedColumn<String>(
+    'target_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deltaMeta = const VerificationMeta('delta');
+  @override
+  late final GeneratedColumn<String> delta = GeneratedColumn<String>(
+    'delta',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>(
+        $PendingOperationsTable.$convertervectorClock,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> createdAt =
+      GeneratedColumn<int>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($PendingOperationsTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    sequence,
+    id,
+    deviceId,
+    targetEntity,
+    targetId,
+    operation,
+    delta,
+    vectorClock,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_operations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingOperationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('sequence')) {
+      context.handle(
+        _sequenceMeta,
+        sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('target_entity')) {
+      context.handle(
+        _targetEntityMeta,
+        targetEntity.isAcceptableOrUnknown(
+          data['target_entity']!,
+          _targetEntityMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetEntityMeta);
+    }
+    if (data.containsKey('target_id')) {
+      context.handle(
+        _targetIdMeta,
+        targetId.isAcceptableOrUnknown(data['target_id']!, _targetIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_targetIdMeta);
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('delta')) {
+      context.handle(
+        _deltaMeta,
+        delta.isAcceptableOrUnknown(data['delta']!, _deltaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deltaMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {sequence};
+  @override
+  PendingOperationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingOperationRow(
+      sequence: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sequence'],
+      )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      targetEntity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_entity'],
+      )!,
+      targetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_id'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      delta: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}delta'],
+      )!,
+      vectorClock: $PendingOperationsTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+      createdAt: $PendingOperationsTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $PendingOperationsTable createAlias(String alias) {
+    return $PendingOperationsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+  static TypeConverter<DateTime, int> $convertercreatedAt =
+      const InstantConverter();
+}
+
+class PendingOperationRow extends DataClass
+    implements Insertable<PendingOperationRow> {
+  /// This device's authoring order. It is the rowid, so it is assigned by
+  /// sqlite and never reused while the log has an entry above it.
+  final int sequence;
+
+  /// The identifier this device minted for the change, which every replica
+  /// recognizes it by.
+  final String id;
+
+  /// The device that authored it, which is this one. It is stored rather than
+  /// inferred because an operation carries its author across the wire, and
+  /// because a migration to another node pushes what was authored *here* under
+  /// the identity it was authored with.
+  final String deviceId;
+
+  /// Which kind of record changed.
+  final String targetEntity;
+
+  /// The record the change names.
+  final String targetId;
+
+  /// What the change did.
+  final String operation;
+
+  /// The changed fields and nothing else, as the JSON object the contract
+  /// carries in `Operation.delta`.
+  ///
+  /// It is stored as text rather than decoded because nothing between here and
+  /// the wire reads inside it: the push renders it and the reconciler on the
+  /// other side decodes it. A field named as JSON null is a field the change
+  /// cleared, so the nulls have to survive being stored, which they do here and
+  /// would not in a map that dropped them.
+  final String delta;
+
+  /// The causal version the change was authored at.
+  final VectorClock vectorClock;
+
+  /// When it was stamped, on the hybrid clock.
+  final DateTime createdAt;
+  const PendingOperationRow({
+    required this.sequence,
+    required this.id,
+    required this.deviceId,
+    required this.targetEntity,
+    required this.targetId,
+    required this.operation,
+    required this.delta,
+    required this.vectorClock,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['sequence'] = Variable<int>(sequence);
+    map['id'] = Variable<String>(id);
+    map['device_id'] = Variable<String>(deviceId);
+    map['target_entity'] = Variable<String>(targetEntity);
+    map['target_id'] = Variable<String>(targetId);
+    map['operation'] = Variable<String>(operation);
+    map['delta'] = Variable<String>(delta);
+    {
+      map['vector_clock'] = Variable<String>(
+        $PendingOperationsTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    {
+      map['created_at'] = Variable<int>(
+        $PendingOperationsTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  PendingOperationsCompanion toCompanion(bool nullToAbsent) {
+    return PendingOperationsCompanion(
+      sequence: Value(sequence),
+      id: Value(id),
+      deviceId: Value(deviceId),
+      targetEntity: Value(targetEntity),
+      targetId: Value(targetId),
+      operation: Value(operation),
+      delta: Value(delta),
+      vectorClock: Value(vectorClock),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PendingOperationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingOperationRow(
+      sequence: serializer.fromJson<int>(json['sequence']),
+      id: serializer.fromJson<String>(json['id']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      targetEntity: serializer.fromJson<String>(json['targetEntity']),
+      targetId: serializer.fromJson<String>(json['targetId']),
+      operation: serializer.fromJson<String>(json['operation']),
+      delta: serializer.fromJson<String>(json['delta']),
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'sequence': serializer.toJson<int>(sequence),
+      'id': serializer.toJson<String>(id),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'targetEntity': serializer.toJson<String>(targetEntity),
+      'targetId': serializer.toJson<String>(targetId),
+      'operation': serializer.toJson<String>(operation),
+      'delta': serializer.toJson<String>(delta),
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PendingOperationRow copyWith({
+    int? sequence,
+    String? id,
+    String? deviceId,
+    String? targetEntity,
+    String? targetId,
+    String? operation,
+    String? delta,
+    VectorClock? vectorClock,
+    DateTime? createdAt,
+  }) => PendingOperationRow(
+    sequence: sequence ?? this.sequence,
+    id: id ?? this.id,
+    deviceId: deviceId ?? this.deviceId,
+    targetEntity: targetEntity ?? this.targetEntity,
+    targetId: targetId ?? this.targetId,
+    operation: operation ?? this.operation,
+    delta: delta ?? this.delta,
+    vectorClock: vectorClock ?? this.vectorClock,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PendingOperationRow copyWithCompanion(PendingOperationsCompanion data) {
+    return PendingOperationRow(
+      sequence: data.sequence.present ? data.sequence.value : this.sequence,
+      id: data.id.present ? data.id.value : this.id,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      targetEntity: data.targetEntity.present
+          ? data.targetEntity.value
+          : this.targetEntity,
+      targetId: data.targetId.present ? data.targetId.value : this.targetId,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      delta: data.delta.present ? data.delta.value : this.delta,
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOperationRow(')
+          ..write('sequence: $sequence, ')
+          ..write('id: $id, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('targetEntity: $targetEntity, ')
+          ..write('targetId: $targetId, ')
+          ..write('operation: $operation, ')
+          ..write('delta: $delta, ')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    sequence,
+    id,
+    deviceId,
+    targetEntity,
+    targetId,
+    operation,
+    delta,
+    vectorClock,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingOperationRow &&
+          other.sequence == this.sequence &&
+          other.id == this.id &&
+          other.deviceId == this.deviceId &&
+          other.targetEntity == this.targetEntity &&
+          other.targetId == this.targetId &&
+          other.operation == this.operation &&
+          other.delta == this.delta &&
+          other.vectorClock == this.vectorClock &&
+          other.createdAt == this.createdAt);
+}
+
+class PendingOperationsCompanion extends UpdateCompanion<PendingOperationRow> {
+  final Value<int> sequence;
+  final Value<String> id;
+  final Value<String> deviceId;
+  final Value<String> targetEntity;
+  final Value<String> targetId;
+  final Value<String> operation;
+  final Value<String> delta;
+  final Value<VectorClock> vectorClock;
+  final Value<DateTime> createdAt;
+  const PendingOperationsCompanion({
+    this.sequence = const Value.absent(),
+    this.id = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.targetEntity = const Value.absent(),
+    this.targetId = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.delta = const Value.absent(),
+    this.vectorClock = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PendingOperationsCompanion.insert({
+    this.sequence = const Value.absent(),
+    required String id,
+    required String deviceId,
+    required String targetEntity,
+    required String targetId,
+    required String operation,
+    required String delta,
+    required VectorClock vectorClock,
+    required DateTime createdAt,
+  }) : id = Value(id),
+       deviceId = Value(deviceId),
+       targetEntity = Value(targetEntity),
+       targetId = Value(targetId),
+       operation = Value(operation),
+       delta = Value(delta),
+       vectorClock = Value(vectorClock),
+       createdAt = Value(createdAt);
+  static Insertable<PendingOperationRow> custom({
+    Expression<int>? sequence,
+    Expression<String>? id,
+    Expression<String>? deviceId,
+    Expression<String>? targetEntity,
+    Expression<String>? targetId,
+    Expression<String>? operation,
+    Expression<String>? delta,
+    Expression<String>? vectorClock,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (sequence != null) 'sequence': sequence,
+      if (id != null) 'id': id,
+      if (deviceId != null) 'device_id': deviceId,
+      if (targetEntity != null) 'target_entity': targetEntity,
+      if (targetId != null) 'target_id': targetId,
+      if (operation != null) 'operation': operation,
+      if (delta != null) 'delta': delta,
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PendingOperationsCompanion copyWith({
+    Value<int>? sequence,
+    Value<String>? id,
+    Value<String>? deviceId,
+    Value<String>? targetEntity,
+    Value<String>? targetId,
+    Value<String>? operation,
+    Value<String>? delta,
+    Value<VectorClock>? vectorClock,
+    Value<DateTime>? createdAt,
+  }) {
+    return PendingOperationsCompanion(
+      sequence: sequence ?? this.sequence,
+      id: id ?? this.id,
+      deviceId: deviceId ?? this.deviceId,
+      targetEntity: targetEntity ?? this.targetEntity,
+      targetId: targetId ?? this.targetId,
+      operation: operation ?? this.operation,
+      delta: delta ?? this.delta,
+      vectorClock: vectorClock ?? this.vectorClock,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (sequence.present) {
+      map['sequence'] = Variable<int>(sequence.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (targetEntity.present) {
+      map['target_entity'] = Variable<String>(targetEntity.value);
+    }
+    if (targetId.present) {
+      map['target_id'] = Variable<String>(targetId.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (delta.present) {
+      map['delta'] = Variable<String>(delta.value);
+    }
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $PendingOperationsTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(
+        $PendingOperationsTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingOperationsCompanion(')
+          ..write('sequence: $sequence, ')
+          ..write('id: $id, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('targetEntity: $targetEntity, ')
+          ..write('targetId: $targetId, ')
+          ..write('operation: $operation, ')
+          ..write('delta: $delta, ')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $NodeCursorsTable extends NodeCursors
+    with TableInfo<$NodeCursorsTable, NodeCursorRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NodeCursorsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+    'server_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES known_servers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _lastPositionMeta = const VerificationMeta(
+    'lastPosition',
+  );
+  @override
+  late final GeneratedColumn<int> lastPosition = GeneratedColumn<int>(
+    'last_position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> pulledAt =
+      GeneratedColumn<int>(
+        'pulled_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($NodeCursorsTable.$converterpulledAtn);
+  @override
+  List<GeneratedColumn> get $columns => [serverId, lastPosition, pulledAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'node_cursors';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NodeCursorRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('server_id')) {
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serverIdMeta);
+    }
+    if (data.containsKey('last_position')) {
+      context.handle(
+        _lastPositionMeta,
+        lastPosition.isAcceptableOrUnknown(
+          data['last_position']!,
+          _lastPositionMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {serverId};
+  @override
+  NodeCursorRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NodeCursorRow(
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_id'],
+      )!,
+      lastPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_position'],
+      )!,
+      pulledAt: $NodeCursorsTable.$converterpulledAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}pulled_at'],
+        ),
+      ),
+    );
+  }
+
+  @override
+  $NodeCursorsTable createAlias(String alias) {
+    return $NodeCursorsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, int> $converterpulledAt =
+      const InstantConverter();
+  static TypeConverter<DateTime?, int?> $converterpulledAtn =
+      NullAwareTypeConverter.wrap($converterpulledAt);
+}
+
+class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
+  /// The node this position belongs to.
+  final String serverId;
+
+  /// The last position this device has pulled and committed.
+  ///
+  /// It is advanced after the batch is written and not after it is received: an
+  /// operation read from a socket is not an operation written to disk, and a
+  /// device that dies in between must come back to the same place. Zero is a
+  /// device that has pulled nothing, which is what a freshly bound one asks
+  /// from.
+  final int lastPosition;
+
+  /// When the cursor last moved, on a wall clock.
+  ///
+  /// It is a diagnostic and never a cursor: it is what the sync surface of
+  /// phase 11 shows a reader who wants to know whether their notes are only on
+  /// this phone.
+  final DateTime? pulledAt;
+  const NodeCursorRow({
+    required this.serverId,
+    required this.lastPosition,
+    this.pulledAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['server_id'] = Variable<String>(serverId);
+    map['last_position'] = Variable<int>(lastPosition);
+    if (!nullToAbsent || pulledAt != null) {
+      map['pulled_at'] = Variable<int>(
+        $NodeCursorsTable.$converterpulledAtn.toSql(pulledAt),
+      );
+    }
+    return map;
+  }
+
+  NodeCursorsCompanion toCompanion(bool nullToAbsent) {
+    return NodeCursorsCompanion(
+      serverId: Value(serverId),
+      lastPosition: Value(lastPosition),
+      pulledAt: pulledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pulledAt),
+    );
+  }
+
+  factory NodeCursorRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NodeCursorRow(
+      serverId: serializer.fromJson<String>(json['serverId']),
+      lastPosition: serializer.fromJson<int>(json['lastPosition']),
+      pulledAt: serializer.fromJson<DateTime?>(json['pulledAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'serverId': serializer.toJson<String>(serverId),
+      'lastPosition': serializer.toJson<int>(lastPosition),
+      'pulledAt': serializer.toJson<DateTime?>(pulledAt),
+    };
+  }
+
+  NodeCursorRow copyWith({
+    String? serverId,
+    int? lastPosition,
+    Value<DateTime?> pulledAt = const Value.absent(),
+  }) => NodeCursorRow(
+    serverId: serverId ?? this.serverId,
+    lastPosition: lastPosition ?? this.lastPosition,
+    pulledAt: pulledAt.present ? pulledAt.value : this.pulledAt,
+  );
+  NodeCursorRow copyWithCompanion(NodeCursorsCompanion data) {
+    return NodeCursorRow(
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastPosition: data.lastPosition.present
+          ? data.lastPosition.value
+          : this.lastPosition,
+      pulledAt: data.pulledAt.present ? data.pulledAt.value : this.pulledAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NodeCursorRow(')
+          ..write('serverId: $serverId, ')
+          ..write('lastPosition: $lastPosition, ')
+          ..write('pulledAt: $pulledAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(serverId, lastPosition, pulledAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NodeCursorRow &&
+          other.serverId == this.serverId &&
+          other.lastPosition == this.lastPosition &&
+          other.pulledAt == this.pulledAt);
+}
+
+class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
+  final Value<String> serverId;
+  final Value<int> lastPosition;
+  final Value<DateTime?> pulledAt;
+  final Value<int> rowid;
+  const NodeCursorsCompanion({
+    this.serverId = const Value.absent(),
+    this.lastPosition = const Value.absent(),
+    this.pulledAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NodeCursorsCompanion.insert({
+    required String serverId,
+    this.lastPosition = const Value.absent(),
+    this.pulledAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : serverId = Value(serverId);
+  static Insertable<NodeCursorRow> custom({
+    Expression<String>? serverId,
+    Expression<int>? lastPosition,
+    Expression<int>? pulledAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (serverId != null) 'server_id': serverId,
+      if (lastPosition != null) 'last_position': lastPosition,
+      if (pulledAt != null) 'pulled_at': pulledAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NodeCursorsCompanion copyWith({
+    Value<String>? serverId,
+    Value<int>? lastPosition,
+    Value<DateTime?>? pulledAt,
+    Value<int>? rowid,
+  }) {
+    return NodeCursorsCompanion(
+      serverId: serverId ?? this.serverId,
+      lastPosition: lastPosition ?? this.lastPosition,
+      pulledAt: pulledAt ?? this.pulledAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastPosition.present) {
+      map['last_position'] = Variable<int>(lastPosition.value);
+    }
+    if (pulledAt.present) {
+      map['pulled_at'] = Variable<int>(
+        $NodeCursorsTable.$converterpulledAtn.toSql(pulledAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NodeCursorsCompanion(')
+          ..write('serverId: $serverId, ')
+          ..write('lastPosition: $lastPosition, ')
+          ..write('pulledAt: $pulledAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -4928,6 +5831,9 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   );
   late final $AnnotationsTable annotations = $AnnotationsTable(this);
   late final $ProgressTable progress = $ProgressTable(this);
+  late final $PendingOperationsTable pendingOperations =
+      $PendingOperationsTable(this);
+  late final $NodeCursorsTable nodeCursors = $NodeCursorsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
@@ -4945,6 +5851,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     'CREATE INDEX annotations_ebook ON annotations (ebook_id)',
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
+  late final SyncDao syncDao = SyncDao(this as AtrilDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4959,6 +5866,8 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     ebookCollections,
     annotations,
     progress,
+    pendingOperations,
+    nodeCursors,
     knownServersOrigin,
     ebooksContentHash,
     ebookCollectionsCollection,
@@ -4993,6 +5902,13 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('progress', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'known_servers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('node_cursors', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -5240,6 +6156,24 @@ final class $$KnownServersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$NodeCursorsTable, List<NodeCursorRow>>
+  _nodeCursorsRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
+    db.nodeCursors,
+    aliasName: 'known_servers__id__node_cursors__server_id',
+  );
+
+  $$NodeCursorsTableProcessedTableManager get nodeCursorsRefs {
+    final manager = $$NodeCursorsTableTableManager(
+      $_db,
+      $_db.nodeCursors,
+    ).filter((f) => f.serverId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_nodeCursorsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$KnownServersTableFilterComposer
@@ -5313,6 +6247,31 @@ class $$KnownServersTableFilterComposer
           }) => $$SignedInReaderTableFilterComposer(
             $db: $db,
             $table: $db.signedInReader,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> nodeCursorsRefs(
+    Expression<bool> Function($$NodeCursorsTableFilterComposer f) f,
+  ) {
+    final $$NodeCursorsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.nodeCursors,
+      getReferencedColumn: (t) => t.serverId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NodeCursorsTableFilterComposer(
+            $db: $db,
+            $table: $db.nodeCursors,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5445,6 +6404,31 @@ class $$KnownServersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> nodeCursorsRefs<T extends Object>(
+    Expression<T> Function($$NodeCursorsTableAnnotationComposer a) f,
+  ) {
+    final $$NodeCursorsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.nodeCursors,
+      getReferencedColumn: (t) => t.serverId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NodeCursorsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.nodeCursors,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$KnownServersTableTableManager
@@ -5460,7 +6444,10 @@ class $$KnownServersTableTableManager
           $$KnownServersTableUpdateCompanionBuilder,
           (ServerRow, $$KnownServersTableReferences),
           ServerRow,
-          PrefetchHooks Function({bool signedInReaderRefs})
+          PrefetchHooks Function({
+            bool signedInReaderRefs,
+            bool nodeCursorsRefs,
+          })
         > {
   $$KnownServersTableTableManager(_$AtrilDatabase db, $KnownServersTable table)
     : super(
@@ -5529,40 +6516,63 @@ class $$KnownServersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({signedInReaderRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (signedInReaderRefs) db.signedInReader,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (signedInReaderRefs)
-                    await $_getPrefetchedData<
-                      ServerRow,
-                      $KnownServersTable,
-                      ReaderRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$KnownServersTableReferences
-                          ._signedInReaderRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$KnownServersTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).signedInReaderRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.originServerId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({signedInReaderRefs = false, nodeCursorsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (signedInReaderRefs) db.signedInReader,
+                    if (nodeCursorsRefs) db.nodeCursors,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (signedInReaderRefs)
+                        await $_getPrefetchedData<
+                          ServerRow,
+                          $KnownServersTable,
+                          ReaderRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$KnownServersTableReferences
+                              ._signedInReaderRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$KnownServersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).signedInReaderRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.originServerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (nodeCursorsRefs)
+                        await $_getPrefetchedData<
+                          ServerRow,
+                          $KnownServersTable,
+                          NodeCursorRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$KnownServersTableReferences
+                              ._nodeCursorsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$KnownServersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).nodeCursorsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.serverId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -5579,7 +6589,7 @@ typedef $$KnownServersTableProcessedTableManager =
       $$KnownServersTableUpdateCompanionBuilder,
       (ServerRow, $$KnownServersTableReferences),
       ServerRow,
-      PrefetchHooks Function({bool signedInReaderRefs})
+      PrefetchHooks Function({bool signedInReaderRefs, bool nodeCursorsRefs})
     >;
 typedef $$SignedInReaderTableCreateCompanionBuilder =
     SignedInReaderCompanion Function({
@@ -8373,6 +9383,576 @@ typedef $$ProgressTableProcessedTableManager =
       ProgressRow,
       PrefetchHooks Function({bool ebookId})
     >;
+typedef $$PendingOperationsTableCreateCompanionBuilder =
+    PendingOperationsCompanion Function({
+      Value<int> sequence,
+      required String id,
+      required String deviceId,
+      required String targetEntity,
+      required String targetId,
+      required String operation,
+      required String delta,
+      required VectorClock vectorClock,
+      required DateTime createdAt,
+    });
+typedef $$PendingOperationsTableUpdateCompanionBuilder =
+    PendingOperationsCompanion Function({
+      Value<int> sequence,
+      Value<String> id,
+      Value<String> deviceId,
+      Value<String> targetEntity,
+      Value<String> targetId,
+      Value<String> operation,
+      Value<String> delta,
+      Value<VectorClock> vectorClock,
+      Value<DateTime> createdAt,
+    });
+
+class $$PendingOperationsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $PendingOperationsTable> {
+  $$PendingOperationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetEntity => $composableBuilder(
+    column: $table.targetEntity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetId => $composableBuilder(
+    column: $table.targetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get delta => $composableBuilder(
+    column: $table.delta,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$PendingOperationsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $PendingOperationsTable> {
+  $$PendingOperationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetEntity => $composableBuilder(
+    column: $table.targetEntity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetId => $composableBuilder(
+    column: $table.targetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get delta => $composableBuilder(
+    column: $table.delta,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingOperationsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $PendingOperationsTable> {
+  $$PendingOperationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get sequence =>
+      $composableBuilder(column: $table.sequence, builder: (column) => column);
+
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get targetEntity => $composableBuilder(
+    column: $table.targetEntity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get targetId =>
+      $composableBuilder(column: $table.targetId, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get delta =>
+      $composableBuilder(column: $table.delta, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PendingOperationsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $PendingOperationsTable,
+          PendingOperationRow,
+          $$PendingOperationsTableFilterComposer,
+          $$PendingOperationsTableOrderingComposer,
+          $$PendingOperationsTableAnnotationComposer,
+          $$PendingOperationsTableCreateCompanionBuilder,
+          $$PendingOperationsTableUpdateCompanionBuilder,
+          (
+            PendingOperationRow,
+            BaseReferences<
+              _$AtrilDatabase,
+              $PendingOperationsTable,
+              PendingOperationRow
+            >,
+          ),
+          PendingOperationRow,
+          PrefetchHooks Function()
+        > {
+  $$PendingOperationsTableTableManager(
+    _$AtrilDatabase db,
+    $PendingOperationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingOperationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingOperationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingOperationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> sequence = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> targetEntity = const Value.absent(),
+                Value<String> targetId = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> delta = const Value.absent(),
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PendingOperationsCompanion(
+                sequence: sequence,
+                id: id,
+                deviceId: deviceId,
+                targetEntity: targetEntity,
+                targetId: targetId,
+                operation: operation,
+                delta: delta,
+                vectorClock: vectorClock,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> sequence = const Value.absent(),
+                required String id,
+                required String deviceId,
+                required String targetEntity,
+                required String targetId,
+                required String operation,
+                required String delta,
+                required VectorClock vectorClock,
+                required DateTime createdAt,
+              }) => PendingOperationsCompanion.insert(
+                sequence: sequence,
+                id: id,
+                deviceId: deviceId,
+                targetEntity: targetEntity,
+                targetId: targetId,
+                operation: operation,
+                delta: delta,
+                vectorClock: vectorClock,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingOperationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $PendingOperationsTable,
+      PendingOperationRow,
+      $$PendingOperationsTableFilterComposer,
+      $$PendingOperationsTableOrderingComposer,
+      $$PendingOperationsTableAnnotationComposer,
+      $$PendingOperationsTableCreateCompanionBuilder,
+      $$PendingOperationsTableUpdateCompanionBuilder,
+      (
+        PendingOperationRow,
+        BaseReferences<
+          _$AtrilDatabase,
+          $PendingOperationsTable,
+          PendingOperationRow
+        >,
+      ),
+      PendingOperationRow,
+      PrefetchHooks Function()
+    >;
+typedef $$NodeCursorsTableCreateCompanionBuilder =
+    NodeCursorsCompanion Function({
+      required String serverId,
+      Value<int> lastPosition,
+      Value<DateTime?> pulledAt,
+      Value<int> rowid,
+    });
+typedef $$NodeCursorsTableUpdateCompanionBuilder =
+    NodeCursorsCompanion Function({
+      Value<String> serverId,
+      Value<int> lastPosition,
+      Value<DateTime?> pulledAt,
+      Value<int> rowid,
+    });
+
+final class $$NodeCursorsTableReferences
+    extends BaseReferences<_$AtrilDatabase, $NodeCursorsTable, NodeCursorRow> {
+  $$NodeCursorsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $KnownServersTable _serverIdTable(_$AtrilDatabase db) =>
+      db.knownServers.createAlias('node_cursors__server_id__known_servers__id');
+
+  $$KnownServersTableProcessedTableManager get serverId {
+    final $_column = $_itemColumn<String>('server_id')!;
+
+    final manager = $$KnownServersTableTableManager(
+      $_db,
+      $_db.knownServers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_serverIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$NodeCursorsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $NodeCursorsTable> {
+  $$NodeCursorsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get lastPosition => $composableBuilder(
+    column: $table.lastPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int> get pulledAt =>
+      $composableBuilder(
+        column: $table.pulledAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$KnownServersTableFilterComposer get serverId {
+    final $$KnownServersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverId,
+      referencedTable: $db.knownServers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KnownServersTableFilterComposer(
+            $db: $db,
+            $table: $db.knownServers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NodeCursorsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $NodeCursorsTable> {
+  $$NodeCursorsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get lastPosition => $composableBuilder(
+    column: $table.lastPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pulledAt => $composableBuilder(
+    column: $table.pulledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$KnownServersTableOrderingComposer get serverId {
+    final $$KnownServersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverId,
+      referencedTable: $db.knownServers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KnownServersTableOrderingComposer(
+            $db: $db,
+            $table: $db.knownServers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NodeCursorsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $NodeCursorsTable> {
+  $$NodeCursorsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get lastPosition => $composableBuilder(
+    column: $table.lastPosition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime?, int> get pulledAt =>
+      $composableBuilder(column: $table.pulledAt, builder: (column) => column);
+
+  $$KnownServersTableAnnotationComposer get serverId {
+    final $$KnownServersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverId,
+      referencedTable: $db.knownServers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KnownServersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.knownServers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NodeCursorsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $NodeCursorsTable,
+          NodeCursorRow,
+          $$NodeCursorsTableFilterComposer,
+          $$NodeCursorsTableOrderingComposer,
+          $$NodeCursorsTableAnnotationComposer,
+          $$NodeCursorsTableCreateCompanionBuilder,
+          $$NodeCursorsTableUpdateCompanionBuilder,
+          (NodeCursorRow, $$NodeCursorsTableReferences),
+          NodeCursorRow,
+          PrefetchHooks Function({bool serverId})
+        > {
+  $$NodeCursorsTableTableManager(_$AtrilDatabase db, $NodeCursorsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NodeCursorsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NodeCursorsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NodeCursorsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> serverId = const Value.absent(),
+                Value<int> lastPosition = const Value.absent(),
+                Value<DateTime?> pulledAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NodeCursorsCompanion(
+                serverId: serverId,
+                lastPosition: lastPosition,
+                pulledAt: pulledAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String serverId,
+                Value<int> lastPosition = const Value.absent(),
+                Value<DateTime?> pulledAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NodeCursorsCompanion.insert(
+                serverId: serverId,
+                lastPosition: lastPosition,
+                pulledAt: pulledAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$NodeCursorsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({serverId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (serverId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.serverId,
+                        referencedTable: $$NodeCursorsTableReferences
+                            ._serverIdTable(db),
+                        referencedColumn: $$NodeCursorsTableReferences
+                            ._serverIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$NodeCursorsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $NodeCursorsTable,
+      NodeCursorRow,
+      $$NodeCursorsTableFilterComposer,
+      $$NodeCursorsTableOrderingComposer,
+      $$NodeCursorsTableAnnotationComposer,
+      $$NodeCursorsTableCreateCompanionBuilder,
+      $$NodeCursorsTableUpdateCompanionBuilder,
+      (NodeCursorRow, $$NodeCursorsTableReferences),
+      NodeCursorRow,
+      PrefetchHooks Function({bool serverId})
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -8395,4 +9975,8 @@ class $AtrilDatabaseManager {
       $$AnnotationsTableTableManager(_db, _db.annotations);
   $$ProgressTableTableManager get progress =>
       $$ProgressTableTableManager(_db, _db.progress);
+  $$PendingOperationsTableTableManager get pendingOperations =>
+      $$PendingOperationsTableTableManager(_db, _db.pendingOperations);
+  $$NodeCursorsTableTableManager get nodeCursors =>
+      $$NodeCursorsTableTableManager(_db, _db.nodeCursors);
 }

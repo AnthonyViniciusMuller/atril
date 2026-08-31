@@ -149,10 +149,14 @@ listenable would be a type no widget and no `provider` could observe.
       `(ebook_id, device_id)`. `progress` deliberately does not reuse the revision mixin: its
       `device_id` is the row's own key and not a record of who wrote last, and a table offering a
       tie-break would invite the reconciler to apply one where nothing ties
-- [ ] `feat: add the operation log and the node cursors` — what this device authored and has not
+- [x] `feat: add the operation log and the node cursors` — what this device authored and has not
       handed over, in the order it authored it, and the last position pulled from each node. The
       cursor is keyed by the node dialed: a position is that node's own order and two of them
-      have nothing to do with each other
+      have nothing to do with each other. The order is sqlite's rowid and the identity is the
+      uuid this device minted, because the identifier travels and a position does not; and the
+      cursor never moves backwards, since a retry that answered with an older page must not undo
+      a position whose operations are already applied. The `Operation` value the log stores and
+      returns lands with it, in `domain/models`
 - [ ] `feat: add the record versions table` — the causal version last seen of each record this
       device has touched, and for the two associative entities the surrogate id this device
       minted. C18 is why the second half exists: a device that forgets the id it minted mints

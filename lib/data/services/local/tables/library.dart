@@ -15,6 +15,7 @@ library;
 import 'package:drift/drift.dart';
 
 import '../converters.dart';
+import 'constraints.dart';
 import 'revision.dart';
 
 /// The formats UC02 admits, as the delta spells them.
@@ -34,10 +35,6 @@ const List<String> ebookFormats = <String>[
 
 /// The two kinds of grouping RF05 offers over one structure.
 const List<String> collectionKinds = <String>['collection', 'category'];
-
-/// The `IN (...)` list of a check constraint over [values].
-String _oneOf(String column, List<String> values) =>
-    'CHECK ($column IN (${values.map((value) => "'$value'").join(', ')}))';
 
 /// A work in the reader's collection.
 @DataClassName('EbookRow')
@@ -95,7 +92,7 @@ class Ebooks extends Table with RevisionColumns {
 
   @override
   List<String> get customConstraints => <String>[
-    _oneOf('format', ebookFormats),
+    oneOf('format', ebookFormats),
     "CHECK (length(trim(title)) > 0)",
     "CHECK (content_hash GLOB '[0-9a-f]*' AND length(content_hash) = 64)",
     'CHECK (size_bytes IS NULL OR size_bytes > 0)',
@@ -130,7 +127,7 @@ class Collections extends Table with RevisionColumns {
 
   @override
   List<String> get customConstraints => <String>[
-    _oneOf('kind', collectionKinds),
+    oneOf('kind', collectionKinds),
     "CHECK (length(trim(name)) > 0)",
   ];
 }

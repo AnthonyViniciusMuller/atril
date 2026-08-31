@@ -26,9 +26,11 @@ import '../../../domain/crdt/vector_clock.dart';
 import 'connection/connection.dart';
 import 'converters.dart';
 import 'dao/identity_dao.dart';
+import 'dao/sync_dao.dart';
 import 'tables/identity.dart';
 import 'tables/library.dart';
 import 'tables/reading.dart';
+import 'tables/sync.dart';
 
 part 'database.g.dart';
 
@@ -48,8 +50,10 @@ part 'database.g.dart';
     EbookCollections,
     Annotations,
     Progress,
+    PendingOperations,
+    NodeCursors,
   ],
-  daos: <Type>[IdentityDao],
+  daos: <Type>[IdentityDao, SyncDao],
 )
 class AtrilDatabase extends _$AtrilDatabase {
   /// The replica over [executor], or over the platform's own connection.

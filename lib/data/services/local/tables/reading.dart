@@ -18,6 +18,7 @@ library;
 import 'package:drift/drift.dart';
 
 import '../converters.dart';
+import 'constraints.dart';
 import 'library.dart';
 import 'revision.dart';
 
@@ -68,7 +69,7 @@ class Annotations extends Table with RevisionColumns {
 
   @override
   List<String> get customConstraints => <String>[
-    "CHECK (kind IN ('note', 'highlight', 'bookmark'))",
+    oneOf('kind', annotationKinds),
     'CHECK (length(trim(locator)) > 0)',
     // A note with no text is an empty note; the other two are about the
     // passage and carry text only when the reader added one.
