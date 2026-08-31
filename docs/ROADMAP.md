@@ -78,7 +78,7 @@ Then, here:
       protoc_plugin`, pinned; the generation wired into `make gen`; the output under
       `lib/data/services/api/generated` and committed, with a CI drift check that regenerates and
       diffs. Generated code is excluded from the analyzer and from coverage
-- [ ] `build: add the generated quire contract` — the stubs themselves, in their own commit so
+- [x] `build: add the generated quire contract` — the stubs themselves, in their own commit so
       that the diff of the commit before it is readable
 
 ## Phase 2 — The shared core
