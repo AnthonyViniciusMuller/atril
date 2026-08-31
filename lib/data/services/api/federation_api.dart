@@ -78,7 +78,11 @@ final class Migration {
 /// `FederationService`, as this app calls it.
 final class FederationApi extends ApiClient {
   /// The client over the channel this node is dialled on.
-  FederationApi({required super.channel, required super.session});
+  FederationApi({
+    required super.channel,
+    required super.session,
+    super.reachability,
+  });
 
   late final pb.FederationServiceClient _stub = pb.FederationServiceClient(
     channel,

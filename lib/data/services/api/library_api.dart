@@ -99,7 +99,11 @@ final class UploadFinish {
 /// `LibraryService`, as this app is allowed to call it.
 final class LibraryApi extends ApiClient {
   /// The client over the channel this node is dialled on.
-  LibraryApi({required super.channel, required super.session});
+  LibraryApi({
+    required super.channel,
+    required super.session,
+    super.reachability,
+  });
 
   late final pb.LibraryServiceClient _stub = pb.LibraryServiceClient(
     channel,

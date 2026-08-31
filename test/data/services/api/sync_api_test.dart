@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:atril/data/services/api/generated/quire/v1/sync.pbgrpc.dart'
     as pb;
+import 'package:atril/data/services/api/reachability.dart';
 import 'package:atril/data/services/api/session.dart';
 import 'package:atril/data/services/api/sync_api.dart';
 import 'package:atril/data/services/channel/channel.dart';
@@ -130,6 +131,7 @@ void main() {
   late _FakeSyncService service;
   late Server server;
   late ClientChannel channel;
+  late NodeReachability reachability;
   late SyncApi api;
 
   setUp(() async {
@@ -160,10 +162,16 @@ void main() {
         transportSecurity: false,
       ),
     );
-    api = SyncApi(channel: channel, session: holder);
+    reachability = NodeReachability();
+    api = SyncApi(
+      channel: channel,
+      session: holder,
+      reachability: reachability,
+    );
   });
 
   tearDown(() async {
+    await reachability.dispose();
     await service.heads.close();
     await channel.shutdown();
     await server.shutdown();
@@ -271,5 +279,19 @@ void main() {
             .having((e) => e.isRetryable, 'is retryable', isTrue),
       ),
     );
+  });
+
+  test('every call is evidence about whether the node is there', () async {
+    await api.pull();
+
+    expect(reachability.isReachable, isTrue);
+
+    await server.shutdown();
+
+    await expectLater(api.pull(), throwsA(isA<AppException>()));
+
+    // The signal is the call itself, which is why nothing had to remember to
+    // report: it is wired at the one place every call passes through.
+    expect(reachability.isReachable, isFalse);
   });
 }

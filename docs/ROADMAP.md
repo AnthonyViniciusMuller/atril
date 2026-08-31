@@ -273,9 +273,16 @@ listenable would be a type no widget and no `provider` could observe.
       difference between a work it cannot open and a change it must not apply somewhere nobody
       named. And the session and the client that refreshes it are a real cycle, closed with a
       `late final` at the composition root rather than pretended away
-- [ ] `feat: add connectivity awareness` — whether a node is reachable, as a stream. Not
+- [x] `feat: add connectivity awareness` — whether a node is reachable, as a stream. Not
       `connectivity_plus` alone, which reports a radio and not a route: a failed call is the
-      signal, and the radio is the hint that it is worth trying again
+      signal, and the radio is the hint that it is worth trying again. The evidence is wired into
+      `ApiClient` rather than into each caller, because that is the one place every call passes
+      through and a client that had to remember to report would eventually not. A *refusal* is an
+      answer and counts as reached — a `NOT_FOUND` is a node that received the request and
+      decided — so only the two failures that mean nothing arrived mark it otherwise. The radio
+      is used in the one direction it is honest: no interface at all is proof, and an interface
+      appearing is a prompt to retry rather than a claim that a retry will work. The state starts
+      optimistic, since a device that has tried nothing has no evidence
 
 ## Phase 5 — The shell
 

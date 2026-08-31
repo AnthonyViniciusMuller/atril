@@ -19,13 +19,15 @@ library;
 import 'package:grpc/service_api.dart' show ClientChannel, ClientInterceptor;
 
 import 'errors.dart';
+import 'reachability.dart';
 import 'session.dart';
 import 'session_interceptor.dart';
 
 /// The base of the five clients.
 abstract base class ApiClient {
-  /// A client dialling [channel] and authorized by [session].
-  ApiClient({required this.channel, required this.session});
+  /// A client dialling [channel], authorized by [session], and reporting what
+  /// it learns to [reachability].
+  ApiClient({required this.channel, required this.session, this.reachability});
 
   /// The channel this node is reached over. Which lane it is — HTTP/2 or
   /// gRPC-Web — was decided by the conditional export in
@@ -34,6 +36,15 @@ abstract base class ApiClient {
 
   /// The session every call is made under.
   final SessionHolder session;
+
+  /// What is told whether the node answered, where anything is listening.
+  ///
+  /// It is wired here rather than in each client because this is the one place
+  /// every call passes through: a client that had to remember to report would
+  /// be a client that eventually did not. It is nullable so that a test can
+  /// build a client without one; the composition root passes the single
+  /// instance every client shares.
+  final NodeReachability? reachability;
 
   /// What a stub is built with, so that the credential is attached to every
   /// call of every client and not to the ones somebody remembered.
@@ -51,9 +62,21 @@ abstract base class ApiClient {
   /// nothing refuses it for a credential, so the retry never fires.
   Future<T> call<T>(String op, Future<T> Function() invoke) async {
     try {
-      return await session.retrying(invoke);
+      final answer = await session.retrying(invoke);
+
+      reachability?.recordAnswer();
+
+      return answer;
     } on Exception catch (error) {
-      throw failureFrom(error, op: op);
+      final failure = failureFrom(error, op: op);
+
+      // A refusal is an answer: the node received the request and decided, so
+      // it is evidence that the node is there. Only the two failures that mean
+      // nothing arrived say otherwise, and NodeReachability is what knows
+      // which two those are.
+      reachability?.recordFailure(failure);
+
+      throw failure;
     }
   }
 
@@ -65,5 +88,11 @@ abstract base class ApiClient {
   /// give up — is a decision the sync loop makes with state this layer does
   /// not have.
   Stream<T> listen<T>(String op, Stream<T> responses) =>
-      responses.handleError((Object error) => throw failureFrom(error, op: op));
+      responses.handleError((Object error) {
+        final failure = failureFrom(error, op: op);
+
+        reachability?.recordFailure(failure);
+
+        throw failure;
+      });
 }

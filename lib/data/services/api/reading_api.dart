@@ -42,7 +42,11 @@ final class AnnotationPage {
 /// `ReadingService`, as this app is allowed to call it.
 final class ReadingApi extends ApiClient {
   /// The client over the channel this node is dialled on.
-  ReadingApi({required super.channel, required super.session});
+  ReadingApi({
+    required super.channel,
+    required super.session,
+    super.reachability,
+  });
 
   late final pb.ReadingServiceClient _stub = pb.ReadingServiceClient(
     channel,
