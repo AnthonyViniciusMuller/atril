@@ -79,7 +79,27 @@ final class FakeAuthService extends AuthServiceBase {
   Future<LoginResponse> login(ServiceCall call, LoginRequest request) async {
     _record(call);
 
-    return LoginResponse(session: _session());
+    return LoginResponse(
+      session: _session(),
+      user: User(
+        id: 'a-reader',
+        localName: 'reader',
+        displayName: 'A Reader',
+        originServerDomain: 'quire-a.example',
+        federatedId: '@reader:quire-a.example',
+        email: 'reader@quire-a.example',
+        createdAt: Timestamp.fromDateTime(DateTime.utc(2026, 1, 2, 3, 4, 5)),
+      ),
+      // The device the reader named, with the identifier it must write under
+      // from now on. A device being bound for the first time sends none and
+      // learns it here.
+      device: Device(
+        id: request.device.hasDeviceId() ? request.device.deviceId : 'd-minted',
+        name: request.device.name,
+        platform: request.device.platform,
+        active: true,
+      ),
+    );
   }
 
   @override

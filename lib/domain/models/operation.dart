@@ -184,3 +184,78 @@ final class Operation {
   String toString() =>
       'Operation($id, $kind $entity $targetId, by $deviceId, $vectorClock)';
 }
+
+/// What a node did with one operation it was offered.
+///
+/// The four are distinct because a device draining its log has to treat them
+/// differently, and three of the four are ordinary. *Applied* and *duplicate*
+/// both retire the operation — an operation reaching a node twice by two
+/// routes is the normal shape of a federation and not a fault. *Superseded*
+/// retires it too and leaves the replica alone: the node kept it, because a
+/// later node must reach the same conclusion from the same history, and the
+/// record already held a version this one does not beat. Only *rejected*
+/// reaches a reader.
+enum OperationOutcome {
+  /// Stored, and it changed the record.
+  applied('applied'),
+
+  /// Already in that node's log, by id. Nothing was done and nothing is wrong.
+  duplicate('duplicate'),
+
+  /// Stored, and it lost the merge.
+  superseded('superseded'),
+
+  /// Refused. A caller cannot fix most of these by retrying.
+  rejected('rejected');
+
+  const OperationOutcome(this.wireName);
+
+  /// The name the contract uses.
+  final String wireName;
+
+  /// The outcome [name] spells, or `null` for one this build cannot name.
+  static OperationOutcome? parse(String name) {
+    for (final outcome in OperationOutcome.values) {
+      if (outcome.wireName == name) {
+        return outcome;
+      }
+    }
+
+    return null;
+  }
+
+  /// Whether the device may stop offering the operation.
+  ///
+  /// Three of the four say yes, and the fourth is the one phase 11
+  /// quarantines: the change is on this device and will reach nobody, which is
+  /// a state a reader has to be told about rather than one to retry.
+  bool get retiresTheOperation => this != OperationOutcome.rejected;
+
+  @override
+  String toString() => wireName;
+}
+
+/// The verdict on one operation.
+final class OperationResult {
+  /// The verdict [outcome] on the operation [operationId], with [detail] where
+  /// the node explained a refusal.
+  const OperationResult({
+    required this.operationId,
+    required this.outcome,
+    this.detail = '',
+  });
+
+  /// The operation the verdict is about, by the identifier its author minted.
+  final String operationId;
+
+  /// What the node did, or `null` for an outcome this build cannot name.
+  final OperationOutcome? outcome;
+
+  /// Why, where the node said. Populated for a rejection, and written for the
+  /// operator rather than for the reader.
+  final String detail;
+
+  @override
+  String toString() =>
+      'OperationResult($operationId, $outcome${detail.isEmpty ? '' : ': $detail'})';
+}

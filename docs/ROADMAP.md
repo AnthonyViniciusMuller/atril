@@ -259,8 +259,20 @@ listenable would be a type no widget and no `provider` could observe.
       keychain access group or the store raises at the first write; and it is held at 10, because
       11's Android archive demands compile SDK 37 and the Gradle plugin this Flutter release
       ships supports 36 — found by building the target rather than by reading the changelog
-- [ ] `feat: add the api clients` — one thin client per gRPC service over the generated stubs,
-      and the mappers between the wire types and the domain models
+- [x] `feat: add the api clients` — one thin client per gRPC service over the generated stubs,
+      and the mappers between the wire types and the domain models, which is where the rest of
+      `domain/models` lands: the reader, the device, the node, the work, the grouping, the mark
+      and the position. Three of the five clients are smaller than the service they cover, and
+      the missing methods are the point. `LibraryApi` and `ReadingApi` expose no write RPC at
+      all — C21 — so what is left of them is the reads that seed a freshly bound device and the
+      content calls, which carry bytes and not records. `SyncApi` leaves out the two calls a
+      device is not the caller of: `ReplicateOperations`, whose caller is a peer proving itself
+      with a certificate, and bidirectional `Sync`, whose acknowledgement means *durably
+      written* and therefore belongs with the loop phase 11 builds around it. A wire enum this
+      build cannot name is `null` on a record and a refusal on an operation, which is the
+      difference between a work it cannot open and a change it must not apply somewhere nobody
+      named. And the session and the client that refreshes it are a real cycle, closed with a
+      `late final` at the composition root rather than pretended away
 - [ ] `feat: add connectivity awareness` — whether a node is reachable, as a stream. Not
       `connectivity_plus` alone, which reports a radio and not a route: a failed call is the
       signal, and the radio is the hint that it is worth trying again

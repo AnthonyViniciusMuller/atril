@@ -58,7 +58,7 @@ void main() {
     test('holds no token before anything has signed in', () async {
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: _Refresher(),
+        refresher: () => _Refresher(),
       );
 
       expect(await holder.isSignedIn, isFalse);
@@ -67,7 +67,7 @@ void main() {
 
     test('offers the token a login returned', () async {
       final store = MemorySessionStore();
-      final holder = SessionHolder(store: store, refresher: _Refresher());
+      final holder = SessionHolder(store: store, refresher: () => _Refresher());
 
       await holder.begin(_sessionNamed(1));
 
@@ -86,7 +86,7 @@ void main() {
         ),
       );
       final refresher = _Refresher();
-      final holder = SessionHolder(store: store, refresher: refresher);
+      final holder = SessionHolder(store: store, refresher: () => refresher);
 
       expect(await holder.accessToken(), 'access-2');
       expect(refresher.calls, 1);
@@ -94,7 +94,7 @@ void main() {
 
     test('writes the rotated credential before adopting the session', () async {
       final store = MemorySessionStore();
-      final holder = SessionHolder(store: store, refresher: _Refresher());
+      final holder = SessionHolder(store: store, refresher: () => _Refresher());
 
       await holder.begin(_sessionNamed(1, const Duration(seconds: 1)));
       await holder.accessToken();
@@ -109,7 +109,7 @@ void main() {
       final refresher = _Refresher();
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: refresher,
+        refresher: () => refresher,
       );
 
       // Inside the margin, so it is stale even though it has not expired: a
@@ -124,7 +124,7 @@ void main() {
       final refresher = _Refresher()..gate = Completer<void>();
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: refresher,
+        refresher: () => refresher,
       );
 
       await holder.begin(_sessionNamed(1, const Duration(seconds: 1)));
@@ -147,7 +147,7 @@ void main() {
       final store = MemorySessionStore();
       final holder = SessionHolder(
         store: store,
-        refresher: _Refresher(accepts: 'something else'),
+        refresher: () => _Refresher(accepts: 'something else'),
       );
 
       await holder.begin(_sessionNamed(1, const Duration(seconds: 1)));
@@ -165,7 +165,7 @@ void main() {
           expiresAt: DateTime.now().toUtc().subtract(const Duration(days: 1)),
         ),
       );
-      final holder = SessionHolder(store: store, refresher: refresher);
+      final holder = SessionHolder(store: store, refresher: () => refresher);
 
       expect(await holder.isSignedIn, isFalse);
       expect(await holder.accessToken(), isNull);
@@ -175,7 +175,7 @@ void main() {
 
     test('forgets the credential on logout', () async {
       final store = MemorySessionStore();
-      final holder = SessionHolder(store: store, refresher: _Refresher());
+      final holder = SessionHolder(store: store, refresher: () => _Refresher());
 
       await holder.begin(_sessionNamed(1));
       await holder.end();
@@ -189,7 +189,7 @@ void main() {
       final refresher = _Refresher();
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: refresher,
+        refresher: () => refresher,
         clock: () => DateTime.now().toUtc().add(const Duration(hours: 1)),
       );
 
@@ -204,7 +204,7 @@ void main() {
     test('passes a call that succeeds through untouched', () async {
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: _Refresher(),
+        refresher: () => _Refresher(),
       );
 
       var calls = 0;
@@ -226,7 +226,7 @@ void main() {
         final refresher = _Refresher();
         final holder = SessionHolder(
           store: MemorySessionStore(),
-          refresher: refresher,
+          refresher: () => refresher,
         );
 
         await holder.begin(_sessionNamed(1));
@@ -253,7 +253,7 @@ void main() {
     test('gives up on a second refusal rather than looping', () async {
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: _Refresher(),
+        refresher: () => _Refresher(),
       );
 
       await holder.begin(_sessionNamed(1));
@@ -275,7 +275,7 @@ void main() {
       final refresher = _Refresher();
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: refresher,
+        refresher: () => refresher,
       );
 
       await holder.begin(_sessionNamed(1));
@@ -292,7 +292,7 @@ void main() {
     test('does not retry a call made while signed out', () async {
       final holder = SessionHolder(
         store: MemorySessionStore(),
-        refresher: _Refresher(),
+        refresher: () => _Refresher(),
       );
 
       var calls = 0;

@@ -70,8 +70,15 @@ final class SessionHolder {
   /// Where the credential is kept between two runs of the app.
   final SessionStore store;
 
-  /// What exchanges it for a session.
-  final SessionRefresher refresher;
+  /// What exchanges it for a session, resolved when it is needed rather than
+  /// held.
+  ///
+  /// The indirection is a real cycle and not a style: the client that
+  /// refreshes is the same client whose other calls this session authorizes,
+  /// so one of the two has to be reachable later rather than at construction.
+  /// A `late final` at the composition root is what closes it, and the port
+  /// stays an interface either way.
+  final SessionRefresher Function() refresher;
 
   final DateTime Function() _clock;
 
@@ -224,7 +231,7 @@ final class SessionHolder {
         return null;
       }
 
-      final session = await refresher.refreshSession(credential.refreshToken);
+      final session = await refresher().refreshSession(credential.refreshToken);
       await _adopt(session);
 
       return session;

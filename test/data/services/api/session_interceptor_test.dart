@@ -63,7 +63,10 @@ void main() {
     await server.serve(address: InternetAddress.loopbackIPv4, port: 0);
 
     store = MemorySessionStore(held);
-    holder = SessionHolder(store: store, refresher: _Refresher(() => client));
+    holder = SessionHolder(
+      store: store,
+      refresher: () => _Refresher(() => client),
+    );
 
     channel = openChannel(
       NodeEndpoint(
