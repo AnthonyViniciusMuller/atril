@@ -86,7 +86,7 @@ Then, here:
 The part of `internal/shared` a device cannot be correct without. Pure Dart, no Flutter import,
 and the most heavily tested code in the app.
 
-- [ ] `feat: add the result type` — the guide's sealed `Result<T>`, its `Ok`/`Error` cases, and
+- [x] `feat: add the result type` — the guide's sealed `Result<T>`, its `Ok`/`Error` cases, and
       the extensions the view models use
 - [ ] `feat: add the error vocabulary` — one `AppException` with the `Kind` values
       `internal/shared/errs` uses, the machine-readable code, and the per-field validation
