@@ -126,7 +126,7 @@ tools:
 # a red build with nothing wrong in it.
 ## gen: regenerate everything that is generated and committed
 .PHONY: gen
-gen: gen-proto gen-drift
+gen: gen-proto gen-drift gen-l10n
 
 ## gen-proto: regenerate the dart stubs from the vendored contract
 .PHONY: gen-proto
@@ -156,6 +156,18 @@ gen-proto:
 .PHONY: gen-drift
 gen-drift:
 	$(DART) run build_runner build
+
+# The ARB files are compiled into the class every widget reads its strings
+# from, against the options in l10n.yaml. `generate: true` in the pubspec runs
+# this as part of a build as well, so the target exists for the same reason the
+# other two do: the output is committed and CI regenerates it and diffs, and a
+# message added to the ARB without regenerating fails at the call site rather
+# than at the edit.
+#
+## gen-l10n: regenerate the localizations from the arb files
+.PHONY: gen-l10n
+gen-l10n:
+	$(FLUTTER) gen-l10n
 
 # The web build serves sqlite compiled to WebAssembly and drift's worker beside
 # the app, because a browser has no file to open a database on. Neither can be
@@ -202,11 +214,22 @@ fmt:
 
 # --- checks ------------------------------------------------------------------
 
-## analyze: the formatter and the analyzer, as CI runs them
+## analyze: the formatter, the analyzer and the l10n check, as CI runs them
 .PHONY: analyze
-analyze:
+analyze: l10n-check
 	$(DART) format --output=none --set-exit-if-changed .
 	$(FLUTTER) analyze
+
+# Dart has no lint for a user-visible string written into a widget, and it is
+# one of the few rules in CLAUDE.md a session can break without noticing — the
+# screen looks right in the language it was written in. The tool parses what a
+# grep cannot read apart: `Text('Biblioteca')` from `Key('library')`, and a
+# message wrapped over two lines from neither.
+#
+## l10n-check: fail on a user-visible string that is not in the arb files
+.PHONY: l10n-check
+l10n-check:
+	$(DART) run tool/check_hardcoded_strings.dart
 
 ## test: the unit and widget tests
 .PHONY: test

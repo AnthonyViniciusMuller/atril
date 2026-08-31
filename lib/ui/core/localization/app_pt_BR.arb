@@ -1,0 +1,23 @@
+{
+  "@@locale": "pt_BR",
+
+  "appTitle": "Atril",
+  "@appTitle": {
+    "description": "O nome do aplicativo, como aparece na barra de título de uma janela, no seletor de aplicativos e na aba do navegador. É um nome próprio e não deve ser traduzido."
+  },
+
+  "navigationLibrary": "Biblioteca",
+  "@navigationLibrary": {
+    "description": "O destino de navegação que mostra o acervo do leitor. Rótulo curto, usado tanto na barra inferior de um celular quanto no trilho lateral de uma janela larga, e também como título da própria tela."
+  },
+
+  "navigationAnnotations": "Anotações",
+  "@navigationAnnotations": {
+    "description": "O destino de navegação que reúne os destaques, as notas e os marcadores que o leitor escreveu, de todos os livros. Rótulo curto, usado também como título da tela."
+  },
+
+  "navigationSettings": "Configurações",
+  "@navigationSettings": {
+    "description": "O destino de navegação que reúne a conta, os dispositivos, os servidores conhecidos e o estado da sincronização. Rótulo curto, usado também como título da tela."
+  }
+}

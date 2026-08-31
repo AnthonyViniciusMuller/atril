@@ -31,6 +31,20 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # The delegates that teach the framework's own widgets a locale: the date
+  # and number formats, the reading direction, and the strings inside
+  # Material's dialogs and its text-selection menu. Without them a translated
+  # app is translated only where this project wrote the string, and the copy
+  # button in a text field is still in English.
+  flutter_localizations:
+    sdk: flutter
+
+  # What `flutter gen-l10n` compiles the ARB files against. It is a direct
+  # dependency because the generated code imports it, and the constraint is
+  # `any` because the Flutter SDK pins the version `flutter_localizations`
+  # resolves to and a second opinion here can only conflict with it.
+  intl: any
+
   # The runtime the generated contract under lib/data/services/api/generated is
   # compiled against. `grpc` carries both channels the app needs — ClientChannel
   # over HTTP/2 for the five native targets and GrpcWebClientChannel for the
@@ -116,6 +130,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # What `tool/check_hardcoded_strings.dart` reads the UI with. Dart ships no
+  # lint for a user-visible string written into a widget, and a grep cannot
+  # tell `Text('Biblioteca')` from `Key('library')`, so the check parses the
+  # files and looks at where a literal actually lands. The package is already
+  # here transitively, under build_runner; it is named so that the tool depends
+  # on it rather than on somebody else's dependency.
+  analyzer: ^13.3.0
+
   # drift's tables are Dart classes and its queries are generated from them, so
   # `make gen` runs build_runner as well as protoc. The output is committed for
   # the reason the generated contract is, and CI regenerates and diffs it.
@@ -133,6 +155,13 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Runs `flutter gen-l10n` as part of a build, against `l10n.yaml`. The output
+  # is also committed and checked in CI, for the reason the contract's stubs
+  # and drift's are: a message added to the ARB and not regenerated compiles
+  # against the previous class and fails at the call site rather than at the
+  # edit.
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

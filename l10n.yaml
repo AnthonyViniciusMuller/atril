@@ -1,0 +1,43 @@
+# How `flutter gen-l10n` turns the ARB files into the class the widgets read.
+#
+# `pt_BR` is the template and not `en`, and that is the whole ordering of this
+# project: the thesis, the interface and the reader it is written for are
+# Brazilian, so the message a translator is given context from is the
+# Portuguese one and English is the translation. `preferred-supported-locales`
+# is what makes it the fallback as well — the generated `supportedLocales` is
+# alphabetical otherwise, which would put `en` first and hand a device set to,
+# say, Japanese an English interface rather than the app's own language.
+#
+# There is no `synthetic-package`. The flag is gone from the tool, and the
+# generated code lands in the tree beside the ARB it came from, where it is
+# committed and diffed in CI like every other generated file here.
+arb-dir: lib/ui/core/localization
+template-arb-file: app_pt_BR.arb
+output-dir: lib/ui/core/localization/generated
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+preferred-supported-locales:
+  - pt_BR
+
+# `app_pt.arb` is empty and is meant to be. The tool refuses a locale carrying
+# a country code unless the bare language exists as its fallback, and this app
+# has exactly one Portuguese: what it would put in a generic `pt` file is the
+# Brazilian text, which is what an untranslated message already falls back to.
+# The report of those four-and-counting "untranslated" messages is therefore
+# expected rather than a backlog, and it is written to a file under `build/`
+# instead of onto the terminal so that `make gen` staying quiet still means
+# something.
+untranslated-messages-file: build/l10n-untranslated.json
+
+# The getter is non-null, so a widget writes `AppLocalizations.of(context)` and
+# not `...!`. It is safe because the delegate is installed at the root of the
+# app and there is no screen above it; a widget that reached it without one
+# would be a widget outside the app, which is a test that forgot `MaterialApp`
+# rather than a state to write a null check for.
+nullable-getter: false
+
+# Every message carries a `@key` describing it. A message with no description
+# is a message a translator guesses at, and the guess is invisible until a
+# reader sees it — the ARB is the only place the *meaning* of a string can be
+# written down, since the call site shows a getter name and nothing else.
+required-resource-attributes: true

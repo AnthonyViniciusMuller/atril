@@ -305,8 +305,21 @@ listenable would be a type no widget and no `provider` could observe.
       on the titles. There is no third theme and no theme *setting*: the device already knows
       whether the reader wants dark, and a page's own background belongs to the engine phase 9
       renders it in
-- [ ] `feat: add localization` — `flutter_localizations`, `app_pt_BR.arb` and `app_en.arb`, and
-      the lint that fails the build on a hardcoded string
+- [x] `feat: add localization` — `flutter_localizations`, `app_pt_BR.arb` and `app_en.arb`, and
+      ~~the lint~~ that fails the build on a hardcoded string: Dart ships no such lint and none
+      of the three ways to add one is a lint. A grep cannot tell `Text('Biblioteca')` from
+      `Key('library')` and does not see a message wrapped over two lines; `custom_lint` is a
+      plugin package inside the repository for one rule. So it is
+      `tool/check_hardcoded_strings.dart`, which parses `lib/ui` and `lib/routing` and looks at
+      *where a literal lands* — the first argument of a widget whose first argument is text, or a
+      named argument the framework renders — with `// l10n-ignore` as the escape hatch and its own
+      test, because a visitor that stopped matching would report nothing and nothing is what a
+      clean tree looks like. It is `make l10n-check`, and `make analyze` depends on it. There is a
+      third ARB, `app_pt.arb`, and it is empty: gen-l10n refuses a locale with a country code
+      unless the bare language exists as its fallback, and what a generic Portuguese file would
+      hold is the Brazilian text. Its four "untranslated" messages are written to a file under
+      `build/` rather than onto the terminal, which is why holding `app_en.arb` to the template is
+      a test and not the tool's own report
 - [ ] `feat: add routing` — `go_router`, the route table, and the redirect that sends a device
       with no session to onboarding and one with a session away from it
 - [ ] `feat: add the adaptive scaffold` — one navigation surface expressed three ways:

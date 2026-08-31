@@ -98,6 +98,26 @@ jobs:
           git add --intent-to-add -- 'lib/**/*.g.dart'
           git diff --exit-code -- 'lib/**/*.g.dart'
 
+      # The strings are compiled from the ARB files into the class the
+      # widgets read, and that output is committed too: a message added to
+      # `app_pt_BR.arb` without regenerating fails at the call site rather
+      # than at the edit. A message added to only one of the two languages is
+      # not caught here — gen-l10n reports that into a file, because the
+      # deliberately empty `app_pt.arb` would otherwise print a backlog on
+      # every build — so `test/ui/core/localization/arb_test.dart` is what
+      # holds the two files to each other.
+      - name: Check that the generated localizations are current
+        run: |
+          make gen-l10n
+          git add --intent-to-add -- lib/ui/core/localization/generated
+          git diff --exit-code -- lib/ui/core/localization/generated
+
+      # No hardcoded user-visible string, from the first screen. Dart ships no
+      # lint for it, so `tool/check_hardcoded_strings.dart` parses the UI and
+      # looks at where each literal lands.
+      - name: Check for hardcoded strings
+        run: make l10n-check
+
       # The web build serves sqlite as WebAssembly and drift's worker beside
       # the app, and those two files are committed. A drift upgrade that did
       # not refresh them produces a build that compiles and then fails at its
