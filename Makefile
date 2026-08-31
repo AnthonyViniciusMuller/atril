@@ -101,6 +101,16 @@ PUB_BIN := $(HOME)/.pub-cache/bin
 # makes an import from elsewhere read as the mistake it is.
 GEN_DIR := lib/data/services/api/generated
 
+# The one proto in this repository that is not Quire's. google.rpc.ErrorInfo
+# and google.rpc.BadRequest are what the node attaches to a status — the stable
+# reason, and the fields that failed validation — and `package:grpc` parses
+# them into types it does not export, under `src/`. Generating our own from the
+# canonical file is what lets `data/services/api` read a rejected registration
+# as something a form can point at, without importing another package's
+# internals. It is vendored rather than depended on because there is no package
+# on pub that publishes it alone.
+GOOGLE_PROTO_DIR := proto/google/rpc
+
 ## tools: install the pinned code generators
 .PHONY: tools
 tools:
@@ -131,7 +141,8 @@ gen-proto:
 	}
 	@rm -rf $(GEN_DIR)
 	@mkdir -p $(GEN_DIR)
-	@PATH="$(PATH):$(PUB_BIN)" $(PROTOC) -I proto --dart_out=grpc:$(GEN_DIR) $(PROTO_DIR)/*.proto
+	@PATH="$(PATH):$(PUB_BIN)" $(PROTOC) -I proto --dart_out=grpc:$(GEN_DIR) \
+		$(PROTO_DIR)/*.proto $(GOOGLE_PROTO_DIR)/*.proto
 	@$(DART) format $(GEN_DIR) >/dev/null
 	@echo "generated $(GEN_DIR) from $(PROTO_DIR)"
 

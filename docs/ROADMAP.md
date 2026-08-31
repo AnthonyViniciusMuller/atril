@@ -225,9 +225,17 @@ listenable would be a type no widget and no `provider` could observe.
       for a token would refresh in order to refresh. Only the refresh credential is persisted —
       an access token written to disk outlives nothing useful — so a cold start exchanges before
       its first call, and `isSignedIn` is answered without a round trip
-- [ ] `feat: map grpc status onto the error vocabulary` — `GrpcError` to `AppException`, keeping
+- [x] `feat: map grpc status onto the error vocabulary` — `GrpcError` to `AppException`, keeping
       the code and the field failures the node sends, so a rejected registration reaches a form
-      as something it can point at
+      as something it can point at. The table is `grpcx.Code` read backwards and is kept equal to
+      it deliberately: `ABORTED` is a *conflict* and not a failed precondition, which is the
+      difference between a device retrying an operation after reconciling and abandoning it. The
+      two details travel in `grpc-status-details-bin` as `google.rpc.ErrorInfo` and
+      `google.rpc.BadRequest`, and `package:grpc` parses them into types it keeps under `src/`
+      and does not export — so `proto/google/rpc` vendors the two canonical files and `make gen`
+      generates our own, which is also what lets a test build the trailer a node sends and read
+      it back over a socket. A reason scoped to another domain is ignored rather than branched
+      on: a detail attached by a gateway means what that gateway meant by it
 - [ ] `feat: add the session store` — the refresh credential in `flutter_secure_storage` on the
       five native targets. On the web there is no secure storage, only `localStorage`; the store
       says so in one comment and the settings screen says so to the reader
