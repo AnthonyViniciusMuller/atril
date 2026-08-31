@@ -169,10 +169,17 @@ listenable would be a type no widget and no `provider` could observe.
       what makes redelivery free rather than merely harmless, and what tells *duplicate* apart
       from *superseded*. The delta vocabulary lands here rather than in phase 7 — the reconciler
       cannot decode a change without it — so what is left for that phase is the authoring side
-- [ ] `test: prove the reconciler converges` — a generated operation log, applied in every
-      shuffled order, reaching one state. The tombstone case is separate and explicit: a deletion
-      is a write like any other, and a record removed outright is resurrected by the next replica
-      that had not yet heard
+- [x] `test: prove the reconciler converges` — a generated operation log, applied in every
+      shuffled order ~~reaching one state~~ **that a replica could legitimately receive**,
+      reaching one state. Two corrections came out of writing it. An order inconsistent with
+      causality is not one any replica receives — a node allocates its positions inside the
+      writing transaction and a device pushes its own log in order — so those are what the
+      generator produces. And a log whose concurrent writes claim *different* fields of one
+      record does not converge at all: that is C17, open upstream, and Atril reproduces it
+      because a client that settled it differently would disagree with the node. The last group
+      of the test pins that as behaviour rather than folklore, and `architecture.md` records it
+      beside the other findings the node will not tell us. The tombstone case is separate and
+      explicit, as planned
 - [ ] `feat: add the blob store` — the e-book bytes, keyed by content hash, behind an interface
       with a filesystem implementation and a browser one
 - [ ] `feat: report the storage budget` — what the store holds and what it may hold, as a number

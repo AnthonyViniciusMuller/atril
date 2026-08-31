@@ -246,6 +246,13 @@ Recorded here because each one shapes a screen rather than a line of code.
 - **C05**: a reading position has exactly one writer, so its versions can never be concurrent. It
   carries a clock and a timestamp and neither tie-break field. A device never writes another
   device's position.
+- **C17**: reconciliation is per *record*, not per field — there is one revision per row, so
+  there is nowhere to record that the title came from one write and the author from another.
+  Two concurrent writes claiming *different* fields of one record therefore settle differently
+  depending on the order they arrive in, and Atril reproduces that deliberately: a client that
+  resolved it another way would disagree with the node, which is worse than the case C17
+  describes. `reconciler_convergence_test.dart` pins the boundary as behaviour, so that a
+  change to it is a failing test rather than a discovery.
 - **C22**: a node cannot be told through the API that it is a replica. The replica-authorization
   screen can grant the permission and cannot complete the federation; the roadmap says so where
   it lands.
