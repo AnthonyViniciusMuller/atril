@@ -572,9 +572,17 @@ that reason.
       kind instead of asking for it — a position has exactly one writer (C05), so whether there
       is one to update is exactly whether this device has written one before, which is a question
       no caller should have to answer
-- [ ] `test: pin the write path against the contract` — a test that walks `lib/` and fails if
-      anything calls one of the eleven write RPCs. It is the executable form of the rule in
-      [`architecture.md`](architecture.md), and it is what makes the rule survive a future session
+- [x] `test: pin the write path against the contract` — a test that walks `lib/` and fails if
+      anything calls one of the ~~eleven~~ **twelve** write RPCs. It is the executable form of
+      the rule in [`architecture.md`](architecture.md), and it is what makes the rule survive a
+      future session. There are twelve and not eleven: `LibraryService` declares eight calls that
+      write a replicable record and `ReadingService` four, which is what `architecture.md`'s own
+      blockquote has always listed — the count was wrong here and in `library_api.dart` and both
+      are corrected. The check is three tests rather than one, because a pinned list of names is
+      a check that stops guarding anything the day the contract renames one of them and passes
+      forever afterwards: the names are asserted against the vendored `.proto` files, and the
+      visitor is run over a call it must refuse and over the prose that names the same RPCs and
+      must not be flagged
 
 ## Phase 8 — The library (UC01, UC02, UC03)
 
@@ -825,7 +833,7 @@ disproved rather than fixed — which is why they are recorded instead of delete
 
 - **C21 is still open.** `internal/` has no outbox: a change made through the node's API writes
   the table and appends nothing to `sync.operations`. It is the reason Atril writes locally and
-  pushes, the reason the eleven write RPCs are forbidden, and the reason phase 6 seeds a new
+  pushes, the reason the twelve write RPCs are forbidden, and the reason phase 6 seeds a new
   device through the read calls. The day it closes, all three are revisited deliberately — the
   rule becomes a preference and the seeding step becomes unnecessary.
 - **C22 is still open.** Nothing in the contract can tell a node that it is a replica, so the

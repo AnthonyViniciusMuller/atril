@@ -33,9 +33,12 @@ Atril is that client, so this is not a preference:
 > `AddEbookToCollection`, `RemoveEbookFromCollection`, `CreateAnnotation`, `UpdateAnnotation`,
 > `DeleteAnnotation` or `UpdateReadingProgress`.**
 
-Those RPCs stay in the generated stubs because the contract has them. Nothing in `lib/` calls
-them, and a test asserts it, so the day C21 closes the decision is revisited deliberately rather
-than discovered.
+Those twelve — eight on `LibraryService`, four on `ReadingService` — stay in the generated stubs
+because the contract has them. Nothing in `lib/` calls them, and
+`test/architecture/write_path_test.dart` asserts it by walking the tree, so the day C21 closes
+the decision is revisited deliberately rather than discovered. The same test checks the twelve
+names against the vendored `.proto` files: a pinned list that the contract has renamed out from
+under it is a check that matches nothing and passes forever.
 
 The read calls (`ListEbooks`, `ListCollections`, `ListAnnotations`, `ListReadingProgress`) are
 used exactly once per record: to seed a freshly bound device before its first pull. After that

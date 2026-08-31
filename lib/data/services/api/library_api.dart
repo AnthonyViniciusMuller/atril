@@ -1,11 +1,14 @@
 /// `LibraryService`, minus every call that writes a record.
 ///
-/// The service offers eleven write RPCs and this client exposes none of them.
-/// C21 is why, and it is not a preference: `UpdateEbook` writes the node's
-/// table and appends nothing to its operation log, so a change made that way
-/// reaches the reader's other devices and every authorized replica — never.
-/// The same change authored locally and pushed reaches all of them. A test in
-/// phase 7 walks `lib/` and fails if anything in this app calls one.
+/// The service offers eight calls that write a record the federation
+/// replicates, and this client exposes none of them. C21 is why, and it is not
+/// a preference: `UpdateEbook` writes the node's table and appends nothing to
+/// its operation log, so a change made that way reaches the reader's other
+/// devices and every authorized replica — never. The same change authored
+/// locally and pushed reaches all of them.
+/// `test/architecture/write_path_test.dart` walks `lib/` and fails if anything
+/// in this app calls one of the twelve — these eight and `ReadingService`'s
+/// four.
 ///
 /// What is left is the two kinds of call that are not writes to a replicable
 /// record:
