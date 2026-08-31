@@ -132,6 +132,15 @@ final class SessionHolder {
   /// signed in.
   Session? get current => _session;
 
+  /// The refresh credential this device holds, or `null` when it holds none.
+  ///
+  /// It exists for one caller: signing out. `Logout` takes the credential
+  /// rather than reading it off the session, which is what lets a device whose
+  /// access token has already expired end its session without refreshing
+  /// first — and a device that has not made a call since it started has no
+  /// session in memory at all.
+  Future<SessionCredential?> credential() => _readCredential();
+
   /// Adopts the session a login, a registration or a migration returned.
   Future<void> begin(Session session) async {
     await _adopt(session);

@@ -12,6 +12,7 @@ import '../../services/api/auth_api.dart';
 import '../../services/api/errors.dart';
 import '../../services/api/session.dart';
 import '../../services/local/dao/identity_dao.dart';
+import '../../services/local/database.dart';
 import '../server/server_repository.dart';
 import 'auth_repository.dart';
 
@@ -111,6 +112,44 @@ final class AuthRepositoryImpl implements AuthRepository {
     } on Exception catch (error) {
       return Result<User>.error(failureFrom(error, op: opRegisterUser));
     }
+  }
+
+  @override
+  Stream<User?> reader() => identity.watchReader().map(
+    (ReaderRow? row) => row == null
+        ? null
+        : User(
+            id: row.id,
+            localName: row.localName,
+            displayName: row.displayName,
+            originServerDomain: row.originServerDomain,
+            federatedId: row.federatedId,
+            createdAt: row.createdAt,
+            email: row.email,
+          ),
+  );
+
+  @override
+  Future<Result<void>> signOut() async {
+    final held = await session.credential();
+
+    // Presented rather than inferred from the session: a device whose access
+    // token has already expired can still end its session, and one that has
+    // made no call since it started holds no session in memory at all.
+    if (held != null && !held.hasExpiredAt(_clock())) {
+      try {
+        await auth.logout(held.refreshToken);
+      } on Exception catch (error) {
+        // Reported and not returned. The reader asked to sign out, and a node
+        // that could not be told is a node holding a credential that will
+        // exist nowhere else a moment from now.
+        _log.warning('the node was not told about the sign-out', error);
+      }
+    }
+
+    await session.end();
+
+    return const Result<void>.ok(null);
   }
 
   @override

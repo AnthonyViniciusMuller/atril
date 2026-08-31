@@ -368,6 +368,30 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível falar com {domain}. Verifique sua conexão e tente de novo.'**
   String registerUnreachable(String domain);
+
+  /// Título da seção da tela de configurações que reúne o que diz respeito à conta do leitor. As demais seções — dispositivos, servidores conhecidos, sincronização — chegam nas fases seguintes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Conta'**
+  String get settingsAccountSection;
+
+  /// Linha que nomeia o leitor conectado pelo identificador federado inteiro, com as duas metades. Está ali porque o identificador diz também em qual servidor a biblioteca está, e o leitor pode ter contas em mais de um.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você está em {federatedId}.'**
+  String settingsSignedInAs(String federatedId);
+
+  /// Ação que encerra a sessão neste dispositivo. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sair'**
+  String get settingsSignOut;
+
+  /// Explicação abaixo da ação de sair. Diz o que sair não faz, porque o leitor não tem como saber: o acervo, as anotações e as mudanças ainda não enviadas continuam no dispositivo, e é isso que faz com que entrar de novo devolva a biblioteca em vez de uma vazia.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.'**
+  String get settingsSignOutExplanation;
 }
 
 class _AppLocalizationsDelegate

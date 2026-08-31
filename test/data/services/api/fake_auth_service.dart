@@ -43,6 +43,9 @@ final class FakeAuthService extends AuthServiceBase {
   /// How many refreshes this node has served.
   int refreshes = 0;
 
+  /// Every refresh credential this node was asked to revoke, in order.
+  final List<String> loggedOut = <String>[];
+
   /// Every registration this node was sent, in order.
   final List<RegisterUserRequest> registered = <RegisterUserRequest>[];
 
@@ -177,6 +180,7 @@ final class FakeAuthService extends AuthServiceBase {
   @override
   Future<LogoutResponse> logout(ServiceCall call, LogoutRequest request) async {
     _record(call);
+    loggedOut.add(request.refreshToken);
 
     return LogoutResponse();
   }

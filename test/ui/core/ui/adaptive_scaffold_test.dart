@@ -26,6 +26,9 @@ import 'package:atril/ui/settings/widgets/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../repository_fakes.dart';
 
 /// A refresher nothing here reaches: the credential below is good for a month.
 final class _NeverAsked implements SessionRefresher {
@@ -70,11 +73,17 @@ Future<GoRouter> _pumpAt(
   addTearDown(session.dispose);
 
   await tester.pumpWidget(
-    MaterialApp.router(
-      routerConfig: router,
-      locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+    MultiProvider(
+      // The settings destination reads its repository out of the tree. Nothing
+      // here asserts anything about it: what is under test is which branch a
+      // tap moves to.
+      providers: repositoryProviders(),
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     ),
   );
   await tester.pumpAndSettle();

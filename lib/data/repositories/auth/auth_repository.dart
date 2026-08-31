@@ -94,4 +94,29 @@ abstract interface class AuthRepository {
   /// device that adopted the session first and then failed would be a device
   /// the shell believes is signed in and that cannot say who as.
   Future<Result<User>> signIn(Credentials credentials);
+
+  /// The reader signed in on this device, and `null` on one where nobody is.
+  ///
+  /// It is a stream because the answer changes without anybody on this screen
+  /// asking: a refresh credential the node refuses signs the device out, and a
+  /// surface naming the reader has to stop naming them.
+  ///
+  /// It is read from the local database and not from the node, which is what
+  /// makes it correct offline. A logged-out device still has a row here, and
+  /// that is deliberate — see [signOut].
+  Stream<User?> reader();
+
+  /// Ends the session on this device, and on this device alone (RN07).
+  ///
+  /// It clears the session and nothing else. The device identity, the local
+  /// replica and the log this device still owes all stay, because logging out
+  /// is not unbinding: the reader who signs back in here should find their
+  /// library rather than an empty one, and a device that forgot its identifier
+  /// would start a vector-clock entry that never merges with the first.
+  ///
+  /// The local half always happens. A reader who asks to sign out on a train
+  /// is signed out; the node's copy of the credential is revoked when the node
+  /// can be reached, and the credential itself is destroyed here either way, so
+  /// what survives a failed call is a credential nobody holds.
+  Future<Result<void>> signOut();
 }

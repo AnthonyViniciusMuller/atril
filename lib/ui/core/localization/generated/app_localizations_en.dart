@@ -173,4 +173,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String registerUnreachable(String domain) {
     return '$domain could not be reached. Check your connection and try again.';
   }
+
+  @override
+  String get settingsAccountSection => 'Account';
+
+  @override
+  String settingsSignedInAs(String federatedId) {
+    return 'You are signed in as $federatedId.';
+  }
+
+  @override
+  String get settingsSignOut => 'Sign out';
+
+  @override
+  String get settingsSignOutExplanation =>
+      'Your library stays on this device. Signing out ends the session and deletes nothing.';
 }

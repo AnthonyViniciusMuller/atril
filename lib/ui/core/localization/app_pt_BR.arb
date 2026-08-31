@@ -297,5 +297,31 @@
         "example": "quire-a.example"
       }
     }
+  },
+
+  "settingsAccountSection": "Conta",
+  "@settingsAccountSection": {
+    "description": "Título da seção da tela de configurações que reúne o que diz respeito à conta do leitor. As demais seções — dispositivos, servidores conhecidos, sincronização — chegam nas fases seguintes."
+  },
+
+  "settingsSignedInAs": "Você está em {federatedId}.",
+  "@settingsSignedInAs": {
+    "description": "Linha que nomeia o leitor conectado pelo identificador federado inteiro, com as duas metades. Está ali porque o identificador diz também em qual servidor a biblioteca está, e o leitor pode ter contas em mais de um.",
+    "placeholders": {
+      "federatedId": {
+        "type": "String",
+        "example": "@ana:quire-a.example"
+      }
+    }
+  },
+
+  "settingsSignOut": "Sair",
+  "@settingsSignOut": {
+    "description": "Ação que encerra a sessão neste dispositivo. Rótulo curto."
+  },
+
+  "settingsSignOutExplanation": "Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.",
+  "@settingsSignOutExplanation": {
+    "description": "Explicação abaixo da ação de sair. Diz o que sair não faz, porque o leitor não tem como saber: o acervo, as anotações e as mudanças ainda não enviadas continuam no dispositivo, e é isso que faz com que entrar de novo devolva a biblioteca em vez de uma vazia."
   }
 }

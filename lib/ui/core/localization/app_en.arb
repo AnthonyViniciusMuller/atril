@@ -49,5 +49,10 @@
   "registerEmailTaken": "That address is already registered on this server.",
   "registerPasswordInvalid": "The password must be at least 8 characters long.",
   "registerFailed": "The account could not be created.",
-  "registerUnreachable": "{domain} could not be reached. Check your connection and try again."
+  "registerUnreachable": "{domain} could not be reached. Check your connection and try again.",
+
+  "settingsAccountSection": "Account",
+  "settingsSignedInAs": "You are signed in as {federatedId}.",
+  "settingsSignOut": "Sign out",
+  "settingsSignOutExplanation": "Your library stays on this device. Signing out ends the session and deletes nothing."
 }

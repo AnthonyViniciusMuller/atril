@@ -174,6 +174,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String registerUnreachable(String domain) {
     return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
   }
+
+  @override
+  String get settingsAccountSection => 'Conta';
+
+  @override
+  String settingsSignedInAs(String federatedId) {
+    return 'Você está em $federatedId.';
+  }
+
+  @override
+  String get settingsSignOut => 'Sair';
+
+  @override
+  String get settingsSignOutExplanation =>
+      'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -345,4 +360,19 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String registerUnreachable(String domain) {
     return 'Não foi possível falar com $domain. Verifique sua conexão e tente de novo.';
   }
+
+  @override
+  String get settingsAccountSection => 'Conta';
+
+  @override
+  String settingsSignedInAs(String federatedId) {
+    return 'Você está em $federatedId.';
+  }
+
+  @override
+  String get settingsSignOut => 'Sair';
+
+  @override
+  String get settingsSignOutExplanation =>
+      'Sua biblioteca continua neste dispositivo. Sair encerra a sessão e não apaga nada.';
 }

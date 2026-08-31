@@ -481,8 +481,17 @@ a registration commit landing first would end at a route that matches nothing.
       not a reader on this device, and what makes this device that reader's is the login that
       follows — which is where the screen hands them, with the name they chose carried in the
       location so that the hand-off survives a reload in a browser
-- [ ] `feat: add logout` — clears the session and nothing else. The device id, the local replica
-      and the pending log stay, because logging out is not unbinding
+- [x] `feat: add logout` — clears the session and nothing else. The device id, the local replica
+      and the pending log stay, because logging out is not unbinding, and the settings screen says
+      so where the reader can read it: what signing out does *not* do is the part they have no
+      way of knowing. The credential is presented to `Logout` rather than inferred from the
+      session, which is what lets a device whose access token has already expired end its session
+      without refreshing first — and the local half happens whether or not the node could be
+      told, because a reader who asks to sign out on a train is signed out and what survives a
+      failed call is a credential nobody holds. It is also the settings screen's first section
+      and the app's first view model over a stream: the reader is read from the local database,
+      so it is right offline, and it stops naming them the moment a refused credential ends the
+      session under them
 - [ ] `feat: add password recovery` — UC08. Two screens: request, and reset from a token. The
       request reports the same outcome whether or not the address is registered, and the screen
       does not helpfully say otherwise

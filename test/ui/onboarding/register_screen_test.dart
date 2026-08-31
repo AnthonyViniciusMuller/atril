@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'fake_server_repository.dart';
+import '../repository_fakes.dart';
 
 /// Where the sign-in screen would be, showing what the hand-off carried.
 const String signInMarker = 'sign-in:';
@@ -48,7 +48,7 @@ Future<void> pump(
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: onboardingProviders(
+      providers: repositoryProviders(
         auth: auth,
         servers: FakeServerRepository()
           ..node = const ServerDescriptor(

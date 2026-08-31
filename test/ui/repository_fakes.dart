@@ -1,10 +1,14 @@
-/// The onboarding screens' collaborators, faked.
+/// The repositories the screens read, faked, and the providers that hand them
+/// over.
 ///
-/// It is shared by the widget tests of this directory and by the two tests
-/// above it that merely have to *reach* an onboarding screen — the router's
-/// guard and the root widget's — because a screen that reads a repository out
-/// of the tree cannot be pumped without one.
+/// Every screen in this app reads its repositories out of the tree, so every
+/// widget test that so much as *reaches* one needs them — the router's guard
+/// and the adaptive scaffold's taps included, neither of which asserts anything
+/// about a repository. One file, so that a repository gaining a method is one
+/// place to add it rather than five.
 library;
+
+import 'dart:async';
 
 import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
@@ -106,6 +110,23 @@ final class FakeAuthRepository implements AuthRepository {
     return Result<User>.ok(_reader(credentials.identifier));
   }
 
+  /// How many times it was asked to sign out.
+  int signOuts = 0;
+
+  /// The reader it reports as signed in, which nothing changes on its own.
+  final StreamController<User?> readers = StreamController<User?>.broadcast();
+
+  @override
+  Stream<User?> reader() => readers.stream;
+
+  @override
+  Future<Result<void>> signOut() async {
+    signOuts++;
+    readers.add(null);
+
+    return const Result<void>.ok(null);
+  }
+
   User _reader(String localName) => User(
     id: '22222222-2222-4222-8222-222222222222',
     localName: localName,
@@ -122,7 +143,7 @@ final class FakeAuthRepository implements AuthRepository {
 /// the build with no federation to tap: the development list is a case a test
 /// has to ask for, which is the right way round for a list that must never
 /// appear in production.
-List<SingleChildWidget> onboardingProviders({
+List<SingleChildWidget> repositoryProviders({
   ServerRepository? servers,
   AuthRepository? auth,
   Environment? environment,

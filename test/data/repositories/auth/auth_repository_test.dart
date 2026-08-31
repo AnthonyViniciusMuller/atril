@@ -238,6 +238,73 @@ void main() {
     });
   });
 
+  group('signing out', () {
+    test('clears the session and nothing else', () async {
+      await auth.signIn(credentials);
+
+      final result = await auth.signOut();
+
+      expect(result.errorOrNull, isNull);
+      expect(await session.isSignedIn, isFalse);
+
+      // Logging out is not unbinding. The reader who signs back in here should
+      // find their library, and a device that forgot its identifier would
+      // start a vector-clock entry that never merges with the first.
+      expect(await database.identityDao.deviceId(), fakeMintedDeviceId);
+      expect(await database.identityDao.reader(), isNotNull);
+      expect(
+        (await database.identityDao.originServer())?.domain,
+        'quire-a.example',
+      );
+    });
+
+    test('presents the credential rather than the session', () async {
+      await auth.signIn(credentials);
+      final held = service.refreshToken;
+
+      await auth.signOut();
+
+      // A device whose access token has already expired can still end its
+      // session, which is why Logout takes the credential.
+      expect(service.loggedOut, <String>[held]);
+    });
+
+    test('signs the device out even when the node cannot be told', () async {
+      await auth.signIn(credentials);
+      await connection.connectTo(
+        NodeEndpoint(authority: '127.0.0.1:1', transportSecurity: false),
+      );
+
+      final result = await auth.signOut();
+
+      // A reader who asks to sign out on a train is signed out. What survives
+      // a failed call is a credential nobody holds.
+      expect(result.errorOrNull, isNull);
+      expect(await session.isSignedIn, isFalse);
+    });
+
+    test(
+      'tells nobody anything on a device that was never signed in',
+      () async {
+        await auth.signOut();
+
+        expect(service.loggedOut, isEmpty);
+        expect(await session.isSignedIn, isFalse);
+      },
+    );
+
+    test('reports the reader the shell should name', () async {
+      expect(await auth.reader().first, isNull);
+
+      await auth.signIn(credentials);
+
+      expect(
+        (await auth.reader().first)?.federatedId,
+        '@reader:quire-a.example',
+      );
+    });
+  });
+
   test('an origin the device never discovered is refused', () async {
     // A node answering for a domain nothing looked up, on a device that has
     // chosen nothing, is a claim with no record behind it.
