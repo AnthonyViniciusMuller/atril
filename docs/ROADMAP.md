@@ -187,12 +187,18 @@ listenable would be a type no widget and no `provider` could observe.
       what makes a write atomic. A browser with no origin-private file system is reported rather
       than worked around: it can still list, sync and stream, and phase 8 asks before offering to
       keep a book
-- [ ] `feat: report the storage budget` — what the store holds and what it may hold, as a number
-      the interface answers. On the web that is `navigator.storage.estimate()`; on the five
-      native targets it is the free space on the volume. It exists because the web build spends
-      it deliberately rather than discovering it: a reader whose next download fails deserves a
-      sentence and not a crash, and one whose book was evicted deserves never to find out that
-      way
+- [x] `feat: report the storage budget` — what the store holds and what it may hold, as a number
+      the interface answers. On the web that is `navigator.storage.estimate()`; ~~on the five
+      native targets it is the free space on the volume~~ — there is no portable way to ask a
+      volume how much room is left, and no package on pub covers all five (the maintained one has
+      no macOS), so the choice was between a number absent on one target, a number that could not
+      be verified on four, and none. Natively the budget reports what the store holds and says it
+      is unmeasured, which refuses no download the platform has not refused. It costs least where
+      it is missing: a native install keeps every book by default and has no budget to spend,
+      while the web build, which does, has the browser's own answer. Phase 8 shows the number and
+      is where this is worth revisiting. It exists because the web build spends it deliberately
+      rather than discovering it: a reader whose next download fails deserves a sentence and not
+      a crash, and one whose book was evicted deserves never to find out that way
 
 ## Phase 4 — Reaching a node
 

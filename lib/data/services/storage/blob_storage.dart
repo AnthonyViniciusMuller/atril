@@ -15,3 +15,7 @@ export 'blob_store.dart';
 export 'blob_store_io.dart'
     if (dart.library.js_interop) 'blob_store_web.dart'
     show blobChunkBytes, blobStoreIsSupported, openBlobStore;
+export 'storage_budget.dart';
+export 'storage_budget_io.dart'
+    if (dart.library.js_interop) 'storage_budget_web.dart'
+    show readStorageBudget;
