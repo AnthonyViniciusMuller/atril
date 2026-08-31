@@ -99,7 +99,7 @@ listenable would be a type no widget and no `provider` could observe.
 - [x] `feat: add the vector clock` — a `Map<String, int>` wrapper, its pointwise-maximum merge,
       and a comparison returning *before*, *after*, *equal* or *concurrent*. A device absent and
       a device at zero are the same thing, on both sides of every operation
-- [ ] `test: prove the vector clock is a join semilattice` — merge is idempotent, commutative and
+- [x] `test: prove the vector clock is a join semilattice` — merge is idempotent, commutative and
       associative, and the partial order agrees with it. The property tests
       `internal/shared/crdt` carries, written again against the same laws, because a client that
       merges differently converges differently
