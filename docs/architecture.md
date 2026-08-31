@@ -55,8 +55,9 @@ lib/
 ├── main.dart                     production entry point
 ├── main_development.dart         entry point pointed at `make dev-up`
 ├── config/
-│   ├── dependencies.dart         the provider graph, one function per environment
-│   └── environment.dart          the node address, the CA, the log level — one struct
+│   ├── dependencies.dart         the provider graph — one function, over one Environment
+│   ├── environment.dart          the node address, the CA, the log level — one struct
+│   └── window.dart               the desktop window's floor and the size it was left at
 ├── routing/                      go_router, the routes, and the session guard
 ├── domain/
 │   ├── models/                   ebook · collection · annotation · progress · device · user · server
@@ -70,12 +71,14 @@ lib/
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
 │   │   ├── local/                the drift database, its tables and its DAOs
 │   │   ├── sync/                 the reconciler, the operation author, the sync loop
-│   │   └── storage/              the session store and the e-book blob store
+│   │   └── storage/              the session store, the e-book blob store, the window's size
 │   └── model/                    the mappers between the wire and the domain
 ├── ui/
 │   ├── core/{themes,localization,ui}
 │   └── <feature>/{view_model,widgets}
 └── utils/                        Result, Command, the logger
+
+tool/check_hardcoded_strings.dart  the no-hardcoded-strings rule, since Dart has no lint for it
 ```
 
 Four rules carry most of the weight.
@@ -162,6 +165,44 @@ where it is said to the reader.
 The guide's sample has three flavours. This app has two nodes it ever points at: a production one
 and the local federation `make dev-up` starts. A third entry point would be a third
 configuration nobody maintains.
+
+## The shell
+
+Three decisions from the shell are worth writing down, because each one is a place the obvious
+answer is not the one this app took.
+
+**The provider graph is one function, not one per flavour.** The roadmap asked for a `providers`
+function per environment, and building it showed the split belongs one layer up: what differs
+between a shipped build and one pointed at `make dev-up` is entirely an `Environment`, so the
+flavours are `Environment.production` and `Environment.development` and the graph is
+`providersFor(environment)`. A second graph function would be a second thing to keep in step for
+no second behaviour, and a graph that branched on the flavour would be a second app nobody runs.
+
+Two providers in it are lazy on purpose. A device that has never been bound reaches onboarding
+without opening a channel to a node nobody has chosen — which `NodeEndpoint` would refuse to do
+anyway, by name — and the cycle between the session and the client that refreshes it is closed by
+resolving the refresher on its first use rather than at construction.
+
+**No hardcoded strings is enforced by a program, because Dart ships no lint for it.** A grep
+cannot tell `Text('Biblioteca')` from `Key('library')`, does not see a message wrapped across two
+lines, and flags every asset path. `tool/check_hardcoded_strings.dart` parses `lib/ui` and
+`lib/routing` and looks at where each literal *lands* — the first argument of a widget whose first
+argument is text, or a named argument the framework renders — with `// l10n-ignore` as the escape
+hatch. It is `make l10n-check`, `make analyze` depends on it, and it has its own test: a visitor
+that stopped matching would report nothing, and nothing is what a clean tree looks like.
+
+The ARB directory holds three files and not two. `flutter gen-l10n` refuses a locale carrying a
+country code unless the bare language exists as its fallback, so `app_pt.arb` is there and is
+empty: this app has one Portuguese, and what a generic file would hold is the Brazilian text an
+untranslated message already falls back to.
+
+**Not everything local belongs in the replica.** The drift database holds the records that
+replicate, the log this device owes and the causal state that makes the next change correct. The
+desktop window's size is none of those — it replicates to nobody, it means nothing on another
+device, and it has to be read before `runApp`, which is before the database is opened — so it
+lives in `shared_preferences` behind a `WindowStore`. The window's *position* is deliberately not
+remembered at all: a window restored to coordinates that were on a second monitor is a window the
+reader cannot find.
 
 ## Talking to a node
 

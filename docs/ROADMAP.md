@@ -378,11 +378,12 @@ listenable would be a type no widget and no `provider` could observe.
       replica, a window's width replicates to nobody, and it has to be readable before `runApp`.
       Writing is debounced, because a dragged edge delivers a resize per frame
 
-- [ ] `docs: record what the shell settled` — `architecture.md` still describes
+- [x] `docs: record what the shell settled` — `architecture.md` still described
       `config/dependencies.dart` as "one function per environment", which this phase found to be
-      one layer too low, and it names none of what the shell added: the routing directory, the
-      window store's place outside the replica, and the fact that the no-hardcoded-strings rule is
-      enforced by a tool in `tool/` because Dart ships no lint for it
+      one layer too low, and it named none of what the shell added: the two providers that are
+      lazy on purpose, the third ARB file that exists because gen-l10n demands it, the window
+      store's place outside the replica, and the fact that the no-hardcoded-strings rule is
+      enforced by a program in `tool/` because Dart ships no lint for it
 
 ## Phase 6 — Onboarding (UC13, UC14, UC07, UC08)
 
