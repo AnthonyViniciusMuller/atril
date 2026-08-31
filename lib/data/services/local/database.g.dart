@@ -5817,6 +5817,229 @@ class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
   }
 }
 
+class $AppliedOperationsTable extends AppliedOperations
+    with TableInfo<$AppliedOperationsTable, AppliedOperationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppliedOperationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> appliedAt =
+      GeneratedColumn<int>(
+        'applied_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AppliedOperationsTable.$converterappliedAt);
+  @override
+  List<GeneratedColumn> get $columns => [id, appliedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'applied_operations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppliedOperationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppliedOperationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppliedOperationRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      appliedAt: $AppliedOperationsTable.$converterappliedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}applied_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $AppliedOperationsTable createAlias(String alias) {
+    return $AppliedOperationsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, int> $converterappliedAt =
+      const InstantConverter();
+}
+
+class AppliedOperationRow extends DataClass
+    implements Insertable<AppliedOperationRow> {
+  /// The identifier the authoring device minted.
+  final String id;
+
+  /// When this device applied it, on a wall clock. It is a diagnostic, and it
+  /// is what a later phase would prune by.
+  final DateTime appliedAt;
+  const AppliedOperationRow({required this.id, required this.appliedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    {
+      map['applied_at'] = Variable<int>(
+        $AppliedOperationsTable.$converterappliedAt.toSql(appliedAt),
+      );
+    }
+    return map;
+  }
+
+  AppliedOperationsCompanion toCompanion(bool nullToAbsent) {
+    return AppliedOperationsCompanion(
+      id: Value(id),
+      appliedAt: Value(appliedAt),
+    );
+  }
+
+  factory AppliedOperationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppliedOperationRow(
+      id: serializer.fromJson<String>(json['id']),
+      appliedAt: serializer.fromJson<DateTime>(json['appliedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'appliedAt': serializer.toJson<DateTime>(appliedAt),
+    };
+  }
+
+  AppliedOperationRow copyWith({String? id, DateTime? appliedAt}) =>
+      AppliedOperationRow(
+        id: id ?? this.id,
+        appliedAt: appliedAt ?? this.appliedAt,
+      );
+  AppliedOperationRow copyWithCompanion(AppliedOperationsCompanion data) {
+    return AppliedOperationRow(
+      id: data.id.present ? data.id.value : this.id,
+      appliedAt: data.appliedAt.present ? data.appliedAt.value : this.appliedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppliedOperationRow(')
+          ..write('id: $id, ')
+          ..write('appliedAt: $appliedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, appliedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppliedOperationRow &&
+          other.id == this.id &&
+          other.appliedAt == this.appliedAt);
+}
+
+class AppliedOperationsCompanion extends UpdateCompanion<AppliedOperationRow> {
+  final Value<String> id;
+  final Value<DateTime> appliedAt;
+  final Value<int> rowid;
+  const AppliedOperationsCompanion({
+    this.id = const Value.absent(),
+    this.appliedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AppliedOperationsCompanion.insert({
+    required String id,
+    required DateTime appliedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       appliedAt = Value(appliedAt);
+  static Insertable<AppliedOperationRow> custom({
+    Expression<String>? id,
+    Expression<int>? appliedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (appliedAt != null) 'applied_at': appliedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AppliedOperationsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? appliedAt,
+    Value<int>? rowid,
+  }) {
+    return AppliedOperationsCompanion(
+      id: id ?? this.id,
+      appliedAt: appliedAt ?? this.appliedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (appliedAt.present) {
+      map['applied_at'] = Variable<int>(
+        $AppliedOperationsTable.$converterappliedAt.toSql(appliedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppliedOperationsCompanion(')
+          ..write('id: $id, ')
+          ..write('appliedAt: $appliedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $RecordVersionsTable extends RecordVersions
     with TableInfo<$RecordVersionsTable, RecordVersionRow> {
   @override
@@ -6182,6 +6405,8 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $PendingOperationsTable pendingOperations =
       $PendingOperationsTable(this);
   late final $NodeCursorsTable nodeCursors = $NodeCursorsTable(this);
+  late final $AppliedOperationsTable appliedOperations =
+      $AppliedOperationsTable(this);
   late final $RecordVersionsTable recordVersions = $RecordVersionsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
@@ -6218,6 +6443,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     progress,
     pendingOperations,
     nodeCursors,
+    appliedOperations,
     recordVersions,
     knownServersOrigin,
     ebooksContentHash,
@@ -10304,6 +10530,163 @@ typedef $$NodeCursorsTableProcessedTableManager =
       NodeCursorRow,
       PrefetchHooks Function({bool serverId})
     >;
+typedef $$AppliedOperationsTableCreateCompanionBuilder =
+    AppliedOperationsCompanion Function({
+      required String id,
+      required DateTime appliedAt,
+      Value<int> rowid,
+    });
+typedef $$AppliedOperationsTableUpdateCompanionBuilder =
+    AppliedOperationsCompanion Function({
+      Value<String> id,
+      Value<DateTime> appliedAt,
+      Value<int> rowid,
+    });
+
+class $$AppliedOperationsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $AppliedOperationsTable> {
+  $$AppliedOperationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get appliedAt =>
+      $composableBuilder(
+        column: $table.appliedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$AppliedOperationsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $AppliedOperationsTable> {
+  $$AppliedOperationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get appliedAt => $composableBuilder(
+    column: $table.appliedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppliedOperationsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $AppliedOperationsTable> {
+  $$AppliedOperationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get appliedAt =>
+      $composableBuilder(column: $table.appliedAt, builder: (column) => column);
+}
+
+class $$AppliedOperationsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $AppliedOperationsTable,
+          AppliedOperationRow,
+          $$AppliedOperationsTableFilterComposer,
+          $$AppliedOperationsTableOrderingComposer,
+          $$AppliedOperationsTableAnnotationComposer,
+          $$AppliedOperationsTableCreateCompanionBuilder,
+          $$AppliedOperationsTableUpdateCompanionBuilder,
+          (
+            AppliedOperationRow,
+            BaseReferences<
+              _$AtrilDatabase,
+              $AppliedOperationsTable,
+              AppliedOperationRow
+            >,
+          ),
+          AppliedOperationRow,
+          PrefetchHooks Function()
+        > {
+  $$AppliedOperationsTableTableManager(
+    _$AtrilDatabase db,
+    $AppliedOperationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppliedOperationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppliedOperationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppliedOperationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> appliedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppliedOperationsCompanion(
+                id: id,
+                appliedAt: appliedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime appliedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => AppliedOperationsCompanion.insert(
+                id: id,
+                appliedAt: appliedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppliedOperationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $AppliedOperationsTable,
+      AppliedOperationRow,
+      $$AppliedOperationsTableFilterComposer,
+      $$AppliedOperationsTableOrderingComposer,
+      $$AppliedOperationsTableAnnotationComposer,
+      $$AppliedOperationsTableCreateCompanionBuilder,
+      $$AppliedOperationsTableUpdateCompanionBuilder,
+      (
+        AppliedOperationRow,
+        BaseReferences<
+          _$AtrilDatabase,
+          $AppliedOperationsTable,
+          AppliedOperationRow
+        >,
+      ),
+      AppliedOperationRow,
+      PrefetchHooks Function()
+    >;
 typedef $$RecordVersionsTableCreateCompanionBuilder =
     RecordVersionsCompanion Function({
       required String entity,
@@ -10521,6 +10904,8 @@ class $AtrilDatabaseManager {
       $$PendingOperationsTableTableManager(_db, _db.pendingOperations);
   $$NodeCursorsTableTableManager get nodeCursors =>
       $$NodeCursorsTableTableManager(_db, _db.nodeCursors);
+  $$AppliedOperationsTableTableManager get appliedOperations =>
+      $$AppliedOperationsTableTableManager(_db, _db.appliedOperations);
   $$RecordVersionsTableTableManager get recordVersions =>
       $$RecordVersionsTableTableManager(_db, _db.recordVersions);
 }

@@ -81,6 +81,32 @@ class PendingOperations extends Table {
   ];
 }
 
+/// The operations this device has already applied to its replica.
+///
+/// It is how receiving is made idempotent, and it is the device's equivalent of
+/// the node's `INSERT ... ON CONFLICT (id) DO NOTHING` against its own log: an
+/// operation reaching a replica twice — from the node it was pulled from, and
+/// again from a peer that also replicates the reader — is recognized by the
+/// identifier its author minted, and never applied twice.
+///
+/// Applying twice would in fact be harmless, because the merge is idempotent:
+/// the second application loses to the version the first one wrote. This table
+/// is what makes redelivery *free* rather than merely safe, and what lets the
+/// caller be told `duplicate` — which is a different thing from `superseded`,
+/// and the difference is what a reader is shown when a change of theirs lost.
+@DataClassName('AppliedOperationRow')
+class AppliedOperations extends Table {
+  /// The identifier the authoring device minted.
+  TextColumn get id => text().withLength(min: 36, max: 36)();
+
+  /// When this device applied it, on a wall clock. It is a diagnostic, and it
+  /// is what a later phase would prune by.
+  IntColumn get appliedAt => integer().map(const InstantConverter())();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 /// How far this device has read from each node's log.
 ///
 /// The cursor is keyed by the node because a position is *that node's* order

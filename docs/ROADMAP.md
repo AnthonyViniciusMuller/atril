@@ -163,9 +163,12 @@ listenable would be a type no widget and no `provider` could observe.
       another on every write. The clock is merged and never replaced, because a device holding an
       unpushed change knows a version the node does not; and `RecordKey` is what makes a filing
       addressable by its pair and by nothing else
-- [ ] `feat: add the reconciler` — applies one operation to the local replica, per field, by the
+- [x] `feat: add the reconciler` — applies one operation to the local replica, per field, by the
       rule phase 2 established. Idempotent by operation id, because a node may deliver the same
-      operation twice and receiving is what makes retries safe
+      operation twice and receiving is what makes retries safe: an `applied_operations` table is
+      what makes redelivery free rather than merely harmless, and what tells *duplicate* apart
+      from *superseded*. The delta vocabulary lands here rather than in phase 7 — the reconciler
+      cannot decode a change without it — so what is left for that phase is the authoring side
 - [ ] `test: prove the reconciler converges` — a generated operation log, applied in every
       shuffled order, reaching one state. The tombstone case is separate and explicit: a deletion
       is a write like any other, and a record removed outright is resurrected by the next replica
@@ -263,10 +266,11 @@ that reason.
       resolves the target, stamps the delta on the version this device last saw, ticks its clock
       entry, appends to the local log and applies to the local replica in one transaction. The
       caller does not branch on connectivity, because there is nothing to branch on
-- [ ] `feat: add the delta vocabulary` — the field names the node reads in
-      `internal/sync/infra/service/records`, spelled once. A field the delta does not name keeps
-      whatever device wrote it last, and a field named as JSON null is a field the reader
-      cleared: the difference is the whole of what per-field reconciliation rests on
+- [ ] `feat: add the delta vocabulary` — ~~the field names~~ landed in phase 3 with the
+      reconciler, in `data/services/sync/delta.dart`, because a reconciler cannot decode a change
+      without them. What is left here is the authoring side: writing a delta that claims exactly
+      the fields the reader changed, where a field left unnamed keeps whatever device wrote it
+      last and a field named as JSON null is a field the reader cleared
 - [ ] `feat: resolve the associative entities by natural key` — C18. An operation on a filing
       carries `(ebook_id, collection_id)` in its delta and an operation on a position carries
       `ebook_id`, the device half being the authoring device by C05. The surrogate id is

@@ -54,6 +54,7 @@ part 'database.g.dart';
     Progress,
     PendingOperations,
     NodeCursors,
+    AppliedOperations,
     RecordVersions,
   ],
   daos: <Type>[IdentityDao, SyncDao, RecordsDao],

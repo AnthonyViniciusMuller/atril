@@ -18,7 +18,9 @@ part 'sync_dao.g.dart';
 /// draining is what the push of phase 11 does; this is the storage between the
 /// two, and it is deliberately dumb — an outbox that reordered, deduplicated or
 /// interpreted what it holds would be a second reconciler with no tests.
-@DriftAccessor(tables: <Type>[PendingOperations, NodeCursors])
+@DriftAccessor(
+  tables: <Type>[PendingOperations, NodeCursors, AppliedOperations],
+)
 class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
   /// The accessor over [database].
   SyncDao(super.database);
@@ -82,6 +84,26 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
   Future<int> retire(Iterable<String> ids) => (delete(
     pendingOperations,
   )..where((row) => row.id.isIn(ids.toList()))).go();
+
+  /// Whether this device has already applied the operation [id] names.
+  Future<bool> hasApplied(String id) async =>
+      await (select(appliedOperations)
+            ..where((row) => row.id.equals(id))
+            ..limit(1))
+          .getSingleOrNull() !=
+      null;
+
+  /// Records that the operation [id] names has been applied to the replica.
+  ///
+  /// It is written inside the same transaction as the change it describes. A
+  /// device that recorded it separately could be interrupted between the two
+  /// and would then either apply an operation twice or never — and the second
+  /// is not made safe by the merge.
+  Future<void> markApplied(String id, {required DateTime at}) =>
+      into(appliedOperations).insert(
+        AppliedOperationsCompanion.insert(id: id, appliedAt: at),
+        mode: InsertMode.insertOrIgnore,
+      );
 
   /// This device's position in [serverId]'s log, which is zero for a node it
   /// has never pulled from.
