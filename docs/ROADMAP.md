@@ -284,6 +284,15 @@ listenable would be a type no widget and no `provider` could observe.
       appearing is a prompt to retry rather than a claim that a retry will work. The state starts
       optimistic, since a device that has tried nothing has no evidence
 
+- [x] `docs: record the fourth conditional export` — `architecture.md` counted three and named
+      the shape as being used "twice more"; `GrpcError` and `StatusCode` make a fourth, and it is
+      of a different kind — the two types are one class each and `package:grpc` publishes them
+      only through two libraries, one of which imports `dart:io` and the other `dart:js_interop`,
+      so the split has nothing of this project's own on either side. It is written down so that a
+      future session counts four rather than finding a rule that appears to have been broken. The
+      same paragraph now records what the session store turned out to be: one implementation,
+      because the package is already the split
+
 ## Phase 5 — The shell
 
 - [ ] `feat: add the theme` — Material 3, a light and a dark scheme, and the type scale the

@@ -127,13 +127,13 @@ authored under one host has to resolve under another. Two CFI implementations wo
 almost always and disagree as annotations landing on the wrong paragraph after a sync, so there
 is one engine and the split is only in what gives it a DOM.
 
-### Three things are chosen by conditional export
+### Four things are chosen by conditional export
 
 `ClientChannel` over HTTP/2 does not exist in a browser and `GrpcWebClientChannel` does not exist
 outside one. `data/services/channel/channel.dart` is a conditional export over `channel_io.dart`
 and `channel_web.dart`, both exposing one factory.
 
-The same shape, and only the same shape, is used twice more: `data/services/local/connection/`
+The same shape is used twice more: `data/services/local/connection/`
 opens a file on the five native targets and a WebAssembly build of sqlite over the
 origin-private file system in a browser, and `data/services/storage/` holds the e-book bytes on
 a filesystem or in that same origin-private store. All three are cases where the losing branch
@@ -141,9 +141,21 @@ a filesystem or in that same origin-private store. All three are cases where the
 `package:web` one does not parse for the others — so an interface chosen at run time would not
 help: both implementations would still have to compile.
 
+There is a fourth, and it is of a different kind: `data/services/api/grpc_status.dart` exports
+`GrpcError` and `StatusCode` from `package:grpc/grpc.dart` or from `package:grpc/grpc_web.dart`.
+The two types are one class each in one file, and the package publishes them only through those
+two libraries — one of which drags in `dart:io` and the other `dart:js_interop`. So the split has
+nothing of this project's own on either side of it: it is the same constraint met inside a
+dependency, and it is named here so that a future reader counts four and not a rule that was
+broken.
+
 Everything else that merely behaves differently per platform (the secure store, the storage
 budget's units, the reader's host) differs behind an interface with two implementations, because
-a `dart:io` import inside a repository is a repository that cannot be tested on web.
+a `dart:io` import inside a repository is a repository that cannot be tested on web. The session
+store is the one that has already landed, and it turned out to need a single implementation:
+`flutter_secure_storage` is itself the platform split, and what the web target lacks is not a
+store but secrecy — `SecureSessionStore.isSecure` is what says so, and the settings screen is
+where it is said to the reader.
 
 ### There is no `main_staging.dart`
 
