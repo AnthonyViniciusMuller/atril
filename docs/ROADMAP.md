@@ -60,7 +60,7 @@ Then, here:
       became null-safe, and that diagnostic is already an error by default, so the line would
       configure a code the analyzer no longer has. Checked against Dart 3.13.1 rather than
       assumed
-- [ ] `ci: add analyze, test and build workflow` — `dart format --set-exit-if-changed`,
+- [x] `ci: add analyze, test and build workflow` — `dart format --set-exit-if-changed`,
       `flutter analyze`, `flutter test`, and a build of each of the six targets. The Apple
       targets need a macOS runner; if none is available the workflow says so in a comment rather
       than pretending to cover them
