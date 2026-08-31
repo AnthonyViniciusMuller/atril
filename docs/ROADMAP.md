@@ -419,6 +419,24 @@ listenable would be a type no widget and no `provider` could observe.
       the pin and the id would be this device forgetting what it was told by reading a document
       that was never going to mention it. The schema version stays at one, because there is no
       installed database anywhere for it to promise anything to
+- [x] `feat: point the channel at the chosen node` — also not in the plan, and the other half of
+      what the screen below needs: the channel was opened once from the flavour's endpoint, and
+      phase 6 is where the endpoint stops being a property of the build. `NodeConnection` holds
+      it, opens a channel on the first call and closes it when the reader points somewhere else,
+      and `providersFor` resolves the launch endpoint from the origin server in the catalogue —
+      which is why the database is opened at the composition root rather than behind a lazy
+      provider. It is a *supplier* and not a `ClientChannel`, which was the obvious shape and is
+      not available: `createCall` returns a `ClientCall` and `onConnectionStateChanged` a
+      `ConnectionState`, and `package:grpc` publishes both only through `grpc.dart` — the library
+      that also exports the HTTP/2 channel and so `dart:io`, which does not parse for the web
+      target. An implementation of that interface could not name its own signatures on six
+      targets. So the five clients build their stub per call instead of holding one: a generated
+      client is a channel, some options and `static final` methods, and a `late final` stub would
+      be a stub bound to whichever node this app was pointed at when it was first read.
+      `NodeEndpoint.of` fills both lanes from one document — `grpc` for the native lane, the base
+      URL for the browser, since the authority a node publishes is what a *peer* dials — and
+      `Environment.endpointFor` overrides it for the local federation, whose published addresses
+      resolve inside the compose network and nowhere a host can reach
 - [ ] `feat: add the server selection screen` — the first screen a new install shows, with the
       development federation reachable in one tap in a debug build. The identifier is
       `@local_name:server` and the server half is which node the call was addressed to, so this

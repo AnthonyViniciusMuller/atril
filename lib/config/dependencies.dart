@@ -27,7 +27,6 @@ library;
 
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:grpc/service_api.dart' show ClientChannel;
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -39,7 +38,9 @@ import '../data/services/api/reading_api.dart';
 import '../data/services/api/session.dart';
 import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
+import '../data/services/discovery/well_known.dart';
 import '../data/services/local/database.dart';
+import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
 import '../data/services/storage/secure_session_store.dart';
 import '../data/services/storage/session_store.dart';
@@ -56,16 +57,20 @@ import 'environment.dart';
 Future<List<SingleChildWidget>> providersFor(Environment environment) async {
   final blobs = await openBlobStore();
 
+  // The replica is opened here rather than behind a lazy provider because one
+  // question has to be answered before anything can dial: *which node is this
+  // device signed in at*. A launch points the app at the reader's origin
+  // server, and the only record of it is this database.
+  final database = AtrilDatabase();
+  final origin = await database.identityDao.originServer();
+
   return <SingleChildWidget>[
     Provider<Environment>.value(value: environment),
     Provider<BlobStore>.value(value: blobs),
 
     // The local replica. It is the app's own truth and outlives every screen,
-    // so it is opened once and closed when the graph goes away.
-    Provider<AtrilDatabase>(
-      create: (_) => AtrilDatabase(),
-      dispose: (_, AtrilDatabase database) => database.close(),
-    ),
+    // so it is closed when the graph goes away.
+    Provider<AtrilDatabase>.value(value: database),
 
     Provider<SessionStore>(create: (_) => SecureSessionStore()),
 
@@ -76,19 +81,30 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
       dispose: (_, NodeReachability reachability) => reachability.dispose(),
     ),
 
-    // Where this build dials. Phase 6 is what replaces the environment's
-    // answer with the node the reader chose, and it is a provider of its own
-    // for exactly that reason: the clients below read an endpoint, not a
-    // flavour.
-    Provider<NodeEndpoint>.value(value: environment.initialEndpoint),
+    // Where this build talks, and the one thing that changes when the reader
+    // picks a different node. It starts at the origin server the catalogue
+    // records, or — on a device that has never signed in — at whatever the
+    // flavour named, which for a shipped build is no node at all.
+    //
+    // Nothing is dialled by building it. A fresh install reaches onboarding
+    // without opening a socket to a node nobody has chosen yet, because the
+    // channel is opened by the first call and there is none until the reader
+    // has chosen.
+    Provider<NodeConnection>(
+      create: (_) => NodeConnection(
+        origin == null
+            ? environment.initialEndpoint
+            : environment.endpointFor(_descriptorOf(origin)),
+      ),
+      dispose: (_, NodeConnection connection) => connection.shutdown(),
+    ),
 
-    // Lazy, and it matters. A device with no session never reads this, so a
-    // fresh install reaches onboarding without dialling a node nobody has
-    // chosen yet — which `NodeEndpoint` would refuse to do anyway, by name.
-    Provider<ClientChannel>(
-      create: (BuildContext context) =>
-          openChannel(context.read<NodeEndpoint>()),
-      dispose: (_, ClientChannel channel) => channel.shutdown(),
+    // The `.well-known` lookup, which is the one call a device makes before it
+    // has a node — and therefore the one client here that does not read the
+    // connection above.
+    Provider<WellKnownDiscovery>(
+      create: (_) => WellKnownDiscovery(),
+      dispose: (_, WellKnownDiscovery discovery) => discovery.close(),
     ),
 
     // The cycle, closed. The holder is given a *function* that resolves the
@@ -104,35 +120,35 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
 
     Provider<AuthApi>(
       create: (BuildContext context) => AuthApi(
-        channel: context.read<ClientChannel>(),
+        connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
       ),
     ),
     Provider<FederationApi>(
       create: (BuildContext context) => FederationApi(
-        channel: context.read<ClientChannel>(),
+        connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
       ),
     ),
     Provider<LibraryApi>(
       create: (BuildContext context) => LibraryApi(
-        channel: context.read<ClientChannel>(),
+        connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
       ),
     ),
     Provider<ReadingApi>(
       create: (BuildContext context) => ReadingApi(
-        channel: context.read<ClientChannel>(),
+        connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
       ),
     ),
     Provider<SyncApi>(
       create: (BuildContext context) => SyncApi(
-        channel: context.read<ClientChannel>(),
+        connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
       ),
@@ -148,3 +164,17 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     ),
   ];
 }
+
+/// The node a catalogue row describes, as discovery would have returned it.
+///
+/// It is private and it is used once, at the launch that has to know where to
+/// dial. A row is what this device stored; a descriptor is what the rest of the
+/// app speaks, and the four fields that differ between them are the four the
+/// catalogue keeps and a lookup does not carry.
+ServerDescriptor _descriptorOf(ServerRow row) => ServerDescriptor(
+  domain: row.domain,
+  baseUrl: row.baseUrl,
+  jwksUri: row.jwksUri,
+  certificateFingerprint: row.certificateFingerprint,
+  grpcAuthority: row.grpcAuthority,
+);

@@ -8,6 +8,7 @@ library;
 
 import 'package:atril/config/environment.dart';
 import 'package:atril/data/services/channel/channel.dart';
+import 'package:atril/domain/models/server.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/logging.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -78,6 +79,38 @@ void main() {
         () => openChannel(Environment.development().initialEndpoint),
         returnsNormally,
       );
+    });
+  });
+
+  group('where a build dials a node', () {
+    const ServerDescriptor published = ServerDescriptor(
+      domain: 'quire-a.example',
+      // What `make dev-up` actually publishes, and neither half of it resolves
+      // on a host running this app.
+      baseUrl: 'http://quire-a.example',
+      grpcAuthority: 'quire-a.example:9090',
+    );
+
+    test('is the flavour\'s address for a node of the local federation', () {
+      final endpoint = Environment.development().endpointFor(published);
+
+      expect(endpoint.authority, '127.0.0.1:19090');
+      expect(endpoint.gateway, Uri.parse('http://127.0.0.1:18090'));
+    });
+
+    test('is what the node published, for every other node', () {
+      final endpoint = Environment.production().endpointFor(published);
+
+      expect(endpoint.authority, 'quire-a.example:9090');
+      expect(endpoint.gateway, Uri.parse('http://quire-a.example'));
+    });
+
+    test('knows the local federation by domain and nothing else by it', () {
+      final development = Environment.development();
+
+      expect(development.knownNode('Quire-B.Example')?.label, 'Node B');
+      expect(development.knownNode('quire.example'), isNull);
+      expect(Environment.production().knownNode('quire-a.example'), isNull);
     });
   });
 

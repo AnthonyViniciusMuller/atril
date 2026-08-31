@@ -17,6 +17,7 @@
 /// to know which target it is being compiled for.
 library;
 
+import '../../../domain/models/server.dart';
 import '../../../utils/errors.dart';
 
 /// The operation the channel reports its failures under.
@@ -65,6 +66,28 @@ final class NodeEndpoint {
       transportSecurity: transportSecurity,
     );
   }
+
+  /// The endpoint a node described by [descriptor] is dialled at.
+  ///
+  /// Both lanes are filled from the one document, and each half of the
+  /// conditional export reads the field its platform can dial. The native lane
+  /// dials `grpc`, which is what the node published for the purpose. A browser
+  /// dials the base URL, because that is the origin the node answers HTTP on
+  /// and therefore the address its gateway translates gRPC-Web at — the `grpc`
+  /// authority is what a *peer* dials for replication, over HTTP/2 with a
+  /// client certificate, and a page has neither.
+  ///
+  /// [certificateAuthority] is the local federation's, and is `null` for every
+  /// node a reader ever types: a production node is dialled under the
+  /// platform's own trust store.
+  factory NodeEndpoint.of(
+    ServerDescriptor descriptor, {
+    List<int>? certificateAuthority,
+  }) => NodeEndpoint(
+    authority: descriptor.grpcAuthority,
+    gateway: Uri.tryParse(descriptor.baseUrl),
+    certificateAuthority: certificateAuthority,
+  );
 
   const NodeEndpoint._({
     required this.authority,

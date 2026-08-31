@@ -76,12 +76,14 @@ final class SignIn {
 /// `AuthService`, as this app calls it.
 final class AuthApi extends ApiClient implements SessionRefresher {
   /// The client over [channel], authorized by [session].
-  AuthApi({required super.channel, required super.session, super.reachability});
+  AuthApi({
+    required super.connection,
+    required super.session,
+    super.reachability,
+  });
 
-  late final pb.AuthServiceClient _stub = pb.AuthServiceClient(
-    channel,
-    interceptors: interceptors,
-  );
+  pb.AuthServiceClient get _stub =>
+      pb.AuthServiceClient(channel, interceptors: interceptors);
 
   /// UC14. Creates the reader on this node and binds them to it.
   ///

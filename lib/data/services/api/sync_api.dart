@@ -74,12 +74,14 @@ final class PullResult {
 /// `SyncService`, as this app calls it.
 final class SyncApi extends ApiClient {
   /// The client over the channel this node is dialled on.
-  SyncApi({required super.channel, required super.session, super.reachability});
+  SyncApi({
+    required super.connection,
+    required super.session,
+    super.reachability,
+  });
 
-  late final pb.SyncServiceClient _stub = pb.SyncServiceClient(
-    channel,
-    interceptors: interceptors,
-  );
+  pb.SyncServiceClient get _stub =>
+      pb.SyncServiceClient(channel, interceptors: interceptors);
 
   /// UC09, outbound. Hands this node the changes this device authored.
   ///

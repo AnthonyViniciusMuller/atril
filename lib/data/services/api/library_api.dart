@@ -100,15 +100,13 @@ final class UploadFinish {
 final class LibraryApi extends ApiClient {
   /// The client over the channel this node is dialled on.
   LibraryApi({
-    required super.channel,
+    required super.connection,
     required super.session,
     super.reachability,
   });
 
-  late final pb.LibraryServiceClient _stub = pb.LibraryServiceClient(
-    channel,
-    interceptors: interceptors,
-  );
+  pb.LibraryServiceClient get _stub =>
+      pb.LibraryServiceClient(channel, interceptors: interceptors);
 
   /// UC01, read. One page of the reader's collection, optionally narrowed to
   /// the works filed under one grouping.

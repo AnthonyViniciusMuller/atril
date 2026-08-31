@@ -79,15 +79,13 @@ final class Migration {
 final class FederationApi extends ApiClient {
   /// The client over the channel this node is dialled on.
   FederationApi({
-    required super.channel,
+    required super.connection,
     required super.session,
     super.reachability,
   });
 
-  late final pb.FederationServiceClient _stub = pb.FederationServiceClient(
-    channel,
-    interceptors: interceptors,
-  );
+  pb.FederationServiceClient get _stub =>
+      pb.FederationServiceClient(channel, interceptors: interceptors);
 
   /// UC13, RF14. Resolves a domain to the services it exposes, and returns
   /// what it found without storing anything.

@@ -20,6 +20,7 @@ library;
 import 'package:logging/logging.dart';
 
 import '../data/services/channel/channel.dart';
+import '../domain/models/server.dart';
 import '../utils/logging.dart';
 
 /// A node this build already knows how to reach.
@@ -148,6 +149,30 @@ final class Environment {
 
   /// Whether this build knows about the local federation.
   bool get isDevelopment => federation.isNotEmpty;
+
+  /// The node in [federation] answering for [domain], or `null`.
+  KnownNode? knownNode(String domain) {
+    final wanted = canonicalServerDomain(domain);
+
+    for (final node in federation) {
+      if (node.domain == wanted) {
+        return node;
+      }
+    }
+
+    return null;
+  }
+
+  /// Where this build dials the node [descriptor] describes.
+  ///
+  /// A node of the local federation is dialled at the address the flavour
+  /// names, and not at the one it publishes about itself: `make dev-up` gives
+  /// both nodes a `base_url` of `http://quire-a.example` and a `grpc` of
+  /// `quire-a.example:9090`, which resolve inside the compose network and
+  /// nowhere a host running this app can reach. Every other node is dialled at
+  /// what its own document said.
+  NodeEndpoint endpointFor(ServerDescriptor descriptor) =>
+      knownNode(descriptor.domain)?.endpoint ?? NodeEndpoint.of(descriptor);
 
   @override
   String toString() =>

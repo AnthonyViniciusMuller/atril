@@ -172,6 +172,16 @@ configuration nobody maintains.
 Three decisions from the shell are worth writing down, because each one is a place the obvious
 answer is not the one this app took.
 
+**The node this app talks to is one object, not a compile-time constant.** `NodeConnection`
+holds the endpoint, opens a channel on the first call and closes it when the reader points
+somewhere else; `providersFor` resolves the launch endpoint from the origin server in the local
+catalogue, which is why the database is opened at the composition root. It is a supplier rather
+than a `ClientChannel` that forwards, because `package:grpc` publishes `ClientCall` and
+`ConnectionState` only through `grpc.dart` — the library that also drags in `dart:io` — so an
+implementation of that interface could not name its own signatures on all six targets. The five
+API clients therefore build their stub per call, which costs an object and is what lets the node
+under them change.
+
 **The provider graph is one function, not one per flavour.** The roadmap asked for a `providers`
 function per environment, and building it showed the split belongs one layer up: what differs
 between a shipped build and one pointed at `make dev-up` is entirely an `Environment`, so the
@@ -179,10 +189,11 @@ flavours are `Environment.production` and `Environment.development` and the grap
 `providersFor(environment)`. A second graph function would be a second thing to keep in step for
 no second behaviour, and a graph that branched on the flavour would be a second app nobody runs.
 
-Two providers in it are lazy on purpose. A device that has never been bound reaches onboarding
-without opening a channel to a node nobody has chosen — which `NodeEndpoint` would refuse to do
-anyway, by name — and the cycle between the session and the client that refreshes it is closed by
-resolving the refresher on its first use rather than at construction.
+The cycle between the session and the client that refreshes it is closed by resolving the
+refresher on its first use rather than at construction. A device that has never been bound still
+reaches onboarding without opening a channel to a node nobody has chosen, but that is no longer a
+property of a lazy provider: `NodeConnection` dials on the first call, and there is no call until
+the reader has chosen.
 
 **No hardcoded strings is enforced by a program, because Dart ships no lint for it.** A grep
 cannot tell `Text('Biblioteca')` from `Key('library')`, does not see a message wrapped across two

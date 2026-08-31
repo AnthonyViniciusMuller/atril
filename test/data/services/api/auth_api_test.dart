@@ -10,15 +10,14 @@ import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/device.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grpc/grpc.dart' hide ClientChannel;
-import 'package:grpc/service_api.dart' show ClientChannel;
+import 'package:grpc/grpc.dart';
 
 import 'fake_auth_service.dart';
 
 void main() {
   late FakeAuthService service;
   late Server server;
-  late ClientChannel channel;
+  late NodeConnection connection;
   late MemorySessionStore store;
   late SessionHolder holder;
   late AuthApi api;
@@ -35,18 +34,18 @@ void main() {
     late final AuthApi built;
     holder = SessionHolder(store: store, refresher: () => built);
 
-    channel = openChannel(
+    connection = NodeConnection(
       NodeEndpoint(
         authority: '127.0.0.1:${server.port}',
         transportSecurity: false,
       ),
     );
-    built = AuthApi(channel: channel, session: holder);
+    built = AuthApi(connection: connection, session: holder);
     api = built;
   });
 
   tearDown(() async {
-    await channel.shutdown();
+    await connection.shutdown();
     await server.shutdown();
   });
 

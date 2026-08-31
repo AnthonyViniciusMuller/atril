@@ -7,6 +7,12 @@
 /// that decides *when* to call belongs above: a repository reads the local
 /// replica and the sync loop moves rows, and neither of them is here.
 ///
+/// **A stub is built per call.** The generated clients hold a channel, a set of
+/// options and nothing else — their methods are `static final` — so building one
+/// costs an object, and it is what lets the node a client talks to change under
+/// it. A `late final` stub would be a stub bound to whichever node this app was
+/// pointed at when the client was first read.
+///
 /// **Failures are thrown, not returned.** That is the same shape the blob
 /// store and the DAOs have, and the `Result` boundary is the repository above
 /// them: within `data/services` a failure travels as the [AppException] every
@@ -18,6 +24,7 @@ library;
 
 import 'package:grpc/service_api.dart' show ClientChannel, ClientInterceptor;
 
+import '../channel/node_connection.dart';
 import 'errors.dart';
 import 'reachability.dart';
 import 'session.dart';
@@ -25,14 +32,27 @@ import 'session_interceptor.dart';
 
 /// The base of the five clients.
 abstract base class ApiClient {
-  /// A client dialling [channel], authorized by [session], and reporting what
-  /// it learns to [reachability].
-  ApiClient({required this.channel, required this.session, this.reachability});
+  /// A client dialling over [connection], authorized by [session], and
+  /// reporting what it learns to [reachability].
+  ApiClient({
+    required this.connection,
+    required this.session,
+    this.reachability,
+  });
 
-  /// The channel this node is reached over. Which lane it is — HTTP/2 or
-  /// gRPC-Web — was decided by the conditional export in
+  /// The node this device is talking to.
+  ///
+  /// It is the connection and not a channel because the node a client dials
+  /// changes: the reader picks one during onboarding, and a launch points the
+  /// app at the one the local catalogue records. A channel captured here at
+  /// construction would be the node this app was pointed at when the graph was
+  /// built, which on a fresh install is no node at all.
+  final NodeConnection connection;
+
+  /// The channel this node is reached over, as of now. Which lane it is —
+  /// HTTP/2 or gRPC-Web — was decided by the conditional export in
   /// `data/services/channel`, and nothing here can tell.
-  final ClientChannel channel;
+  ClientChannel get channel => connection.channel;
 
   /// The session every call is made under.
   final SessionHolder session;

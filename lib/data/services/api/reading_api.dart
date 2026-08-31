@@ -43,15 +43,13 @@ final class AnnotationPage {
 final class ReadingApi extends ApiClient {
   /// The client over the channel this node is dialled on.
   ReadingApi({
-    required super.channel,
+    required super.connection,
     required super.session,
     super.reachability,
   });
 
-  late final pb.ReadingServiceClient _stub = pb.ReadingServiceClient(
-    channel,
-    interceptors: interceptors,
-  );
+  pb.ReadingServiceClient get _stub =>
+      pb.ReadingServiceClient(channel, interceptors: interceptors);
 
   /// UC04, read. Everything written in one work.
   Future<AnnotationPage> listAnnotations({

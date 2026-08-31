@@ -17,8 +17,7 @@ import 'package:atril/domain/models/session.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:grpc/grpc.dart' hide ClientChannel;
-import 'package:grpc/service_api.dart' show ClientChannel;
+import 'package:grpc/grpc.dart';
 
 /// A node that keeps one reader's log in a list.
 ///
@@ -130,7 +129,7 @@ Operation operation(String id, int counter) => Operation(
 void main() {
   late _FakeSyncService service;
   late Server server;
-  late ClientChannel channel;
+  late NodeConnection connection;
   late NodeReachability reachability;
   late SyncApi api;
 
@@ -156,7 +155,7 @@ void main() {
       ),
     );
 
-    channel = openChannel(
+    connection = NodeConnection(
       NodeEndpoint(
         authority: '127.0.0.1:${server.port}',
         transportSecurity: false,
@@ -164,7 +163,7 @@ void main() {
     );
     reachability = NodeReachability();
     api = SyncApi(
-      channel: channel,
+      connection: connection,
       session: holder,
       reachability: reachability,
     );
@@ -173,7 +172,7 @@ void main() {
   tearDown(() async {
     await reachability.dispose();
     await service.heads.close();
-    await channel.shutdown();
+    await connection.shutdown();
     await server.shutdown();
   });
 

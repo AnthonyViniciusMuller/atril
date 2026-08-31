@@ -20,3 +20,4 @@ library;
 
 export 'channel_io.dart' if (dart.library.js_interop) 'channel_web.dart';
 export 'endpoint.dart';
+export 'node_connection.dart';
