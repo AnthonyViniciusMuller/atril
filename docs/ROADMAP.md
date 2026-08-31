@@ -64,7 +64,7 @@ Then, here:
       `flutter analyze`, `flutter test`, and a build of each of the six targets. The Apple
       targets need a macOS runner; if none is available the workflow says so in a comment rather
       than pretending to cover them
-- [ ] `build: add a makefile` — the targets this project is driven by, mirroring Quire's:
+- [x] `build: add a makefile` — the targets this project is driven by, mirroring Quire's:
       `proto`, `gen`, `test`, `analyze`, `run-linux`, `run-web`, `build-all`
 
 ## Phase 1 — The contract
