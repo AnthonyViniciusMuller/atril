@@ -202,9 +202,15 @@ listenable would be a type no widget and no `provider` could observe.
 
 ## Phase 4 — Reaching a node
 
-- [ ] `feat: add the platform channel` — `channel_io.dart` and `channel_web.dart` behind one
+- [x] `feat: add the platform channel` — `channel_io.dart` and `channel_web.dart` behind one
       conditional export. The native side takes an optional CA so that `make dev-up` can be
-      dialled; the web side takes the proxy's URL
+      dialled; the web side takes the proxy's URL. Both addresses are one value, because the
+      configuration is one struct compiled for six targets and a field only some of them read
+      costs less than a configuration that knows which target it is. It is parsed where the
+      configuration is read rather than at the first call, and a `grpc` authority that names no
+      port is refused rather than defaulted to 443: the contract publishes `host:port`, so a bare
+      host is a node saying something this client cannot act on, and a guess would be dialling
+      somewhere nobody named
 - [ ] `feat: add the session interceptor` — the bearer token on every call, a single-flight
       refresh on `UNAUTHENTICATED` that retries the call once, and the rotation the contract
       requires: the refresh credential presented is consumed and the reply carries its
