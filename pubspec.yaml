@@ -137,6 +137,23 @@ dependencies:
   # is no point in trying at all.
   connectivity_plus: ^7.3.1
 
+  # The one call in this app that is not gRPC: the `.well-known/quire/client`
+  # lookup a device makes before it has a node to ask anything else of. It is
+  # plain HTTP, it has to work on all six targets, and `Client()` is itself the
+  # platform split — `dart:io` behind the five native builds and `fetch` behind
+  # the browser — which is what keeps discovery one file instead of a fifth
+  # conditional export with this project's own code on both sides of it.
+  #
+  # It is promoted from transitive rather than added: `grpc` already resolves
+  # it. The constraint is named here because `data/services/discovery` is
+  # written against its API, and depending on somebody else's dependency is how
+  # a version bump next door becomes a compile error here.
+  #
+  # The lookup sends no header of any kind, and that is a constraint of Quire's
+  # gateway rather than a style: it admits `GET` on `/.well-known/*` and not
+  # `OPTIONS`, so anything that provokes a preflight is refused 403.
+  http: ^1.6.0
+
   # The window on Linux, macOS and Windows: its minimum size, the size it was
   # left at, and the moment it is ready to be shown. Flutter's own embedders
   # expose none of that to Dart — the three runners set a size in C++, Swift

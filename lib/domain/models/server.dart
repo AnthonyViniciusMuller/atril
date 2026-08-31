@@ -8,6 +8,96 @@
 /// makes a kept node a replica.
 library;
 
+/// The greatest length `federation.servers.domain` holds, counted in
+/// characters as PostgreSQL counts a `varchar`.
+const int maxServerDomainLength = 255;
+
+/// The domain [typed] means, in the form a lookup is addressed to and a row is
+/// stored under.
+///
+/// A reader who types `Quire-A.Example` means the same node as one who types
+/// it in lower case, and two catalogue rows for one node would be two pins for
+/// one key. It is the Dart half of `server.ParseDomain` and it folds the same
+/// two things: the surrounding space, and the case.
+String canonicalServerDomain(String typed) => typed.trim().toLowerCase();
+
+/// Why [domain] is not a host a `.well-known` lookup can be addressed to, or
+/// `null` when it is one.
+///
+/// It is the rule `federation.servers_domain_format` checks and
+/// `server.Domain.Validate` states, applied here so that a reader is told what
+/// is wrong with what they typed before a request travels — a host, optionally
+/// with a port, made of lower-case letters, digits, dots and hyphens, and
+/// starting and ending with a letter or a digit.
+///
+/// The reason it returns is diagnostic and is never shown: it names the
+/// violation for a log line and for a failing test, and what a reader sees is
+/// chosen from the ARB by the screen that asked. Checking it here rather than
+/// only at the node is not distrust of the node — it is that a malformed
+/// domain has no node to be refused by.
+String? serverDomainViolation(String domain) {
+  if (domain.isEmpty) {
+    return 'it must not be empty';
+  }
+
+  if (domain.runes.length > maxServerDomainLength) {
+    return 'it must be at most $maxServerDomainLength characters long';
+  }
+
+  final colon = domain.indexOf(':');
+  final host = colon < 0 ? domain : domain.substring(0, colon);
+  final port = colon < 0 ? null : domain.substring(colon + 1);
+
+  if (host.isEmpty) {
+    return 'it must not be empty';
+  }
+
+  if (port != null && !_isPort(port)) {
+    return 'its port must be one to five digits';
+  }
+
+  for (var index = 0; index < host.length; index++) {
+    final character = host.codeUnitAt(index);
+
+    if (_isAlphanumeric(character)) {
+      continue;
+    }
+
+    if (character != _dot && character != _hyphen) {
+      return 'it may contain only lower-case letters, digits, dots and hyphens';
+    }
+
+    if (index == 0 || index == host.length - 1) {
+      return 'it must start and end with a letter or a digit';
+    }
+  }
+
+  return null;
+}
+
+const int _dot = 0x2e;
+const int _hyphen = 0x2d;
+
+bool _isAlphanumeric(int character) =>
+    (character >= 0x30 && character <= 0x39) ||
+    (character >= 0x61 && character <= 0x7a);
+
+bool _isPort(String port) {
+  if (port.isEmpty || port.length > 5) {
+    return false;
+  }
+
+  for (var index = 0; index < port.length; index++) {
+    final digit = port.codeUnitAt(index);
+
+    if (digit < 0x30 || digit > 0x39) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /// What a node publishes about itself, as discovery returns it.
 final class ServerDescriptor {
   /// The descriptor a lookup answered with.

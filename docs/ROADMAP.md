@@ -387,14 +387,24 @@ listenable would be a type no widget and no `provider` could observe.
 
 ## Phase 6 — Onboarding (UC13, UC14, UC07, UC08)
 
-- [ ] `feat: add server discovery` — `FederationService.DiscoverServer`, and the direct
+- [x] `feat: add server discovery` — ~~`FederationService.DiscoverServer`~~ landed in phase 4
+      with the rest of the federation client; what this commit adds is the direct
       `.well-known/quire/client` fetch for a device that has no node to ask yet — the *client*
       document and not the server one, which is what a peer reads to learn the key to pin. The
-      fetch sends no custom header of any kind: the node answers the document with
+      fetch sends no header of any kind, not even `Accept`: the node answers the document with
       `Access-Control-Allow-Origin` itself, but the gateway admits `GET` on `/.well-known/*` and
       not `OPTIONS`, so anything that provokes a preflight is refused `403`. A reader types a
-      domain; the app learns the base URL, the JWKS URI and the gRPC authority from the document
-      the node publishes
+      domain; the app learns the base URL and the gRPC authority — **and not the JWKS URI**,
+      which this entry claimed and `internal/shared/wellknown/wellknown.go` disproves:
+      `jwks_uri` and `cert_fingerprint` are in the *server* document alone, because neither is
+      a value a reader's application checks anything against. A descriptor read here carries
+      three of five fields absent and that is the document, not a lookup that half-failed. The
+      lookup is HTTPS for a typed domain and is never downgraded by a redirect, since the
+      document is exactly as trustworthy as the channel it arrived on; `discoverAt` is the
+      second entry point, for the local federation, whose nodes publish a `base_url` that
+      resolves inside the compose network and nowhere else. `package:http` is promoted from
+      transitive rather than added: its `Client()` is itself the platform split, which is what
+      keeps this one file instead of a fifth conditional export
 - [ ] `feat: add the server selection screen` — the first screen a new install shows, with the
       development federation reachable in one tap in a debug build. The identifier is
       `@local_name:server` and the server half is which node the call was addressed to, so this

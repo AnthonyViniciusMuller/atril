@@ -69,6 +69,7 @@ lib/
 │   ├── services/
 │   │   ├── api/                  one client per gRPC service, over the generated stubs
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
+│   │   ├── discovery/            the `.well-known` lookup — the one call that is not gRPC
 │   │   ├── local/                the drift database, its tables and its DAOs
 │   │   ├── sync/                 the reconciler, the operation author, the sync loop
 │   │   └── storage/              the session store, the e-book blob store, the window's size
@@ -257,7 +258,10 @@ is a line of Atril's code rather than a note.
 **The discovery lookup reads `quire/client`, not `quire/server`.** They are two documents and
 the difference is who is asking: a peer reads `quire/server` and learns the key to pin for
 mTLS; a reader's application reads `quire/client` and learns `base_url` and `grpc`. Atril is
-the second.
+the second — and that is *all* it learns. `internal/shared/wellknown/wellknown.go` puts
+`jwks_uri` and `cert_fingerprint` in the server document alone, so a `ServerDescriptor` read
+by this app carries three of its five fields absent. It is not a lookup that half-failed:
+those two are values a peer checks a peer against, and this device is neither.
 
 **The discovery lookup must stay a *simple* request.** The node answers both documents with
 `Access-Control-Allow-Origin: *`, so they are readable cross-origin with no help from the
