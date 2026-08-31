@@ -1,0 +1,268 @@
+/// Authoring a change to a replicable record.
+///
+/// This is the path every screen in this app takes to write anything the
+/// federation replicates, and it is the reason there is no other one. C21 is
+/// why: a change made through the node's write RPCs writes the node's table and
+/// appends nothing to its operation log, so it reaches the reader's other
+/// devices and every authorized replica — never. The same change authored here
+/// and pushed reaches all of them. `architecture.md` states the rule and the
+/// test beside this file is what keeps it true.
+///
+/// **The caller does not branch on connectivity.** There is nothing to branch
+/// on. A change is stamped, logged and applied against the local replica, and
+/// whether a node hears about it in the next second or the next week is the
+/// sync loop's problem and never the screen's. A view that showed a spinner
+/// while a note saved would be a view written against the wrong layer.
+///
+/// **The local replica is written by the reconciler and not by this file.** An
+/// author that wrote the row itself would be a second implementation of the
+/// merge — the same computation, in the same repository, tested half as hard —
+/// and the first divergence between the two would be a change that looks
+/// applied here and reconciles differently everywhere else. So authoring is
+/// three things the reconciler cannot do for itself: decide the version the
+/// change is stamped at, name the record the way every replica will resolve it,
+/// and record what this device now owes. Applying it is the ordinary path, run
+/// against an operation this device happens to have written.
+///
+/// `architecture.md` calls the author the second of the three writers to the
+/// replicated tables. It is the second *author* of a write; the reconciler is
+/// still what performs it, and that is a narrowing of the rule rather than a
+/// departure from it.
+///
+/// **The instant is stamped twice over.** [HybridClock.now] gives an instant
+/// later than everything this device has stamped or observed, and
+/// [Revision.next] raises it again to one step past the version the change was
+/// derived from. The second is not redundant: a record seeded from the node's
+/// read calls carries an instant this device never folded into its clock, so
+/// the per-record floor is what keeps a causally later version from carrying an
+/// earlier timestamp — the single edge C01's whole acyclicity argument depends
+/// on not existing.
+library;
+
+import '../../../domain/crdt/hybrid_clock.dart';
+import '../../../domain/crdt/revision.dart';
+import '../../../domain/models/operation.dart';
+import '../../../domain/models/record_key.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/identifiers.dart';
+import '../../../utils/logging.dart';
+import '../local/database.dart';
+import 'reconciler.dart';
+
+final _log = loggerFor('data/sync');
+
+/// The operation an authored change reports under.
+const String opAuthor = 'sync/author: write';
+
+/// One change to one record, as the caller describes it.
+///
+/// It names the record and says what became of it, and it carries the fields
+/// the change claims — exactly those, because a field the delta does not name
+/// keeps whatever device wrote it last and a field named as JSON null is a
+/// field the reader cleared. `delta.dart` is where that vocabulary is spelled.
+final class Change {
+  const Change._(this.key, this.kind, this.delta);
+
+  /// A record this device is creating: a work, a grouping or a mark.
+  ///
+  /// The delta has to carry every field the record cannot exist without, which
+  /// is what the reconciler refuses an insert for and what makes that refusal
+  /// name a field rather than a table.
+  factory Change.insert(
+    TargetEntity entity,
+    String id,
+    Map<String, Object?> delta,
+  ) => Change._(RecordKey.record(entity, id), OperationKind.insert, delta);
+
+  /// Fields of a record this device is changing.
+  factory Change.update(
+    TargetEntity entity,
+    String id,
+    Map<String, Object?> delta,
+  ) => Change._(RecordKey.record(entity, id), OperationKind.update, delta);
+
+  /// A record this device is removing.
+  ///
+  /// It is a tombstone and never a deletion: a record removed outright is
+  /// resurrected by the next replica that had not yet heard about the removal,
+  /// so it travels as a write and reconciles like one. The delta is empty
+  /// because there is nothing to claim — the removal is the kind of the change.
+  factory Change.delete(TargetEntity entity, String id) =>
+      Change._(RecordKey.record(entity, id), OperationKind.delete, const {});
+
+  /// The record, addressed the way every replica resolves it.
+  final RecordKey key;
+
+  /// What the change does to it.
+  final OperationKind kind;
+
+  /// The fields it claims.
+  final Map<String, Object?> delta;
+
+  @override
+  String toString() => '$kind $key';
+}
+
+/// The one entry point for a change to a replicable record.
+final class OperationAuthor {
+  /// The author over [database], stamping on [clock] and applying through
+  /// [reconciler].
+  ///
+  /// [mint] names the operation, and the surrogate identifier of a record that
+  /// has one; it is a parameter so that a test can watch what was minted rather
+  /// than guess it.
+  OperationAuthor({
+    required this.database,
+    required this.clock,
+    required this.reconciler,
+    String Function()? mint,
+  }) : _mint = mint ?? mintIdentifier;
+
+  /// The local replica, which is both what the change is applied to and where
+  /// the log of what this device owes lives.
+  final AtrilDatabase database;
+
+  /// The device-wide hybrid clock every instant this device stamps comes from.
+  final HybridClock clock;
+
+  /// What applies the change here, exactly as it will be applied everywhere
+  /// else.
+  final Reconciler reconciler;
+
+  final String Function() _mint;
+
+  /// Authors [change], and answers with the operation that carries it.
+  ///
+  /// The whole of it is one transaction: the record, the causal state the next
+  /// change will be stamped against, the note that this operation has been
+  /// applied here, and the log entry that says a node has not heard it yet. A
+  /// device interrupted between any two of those would either show the reader a
+  /// change nobody will ever receive or owe a node one it has not made.
+  ///
+  /// It throws an [AppException] rather than returning a `Result`, which is the
+  /// shape everything under `data/services` has: the repository above is the
+  /// layer boundary and the layer boundary is where a failure becomes a value.
+  Future<Operation> write(Change change) async {
+    final device = await database.identityDao.deviceId();
+
+    if (device == null) {
+      throw const AppException(
+        kind: ErrorKind.failedPrecondition,
+        message: 'this device has not been bound and cannot author a change',
+        code: 'device_not_bound',
+        op: opAuthor,
+      );
+    }
+
+    if (change.kind == OperationKind.update && change.delta.isEmpty) {
+      // Authoring it would tick a clock, stamp an instant and queue a push, all
+      // to tell every replica that nothing happened — and the record would come
+      // out of the merge reflecting this device for a write it did not make.
+      throw AppException(
+        kind: ErrorKind.invalidArgument,
+        message: 'the change to ${change.key} claims no field',
+        code: 'empty_delta',
+        op: opAuthor,
+      );
+    }
+
+    // Read outside the transaction, as the reconciler folds an observed instant
+    // outside its own: the clock is device state and not part of the replica,
+    // and persisting its floor is a write that must not wait on this one.
+    final reading = clock.now();
+
+    return database.transaction(() async {
+      final previous = Revision(
+        // What this device last saw, which is not always what the row holds: a
+        // change authored here and not yet pushed is a version the row does not
+        // reflect if it lost the merge, and stamping the next one underneath it
+        // would let this device tick the same counter twice.
+        vectorClock: await database.recordsDao.clockOf(change.key),
+        updatedAt: await _lastStampedAt(change),
+        deviceId: device,
+      );
+      final revision = previous.next(device, reading);
+
+      final operation = Operation(
+        id: _mint(),
+        deviceId: device,
+        entity: change.key.entity,
+        targetId: await _targetId(change),
+        kind: change.kind,
+        delta: change.delta,
+        vectorClock: revision.vectorClock,
+        createdAt: revision.updatedAt,
+      );
+
+      final verdict = await reconciler.reconcile(operation);
+
+      if (!verdict.isApplied) {
+        // The reconciler refuses a change the replica cannot hold — an update
+        // to a record this device does not have, a field the record cannot
+        // hold — and the transaction takes the log entry down with it. Anything
+        // else is this device having authored a version of its own record that
+        // does not supersede the one it was derived from, which is a fault in
+        // the stamping above rather than in the caller.
+        throw AppException(
+          kind: verdict.isRejected
+              ? ErrorKind.failedPrecondition
+              : ErrorKind.internal,
+          message: 'the change to ${change.key} was $verdict',
+          code: 'change_refused',
+          op: opAuthor,
+        );
+      }
+
+      await database.syncDao.append(operation);
+
+      _log.fine('authored $operation');
+
+      return operation;
+    });
+  }
+
+  /// The identifier the operation names the record by.
+  ///
+  /// For a work, a grouping and a mark it is the record's own, minted once by
+  /// whichever device created it and used by every replica. The two entities
+  /// C18 is about are addressed by their natural key instead, and they land in
+  /// the commit after this one.
+  Future<String> _targetId(Change change) async => switch (change.key.entity) {
+    TargetEntity.ebook ||
+    TargetEntity.collection ||
+    TargetEntity.annotation => change.key.identity,
+    TargetEntity.ebookCollection ||
+    TargetEntity.readingProgress => throw _notYetAddressable(change),
+  };
+
+  /// The instant the version this change is derived from was stamped at, or the
+  /// epoch for a record this device does not hold.
+  ///
+  /// It is read from the record and not from the causal state beside it,
+  /// because it is the record's own floor: the timestamp another replica will
+  /// order this change against is the one stored on the row.
+  Future<DateTime> _lastStampedAt(Change change) async {
+    final id = change.key.identity;
+
+    final at = switch (change.key.entity) {
+      TargetEntity.ebook => (await (database.select(
+        database.ebooks,
+      )..where((row) => row.id.equals(id))).getSingleOrNull())?.updatedAt,
+      TargetEntity.collection => (await (database.select(
+        database.collections,
+      )..where((row) => row.id.equals(id))).getSingleOrNull())?.updatedAt,
+      TargetEntity.annotation => (await (database.select(
+        database.annotations,
+      )..where((row) => row.id.equals(id))).getSingleOrNull())?.updatedAt,
+      TargetEntity.ebookCollection ||
+      TargetEntity.readingProgress => throw _notYetAddressable(change),
+    };
+
+    return at ?? Revision.zero.updatedAt;
+  }
+
+  UnsupportedError _notYetAddressable(Change change) => UnsupportedError(
+    'a ${change.key.entity} is addressed by its natural key, which this build '
+    'cannot author yet',
+  );
+}

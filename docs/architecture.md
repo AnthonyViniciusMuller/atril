@@ -127,10 +127,18 @@ has a formal specification elsewhere. They get a package, no Flutter import, and
 
 Applying an operation is not something a view triggers, so it has no view model above it and does
 not fit the guide's `use_cases/`. It lives in `data/services/sync/`, beside the loop that feeds
-it, and it is one of the three writers to the replicated tables — the operation author is the
-second, and the seed of a freshly bound device is the third. The seed is the only one that runs
-once per device: `data/services/sync/seed.dart` reads the four list calls into the replica before
-the first pull, and after it the reconciler and the author are the only writers there are.
+it, and it is one of *two* writers to the replicated tables. The other is the seed of a freshly
+bound device, and it is the only one that runs once per device: `data/services/sync/seed.dart`
+reads the four list calls into the replica before the first pull, and after it the reconciler is
+the only writer there is.
+
+The operation author is deliberately not a third. `data/services/sync/author.dart` decides the
+version a change is stamped at, names the record the way every replica will resolve it, and
+records what this device now owes — and then hands the operation to the reconciler like any
+other. An author that wrote the row itself would be a second implementation of the merge, in
+this repository, tested half as hard; the first divergence between the two would be a change
+that looks applied on this device and reconciles differently on every other. So there are three
+*authors* of a write and two writers, and the difference is the point.
 
 ### The EPUB engine is one file; only its host varies
 

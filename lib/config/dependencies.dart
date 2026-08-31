@@ -44,14 +44,21 @@ import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
 import '../data/services/discovery/well_known.dart';
 import '../data/services/local/database.dart';
+import '../data/services/local/hybrid_clock_store.dart';
+import '../data/services/sync/author.dart';
+import '../data/services/sync/reconciler.dart';
 import '../data/services/sync/seed.dart';
+import '../domain/crdt/hybrid_clock.dart';
 import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
 import '../data/services/storage/secure_session_store.dart';
 import '../data/services/storage/session_store.dart';
 import '../routing/router.dart';
+import '../utils/logging.dart';
 import 'environment.dart';
 import 'platform.dart';
+
+final _log = loggerFor('config');
 
 /// The graph of [environment].
 ///
@@ -70,6 +77,19 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
   final database = AtrilDatabase();
   final origin = await database.identityDao.originServer();
 
+  // The device's hybrid clock, resumed from the floor it was left at. It is
+  // read here for the same reason the origin server is — it is one row, and
+  // the alternative is every stamp awaiting a future — and it is *one*
+  // instance deliberately: the reconciler folds every instant this device
+  // observes into it and the author stamps from it, and two clocks would be
+  // two devices as far as C01's argument is concerned.
+  final clock = await HybridClock.restore(
+    store: LocalHybridClockStore(database.identityDao),
+    onStoreError: (Object error, StackTrace stackTrace) =>
+        _log.warning('the clock floor could not be written', error, stackTrace),
+  );
+  final reconciler = Reconciler(database, clock);
+
   return <SingleChildWidget>[
     Provider<Environment>.value(value: environment),
     Provider<BlobStore>.value(value: blobs),
@@ -79,6 +99,21 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     Provider<AtrilDatabase>.value(value: database),
 
     Provider<SessionStore>(create: (_) => SecureSessionStore()),
+
+    // Where every change to a replicable record goes. Nothing above this line
+    // calls the node's write RPCs — C21 is why, and a test walks `lib/` to keep
+    // it that way — so a screen that saves anything reaches the author, the
+    // author stamps it and the reconciler applies it, in that order and in no
+    // other.
+    Provider<HybridClock>.value(value: clock),
+    Provider<Reconciler>.value(value: reconciler),
+    Provider<OperationAuthor>(
+      create: (_) => OperationAuthor(
+        database: database,
+        clock: clock,
+        reconciler: reconciler,
+      ),
+    ),
 
     // One instance, shared by every client, because it is the sum of what
     // every call has learned and not a per-client opinion.

@@ -533,10 +533,22 @@ a registration commit landing first would end at a route that matches nothing.
 This phase writes no screen. It is the path every screen after it uses, and it comes first for
 that reason.
 
-- [ ] `feat: add the operation author` — one entry point for a change to a replicable record: it
+- [x] `feat: add the operation author` — one entry point for a change to a replicable record: it
       resolves the target, stamps the delta on the version this device last saw, ticks its clock
-      entry, appends to the local log and applies to the local replica in one transaction. The
-      caller does not branch on connectivity, because there is nothing to branch on
+      entry, appends to the local log and ~~applies to the local replica~~ **applies it through
+      the reconciler** in one transaction. The caller does not branch on connectivity, because
+      there is nothing to branch on. Two things came out of building it. The local write is the
+      reconciler's, not the author's: an author that wrote the row itself would be a second
+      implementation of the merge, and the first divergence between the two would be a change
+      that looks applied here and reconciles differently everywhere else — so what the author
+      contributes is the version, the name and the log entry, and applying it is the ordinary
+      path run against an operation this device happens to have written. And the instant is
+      stamped on the record's own floor as well as on the device clock, which is not redundant:
+      phase 6's seed writes the node's timestamps into the replica without folding them into this
+      device's clock, so a record seeded and then edited here would otherwise carry a causally
+      later version with an earlier instant — the one edge C01's acyclicity argument depends on
+      not existing. This commit authors the three records addressed by their own identifier; the
+      two C18 is about land two commits below
 - [ ] `feat: add the delta vocabulary` — ~~the field names~~ landed in phase 3 with the
       reconciler, in `data/services/sync/delta.dart`, because a reconciler cannot decode a change
       without them. What is left here is the authoring side: writing a delta that claims exactly
