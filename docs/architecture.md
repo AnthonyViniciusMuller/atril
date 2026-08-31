@@ -60,6 +60,7 @@ lib/
 ├── routing/                      go_router, the routes, and the session guard
 ├── domain/
 │   ├── models/                   ebook · collection · annotation · progress · device · user · server
+│   │                             operation · record key — what a change is and how it is addressed
 │   ├── crdt/                     vector clock · hybrid timestamp · revision · the merge rules
 │   └── use_cases/                only where a behaviour spans two repositories
 ├── data/

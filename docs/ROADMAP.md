@@ -157,10 +157,12 @@ listenable would be a type no widget and no `provider` could observe.
       cursor never moves backwards, since a retry that answered with an older page must not undo
       a position whose operations are already applied. The `Operation` value the log stores and
       returns lands with it, in `domain/models`
-- [ ] `feat: add the record versions table` — the causal version last seen of each record this
+- [x] `feat: add the record versions table` — the causal version last seen of each record this
       device has touched, and for the two associative entities the surrogate id this device
       minted. C18 is why the second half exists: a device that forgets the id it minted mints
-      another on every write
+      another on every write. The clock is merged and never replaced, because a device holding an
+      unpushed change knows a version the node does not; and `RecordKey` is what makes a filing
+      addressable by its pair and by nothing else
 - [ ] `feat: add the reconciler` — applies one operation to the local replica, per field, by the
       rule phase 2 established. Idempotent by operation id, because a node may deliver the same
       operation twice and receiving is what makes retries safe

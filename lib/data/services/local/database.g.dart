@@ -5817,6 +5817,354 @@ class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
   }
 }
 
+class $RecordVersionsTable extends RecordVersions
+    with TableInfo<$RecordVersionsTable, RecordVersionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecordVersionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entityMeta = const VerificationMeta('entity');
+  @override
+  late final GeneratedColumn<String> entity = GeneratedColumn<String>(
+    'entity',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 40,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityMeta = const VerificationMeta(
+    'identity',
+  );
+  @override
+  late final GeneratedColumn<String> identity = GeneratedColumn<String>(
+    'identity',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 128,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<VectorClock, String> vectorClock =
+      GeneratedColumn<String>(
+        'vector_clock',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VectorClock>($RecordVersionsTable.$convertervectorClock);
+  @override
+  List<GeneratedColumn> get $columns => [
+    entity,
+    identity,
+    recordId,
+    vectorClock,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'record_versions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecordVersionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entity')) {
+      context.handle(
+        _entityMeta,
+        entity.isAcceptableOrUnknown(data['entity']!, _entityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityMeta);
+    }
+    if (data.containsKey('identity')) {
+      context.handle(
+        _identityMeta,
+        identity.isAcceptableOrUnknown(data['identity']!, _identityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_identityMeta);
+    }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entity, identity};
+  @override
+  RecordVersionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecordVersionRow(
+      entity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity'],
+      )!,
+      identity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}identity'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      )!,
+      vectorClock: $RecordVersionsTable.$convertervectorClock.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}vector_clock'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $RecordVersionsTable createAlias(String alias) {
+    return $RecordVersionsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<VectorClock, String> $convertervectorClock =
+      const VectorClockConverter();
+}
+
+class RecordVersionRow extends DataClass
+    implements Insertable<RecordVersionRow> {
+  /// Which kind of record.
+  final String entity;
+
+  /// What identifies it: its own identifier for three of the five entities, and
+  /// the natural key for the two C18 names.
+  final String identity;
+
+  /// The identifier this device uses for the row — the record's own where it
+  /// has one, and the surrogate this device minted where it does not.
+  final String recordId;
+
+  /// The causal version last seen.
+  ///
+  /// It is merged and never replaced. A device holding a change it has not
+  /// pushed knows a version the node does not, and a reply that overwrote this
+  /// with the node's would let the next write be stamped underneath a write
+  /// this device itself made.
+  final VectorClock vectorClock;
+  const RecordVersionRow({
+    required this.entity,
+    required this.identity,
+    required this.recordId,
+    required this.vectorClock,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entity'] = Variable<String>(entity);
+    map['identity'] = Variable<String>(identity);
+    map['record_id'] = Variable<String>(recordId);
+    {
+      map['vector_clock'] = Variable<String>(
+        $RecordVersionsTable.$convertervectorClock.toSql(vectorClock),
+      );
+    }
+    return map;
+  }
+
+  RecordVersionsCompanion toCompanion(bool nullToAbsent) {
+    return RecordVersionsCompanion(
+      entity: Value(entity),
+      identity: Value(identity),
+      recordId: Value(recordId),
+      vectorClock: Value(vectorClock),
+    );
+  }
+
+  factory RecordVersionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecordVersionRow(
+      entity: serializer.fromJson<String>(json['entity']),
+      identity: serializer.fromJson<String>(json['identity']),
+      recordId: serializer.fromJson<String>(json['recordId']),
+      vectorClock: serializer.fromJson<VectorClock>(json['vectorClock']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entity': serializer.toJson<String>(entity),
+      'identity': serializer.toJson<String>(identity),
+      'recordId': serializer.toJson<String>(recordId),
+      'vectorClock': serializer.toJson<VectorClock>(vectorClock),
+    };
+  }
+
+  RecordVersionRow copyWith({
+    String? entity,
+    String? identity,
+    String? recordId,
+    VectorClock? vectorClock,
+  }) => RecordVersionRow(
+    entity: entity ?? this.entity,
+    identity: identity ?? this.identity,
+    recordId: recordId ?? this.recordId,
+    vectorClock: vectorClock ?? this.vectorClock,
+  );
+  RecordVersionRow copyWithCompanion(RecordVersionsCompanion data) {
+    return RecordVersionRow(
+      entity: data.entity.present ? data.entity.value : this.entity,
+      identity: data.identity.present ? data.identity.value : this.identity,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      vectorClock: data.vectorClock.present
+          ? data.vectorClock.value
+          : this.vectorClock,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecordVersionRow(')
+          ..write('entity: $entity, ')
+          ..write('identity: $identity, ')
+          ..write('recordId: $recordId, ')
+          ..write('vectorClock: $vectorClock')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(entity, identity, recordId, vectorClock);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecordVersionRow &&
+          other.entity == this.entity &&
+          other.identity == this.identity &&
+          other.recordId == this.recordId &&
+          other.vectorClock == this.vectorClock);
+}
+
+class RecordVersionsCompanion extends UpdateCompanion<RecordVersionRow> {
+  final Value<String> entity;
+  final Value<String> identity;
+  final Value<String> recordId;
+  final Value<VectorClock> vectorClock;
+  final Value<int> rowid;
+  const RecordVersionsCompanion({
+    this.entity = const Value.absent(),
+    this.identity = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.vectorClock = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecordVersionsCompanion.insert({
+    required String entity,
+    required String identity,
+    required String recordId,
+    required VectorClock vectorClock,
+    this.rowid = const Value.absent(),
+  }) : entity = Value(entity),
+       identity = Value(identity),
+       recordId = Value(recordId),
+       vectorClock = Value(vectorClock);
+  static Insertable<RecordVersionRow> custom({
+    Expression<String>? entity,
+    Expression<String>? identity,
+    Expression<String>? recordId,
+    Expression<String>? vectorClock,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entity != null) 'entity': entity,
+      if (identity != null) 'identity': identity,
+      if (recordId != null) 'record_id': recordId,
+      if (vectorClock != null) 'vector_clock': vectorClock,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecordVersionsCompanion copyWith({
+    Value<String>? entity,
+    Value<String>? identity,
+    Value<String>? recordId,
+    Value<VectorClock>? vectorClock,
+    Value<int>? rowid,
+  }) {
+    return RecordVersionsCompanion(
+      entity: entity ?? this.entity,
+      identity: identity ?? this.identity,
+      recordId: recordId ?? this.recordId,
+      vectorClock: vectorClock ?? this.vectorClock,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entity.present) {
+      map['entity'] = Variable<String>(entity.value);
+    }
+    if (identity.present) {
+      map['identity'] = Variable<String>(identity.value);
+    }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
+    if (vectorClock.present) {
+      map['vector_clock'] = Variable<String>(
+        $RecordVersionsTable.$convertervectorClock.toSql(vectorClock.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecordVersionsCompanion(')
+          ..write('entity: $entity, ')
+          ..write('identity: $identity, ')
+          ..write('recordId: $recordId, ')
+          ..write('vectorClock: $vectorClock, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -5834,6 +6182,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $PendingOperationsTable pendingOperations =
       $PendingOperationsTable(this);
   late final $NodeCursorsTable nodeCursors = $NodeCursorsTable(this);
+  late final $RecordVersionsTable recordVersions = $RecordVersionsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
@@ -5852,6 +6201,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
   late final SyncDao syncDao = SyncDao(this as AtrilDatabase);
+  late final RecordsDao recordsDao = RecordsDao(this as AtrilDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5868,6 +6218,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     progress,
     pendingOperations,
     nodeCursors,
+    recordVersions,
     knownServersOrigin,
     ebooksContentHash,
     ebookCollectionsCollection,
@@ -9953,6 +10304,197 @@ typedef $$NodeCursorsTableProcessedTableManager =
       NodeCursorRow,
       PrefetchHooks Function({bool serverId})
     >;
+typedef $$RecordVersionsTableCreateCompanionBuilder =
+    RecordVersionsCompanion Function({
+      required String entity,
+      required String identity,
+      required String recordId,
+      required VectorClock vectorClock,
+      Value<int> rowid,
+    });
+typedef $$RecordVersionsTableUpdateCompanionBuilder =
+    RecordVersionsCompanion Function({
+      Value<String> entity,
+      Value<String> identity,
+      Value<String> recordId,
+      Value<VectorClock> vectorClock,
+      Value<int> rowid,
+    });
+
+class $$RecordVersionsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $RecordVersionsTable> {
+  $$RecordVersionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get identity => $composableBuilder(
+    column: $table.identity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<VectorClock, VectorClock, String>
+  get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+}
+
+class $$RecordVersionsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $RecordVersionsTable> {
+  $$RecordVersionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get identity => $composableBuilder(
+    column: $table.identity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vectorClock => $composableBuilder(
+    column: $table.vectorClock,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecordVersionsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $RecordVersionsTable> {
+  $$RecordVersionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => column);
+
+  GeneratedColumn<String> get identity =>
+      $composableBuilder(column: $table.identity, builder: (column) => column);
+
+  GeneratedColumn<String> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<VectorClock, String> get vectorClock =>
+      $composableBuilder(
+        column: $table.vectorClock,
+        builder: (column) => column,
+      );
+}
+
+class $$RecordVersionsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $RecordVersionsTable,
+          RecordVersionRow,
+          $$RecordVersionsTableFilterComposer,
+          $$RecordVersionsTableOrderingComposer,
+          $$RecordVersionsTableAnnotationComposer,
+          $$RecordVersionsTableCreateCompanionBuilder,
+          $$RecordVersionsTableUpdateCompanionBuilder,
+          (
+            RecordVersionRow,
+            BaseReferences<
+              _$AtrilDatabase,
+              $RecordVersionsTable,
+              RecordVersionRow
+            >,
+          ),
+          RecordVersionRow,
+          PrefetchHooks Function()
+        > {
+  $$RecordVersionsTableTableManager(
+    _$AtrilDatabase db,
+    $RecordVersionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecordVersionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecordVersionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecordVersionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> entity = const Value.absent(),
+                Value<String> identity = const Value.absent(),
+                Value<String> recordId = const Value.absent(),
+                Value<VectorClock> vectorClock = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecordVersionsCompanion(
+                entity: entity,
+                identity: identity,
+                recordId: recordId,
+                vectorClock: vectorClock,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entity,
+                required String identity,
+                required String recordId,
+                required VectorClock vectorClock,
+                Value<int> rowid = const Value.absent(),
+              }) => RecordVersionsCompanion.insert(
+                entity: entity,
+                identity: identity,
+                recordId: recordId,
+                vectorClock: vectorClock,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecordVersionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $RecordVersionsTable,
+      RecordVersionRow,
+      $$RecordVersionsTableFilterComposer,
+      $$RecordVersionsTableOrderingComposer,
+      $$RecordVersionsTableAnnotationComposer,
+      $$RecordVersionsTableCreateCompanionBuilder,
+      $$RecordVersionsTableUpdateCompanionBuilder,
+      (
+        RecordVersionRow,
+        BaseReferences<_$AtrilDatabase, $RecordVersionsTable, RecordVersionRow>,
+      ),
+      RecordVersionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -9979,4 +10521,6 @@ class $AtrilDatabaseManager {
       $$PendingOperationsTableTableManager(_db, _db.pendingOperations);
   $$NodeCursorsTableTableManager get nodeCursors =>
       $$NodeCursorsTableTableManager(_db, _db.nodeCursors);
+  $$RecordVersionsTableTableManager get recordVersions =>
+      $$RecordVersionsTableTableManager(_db, _db.recordVersions);
 }
