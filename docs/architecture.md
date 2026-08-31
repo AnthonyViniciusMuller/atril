@@ -310,6 +310,13 @@ Recorded here because each one shapes a screen rather than a line of code.
   resolved it another way would disagree with the node, which is worse than the case C17
   describes. `reconciler_convergence_test.dart` pins the boundary as behaviour, so that a
   change to it is a failing test rather than a discovery.
+- **A node's own identifier is not something a new device can know.** The client discovery
+  document publishes `base_url` and `grpc`; the id in `federation.servers` is reported only by
+  `ListKnownServers`, which cannot be called before the device has signed in at the node it is
+  trying to reach. So the local catalogue is keyed by the **domain** — what the reader typed,
+  what the lookup was addressed to, what every federated identifier carries, and what
+  `LoginResponse.User.origin_server_domain` answers with. The node's own id is a nullable
+  `remote_id` that addresses nothing.
 - **C22**: a node cannot be told through the API that it is a replica. The replica-authorization
   screen can grant the permission and cannot complete the federation; the roadmap says so where
   it lands.

@@ -105,30 +105,31 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
         mode: InsertMode.insertOrIgnore,
       );
 
-  /// This device's position in [serverId]'s log, which is zero for a node it
-  /// has never pulled from.
-  Future<int> cursor(String serverId) async {
-    final row = await (select(
-      nodeCursors,
-    )..where((cursor) => cursor.serverId.equals(serverId))).getSingleOrNull();
+  /// This device's position in the log of the node at [serverDomain], which is
+  /// zero for a node it has never pulled from.
+  Future<int> cursor(String serverDomain) async {
+    final row =
+        await (select(nodeCursors)
+              ..where((cursor) => cursor.serverDomain.equals(serverDomain)))
+            .getSingleOrNull();
 
     return row?.lastPosition ?? 0;
   }
 
-  /// Records that everything up to [position] in [serverId]'s log has been
-  /// committed here.
+  /// Records that everything up to [position] in the log of the node at
+  /// [serverDomain] has been committed here.
   ///
   /// It never moves backwards. A pull that answered with an older page — a
   /// retry, a node that restarted mid-stream — must not undo a position this
   /// device has already written, because the operations behind it are already
   /// applied and re-applying them is work rather than correction.
   Future<void> advanceCursor(
-    String serverId,
+    String serverDomain,
     int position, {
     required DateTime at,
   }) => into(nodeCursors).insert(
     NodeCursorsCompanion.insert(
-      serverId: serverId,
+      serverDomain: serverDomain,
       lastPosition: Value<int>(position),
       pulledAt: Value<DateTime>(at),
     ),

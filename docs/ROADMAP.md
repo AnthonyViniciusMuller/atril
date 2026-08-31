@@ -405,6 +405,20 @@ listenable would be a type no widget and no `provider` could observe.
       resolves inside the compose network and nowhere else. `package:http` is promoted from
       transitive rather than added: its `Client()` is itself the platform split, which is what
       keeps this one file instead of a fifth conditional export
+- [x] `feat: address a node by its domain` — not in the plan, and found by trying to write the
+      row the screen below records: `known_servers` was keyed by the node's own identifier, and a
+      node discovered directly has none. The client document publishes `base_url` and `grpc`, and
+      the id in `federation.servers` is a value only `ListKnownServers` reports — which is a call
+      a device cannot make before it has signed in at the node it is trying to reach. So the
+      **domain** is the key: it is what the reader typed, what the lookup was addressed to, what
+      every federated identifier carries, and what `LoginResponse.User.origin_server_domain`
+      answers with, so it is the one name for a node that exists at every point in this app's
+      life. The node's own identifier stays as a nullable `remote_id`, filled in by phase 12 and
+      used to address nothing. `signed_in_reader` and `node_cursors` follow the key, and
+      `rememberDescriptor` is deliberately not an upsert of the whole row: a lookup that wiped
+      the pin and the id would be this device forgetting what it was told by reading a document
+      that was never going to mention it. The schema version stays at one, because there is no
+      installed database anywhere for it to promise anything to
 - [ ] `feat: add the server selection screen` — the first screen a new install shows, with the
       development federation reachable in one tap in a debug build. The identifier is
       `@local_name:server` and the server half is which node the call was addressed to, so this

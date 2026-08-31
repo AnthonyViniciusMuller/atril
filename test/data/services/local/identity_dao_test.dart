@@ -1,24 +1,26 @@
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/local/hybrid_clock_store.dart';
 import 'package:atril/domain/crdt/hybrid_clock.dart';
+import 'package:atril/domain/models/server.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
 const String _reader = '22222222-2222-4222-8222-222222222222';
-const String _node = '33333333-3333-4333-8333-333333333333';
-const String _peer = '44444444-4444-4444-8444-444444444444';
+const String _remote = '33333333-3333-4333-8333-333333333333';
 
 final DateTime _at = DateTime.utc(2026, 3, 14, 15, 9, 26, 535, 897);
 
 ServerRow _server({
-  String id = _node,
   String domain = 'quire.example',
+  String? remoteId,
+  String? certificateFingerprint,
   bool isOrigin = false,
 }) => ServerRow(
-  id: id,
   domain: domain,
+  remoteId: remoteId,
   baseUrl: 'https://$domain',
+  certificateFingerprint: certificateFingerprint,
   isOrigin: isOrigin,
   active: true,
 );
@@ -98,7 +100,7 @@ void main() {
           id: _reader,
           localName: 'ana',
           displayName: 'Ana',
-          originServerId: _node,
+          originServerDomain: 'quire.example',
           federatedId: '@ana:quire.example',
           createdAt: _at,
         ),
@@ -114,7 +116,7 @@ void main() {
         id: _reader,
         localName: 'ana',
         displayName: 'Ana',
-        originServerId: _node,
+        originServerDomain: 'quire.example',
         federatedId: '@ana:quire.example',
         createdAt: _at,
       );
@@ -132,11 +134,11 @@ void main() {
       final identity = open().identityDao;
 
       await identity.rememberServer(_server(isOrigin: true));
-      await identity.rememberServer(_server(id: _peer, domain: 'peer.example'));
+      await identity.rememberServer(_server(domain: 'peer.example'));
 
-      await identity.markOrigin(_peer);
+      await identity.markOrigin('peer.example');
 
-      expect((await identity.originServer())?.id, _peer);
+      expect((await identity.originServer())?.domain, 'peer.example');
     });
 
     test('refuses a second origin written behind the dao', () async {
@@ -146,16 +148,64 @@ void main() {
 
       await expectLater(
         database.identityDao.rememberServer(
-          _server(id: _peer, domain: 'peer.example', isOrigin: true),
+          _server(domain: 'peer.example', isOrigin: true),
         ),
         throwsA(isA<SqliteException>()),
       );
     });
 
+    test('records what a client document said, and no more', () async {
+      final identity = open().identityDao;
+
+      await identity.rememberDescriptor(
+        const ServerDescriptor(
+          domain: 'Quire.Example',
+          baseUrl: 'https://quire.example',
+          grpcAuthority: 'quire.example:9090',
+        ),
+        at: _at,
+      );
+
+      final server = await identity.server('quire.example');
+
+      expect(server?.domain, 'quire.example');
+      expect(server?.grpcAuthority, 'quire.example:9090');
+      expect(server?.discoveredAt, _at);
+      // The client document carries neither, and a row that claimed otherwise
+      // would be this device inventing what a peer is pinned against.
+      expect(server?.remoteId, isNull);
+      expect(server?.certificateFingerprint, isNull);
+    });
+
+    test('keeps what a client document cannot mention', () async {
+      // ListKnownServers is the only call that reports a node's own identifier
+      // and its pin. A re-discovery must not wipe them by reading a document
+      // that was never going to carry them.
+      final identity = open().identityDao;
+
+      await identity.rememberServer(
+        _server(remoteId: _remote, certificateFingerprint: 'spki-sha256:AAAA'),
+      );
+      await identity.rememberDescriptor(
+        const ServerDescriptor(
+          domain: 'quire.example',
+          baseUrl: 'https://quire.example',
+          grpcAuthority: 'quire.example:9091',
+        ),
+        at: _at,
+      );
+
+      final server = await identity.server('quire.example');
+
+      expect(server?.remoteId, _remote);
+      expect(server?.certificateFingerprint, 'spki-sha256:AAAA');
+      expect(server?.grpcAuthority, 'quire.example:9091');
+    });
+
     test('shows the reader their own node first', () async {
       final identity = open().identityDao;
 
-      await identity.rememberServer(_server(id: _peer, domain: 'aaa.example'));
+      await identity.rememberServer(_server(domain: 'aaa.example'));
       await identity.rememberServer(_server(isOrigin: true));
 
       expect(

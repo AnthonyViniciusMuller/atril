@@ -6,7 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
-const String _node = '33333333-3333-4333-8333-333333333333';
+const String _node = 'quire.example';
 const String _work = 'aaaaaaaa-1111-4111-8111-111111111111';
 
 final DateTime _at = DateTime.utc(2026, 3, 14, 15, 9, 26, 535, 897);
@@ -131,7 +131,6 @@ void main() {
 
       await database.identityDao.rememberServer(
         ServerRow(
-          id: _node,
           domain: 'quire.example',
           baseUrl: 'https://quire.example',
           isOrigin: true,

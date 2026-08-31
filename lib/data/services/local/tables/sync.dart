@@ -118,9 +118,11 @@ class AppliedOperations extends Table {
 /// moved past it, and it is not delayed, it is lost.
 @DataClassName('NodeCursorRow')
 class NodeCursors extends Table {
-  /// The node this position belongs to.
-  TextColumn get serverId =>
-      text().references(KnownServers, #id, onDelete: KeyAction.cascade)();
+  /// The node this position belongs to, by the domain this device addresses it
+  /// at. See [KnownServers.domain] for why that is the key and not the node's
+  /// own identifier.
+  TextColumn get serverDomain =>
+      text().references(KnownServers, #domain, onDelete: KeyAction.cascade)();
 
   /// The last position this device has pulled and committed.
   ///
@@ -140,7 +142,7 @@ class NodeCursors extends Table {
       integer().map(const InstantConverter()).nullable()();
 
   @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{serverId};
+  Set<Column<Object>> get primaryKey => <Column<Object>>{serverDomain};
 
   @override
   List<String> get customConstraints => <String>['CHECK (last_position >= 0)'];

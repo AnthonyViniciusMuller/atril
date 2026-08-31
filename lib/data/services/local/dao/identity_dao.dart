@@ -3,6 +3,7 @@ library;
 
 import 'package:drift/drift.dart';
 
+import '../../../../domain/models/server.dart';
 import '../database.dart';
 import '../tables/identity.dart';
 
@@ -75,7 +76,7 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
     required String id,
     required String localName,
     required String displayName,
-    required String originServerId,
+    required String originServerDomain,
     required String federatedId,
     required DateTime createdAt,
     String? email,
@@ -85,7 +86,7 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
       id: id.toLowerCase(),
       localName: localName,
       displayName: displayName,
-      originServerId: originServerId.toLowerCase(),
+      originServerDomain: originServerDomain.toLowerCase(),
       federatedId: federatedId,
       createdAt: createdAt,
       email: Value<String?>(email),
@@ -105,24 +106,64 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
     knownServers,
   )..where((server) => server.isOrigin)).getSingleOrNull();
 
+  /// The node this device knows at [domain], or `null` for one it has never
+  /// discovered.
+  Future<ServerRow?> server(String domain) =>
+      (select(knownServers)..where(
+            (server) => server.domain.equals(canonicalServerDomain(domain)),
+          ))
+          .getSingleOrNull();
+
   /// Records what a discovery document said about a node.
   ///
-  /// The domain is the natural key and the identifier is the node's own, so a
-  /// document read twice updates one row rather than adding a second.
+  /// The domain is the key, so a document read twice updates one row rather
+  /// than adding a second.
   Future<void> rememberServer(ServerRow server) =>
       into(knownServers).insertOnConflictUpdate(server);
 
-  /// Makes [id] the node the reader is signed in at, and no other.
+  /// Records what [descriptor] said about a node, keeping what this device
+  /// already knew that the document does not carry.
+  ///
+  /// The client document publishes `base_url` and `grpc` and nothing else, so a
+  /// re-discovery must not clear the fingerprint, the keys or the node's own
+  /// identifier: those come from `ListKnownServers`, they are still true, and a
+  /// lookup that wiped them would be this device forgetting what it was told by
+  /// reading something that was never going to mention it.
+  Future<void> rememberDescriptor(
+    ServerDescriptor descriptor, {
+    required DateTime at,
+  }) => into(knownServers).insert(
+    KnownServersCompanion.insert(
+      domain: canonicalServerDomain(descriptor.domain),
+      baseUrl: descriptor.baseUrl,
+      grpcAuthority: Value<String?>(descriptor.grpcAuthority),
+      jwksUri: Value<String?>(descriptor.jwksUri),
+      certificateFingerprint: Value<String?>(descriptor.certificateFingerprint),
+      discoveredAt: Value<DateTime>(at),
+    ),
+    onConflict: DoUpdate<$KnownServersTable, ServerRow>(
+      (_) => KnownServersCompanion(
+        baseUrl: Value<String>(descriptor.baseUrl),
+        grpcAuthority: Value<String?>(descriptor.grpcAuthority),
+        discoveredAt: Value<DateTime>(at),
+        active: const Value<bool>(true),
+      ),
+    ),
+  );
+
+  /// Makes the node at [domain] the one the reader is signed in at, and no
+  /// other.
   ///
   /// The two writes are one transaction because the index that keeps a device
   /// from having two origins would refuse the second of them on its own.
-  Future<void> markOrigin(String id) => transaction(() async {
+  Future<void> markOrigin(String domain) => transaction(() async {
     await (update(knownServers)..where((server) => server.isOrigin)).write(
       const KnownServersCompanion(isOrigin: Value<bool>(false)),
     );
 
-    await (update(knownServers)
-          ..where((server) => server.id.equals(id.toLowerCase())))
+    await (update(knownServers)..where(
+          (server) => server.domain.equals(canonicalServerDomain(domain)),
+        ))
         .write(const KnownServersCompanion(isOrigin: Value<bool>(true)));
   });
 

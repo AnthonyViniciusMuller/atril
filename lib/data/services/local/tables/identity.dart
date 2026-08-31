@@ -97,8 +97,13 @@ class SignedInReader extends Table {
 
   /// The node that authenticates this reader (RN08), which is the second half
   /// of their identifier.
-  TextColumn get originServerId =>
-      text().references(KnownServers, #id, onDelete: KeyAction.restrict)();
+  ///
+  /// It is the domain and not an identifier, because the domain is what this
+  /// device can always know: it is what the reader typed, what the `.well-known`
+  /// lookup was addressed to, and what `LoginResponse.User.origin_server_domain`
+  /// answers with. See [KnownServers.domain].
+  TextColumn get originServerDomain =>
+      text().references(KnownServers, #domain, onDelete: KeyAction.restrict)();
 
   /// `@local_name:domain`, as the node assembled it. It is stored rather than
   /// composed here so that every client renders the identifier the same way.
@@ -142,12 +147,28 @@ class SignedInReader extends Table {
   'WHERE is_origin',
 )
 class KnownServers extends Table {
-  /// The node's identifier as it names itself, in canonical lowercase text.
-  TextColumn get id => text().withLength(min: 36, max: 36)();
+  /// The federation domain, which is the authority a lookup is addressed to,
+  /// the second half of every identifier hosted there, and the key this device
+  /// addresses a node by.
+  ///
+  /// It is the primary key and the node's own identifier is not, because a node
+  /// discovered directly has no identifier to be keyed by: the client discovery
+  /// document publishes `base_url` and `grpc` and nothing else, and the id in
+  /// `federation.servers` is a value only the node itself can report. The domain
+  /// is what a reader types, what the lookup is addressed to and what every
+  /// federated identifier carries, so it is the one name for a node that exists
+  /// at every point in this app's life.
+  TextColumn get domain => text().withLength(min: 1, max: 255)();
 
-  /// The federation domain, which is the authority a lookup is addressed to and
-  /// the second half of every identifier hosted there.
-  TextColumn get domain => text().withLength(min: 1, max: 255).unique()();
+  /// The identifier the node calls itself by, once something has heard it say
+  /// so.
+  ///
+  /// It is null on a node this device discovered for itself and is filled in by
+  /// `ListKnownServers`, which is the only call that reports it. It is
+  /// provenance rather than an address: nothing here resolves a node by it, and
+  /// a node that answered with a different one would be a node that had been
+  /// reinstalled rather than a second node.
+  TextColumn get remoteId => text().withLength(min: 36, max: 36).nullable()();
 
   /// Where the node answers, which is deliberately separate from the domain: a
   /// node may be identified by one host and served from another.
@@ -185,12 +206,12 @@ class KnownServers extends Table {
   BoolColumn get active => boolean().withDefault(const Constant(true))();
 
   @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+  Set<Column<Object>> get primaryKey => <Column<Object>>{domain};
 
   @override
   List<String> get customConstraints => <String>[
-    "CHECK (id = lower(id))",
     "CHECK (domain = lower(domain))",
+    "CHECK (remote_id IS NULL OR remote_id = lower(remote_id))",
   ];
 }
 

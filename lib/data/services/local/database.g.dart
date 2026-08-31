@@ -377,19 +377,6 @@ class $KnownServersTable extends KnownServers
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $KnownServersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 36,
-      maxTextLength: 36,
-    ),
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
   static const VerificationMeta _domainMeta = const VerificationMeta('domain');
   @override
   late final GeneratedColumn<String> domain = GeneratedColumn<String>(
@@ -402,7 +389,21 @@ class $KnownServersTable extends KnownServers
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _baseUrlMeta = const VerificationMeta(
     'baseUrl',
@@ -494,8 +495,8 @@ class $KnownServersTable extends KnownServers
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
     domain,
+    remoteId,
     baseUrl,
     jwksUri,
     certificateFingerprint,
@@ -516,11 +517,6 @@ class $KnownServersTable extends KnownServers
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
     if (data.containsKey('domain')) {
       context.handle(
         _domainMeta,
@@ -528,6 +524,12 @@ class $KnownServersTable extends KnownServers
       );
     } else if (isInserting) {
       context.missing(_domainMeta);
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
     }
     if (data.containsKey('base_url')) {
       context.handle(
@@ -577,19 +579,19 @@ class $KnownServersTable extends KnownServers
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {domain};
   @override
   ServerRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ServerRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
       domain: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}domain'],
       )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
       baseUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}base_url'],
@@ -635,12 +637,28 @@ class $KnownServersTable extends KnownServers
 }
 
 class ServerRow extends DataClass implements Insertable<ServerRow> {
-  /// The node's identifier as it names itself, in canonical lowercase text.
-  final String id;
-
-  /// The federation domain, which is the authority a lookup is addressed to and
-  /// the second half of every identifier hosted there.
+  /// The federation domain, which is the authority a lookup is addressed to,
+  /// the second half of every identifier hosted there, and the key this device
+  /// addresses a node by.
+  ///
+  /// It is the primary key and the node's own identifier is not, because a node
+  /// discovered directly has no identifier to be keyed by: the client discovery
+  /// document publishes `base_url` and `grpc` and nothing else, and the id in
+  /// `federation.servers` is a value only the node itself can report. The domain
+  /// is what a reader types, what the lookup is addressed to and what every
+  /// federated identifier carries, so it is the one name for a node that exists
+  /// at every point in this app's life.
   final String domain;
+
+  /// The identifier the node calls itself by, once something has heard it say
+  /// so.
+  ///
+  /// It is null on a node this device discovered for itself and is filled in by
+  /// `ListKnownServers`, which is the only call that reports it. It is
+  /// provenance rather than an address: nothing here resolves a node by it, and
+  /// a node that answered with a different one would be a node that had been
+  /// reinstalled rather than a second node.
+  final String? remoteId;
 
   /// Where the node answers, which is deliberately separate from the domain: a
   /// node may be identified by one host and served from another.
@@ -675,8 +693,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   /// something the reader should keep being able to see.
   final bool active;
   const ServerRow({
-    required this.id,
     required this.domain,
+    this.remoteId,
     required this.baseUrl,
     this.jwksUri,
     this.certificateFingerprint,
@@ -688,8 +706,10 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
     map['domain'] = Variable<String>(domain);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
     map['base_url'] = Variable<String>(baseUrl);
     if (!nullToAbsent || jwksUri != null) {
       map['jwks_uri'] = Variable<String>(jwksUri);
@@ -712,8 +732,10 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
 
   KnownServersCompanion toCompanion(bool nullToAbsent) {
     return KnownServersCompanion(
-      id: Value(id),
       domain: Value(domain),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
       baseUrl: Value(baseUrl),
       jwksUri: jwksUri == null && nullToAbsent
           ? const Value.absent()
@@ -738,8 +760,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ServerRow(
-      id: serializer.fromJson<String>(json['id']),
       domain: serializer.fromJson<String>(json['domain']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
       baseUrl: serializer.fromJson<String>(json['baseUrl']),
       jwksUri: serializer.fromJson<String?>(json['jwksUri']),
       certificateFingerprint: serializer.fromJson<String?>(
@@ -755,8 +777,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
       'domain': serializer.toJson<String>(domain),
+      'remoteId': serializer.toJson<String?>(remoteId),
       'baseUrl': serializer.toJson<String>(baseUrl),
       'jwksUri': serializer.toJson<String?>(jwksUri),
       'certificateFingerprint': serializer.toJson<String?>(
@@ -770,8 +792,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   }
 
   ServerRow copyWith({
-    String? id,
     String? domain,
+    Value<String?> remoteId = const Value.absent(),
     String? baseUrl,
     Value<String?> jwksUri = const Value.absent(),
     Value<String?> certificateFingerprint = const Value.absent(),
@@ -780,8 +802,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
     Value<DateTime?> discoveredAt = const Value.absent(),
     bool? active,
   }) => ServerRow(
-    id: id ?? this.id,
     domain: domain ?? this.domain,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
     baseUrl: baseUrl ?? this.baseUrl,
     jwksUri: jwksUri.present ? jwksUri.value : this.jwksUri,
     certificateFingerprint: certificateFingerprint.present
@@ -796,8 +818,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   );
   ServerRow copyWithCompanion(KnownServersCompanion data) {
     return ServerRow(
-      id: data.id.present ? data.id.value : this.id,
       domain: data.domain.present ? data.domain.value : this.domain,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       baseUrl: data.baseUrl.present ? data.baseUrl.value : this.baseUrl,
       jwksUri: data.jwksUri.present ? data.jwksUri.value : this.jwksUri,
       certificateFingerprint: data.certificateFingerprint.present
@@ -817,8 +839,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   @override
   String toString() {
     return (StringBuffer('ServerRow(')
-          ..write('id: $id, ')
           ..write('domain: $domain, ')
+          ..write('remoteId: $remoteId, ')
           ..write('baseUrl: $baseUrl, ')
           ..write('jwksUri: $jwksUri, ')
           ..write('certificateFingerprint: $certificateFingerprint, ')
@@ -832,8 +854,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
 
   @override
   int get hashCode => Object.hash(
-    id,
     domain,
+    remoteId,
     baseUrl,
     jwksUri,
     certificateFingerprint,
@@ -846,8 +868,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ServerRow &&
-          other.id == this.id &&
           other.domain == this.domain &&
+          other.remoteId == this.remoteId &&
           other.baseUrl == this.baseUrl &&
           other.jwksUri == this.jwksUri &&
           other.certificateFingerprint == this.certificateFingerprint &&
@@ -858,8 +880,8 @@ class ServerRow extends DataClass implements Insertable<ServerRow> {
 }
 
 class KnownServersCompanion extends UpdateCompanion<ServerRow> {
-  final Value<String> id;
   final Value<String> domain;
+  final Value<String?> remoteId;
   final Value<String> baseUrl;
   final Value<String?> jwksUri;
   final Value<String?> certificateFingerprint;
@@ -869,8 +891,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
   final Value<bool> active;
   final Value<int> rowid;
   const KnownServersCompanion({
-    this.id = const Value.absent(),
     this.domain = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.baseUrl = const Value.absent(),
     this.jwksUri = const Value.absent(),
     this.certificateFingerprint = const Value.absent(),
@@ -881,8 +903,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
     this.rowid = const Value.absent(),
   });
   KnownServersCompanion.insert({
-    required String id,
     required String domain,
+    this.remoteId = const Value.absent(),
     required String baseUrl,
     this.jwksUri = const Value.absent(),
     this.certificateFingerprint = const Value.absent(),
@@ -891,12 +913,11 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
     this.discoveredAt = const Value.absent(),
     this.active = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       domain = Value(domain),
+  }) : domain = Value(domain),
        baseUrl = Value(baseUrl);
   static Insertable<ServerRow> custom({
-    Expression<String>? id,
     Expression<String>? domain,
+    Expression<String>? remoteId,
     Expression<String>? baseUrl,
     Expression<String>? jwksUri,
     Expression<String>? certificateFingerprint,
@@ -907,8 +928,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
       if (domain != null) 'domain': domain,
+      if (remoteId != null) 'remote_id': remoteId,
       if (baseUrl != null) 'base_url': baseUrl,
       if (jwksUri != null) 'jwks_uri': jwksUri,
       if (certificateFingerprint != null)
@@ -922,8 +943,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
   }
 
   KnownServersCompanion copyWith({
-    Value<String>? id,
     Value<String>? domain,
+    Value<String?>? remoteId,
     Value<String>? baseUrl,
     Value<String?>? jwksUri,
     Value<String?>? certificateFingerprint,
@@ -934,8 +955,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
     Value<int>? rowid,
   }) {
     return KnownServersCompanion(
-      id: id ?? this.id,
       domain: domain ?? this.domain,
+      remoteId: remoteId ?? this.remoteId,
       baseUrl: baseUrl ?? this.baseUrl,
       jwksUri: jwksUri ?? this.jwksUri,
       certificateFingerprint:
@@ -951,11 +972,11 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
     if (domain.present) {
       map['domain'] = Variable<String>(domain.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
     }
     if (baseUrl.present) {
       map['base_url'] = Variable<String>(baseUrl.value);
@@ -991,8 +1012,8 @@ class KnownServersCompanion extends UpdateCompanion<ServerRow> {
   @override
   String toString() {
     return (StringBuffer('KnownServersCompanion(')
-          ..write('id: $id, ')
           ..write('domain: $domain, ')
+          ..write('remoteId: $remoteId, ')
           ..write('baseUrl: $baseUrl, ')
           ..write('jwksUri: $jwksUri, ')
           ..write('certificateFingerprint: $certificateFingerprint, ')
@@ -1066,20 +1087,20 @@ class $SignedInReaderTable extends SignedInReader
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _originServerIdMeta = const VerificationMeta(
-    'originServerId',
-  );
+  static const VerificationMeta _originServerDomainMeta =
+      const VerificationMeta('originServerDomain');
   @override
-  late final GeneratedColumn<String> originServerId = GeneratedColumn<String>(
-    'origin_server_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES known_servers (id) ON DELETE RESTRICT',
-    ),
-  );
+  late final GeneratedColumn<String> originServerDomain =
+      GeneratedColumn<String>(
+        'origin_server_domain',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES known_servers (domain) ON DELETE RESTRICT',
+        ),
+      );
   static const VerificationMeta _federatedIdMeta = const VerificationMeta(
     'federatedId',
   );
@@ -1120,7 +1141,7 @@ class $SignedInReaderTable extends SignedInReader
     id,
     localName,
     displayName,
-    originServerId,
+    originServerDomain,
     federatedId,
     email,
     createdAt,
@@ -1167,16 +1188,16 @@ class $SignedInReaderTable extends SignedInReader
     } else if (isInserting) {
       context.missing(_displayNameMeta);
     }
-    if (data.containsKey('origin_server_id')) {
+    if (data.containsKey('origin_server_domain')) {
       context.handle(
-        _originServerIdMeta,
-        originServerId.isAcceptableOrUnknown(
-          data['origin_server_id']!,
-          _originServerIdMeta,
+        _originServerDomainMeta,
+        originServerDomain.isAcceptableOrUnknown(
+          data['origin_server_domain']!,
+          _originServerDomainMeta,
         ),
       );
     } else if (isInserting) {
-      context.missing(_originServerIdMeta);
+      context.missing(_originServerDomainMeta);
     }
     if (data.containsKey('federated_id')) {
       context.handle(
@@ -1220,9 +1241,9 @@ class $SignedInReaderTable extends SignedInReader
         DriftSqlType.string,
         data['${effectivePrefix}display_name'],
       )!,
-      originServerId: attachedDatabase.typeMapping.read(
+      originServerDomain: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}origin_server_id'],
+        data['${effectivePrefix}origin_server_domain'],
       )!,
       federatedId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1268,7 +1289,12 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
 
   /// The node that authenticates this reader (RN08), which is the second half
   /// of their identifier.
-  final String originServerId;
+  ///
+  /// It is the domain and not an identifier, because the domain is what this
+  /// device can always know: it is what the reader typed, what the `.well-known`
+  /// lookup was addressed to, and what `LoginResponse.User.origin_server_domain`
+  /// answers with. See [KnownServers.domain].
+  final String originServerDomain;
 
   /// `@local_name:domain`, as the node assembled it. It is stored rather than
   /// composed here so that every client renders the identifier the same way.
@@ -1285,7 +1311,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
     required this.id,
     required this.localName,
     required this.displayName,
-    required this.originServerId,
+    required this.originServerDomain,
     required this.federatedId,
     this.email,
     required this.createdAt,
@@ -1297,7 +1323,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
     map['id'] = Variable<String>(id);
     map['local_name'] = Variable<String>(localName);
     map['display_name'] = Variable<String>(displayName);
-    map['origin_server_id'] = Variable<String>(originServerId);
+    map['origin_server_domain'] = Variable<String>(originServerDomain);
     map['federated_id'] = Variable<String>(federatedId);
     if (!nullToAbsent || email != null) {
       map['email'] = Variable<String>(email);
@@ -1316,7 +1342,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
       id: Value(id),
       localName: Value(localName),
       displayName: Value(displayName),
-      originServerId: Value(originServerId),
+      originServerDomain: Value(originServerDomain),
       federatedId: Value(federatedId),
       email: email == null && nullToAbsent
           ? const Value.absent()
@@ -1335,7 +1361,9 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
       id: serializer.fromJson<String>(json['id']),
       localName: serializer.fromJson<String>(json['localName']),
       displayName: serializer.fromJson<String>(json['displayName']),
-      originServerId: serializer.fromJson<String>(json['originServerId']),
+      originServerDomain: serializer.fromJson<String>(
+        json['originServerDomain'],
+      ),
       federatedId: serializer.fromJson<String>(json['federatedId']),
       email: serializer.fromJson<String?>(json['email']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -1349,7 +1377,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
       'id': serializer.toJson<String>(id),
       'localName': serializer.toJson<String>(localName),
       'displayName': serializer.toJson<String>(displayName),
-      'originServerId': serializer.toJson<String>(originServerId),
+      'originServerDomain': serializer.toJson<String>(originServerDomain),
       'federatedId': serializer.toJson<String>(federatedId),
       'email': serializer.toJson<String?>(email),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -1361,7 +1389,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
     String? id,
     String? localName,
     String? displayName,
-    String? originServerId,
+    String? originServerDomain,
     String? federatedId,
     Value<String?> email = const Value.absent(),
     DateTime? createdAt,
@@ -1370,7 +1398,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
     id: id ?? this.id,
     localName: localName ?? this.localName,
     displayName: displayName ?? this.displayName,
-    originServerId: originServerId ?? this.originServerId,
+    originServerDomain: originServerDomain ?? this.originServerDomain,
     federatedId: federatedId ?? this.federatedId,
     email: email.present ? email.value : this.email,
     createdAt: createdAt ?? this.createdAt,
@@ -1383,9 +1411,9 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
       displayName: data.displayName.present
           ? data.displayName.value
           : this.displayName,
-      originServerId: data.originServerId.present
-          ? data.originServerId.value
-          : this.originServerId,
+      originServerDomain: data.originServerDomain.present
+          ? data.originServerDomain.value
+          : this.originServerDomain,
       federatedId: data.federatedId.present
           ? data.federatedId.value
           : this.federatedId,
@@ -1401,7 +1429,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
           ..write('id: $id, ')
           ..write('localName: $localName, ')
           ..write('displayName: $displayName, ')
-          ..write('originServerId: $originServerId, ')
+          ..write('originServerDomain: $originServerDomain, ')
           ..write('federatedId: $federatedId, ')
           ..write('email: $email, ')
           ..write('createdAt: $createdAt')
@@ -1415,7 +1443,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
     id,
     localName,
     displayName,
-    originServerId,
+    originServerDomain,
     federatedId,
     email,
     createdAt,
@@ -1428,7 +1456,7 @@ class ReaderRow extends DataClass implements Insertable<ReaderRow> {
           other.id == this.id &&
           other.localName == this.localName &&
           other.displayName == this.displayName &&
-          other.originServerId == this.originServerId &&
+          other.originServerDomain == this.originServerDomain &&
           other.federatedId == this.federatedId &&
           other.email == this.email &&
           other.createdAt == this.createdAt);
@@ -1439,7 +1467,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
   final Value<String> id;
   final Value<String> localName;
   final Value<String> displayName;
-  final Value<String> originServerId;
+  final Value<String> originServerDomain;
   final Value<String> federatedId;
   final Value<String?> email;
   final Value<DateTime> createdAt;
@@ -1448,7 +1476,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
     this.id = const Value.absent(),
     this.localName = const Value.absent(),
     this.displayName = const Value.absent(),
-    this.originServerId = const Value.absent(),
+    this.originServerDomain = const Value.absent(),
     this.federatedId = const Value.absent(),
     this.email = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1458,14 +1486,14 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
     required String id,
     required String localName,
     required String displayName,
-    required String originServerId,
+    required String originServerDomain,
     required String federatedId,
     this.email = const Value.absent(),
     required DateTime createdAt,
   }) : id = Value(id),
        localName = Value(localName),
        displayName = Value(displayName),
-       originServerId = Value(originServerId),
+       originServerDomain = Value(originServerDomain),
        federatedId = Value(federatedId),
        createdAt = Value(createdAt);
   static Insertable<ReaderRow> custom({
@@ -1473,7 +1501,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
     Expression<String>? id,
     Expression<String>? localName,
     Expression<String>? displayName,
-    Expression<String>? originServerId,
+    Expression<String>? originServerDomain,
     Expression<String>? federatedId,
     Expression<String>? email,
     Expression<int>? createdAt,
@@ -1483,7 +1511,8 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
       if (id != null) 'id': id,
       if (localName != null) 'local_name': localName,
       if (displayName != null) 'display_name': displayName,
-      if (originServerId != null) 'origin_server_id': originServerId,
+      if (originServerDomain != null)
+        'origin_server_domain': originServerDomain,
       if (federatedId != null) 'federated_id': federatedId,
       if (email != null) 'email': email,
       if (createdAt != null) 'created_at': createdAt,
@@ -1495,7 +1524,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
     Value<String>? id,
     Value<String>? localName,
     Value<String>? displayName,
-    Value<String>? originServerId,
+    Value<String>? originServerDomain,
     Value<String>? federatedId,
     Value<String?>? email,
     Value<DateTime>? createdAt,
@@ -1505,7 +1534,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
       id: id ?? this.id,
       localName: localName ?? this.localName,
       displayName: displayName ?? this.displayName,
-      originServerId: originServerId ?? this.originServerId,
+      originServerDomain: originServerDomain ?? this.originServerDomain,
       federatedId: federatedId ?? this.federatedId,
       email: email ?? this.email,
       createdAt: createdAt ?? this.createdAt,
@@ -1527,8 +1556,8 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
     if (displayName.present) {
       map['display_name'] = Variable<String>(displayName.value);
     }
-    if (originServerId.present) {
-      map['origin_server_id'] = Variable<String>(originServerId.value);
+    if (originServerDomain.present) {
+      map['origin_server_domain'] = Variable<String>(originServerDomain.value);
     }
     if (federatedId.present) {
       map['federated_id'] = Variable<String>(federatedId.value);
@@ -1551,7 +1580,7 @@ class SignedInReaderCompanion extends UpdateCompanion<ReaderRow> {
           ..write('id: $id, ')
           ..write('localName: $localName, ')
           ..write('displayName: $displayName, ')
-          ..write('originServerId: $originServerId, ')
+          ..write('originServerDomain: $originServerDomain, ')
           ..write('federatedId: $federatedId, ')
           ..write('email: $email, ')
           ..write('createdAt: $createdAt')
@@ -5529,18 +5558,18 @@ class $NodeCursorsTable extends NodeCursors
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $NodeCursorsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _serverIdMeta = const VerificationMeta(
-    'serverId',
+  static const VerificationMeta _serverDomainMeta = const VerificationMeta(
+    'serverDomain',
   );
   @override
-  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
-    'server_id',
+  late final GeneratedColumn<String> serverDomain = GeneratedColumn<String>(
+    'server_domain',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES known_servers (id) ON DELETE CASCADE',
+      'REFERENCES known_servers (domain) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _lastPositionMeta = const VerificationMeta(
@@ -5565,7 +5594,7 @@ class $NodeCursorsTable extends NodeCursors
         requiredDuringInsert: false,
       ).withConverter<DateTime?>($NodeCursorsTable.$converterpulledAtn);
   @override
-  List<GeneratedColumn> get $columns => [serverId, lastPosition, pulledAt];
+  List<GeneratedColumn> get $columns => [serverDomain, lastPosition, pulledAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5578,13 +5607,16 @@ class $NodeCursorsTable extends NodeCursors
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('server_id')) {
+    if (data.containsKey('server_domain')) {
       context.handle(
-        _serverIdMeta,
-        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+        _serverDomainMeta,
+        serverDomain.isAcceptableOrUnknown(
+          data['server_domain']!,
+          _serverDomainMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_serverIdMeta);
+      context.missing(_serverDomainMeta);
     }
     if (data.containsKey('last_position')) {
       context.handle(
@@ -5599,14 +5631,14 @@ class $NodeCursorsTable extends NodeCursors
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {serverId};
+  Set<GeneratedColumn> get $primaryKey => {serverDomain};
   @override
   NodeCursorRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return NodeCursorRow(
-      serverId: attachedDatabase.typeMapping.read(
+      serverDomain: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}server_id'],
+        data['${effectivePrefix}server_domain'],
       )!,
       lastPosition: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -5633,8 +5665,10 @@ class $NodeCursorsTable extends NodeCursors
 }
 
 class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
-  /// The node this position belongs to.
-  final String serverId;
+  /// The node this position belongs to, by the domain this device addresses it
+  /// at. See [KnownServers.domain] for why that is the key and not the node's
+  /// own identifier.
+  final String serverDomain;
 
   /// The last position this device has pulled and committed.
   ///
@@ -5652,14 +5686,14 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   /// this phone.
   final DateTime? pulledAt;
   const NodeCursorRow({
-    required this.serverId,
+    required this.serverDomain,
     required this.lastPosition,
     this.pulledAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['server_id'] = Variable<String>(serverId);
+    map['server_domain'] = Variable<String>(serverDomain);
     map['last_position'] = Variable<int>(lastPosition);
     if (!nullToAbsent || pulledAt != null) {
       map['pulled_at'] = Variable<int>(
@@ -5671,7 +5705,7 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
 
   NodeCursorsCompanion toCompanion(bool nullToAbsent) {
     return NodeCursorsCompanion(
-      serverId: Value(serverId),
+      serverDomain: Value(serverDomain),
       lastPosition: Value(lastPosition),
       pulledAt: pulledAt == null && nullToAbsent
           ? const Value.absent()
@@ -5685,7 +5719,7 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return NodeCursorRow(
-      serverId: serializer.fromJson<String>(json['serverId']),
+      serverDomain: serializer.fromJson<String>(json['serverDomain']),
       lastPosition: serializer.fromJson<int>(json['lastPosition']),
       pulledAt: serializer.fromJson<DateTime?>(json['pulledAt']),
     );
@@ -5694,24 +5728,26 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'serverId': serializer.toJson<String>(serverId),
+      'serverDomain': serializer.toJson<String>(serverDomain),
       'lastPosition': serializer.toJson<int>(lastPosition),
       'pulledAt': serializer.toJson<DateTime?>(pulledAt),
     };
   }
 
   NodeCursorRow copyWith({
-    String? serverId,
+    String? serverDomain,
     int? lastPosition,
     Value<DateTime?> pulledAt = const Value.absent(),
   }) => NodeCursorRow(
-    serverId: serverId ?? this.serverId,
+    serverDomain: serverDomain ?? this.serverDomain,
     lastPosition: lastPosition ?? this.lastPosition,
     pulledAt: pulledAt.present ? pulledAt.value : this.pulledAt,
   );
   NodeCursorRow copyWithCompanion(NodeCursorsCompanion data) {
     return NodeCursorRow(
-      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      serverDomain: data.serverDomain.present
+          ? data.serverDomain.value
+          : this.serverDomain,
       lastPosition: data.lastPosition.present
           ? data.lastPosition.value
           : this.lastPosition,
@@ -5722,7 +5758,7 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   @override
   String toString() {
     return (StringBuffer('NodeCursorRow(')
-          ..write('serverId: $serverId, ')
+          ..write('serverDomain: $serverDomain, ')
           ..write('lastPosition: $lastPosition, ')
           ..write('pulledAt: $pulledAt')
           ..write(')'))
@@ -5730,41 +5766,41 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   }
 
   @override
-  int get hashCode => Object.hash(serverId, lastPosition, pulledAt);
+  int get hashCode => Object.hash(serverDomain, lastPosition, pulledAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is NodeCursorRow &&
-          other.serverId == this.serverId &&
+          other.serverDomain == this.serverDomain &&
           other.lastPosition == this.lastPosition &&
           other.pulledAt == this.pulledAt);
 }
 
 class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
-  final Value<String> serverId;
+  final Value<String> serverDomain;
   final Value<int> lastPosition;
   final Value<DateTime?> pulledAt;
   final Value<int> rowid;
   const NodeCursorsCompanion({
-    this.serverId = const Value.absent(),
+    this.serverDomain = const Value.absent(),
     this.lastPosition = const Value.absent(),
     this.pulledAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   NodeCursorsCompanion.insert({
-    required String serverId,
+    required String serverDomain,
     this.lastPosition = const Value.absent(),
     this.pulledAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : serverId = Value(serverId);
+  }) : serverDomain = Value(serverDomain);
   static Insertable<NodeCursorRow> custom({
-    Expression<String>? serverId,
+    Expression<String>? serverDomain,
     Expression<int>? lastPosition,
     Expression<int>? pulledAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (serverId != null) 'server_id': serverId,
+      if (serverDomain != null) 'server_domain': serverDomain,
       if (lastPosition != null) 'last_position': lastPosition,
       if (pulledAt != null) 'pulled_at': pulledAt,
       if (rowid != null) 'rowid': rowid,
@@ -5772,13 +5808,13 @@ class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
   }
 
   NodeCursorsCompanion copyWith({
-    Value<String>? serverId,
+    Value<String>? serverDomain,
     Value<int>? lastPosition,
     Value<DateTime?>? pulledAt,
     Value<int>? rowid,
   }) {
     return NodeCursorsCompanion(
-      serverId: serverId ?? this.serverId,
+      serverDomain: serverDomain ?? this.serverDomain,
       lastPosition: lastPosition ?? this.lastPosition,
       pulledAt: pulledAt ?? this.pulledAt,
       rowid: rowid ?? this.rowid,
@@ -5788,8 +5824,8 @@ class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (serverId.present) {
-      map['server_id'] = Variable<String>(serverId.value);
+    if (serverDomain.present) {
+      map['server_domain'] = Variable<String>(serverDomain.value);
     }
     if (lastPosition.present) {
       map['last_position'] = Variable<int>(lastPosition.value);
@@ -5808,7 +5844,7 @@ class NodeCursorsCompanion extends UpdateCompanion<NodeCursorRow> {
   @override
   String toString() {
     return (StringBuffer('NodeCursorsCompanion(')
-          ..write('serverId: $serverId, ')
+          ..write('serverDomain: $serverDomain, ')
           ..write('lastPosition: $lastPosition, ')
           ..write('pulledAt: $pulledAt, ')
           ..write('rowid: $rowid')
@@ -6687,8 +6723,8 @@ typedef $$BoundDeviceTableProcessedTableManager =
     >;
 typedef $$KnownServersTableCreateCompanionBuilder =
     KnownServersCompanion Function({
-      required String id,
       required String domain,
+      Value<String?> remoteId,
       required String baseUrl,
       Value<String?> jwksUri,
       Value<String?> certificateFingerprint,
@@ -6700,8 +6736,8 @@ typedef $$KnownServersTableCreateCompanionBuilder =
     });
 typedef $$KnownServersTableUpdateCompanionBuilder =
     KnownServersCompanion Function({
-      Value<String> id,
       Value<String> domain,
+      Value<String?> remoteId,
       Value<String> baseUrl,
       Value<String?> jwksUri,
       Value<String?> certificateFingerprint,
@@ -6719,14 +6755,16 @@ final class $$KnownServersTableReferences
   static MultiTypedResultKey<$SignedInReaderTable, List<ReaderRow>>
   _signedInReaderRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
     db.signedInReader,
-    aliasName: 'known_servers__id__signed_in_reader__origin_server_id',
+    aliasName: 'known_servers__domain__signed_in_reader__origin_server_domain',
   );
 
   $$SignedInReaderTableProcessedTableManager get signedInReaderRefs {
-    final manager = $$SignedInReaderTableTableManager(
-      $_db,
-      $_db.signedInReader,
-    ).filter((f) => f.originServerId.id.sqlEquals($_itemColumn<String>('id')!));
+    final manager = $$SignedInReaderTableTableManager($_db, $_db.signedInReader)
+        .filter(
+          (f) => f.originServerDomain.domain.sqlEquals(
+            $_itemColumn<String>('domain')!,
+          ),
+        );
 
     final cache = $_typedResult.readTableOrNull(_signedInReaderRefsTable($_db));
     return ProcessedTableManager(
@@ -6737,14 +6775,15 @@ final class $$KnownServersTableReferences
   static MultiTypedResultKey<$NodeCursorsTable, List<NodeCursorRow>>
   _nodeCursorsRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
     db.nodeCursors,
-    aliasName: 'known_servers__id__node_cursors__server_id',
+    aliasName: 'known_servers__domain__node_cursors__server_domain',
   );
 
   $$NodeCursorsTableProcessedTableManager get nodeCursorsRefs {
-    final manager = $$NodeCursorsTableTableManager(
-      $_db,
-      $_db.nodeCursors,
-    ).filter((f) => f.serverId.id.sqlEquals($_itemColumn<String>('id')!));
+    final manager = $$NodeCursorsTableTableManager($_db, $_db.nodeCursors)
+        .filter(
+          (f) =>
+              f.serverDomain.domain.sqlEquals($_itemColumn<String>('domain')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_nodeCursorsRefsTable($_db));
     return ProcessedTableManager(
@@ -6762,13 +6801,13 @@ class $$KnownServersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
+  ColumnFilters<String> get domain => $composableBuilder(
+    column: $table.domain,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get domain => $composableBuilder(
-    column: $table.domain,
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6813,9 +6852,9 @@ class $$KnownServersTableFilterComposer
   ) {
     final $$SignedInReaderTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.domain,
       referencedTable: $db.signedInReader,
-      getReferencedColumn: (t) => t.originServerId,
+      getReferencedColumn: (t) => t.originServerDomain,
       builder:
           (
             joinBuilder, {
@@ -6838,9 +6877,9 @@ class $$KnownServersTableFilterComposer
   ) {
     final $$NodeCursorsTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.domain,
       referencedTable: $db.nodeCursors,
-      getReferencedColumn: (t) => t.serverId,
+      getReferencedColumn: (t) => t.serverDomain,
       builder:
           (
             joinBuilder, {
@@ -6868,13 +6907,13 @@ class $$KnownServersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<String> get domain => $composableBuilder(
+    column: $table.domain,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get domain => $composableBuilder(
-    column: $table.domain,
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6923,11 +6962,11 @@ class $$KnownServersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
   GeneratedColumn<String> get domain =>
       $composableBuilder(column: $table.domain, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   GeneratedColumn<String> get baseUrl =>
       $composableBuilder(column: $table.baseUrl, builder: (column) => column);
@@ -6962,9 +7001,9 @@ class $$KnownServersTableAnnotationComposer
   ) {
     final $$SignedInReaderTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.domain,
       referencedTable: $db.signedInReader,
-      getReferencedColumn: (t) => t.originServerId,
+      getReferencedColumn: (t) => t.originServerDomain,
       builder:
           (
             joinBuilder, {
@@ -6987,9 +7026,9 @@ class $$KnownServersTableAnnotationComposer
   ) {
     final $$NodeCursorsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.domain,
       referencedTable: $db.nodeCursors,
-      getReferencedColumn: (t) => t.serverId,
+      getReferencedColumn: (t) => t.serverDomain,
       builder:
           (
             joinBuilder, {
@@ -7039,8 +7078,8 @@ class $$KnownServersTableTableManager
               $$KnownServersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<String> id = const Value.absent(),
                 Value<String> domain = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
                 Value<String> baseUrl = const Value.absent(),
                 Value<String?> jwksUri = const Value.absent(),
                 Value<String?> certificateFingerprint = const Value.absent(),
@@ -7050,8 +7089,8 @@ class $$KnownServersTableTableManager
                 Value<bool> active = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => KnownServersCompanion(
-                id: id,
                 domain: domain,
+                remoteId: remoteId,
                 baseUrl: baseUrl,
                 jwksUri: jwksUri,
                 certificateFingerprint: certificateFingerprint,
@@ -7063,8 +7102,8 @@ class $$KnownServersTableTableManager
               ),
           createCompanionCallback:
               ({
-                required String id,
                 required String domain,
+                Value<String?> remoteId = const Value.absent(),
                 required String baseUrl,
                 Value<String?> jwksUri = const Value.absent(),
                 Value<String?> certificateFingerprint = const Value.absent(),
@@ -7074,8 +7113,8 @@ class $$KnownServersTableTableManager
                 Value<bool> active = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => KnownServersCompanion.insert(
-                id: id,
                 domain: domain,
+                remoteId: remoteId,
                 baseUrl: baseUrl,
                 jwksUri: jwksUri,
                 certificateFingerprint: certificateFingerprint,
@@ -7121,7 +7160,7 @@ class $$KnownServersTableTableManager
                               ).signedInReaderRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
-                                (e) => e.originServerId == item.id,
+                                (e) => e.originServerDomain == item.domain,
                               ),
                           typedResults: items,
                         ),
@@ -7142,7 +7181,7 @@ class $$KnownServersTableTableManager
                               ).nodeCursorsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
-                                (e) => e.serverId == item.id,
+                                (e) => e.serverDomain == item.domain,
                               ),
                           typedResults: items,
                         ),
@@ -7174,7 +7213,7 @@ typedef $$SignedInReaderTableCreateCompanionBuilder =
       required String id,
       required String localName,
       required String displayName,
-      required String originServerId,
+      required String originServerDomain,
       required String federatedId,
       Value<String?> email,
       required DateTime createdAt,
@@ -7185,7 +7224,7 @@ typedef $$SignedInReaderTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> localName,
       Value<String> displayName,
-      Value<String> originServerId,
+      Value<String> originServerDomain,
       Value<String> federatedId,
       Value<String?> email,
       Value<DateTime> createdAt,
@@ -7199,18 +7238,19 @@ final class $$SignedInReaderTableReferences
     super.$_typedResult,
   );
 
-  static $KnownServersTable _originServerIdTable(_$AtrilDatabase db) => db
-      .knownServers
-      .createAlias('signed_in_reader__origin_server_id__known_servers__id');
+  static $KnownServersTable _originServerDomainTable(_$AtrilDatabase db) =>
+      db.knownServers.createAlias(
+        'signed_in_reader__origin_server_domain__known_servers__domain',
+      );
 
-  $$KnownServersTableProcessedTableManager get originServerId {
-    final $_column = $_itemColumn<String>('origin_server_id')!;
+  $$KnownServersTableProcessedTableManager get originServerDomain {
+    final $_column = $_itemColumn<String>('origin_server_domain')!;
 
     final manager = $$KnownServersTableTableManager(
       $_db,
       $_db.knownServers,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_originServerIdTable($_db));
+    ).filter((f) => f.domain.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_originServerDomainTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -7263,12 +7303,12 @@ class $$SignedInReaderTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
-  $$KnownServersTableFilterComposer get originServerId {
+  $$KnownServersTableFilterComposer get originServerDomain {
     final $$KnownServersTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.originServerId,
+      getCurrentColumn: (t) => t.originServerDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -7331,12 +7371,12 @@ class $$SignedInReaderTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$KnownServersTableOrderingComposer get originServerId {
+  $$KnownServersTableOrderingComposer get originServerDomain {
     final $$KnownServersTableOrderingComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.originServerId,
+      getCurrentColumn: (t) => t.originServerDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -7389,12 +7429,12 @@ class $$SignedInReaderTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime, int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  $$KnownServersTableAnnotationComposer get originServerId {
+  $$KnownServersTableAnnotationComposer get originServerDomain {
     final $$KnownServersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.originServerId,
+      getCurrentColumn: (t) => t.originServerDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -7426,7 +7466,7 @@ class $$SignedInReaderTableTableManager
           $$SignedInReaderTableUpdateCompanionBuilder,
           (ReaderRow, $$SignedInReaderTableReferences),
           ReaderRow,
-          PrefetchHooks Function({bool originServerId})
+          PrefetchHooks Function({bool originServerDomain})
         > {
   $$SignedInReaderTableTableManager(
     _$AtrilDatabase db,
@@ -7447,7 +7487,7 @@ class $$SignedInReaderTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> localName = const Value.absent(),
                 Value<String> displayName = const Value.absent(),
-                Value<String> originServerId = const Value.absent(),
+                Value<String> originServerDomain = const Value.absent(),
                 Value<String> federatedId = const Value.absent(),
                 Value<String?> email = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -7456,7 +7496,7 @@ class $$SignedInReaderTableTableManager
                 id: id,
                 localName: localName,
                 displayName: displayName,
-                originServerId: originServerId,
+                originServerDomain: originServerDomain,
                 federatedId: federatedId,
                 email: email,
                 createdAt: createdAt,
@@ -7467,7 +7507,7 @@ class $$SignedInReaderTableTableManager
                 required String id,
                 required String localName,
                 required String displayName,
-                required String originServerId,
+                required String originServerDomain,
                 required String federatedId,
                 Value<String?> email = const Value.absent(),
                 required DateTime createdAt,
@@ -7476,7 +7516,7 @@ class $$SignedInReaderTableTableManager
                 id: id,
                 localName: localName,
                 displayName: displayName,
-                originServerId: originServerId,
+                originServerDomain: originServerDomain,
                 federatedId: federatedId,
                 email: email,
                 createdAt: createdAt,
@@ -7489,7 +7529,7 @@ class $$SignedInReaderTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({originServerId = false}) {
+          prefetchHooksCallback: ({originServerDomain = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -7509,15 +7549,15 @@ class $$SignedInReaderTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (originServerId) {
+                    if (originServerDomain) {
                       state = state.withJoin(
                         currentTable: table,
-                        currentColumn: table.originServerId,
+                        currentColumn: table.originServerDomain,
                         referencedTable: $$SignedInReaderTableReferences
-                            ._originServerIdTable(db),
+                            ._originServerDomainTable(db),
                         referencedColumn: $$SignedInReaderTableReferences
-                            ._originServerIdTable(db)
-                            .id,
+                            ._originServerDomainTable(db)
+                            .domain,
                       ) as T;
                     }
 
@@ -7544,7 +7584,7 @@ typedef $$SignedInReaderTableProcessedTableManager =
       $$SignedInReaderTableUpdateCompanionBuilder,
       (ReaderRow, $$SignedInReaderTableReferences),
       ReaderRow,
-      PrefetchHooks Function({bool originServerId})
+      PrefetchHooks Function({bool originServerDomain})
     >;
 typedef $$ClockFloorTableCreateCompanionBuilder = ClockFloorCompanion Function({
   Value<int> onlyRow,
@@ -10252,14 +10292,14 @@ typedef $$PendingOperationsTableProcessedTableManager =
     >;
 typedef $$NodeCursorsTableCreateCompanionBuilder =
     NodeCursorsCompanion Function({
-      required String serverId,
+      required String serverDomain,
       Value<int> lastPosition,
       Value<DateTime?> pulledAt,
       Value<int> rowid,
     });
 typedef $$NodeCursorsTableUpdateCompanionBuilder =
     NodeCursorsCompanion Function({
-      Value<String> serverId,
+      Value<String> serverDomain,
       Value<int> lastPosition,
       Value<DateTime?> pulledAt,
       Value<int> rowid,
@@ -10269,17 +10309,18 @@ final class $$NodeCursorsTableReferences
     extends BaseReferences<_$AtrilDatabase, $NodeCursorsTable, NodeCursorRow> {
   $$NodeCursorsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $KnownServersTable _serverIdTable(_$AtrilDatabase db) =>
-      db.knownServers.createAlias('node_cursors__server_id__known_servers__id');
+  static $KnownServersTable _serverDomainTable(_$AtrilDatabase db) => db
+      .knownServers
+      .createAlias('node_cursors__server_domain__known_servers__domain');
 
-  $$KnownServersTableProcessedTableManager get serverId {
-    final $_column = $_itemColumn<String>('server_id')!;
+  $$KnownServersTableProcessedTableManager get serverDomain {
+    final $_column = $_itemColumn<String>('server_domain')!;
 
     final manager = $$KnownServersTableTableManager(
       $_db,
       $_db.knownServers,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_serverIdTable($_db));
+    ).filter((f) => f.domain.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_serverDomainTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -10307,12 +10348,12 @@ class $$NodeCursorsTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
-  $$KnownServersTableFilterComposer get serverId {
+  $$KnownServersTableFilterComposer get serverDomain {
     final $$KnownServersTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.serverId,
+      getCurrentColumn: (t) => t.serverDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -10350,12 +10391,12 @@ class $$NodeCursorsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$KnownServersTableOrderingComposer get serverId {
+  $$KnownServersTableOrderingComposer get serverDomain {
     final $$KnownServersTableOrderingComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.serverId,
+      getCurrentColumn: (t) => t.serverDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -10391,12 +10432,12 @@ class $$NodeCursorsTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime?, int> get pulledAt =>
       $composableBuilder(column: $table.pulledAt, builder: (column) => column);
 
-  $$KnownServersTableAnnotationComposer get serverId {
+  $$KnownServersTableAnnotationComposer get serverDomain {
     final $$KnownServersTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.serverId,
+      getCurrentColumn: (t) => t.serverDomain,
       referencedTable: $db.knownServers,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.domain,
       builder:
           (
             joinBuilder, {
@@ -10428,7 +10469,7 @@ class $$NodeCursorsTableTableManager
           $$NodeCursorsTableUpdateCompanionBuilder,
           (NodeCursorRow, $$NodeCursorsTableReferences),
           NodeCursorRow,
-          PrefetchHooks Function({bool serverId})
+          PrefetchHooks Function({bool serverDomain})
         > {
   $$NodeCursorsTableTableManager(_$AtrilDatabase db, $NodeCursorsTable table)
     : super(
@@ -10443,24 +10484,24 @@ class $$NodeCursorsTableTableManager
               $$NodeCursorsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<String> serverId = const Value.absent(),
+                Value<String> serverDomain = const Value.absent(),
                 Value<int> lastPosition = const Value.absent(),
                 Value<DateTime?> pulledAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NodeCursorsCompanion(
-                serverId: serverId,
+                serverDomain: serverDomain,
                 lastPosition: lastPosition,
                 pulledAt: pulledAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required String serverId,
+                required String serverDomain,
                 Value<int> lastPosition = const Value.absent(),
                 Value<DateTime?> pulledAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => NodeCursorsCompanion.insert(
-                serverId: serverId,
+                serverDomain: serverDomain,
                 lastPosition: lastPosition,
                 pulledAt: pulledAt,
                 rowid: rowid,
@@ -10473,7 +10514,7 @@ class $$NodeCursorsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({serverId = false}) {
+          prefetchHooksCallback: ({serverDomain = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -10493,15 +10534,15 @@ class $$NodeCursorsTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (serverId) {
+                    if (serverDomain) {
                       state = state.withJoin(
                         currentTable: table,
-                        currentColumn: table.serverId,
+                        currentColumn: table.serverDomain,
                         referencedTable: $$NodeCursorsTableReferences
-                            ._serverIdTable(db),
+                            ._serverDomainTable(db),
                         referencedColumn: $$NodeCursorsTableReferences
-                            ._serverIdTable(db)
-                            .id,
+                            ._serverDomainTable(db)
+                            .domain,
                       ) as T;
                     }
 
@@ -10528,7 +10569,7 @@ typedef $$NodeCursorsTableProcessedTableManager =
       $$NodeCursorsTableUpdateCompanionBuilder,
       (NodeCursorRow, $$NodeCursorsTableReferences),
       NodeCursorRow,
-      PrefetchHooks Function({bool serverId})
+      PrefetchHooks Function({bool serverDomain})
     >;
 typedef $$AppliedOperationsTableCreateCompanionBuilder =
     AppliedOperationsCompanion Function({
