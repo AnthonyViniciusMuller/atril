@@ -243,6 +243,15 @@ alternative was an export on four targets of six, or writing into the applicatio
 directory and telling the reader where it went — which is not *the reader chooses where their
 data goes*, and that is the claim the export exists to make good on.
 
+A third split of that kind arrived with synchronization, and it is the one where the *technology*
+really is absent — it just is not absent from the language. `SyncChannel` has two
+implementations: `Sync`, the bidirectional stream, on the five native targets, and
+`WatchOperations` with a unary push and pull beside it in a browser. gRPC-Web carries a unary call
+and a server stream and neither of the other two, so the browser cannot hold the stream open — but
+both classes *compile* everywhere, because what a browser lacks is a framing and not a type. So
+the choice is `devicePlatform` where the graph is composed, like the host and the file saver, and
+not a sixth conditional export. Nothing above `data/services/sync` knows which one it got.
+
 Everything else that merely behaves differently per platform (the secure store, the storage
 budget's units, the reader's host) differs behind an interface with two implementations, because
 a `dart:io` import inside a repository is a repository that cannot be tested on web. The session
@@ -420,6 +429,76 @@ carries a later instant. The clock is never rendered to a reader, so the coarsen
 `int64` fields arrive as `fixnum.Int64`, not as `int`, and must stay that way until the mapper.
 Microsecond epochs are around 1.7 × 10¹⁵ and survive a JavaScript double; a sync `position`
 does too. Neither is a reason to relax the rule.
+
+## Synchronizing
+
+Three services do the work and one loop decides when. `push.dart` drains the outbox,
+`pull.dart` fills the replica, and the reconciler is what applies anything either of them
+touches; `stream.dart` and `watch.dart` are the two live channels behind `SyncChannel`, and
+`scheduler.dart` is the loop above them. Four decisions in that stack are worth having written
+down, because each is a place the obvious answer is wrong.
+
+**The acknowledgement goes after the commit.** `SyncAck` is what advances the *node's* idea of
+where a device has got to, and the node keeps at most one page in flight until it arrives. So the
+order in the stream is reconcile, move the cursor, then acknowledge. A client that acknowledged on
+receipt would come back from a crash to a page it had never written, and nothing on either side
+would report it. The unary pull has the same shape without the message: the cursor is written
+after the batch, and re-reading a page costs a decode because `applied_operations` recognizes
+every operation by the identifier its author minted.
+
+**Reachability is a hint and never a gate.** `NodeReachability` concludes that a node answers only
+from a call that answered. A loop that refused to connect while it believed otherwise could
+therefore never learn it was wrong — nothing would call, so nothing would conclude — and the only
+way out would be a network interface physically disappearing and coming back. Every device whose
+network simply stayed up while the node was down for a minute would be stuck for ever. So an
+unreachable node is what the bounded backoff is *for*, and reachability contributes the one thing
+it can honestly contribute: a retry hint that clears the wait. The roadmap asked for the stream
+*while the app is in the foreground and reachable*, and the second half of that is corrected in
+`scheduler.dart` rather than implemented.
+
+**The backoff is reset by a channel that lasted, not by one that opened.** gRPC dials lazily, so a
+stream that failed before the node ever answered and one that opened and was closed a moment later
+are the same two events in the same order. How long it stayed up is the only evidence this layer
+has, and the heuristic is named as one where it is made.
+
+**Foreground only, on all six.** The decision table in the roadmap always said so; the scheduler
+is where it is honoured. A background policy is `WorkManager`, `BGTaskScheduler`, a service worker
+and nothing at all on the three desktops — four mechanisms, a phase of its own, and not a line in
+this one. What RNF09's periodic reconstruction asks for is met on launch, on resume, and while the
+app is open.
+
+**Nothing announces a write to the loop.** A change authored anywhere lands in
+`pending_operations`, and the scheduler watches that table grow. It is `ApiClient`'s argument
+about reachability one layer up: a caller that had to remember to announce a write would be a
+caller that eventually did not, and the one that gets forgotten is always the one added last.
+
+### A refusal is quarantined, and that is the local-first path's own failure
+
+A node refusing an operation is the one outcome of a push that reaches a reader, and it exists
+*because* this app writes locally and pushes: the reader watched the change land, it is in the
+replica, and it will reach nobody. `refused_operations` is the response — a side table keyed by
+the operation, carrying the node's own reason.
+
+It is deliberately not a rollback. The write may have others built on top of it, and destroying
+those to satisfy a refusal is the one outcome worse than the refusal. It is deliberately not
+silence either, which would leave this device disagreeing with every replica and saying so to
+nobody. A correct client should rarely produce one, so it is a flag, a list and a discard rather
+than a merge interface — and the discard's confirmation carries the sentence the whole design
+rests on: it undoes nothing the reader wrote.
+
+Two mechanical consequences. A quarantined change **stops being offered**, which is what lets the
+drain go on: the head of the outbox moves without retiring, so one refusal no longer stops every
+change behind it from ever being pushed. And it is a **side table rather than a column**, which
+keeps this schema's upgrade `createAll` — every version of it still only adds — and keeps the
+outbox as dumb as its own comment asks for.
+
+### `node_cursors.pulled_at` answers a reader's question, not the cursor's
+
+It moves when the cursor does *and* when a live channel opens onto a log with nothing new in it.
+A device that is up to date exchanges no operations, so a timestamp that only moved on a pull
+would tell a reader their last synchronization was whenever somebody last happened to write
+something. What the sync surface shows is *when this device last reached its node*, and that is
+the fact the column now holds.
 
 ## What the node will not tell us
 
