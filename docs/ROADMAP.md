@@ -1400,8 +1400,42 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       still exempt is a declaration the publisher makes, not a fact a build file asserts for
       them, so App Store Connect asks and a person answers. **None of this was built here**: the
       Apple targets need a macOS host, and the two jobs in `ci.yml` are what compile them
-- [ ] `build: add desktop packaging` — an AppImage or a Flatpak on Linux, a signed `.app` on
-      macOS, an MSIX on Windows
+- [x] `build: add desktop packaging` — a Flatpak on Linux, a signed `.app` on macOS, an MSIX on
+      Windows. **Flatpak and not AppImage, and the reason is the sandbox rather than the
+      distribution.** `webview_cef` appends `--no-sandbox` to CEF's command line in
+      `common/webview_app.cc` and its CMake leaves the setuid `chrome-sandbox` helper
+      unprivileged, so Chromium's own sandbox is off on this target whatever ships it. An
+      AppImage would then be an unsandboxed browser engine running with the reader's whole
+      account; a Flatpak is one inside a sandbox that is *declared in a file somebody reviews*.
+      What that file says is narrow on purpose: network, ipc, a display socket, a render node,
+      and `org.freedesktop.secrets` for the keyring — and **no `--filesystem` at all**, because
+      `file_selector_linux` opens a `GtkFileChooserNative`, which GTK routes through the portal
+      inside a sandbox, so importing a book and saving an export each hand the app one file the
+      reader chose. **The Linux bundle is three times the size this roadmap thought.**
+      `flutter build linux --release` copies `libcef.so` exactly as CEF published it — 1311 MB
+      unstripped, in a bundle of 1553 MB — and `architecture.md`'s "244 MB stripped" was the
+      stripped size of a file that nothing was stripping. The strip is now a line in the
+      manifest and the bundle is 486 MB; that document is corrected in the same commit.
+      **macOS: one entitlement was missing and it broke both of UC02's ends.** A sandboxed app
+      reaches a path the reader chose only through the powerbox, and
+      `com.apple.security.files.user-selected.read-write` is what grants it — `file_selector`'s
+      macOS README says so. Without it the picker opens and the file it returns cannot be read,
+      so the import and the phase 10 export were both broken on a release build and on nothing
+      else. `packaging/macos/package.sh` signs under the hardened runtime and notarizes **when
+      the environment carries an identity**, and when it does not it signs ad hoc and names the
+      artifact `-unsigned`, because a zip called `atril-macos` that Gatekeeper refuses is a bug
+      report from somebody who was never told. **Windows: the `msix` package, and one setting
+      that is not about this app.** `install_certificate: false` — the default is to install the
+      signing certificate into the machine's trust store as a side effect of building a package,
+      which is a convenience on a laptop and is not a thing a CI runner should do. There is
+      deliberately no `msix_version`, so the installer's version is `version:` in the pubspec and
+      not a second number to forget. **One correction fell out of reading what Linux actually
+      links**: `libjsoncpp-dev` has been in this project's build instructions and in CI since
+      phase 0, and nothing needs it — `flutter_secure_storage_linux` dropped it in 1.2.0 and this
+      project has been on 3.x since phase 6. `ldd` over the built bundle names it nowhere. **What
+      was not run here**: `flatpak-builder` is not installed on this machine and the two Apple
+      steps need a macOS host, so the Linux *bundle* was built and measured and the manifest that
+      wraps it was not; the release workflow is where all three are first executed
 - [ ] `build: add the web build` — the manifest, the icons, the offline service worker, and the
       renderer choice argued for in a comment
 - [ ] `ci: add the release workflow` — tagged builds for all six, with the artifacts attached

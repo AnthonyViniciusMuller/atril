@@ -14,6 +14,17 @@
 	     a sandboxed app reaches it only through an access group it is
 	     entitled to. Without this the store raises at the first write, which
 	     is the moment the reader signs in. -->
+	<!-- The picker opens without this and the file it returns cannot be read.
+	     A sandboxed app reaches a path the reader chose only through the
+	     powerbox, and this is the entitlement that grants it — file_selector's
+	     macOS README says so. Read-*write* rather than read-only because the
+	     same port saves the annotation export of phase 10; the import alone
+	     would need less.
+
+	     It is the narrowest thing that makes both work: this grants the files
+	     the reader picked in a dialog, one at a time, and nothing else. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)dev.quire.atril</string>

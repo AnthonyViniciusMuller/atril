@@ -118,8 +118,11 @@ dependencies:
   # keep, and it is the reason the store is an interface with more than one
   # implementation behind it.
   #
-  # On Linux it is libsecret, so a build host needs `libsecret-1-dev` and
-  # `libjsoncpp-dev`; CI installs both beside the GTK headers.
+  # On Linux it is libsecret, so a build host needs `libsecret-1-dev` beside
+  # the GTK headers, and that is the whole of it. `libjsoncpp-dev` was a second
+  # requirement until flutter_secure_storage_linux 1.2.0 removed it; this
+  # project has been on 3.x since phase 6, and nothing under `linux/` in any
+  # resolved plugin has mentioned jsoncpp since.
   #
   # Held below 11 deliberately, and not because 11 is new: its Android archive
   # declares that it must be compiled against SDK 37, and the Android Gradle
@@ -340,6 +343,18 @@ dev_dependencies:
   # on it rather than on somebody else's dependency.
   analyzer: ^13.3.0
 
+  # The Windows package. `dart run msix:create` wraps the release bundle in an
+  # MSIX, which is the only container Windows installs without a warning and
+  # the one that carries the tiles, the identity and the capabilities the shell
+  # reads. It runs on a Windows host — it needs the SDK's packaging tools — so
+  # it is exercised by the release workflow's `windows` job and by nothing
+  # else, which is why it is a dev dependency and not a step in `make analyze`.
+  #
+  # The alternative was a hand-written AppxManifest driven by MakeAppx, which
+  # is the same file with the version number kept somewhere other than beside
+  # the version number.
+  msix: ^3.18.0
+
   # drift's tables are Dart classes and its queries are generated from them, so
   # `make gen` runs build_runner as well as protoc. The output is committed for
   # the reason the generated contract is, and CI regenerates and diffs it.
@@ -402,6 +417,35 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# The Windows package. `dart run msix:create` reads this after
+# `flutter build windows --release` and wraps the bundle.
+#
+# There is deliberately no `msix_version` here: msix takes `major.minor.patch`
+# from the `version:` field above and appends a zero, so the installer's version
+# and the application's are one number in one place. And there is deliberately
+# no certificate: the release workflow passes `--certificate-path` when it has
+# one, and when it does not the package is signed with the test certificate
+# this tool falls back to and the artifact is named so that nobody mistakes it
+# for a release.
+#
+# `install_certificate: false` is the one setting that is not about this app.
+# The default is to install the signing certificate into the machine's trust
+# store as a side effect of building a package, which is a reasonable
+# convenience on a developer's laptop and is not a thing a CI runner should do.
+msix_config:
+  display_name: Atril
+  publisher_display_name: Quire
+  identity_name: dev.quire.atril
+  logo_path: packaging/windows/dev.quire.atril.png
+  # The one capability this app needs. It reaches a node over the network and
+  # touches nothing else the shell gates.
+  capabilities: internetClient
+  # The two the ARB files carry, in the order the app supports them.
+  languages: pt-BR, en
+  install_certificate: false
+  output_path: build/windows/packaged
+  output_name: atril-windows
 
 # One override, and it is a *removal* rather than a version.
 #

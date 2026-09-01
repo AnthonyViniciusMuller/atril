@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The AppStream description a software centre reads. It is committed rather
+     than generated because two of its statements are promises this project has
+     to keep deliberately: what the sandbox is allowed to reach, and the fact
+     that the reader chooses which node holds their library. -->
+<component type="desktop-application">
+  <id>dev.quire.atril</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Atril</name>
+  <name xml:lang="pt-BR">Atril</name>
+  <summary>Read and synchronize a federated e-book library</summary>
+  <summary xml:lang="pt-BR">Leia e sincronize uma biblioteca de e-books federada</summary>
+
+  <description>
+    <p>
+      Atril is the reading application for Quire, a federated e-book library.
+      The library, the reading positions and the annotations live on the
+      device: the network is an optimization and not a requirement, and a book
+      opened on a train is a book that can be read there.
+    </p>
+    <p>
+      Changes made offline are authored locally and replicated to the reader's
+      other devices, and to whichever nodes they have authorized to hold a
+      copy, when a node can next be reached. A reader can move their account to
+      a different node without losing their library, their marks or the page
+      they were on.
+    </p>
+    <p>
+      EPUB is the format that can be read. The others are imported, listed,
+      synchronized and shown with a reading percentage.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">dev.quire.atril.desktop</launchable>
+  <url type="homepage">https://github.com/AnthonyViniciusMuller/atril</url>
+  <url type="bugtracker">https://github.com/AnthonyViniciusMuller/atril/issues</url>
+
+  <categories>
+    <category>Office</category>
+    <category>Viewer</category>
+  </categories>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="1.0.0" date="2026-09-01"/>
+  </releases>
+</component>

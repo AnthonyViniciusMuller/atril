@@ -193,8 +193,14 @@ platform list; that leaves `webview_cef` carrying Linux alone, which is the one 
 operating system ships no webview a Flutter plugin can embed.
 
 Two facts about that target belong here rather than in a build file. Its `libcef.so` is 244 MB
-stripped, so a Linux bundle is about 300 MB against a few megabytes elsewhere — the size an
-Electron application ships, and the price of the sixth target having a reader at all. And the
+stripped, and a stripped Linux bundle is 486 MB against a few megabytes elsewhere — the size an
+Electron application ships, and the price of the sixth target having a reader at all.
+
+That sentence used to end at *stripped*, and phase 13 is where the missing half turned up: it was
+a claim about a step nobody was taking. `flutter build linux --release` copies `libcef.so`
+exactly as CEF published it, which is **1311 MB**, in a bundle of **1553 MB**. The 244 MB was
+always the stripped size of a file that shipped unstripped. The strip is now a line in the
+Flatpak manifest, which is the first thing in this project to have looked. And the
 plugin's CMake step patches `linux/runner/main.cc` and `my_application.cc`: a CEF process
 bootstrap runs before `g_application_run`, so on Linux `main` branches before the Flutter
 application is constructed. The patch is idempotent and is committed, which makes it a diff

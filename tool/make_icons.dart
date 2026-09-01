@@ -145,9 +145,11 @@ void main(List<String> arguments) {
     ]),
   );
 
-  // Linux ships the icon beside the desktop entry rather than inside the
-  // bundle, because that is what the Flatpak manifest installs.
+  // The two desktop packages want the icon as a file of their own rather than
+  // inside the bundle: the Flatpak manifest installs one into the icon theme,
+  // and `msix` derives every Windows tile size from the other.
   write('packaging/linux/dev.quire.atril.png', encodePng(framedIcon(512)));
+  write('packaging/windows/dev.quire.atril.png', encodePng(framedIcon(512)));
 
   stdout.writeln('wrote $written icon files');
 }

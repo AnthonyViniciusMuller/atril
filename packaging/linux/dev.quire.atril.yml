@@ -1,0 +1,85 @@
+# The Linux package, and the one target whose bundle is measured in hundreds of
+# megabytes.
+#
+# Flatpak rather than AppImage, and the reason is the sandbox rather than the
+# distribution. `webview_cef` appends `--no-sandbox` to CEF's own command line
+# (common/webview_app.cc) and its CMake step leaves the setuid `chrome-sandbox`
+# helper uninstalled, so Chromium's sandbox is off on this target whatever ships
+# it. An AppImage would then be an unsandboxed browser engine running with the
+# reader's full account; a Flatpak is one running inside a sandbox that is
+# declared here, in a file somebody reviews.
+#
+# The application is built *outside* this manifest — flatpak-builder has no
+# Flutter SDK — so `make package-linux` runs `flutter build linux --release`
+# first and this manifest installs what it produced.
+id: dev.quire.atril
+
+# GTK3 is what the Flutter Linux embedder is written against and the GNOME
+# runtime is what still carries it; libsecret comes from the same place, which
+# is where the session store keeps the refresh credential. Those two and libGL
+# are the whole of this project's native Linux dependencies — `libjsoncpp` was
+# one until flutter_secure_storage_linux 1.2.0 removed it, and this project has
+# been on 3.x since phase 6.
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: atril
+
+finish-args:
+  # A node is reached over the network and there is no offline-only build.
+  - --share=network
+  # CEF is multi-process and its processes talk over shared memory.
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  # Chromium composites on the GPU; without a render node it falls back to
+  # software rendering for the whole reader.
+  - --device=dri
+  # libsecret talks to the keyring over this name. Without it the session store
+  # fails at the first write, which is the moment the reader signs in.
+  - --talk-name=org.freedesktop.secrets
+
+# There is deliberately no --filesystem argument. `file_selector_linux` opens a
+# GtkFileChooserNative, which GTK routes through the desktop portal inside a
+# sandbox, so importing a book and saving an export both hand this application
+# one file the reader chose and nothing else. A --filesystem=home would be the
+# same two dialogs over the reader's entire account.
+
+modules:
+  - name: atril
+    buildsystem: simple
+    build-commands:
+      # The bundle keeps its shape: the executable's RPATH is `$ORIGIN/lib`,
+      # and CEF's resources have to stay beside `libcef.so`. So it is installed
+      # whole and reached through a symlink — $ORIGIN resolves through one.
+      - mkdir -p /app/lib/atril
+      - cp -a bundle/. /app/lib/atril/
+      # `flutter build linux --release` ships libcef.so exactly as CEF
+      # published it: 1311 MB of unstripped Chromium, in a bundle of 1553 MB.
+      # Stripping takes that file to 244 MB and the bundle to 486 MB. Nothing
+      # else in the build does it, and this line is the first thing in this
+      # project that ever looked at the file's size — `docs/architecture.md`
+      # quoted the stripped number as though something already had.
+      - strip --strip-unneeded /app/lib/atril/lib/libcef.so
+      # The setuid sandbox helper CEF ships is inert here: webview_cef's CMake
+      # leaves it unprivileged and appends --no-sandbox to the command line, and
+      # a Flatpak could not make it setuid in any case. Removing it saves
+      # nothing — it is a few kilobytes — and it is removed anyway, because
+      # somebody will eventually read its presence as evidence that Chromium's
+      # sandbox is on.
+      - rm -f /app/lib/atril/lib/chrome-sandbox
+      - install -d /app/bin
+      - ln -s ../lib/atril/atril /app/bin/atril
+      - install -Dm644 packaging/dev.quire.atril.desktop
+        /app/share/applications/dev.quire.atril.desktop
+      - install -Dm644 packaging/dev.quire.atril.metainfo.xml
+        /app/share/metainfo/dev.quire.atril.metainfo.xml
+      - install -Dm644 packaging/dev.quire.atril.png
+        /app/share/icons/hicolor/512x512/apps/dev.quire.atril.png
+    sources:
+      - type: dir
+        path: ../../build/linux/x64/release/bundle
+        dest: bundle
+      - type: dir
+        path: .
+        dest: packaging

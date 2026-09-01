@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=Atril
+GenericName=E-book library
+GenericName[pt_BR]=Biblioteca de e-books
+Comment=Read and synchronize a federated e-book library
+Comment[pt_BR]=Leia e sincronize uma biblioteca de e-books federada
+Exec=atril
+Icon=dev.quire.atril
+Terminal=false
+Categories=Office;Viewer;Literature;
+Keywords=epub;ebook;library;reader;
+Keywords[pt_BR]=epub;ebook;biblioteca;leitor;
+# The runner calls g_set_prgname with the application id, so this is what the
+# window reports and it is how the shell matches the window to this file.
+StartupWMClass=dev.quire.atril
+# There is deliberately no MimeType and no %f. The Linux runner does pass its
+# arguments to the Dart entrypoint, but `main` ignores them: a book enters this
+# app through the picker. Claiming application/epub+zip would put Atril in the
+# file manager's "open with" menu and then do nothing when it was chosen.

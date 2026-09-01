@@ -313,6 +313,35 @@ build-ios:
 build-windows:
 	$(FLUTTER) build windows --debug
 
+# --- packaging -------------------------------------------------------------
+
+# Each of the three produces an installable artifact from a release build, and
+# each runs on the operating system it targets: `flutter build macos` and
+# `flutter build windows` need their own host, and flatpak-builder needs a
+# Linux one. There is no `package-all`, for the same reason `build-all` builds
+# what this machine can and leaves the rest to CI.
+
+## package-linux: build the release bundle and wrap it in a Flatpak
+.PHONY: package-linux
+package-linux:
+	$(FLUTTER) build linux --release
+	flatpak-builder --force-clean --repo=build/flatpak-repo \
+		build/flatpak-build packaging/linux/dev.quire.atril.yml
+	flatpak build-bundle build/flatpak-repo build/atril-linux.flatpak dev.quire.atril
+	@echo "wrote build/atril-linux.flatpak"
+
+## package-macos: build the release bundle, sign it and archive it
+.PHONY: package-macos
+package-macos:
+	$(FLUTTER) build macos --release
+	packaging/macos/package.sh
+
+## package-windows: build the release bundle and wrap it in an MSIX
+.PHONY: package-windows
+package-windows:
+	$(FLUTTER) build windows --release
+	$(DART) run msix:create
+
 ## clean: remove the build output
 .PHONY: clean
 clean:
