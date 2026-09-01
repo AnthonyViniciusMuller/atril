@@ -112,6 +112,21 @@ jobs:
           git add --intent-to-add -- lib/ui/core/localization/generated
           git diff --exit-code -- lib/ui/core/localization/generated
 
+      # The application icon is drawn by a program and its output is
+      # committed, so a mark edited in an image editor rather than in the
+      # geometry would survive until somebody next ran the generator. The
+      # deflate that writes these files is the SDK's, and FLUTTER_VERSION is
+      # pinned, which is what makes a byte-for-byte diff meaningful here.
+      - name: Check that the application icons are current
+        run: |
+          make icons
+          git add --intent-to-add -- web/icons web/favicon.png \
+            android/app/src/main/res ios/Runner/Assets.xcassets \
+            macos/Runner/Assets.xcassets windows/runner/resources packaging
+          git diff --exit-code -- web/icons web/favicon.png \
+            android/app/src/main/res ios/Runner/Assets.xcassets \
+            macos/Runner/Assets.xcassets windows/runner/resources packaging
+
       # No hardcoded user-visible string, from the first screen. Dart ships no
       # lint for it, so `tool/check_hardcoded_strings.dart` parses the UI and
       # looks at where each literal lands.

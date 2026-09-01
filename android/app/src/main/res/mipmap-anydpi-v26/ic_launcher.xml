@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher icon from API 26 onwards, where the system masks it into
+     whatever shape the launcher uses and parallaxes the two layers against
+     each other. The legacy `mipmap-*/ic_launcher.png` is still what API 24 and
+     25 show, which is this application's `minSdk`.
+
+     The monochrome layer is the same drawable on purpose: a themed launcher
+     tints it by its alpha, and the foreground already is the mark and nothing
+     else. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>

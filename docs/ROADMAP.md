@@ -1338,6 +1338,23 @@ The phase the thesis is actually about, and the one a demonstration ends on.
 
 ## Phase 13 — Delivery
 
+- [x] `feat: add the application icon` — **a checkbox the plan did not have.** It sat inside the
+      web one as *the icons*, and doing it there would have shipped a tagged release whose other
+      five targets carried the Flutter sample's blue F. The mark is a lectern — which is what an
+      *atril* is — and it is **geometry compiled by `tool/make_icons.dart`, not artwork**: six
+      targets want it at twenty-nine sizes in three container formats, two of which disagree
+      about the alpha channel, and a directory of exported PNGs is a set nobody can regenerate
+      once the file the designer worked in is gone. So the PNGs, the `.ico` and the Android
+      adaptive pair are all written by a program that owns a rasterizer, a PNG encoder and an ICO
+      encoder, and CI regenerates and diffs them exactly as it does the contract and the
+      localizations. Three details worth naming. The **iOS set is written without an alpha
+      channel at all** rather than with an opaque one, because App Store Connect rejects a
+      marketing icon that carries one and a constant channel is still a channel. The **spine down
+      the desk is a hole and not a second colour** — it is wound against the shape that contains
+      it — so it shows the ink behind the mark on five targets and the transparency of an Android
+      foreground layer on the sixth, from one description. And Android gets **both** icons: the
+      adaptive pair from API 26 and the legacy bitmap, because this app's `minSdk` is 24 and two
+      of the versions it admits predate the adaptive format
 - [ ] `build: add the android release configuration` — signing, the application id, and the
       minimum SDK
 - [ ] `build: add the ios release configuration` — the bundle identifier, the capabilities, and

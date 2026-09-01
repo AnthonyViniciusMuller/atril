@@ -145,7 +145,7 @@ tools:
 # a red build with nothing wrong in it.
 ## gen: regenerate everything that is generated and committed
 .PHONY: gen
-gen: gen-proto gen-drift gen-l10n
+gen: gen-proto gen-drift gen-l10n icons
 
 ## gen-proto: regenerate the dart stubs from the vendored contract
 .PHONY: gen-proto
@@ -183,6 +183,18 @@ gen-drift:
 # message added to the ARB without regenerating fails at the call site rather
 # than at the edit.
 #
+# The application icon is geometry rather than artwork: one mark, twenty-nine
+# sizes across six targets, three container formats, and two of them care about
+# the alpha channel. The PNGs are committed — a build must not need a generator
+# to have been run — and CI regenerates and diffs them like every other
+# generated artefact here, which is only sound because FLUTTER_VERSION is
+# pinned and the deflate that writes them is the SDK's.
+#
+## icons: redraw every application icon from tool/make_icons.dart
+.PHONY: icons
+icons:
+	$(DART) run tool/make_icons.dart
+
 ## gen-l10n: regenerate the localizations from the arb files
 .PHONY: gen-l10n
 gen-l10n:

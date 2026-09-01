@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The ink `tool/make_icons.dart` draws the mark on. It is a colour
+         rather than a second bitmap because an adaptive background that is a
+         flat fill has no reason to be five PNGs. -->
+    <color name="ic_launcher_background">#1B2430</color>
+</resources>
