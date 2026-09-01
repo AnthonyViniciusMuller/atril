@@ -821,36 +821,86 @@ wrong paragraph after a sync. That is what decides the shape of this phase.
 **The split is one engine and several hosts, never several engines.** A Dart CFI implementation
 beside a JavaScript one would be two answers to "where is this passage", agreeing almost always,
 and the disagreements would arrive as corrupted annotations a long way from their cause. So
-epub.js is bundled once and every platform runs the same file; what differs is only what gives
-it a DOM.
+epub.js is loaded from one file and every platform runs it; what differs is only what gives it a
+DOM.
+
+The two open questions this phase was told to settle first were spiked before it started, and
+both answers changed the table below.
+
+**The engine is already bundled, by the package.** `flutter_epub_viewer` 2.0.0 ships epub.js,
+JSZip and the page and glue that drive them as assets of its own, published under
+`packages/flutter_epub_viewer/lib/assets/webpage/…`. Bundling a second copy — which is what the
+first commit here used to say — would have put *two* engines in the app and left the desktop host
+running the one the other five do not. So the engine is pinned rather than vendored: the package
+is constrained to an exact version, `data/services/epub/engine.dart` records the digest of every
+asset the host page reaches, and the desktop host loads those same bytes. What the roadmap wanted
+from "bundle it" — a renderer that cannot change under a locator that has already been replicated
+— is what the digest delivers, and the version string never could.
+
+**Windows has a maintained webview and does not need CEF.** `flutter_inappwebview` supports it
+through `flutter_inappwebview_windows`, and `flutter_epub_viewer` chooses its native path on
+`dart.library.io` rather than on a platform list — so Windows runs the same host as Android, iOS
+and macOS with nothing written for it. That leaves `webview_cef` carrying **Linux alone**, which
+halves the surface the round-trip test has to cover and takes a 660 MB native dependency off a
+target whose operating system already ships a browser engine.
 
 | Target | Host |
 |---|---|
-| Android, iOS, macOS | `flutter_epub_viewer`, over `flutter_inappwebview` |
+| Android, iOS, macOS, Windows | `flutter_epub_viewer`, over `flutter_inappwebview` |
 | Web | `flutter_epub_viewer`, epub.js in an `<iframe>` through `dart:js_interop` |
-| Linux, Windows | `webview_cef`, CEF rendered to a Flutter texture |
+| Linux | `webview_cef`, CEF rendered to a Flutter texture |
 
-- [ ] `feat: bundle epub.js` — the engine as an asset, pinned to a version and committed, with
-      the licence beside it. It is loaded from the bundle and never from a CDN: an offline-first
-      reader that cannot open a book on a train has missed the point, and a renderer fetched at
-      runtime is a renderer that changes under a locator
+**The Linux spike was run and it holds.** `flutter build linux --debug` against `webview_cef`
+0.6.2 and Flutter 3.47.1 succeeds. Three things came out of it that are this phase's to carry,
+and they are recorded here because none of them is visible from the package's README:
+
+- CEF is downloaded at build time — 658 MB, into the pub cache, once per machine — and the
+  shipped `libcef.so` is 244 MB stripped. A Linux bundle goes from a few megabytes to about 300,
+  which is the size an Electron application ships and is the price of the sixth target having a
+  reader at all.
+- The plugin's CMake step **patches `linux/runner/main.cc` and `my_application.cc` in place**: a
+  CEF process bootstrap before `g_application_run`, and two key handlers on the view. The scripts
+  are idempotent and guarded by greps, so the patch is committed here and the build is a no-op
+  over it — which turns a silent mutation of tracked files into a reviewed diff.
+- `xclip` is wanted at run time for pasting into a CEF area, and its absence is a warning rather
+  than a failure.
+
+- [x] `feat: pin the epub.js engine` — the engine named, pinned and credited. `pubspec.yaml`
+      constrains `flutter_epub_viewer` to an exact version rather than a range, because a caret
+      would let `pub upgrade` move the renderer under a locator that has already been written
+      down and replicated. `engine.dart` names the asset keys every host loads and the sha-256 of
+      each, and the test hashes what the bundle actually holds — so the engine changing is a red
+      build rather than a highlight landing on the wrong paragraph six weeks later. The digests
+      cover the closure and not just `epub.js`: `epubView.js` is what asks the renderer where the
+      page starts and hands the answer across the bridge, so a change there moves the locator
+      exactly as a change to the renderer would. The licences of epub.js and JSZip are committed
+      and registered, because Flutter registers a resolved package's own `LICENSE` and knows
+      nothing about the two libraries vendored inside it — the package's BSD-3 covers its author's
+      work and says nothing about theirs. One check in it was written twice: the host page carries
+      two commented-out CDN tags, and a *nothing is fetched at run time* assertion that read
+      commented-out markup would be red on a page that fetches nothing, which is an assertion
+      somebody deletes
 - [ ] `feat: add the epub host interface` — the port every platform implements: open a book from
       the blob store, render it, navigate, report the current CFI, resolve one, and apply a
       highlight over a CFI range. It is the whole surface the reader feature knows, and it names
       no webview
-- [ ] `feat: add the webview epub host` — `flutter_epub_viewer` on Android, iOS and macOS. It
-      already exposes CFI for the position, for navigation and for extracting a text range, so
-      what this commit writes is the mapping onto the port and not a renderer
-- [ ] `feat: add the web epub host` — the same package's web path, which puts epub.js in an
-      `<iframe>` and talks to it over `dart:js_interop` rather than through a webview plugin
-- [ ] `feat: add the desktop epub host` — `webview_cef` for Linux and Windows, loading the same
-      bundled epub.js and the same bridge the other two hosts use. This is the risk in the phase
-      and it is named in the open questions: CEF is a heavy dependency, Linux is its
-      software-rendered path, and the package is a community one
+- [ ] `feat: add the webview epub host` — `flutter_epub_viewer` on the five targets it reaches:
+      Android, iOS, macOS and Windows through `flutter_inappwebview`, and a browser through the
+      same package's `<iframe>` and `dart:js_interop` path. It is **one** implementation of the
+      port and not two, and that is the finding rather than a shortcut — the package's own
+      conditional export on `dart.library.io` is the split, so a second class over it would have
+      the same body. The roadmap carried these as two commits on the assumption that the web path
+      needed writing; it needed checking, and it holds. What this commit writes is the mapping
+      onto the port: the package already exposes CFI for the position, for navigation and for
+      extracting a text range
+- [ ] `feat: add the desktop epub host` — `webview_cef` for Linux, loading the same pinned assets
+      over a loopback server, because a CEF webview has no asset protocol to be handed and the
+      host page resolves its scripts by relative path. The bridge is the same one: the package's
+      glue talks to `window.flutter_inappwebview.callHandler`, and both the browser host and this
+      one shim exactly that — so the three hosts differ in what gives epub.js a DOM and in
+      nothing above it. The runner patch lands here, committed rather than applied at build time
 - [ ] `test: prove a locator round-trips between hosts` — the correctness claim the whole split
-      rests on. A CFI produced by one host resolves to the same passage under another, checked
-      against a corpus rather than asserted, because the failure it guards against is an
-      annotation that syncs to a reader's other device and lands somewhere else
+      rests on
 - [ ] `feat: add the reader chrome` — the page, the progress, the table of contents, and the
       controls that get out of the way. Flutter widgets over the host, not inside it
 - [ ] `feat: add reader settings` — font, size, line height, margins and the reading theme,
@@ -864,6 +914,7 @@ it a DOM.
 - [ ] `feat: add continue reading` — the shelf that reads the position rows back, including the
       ones this reader's other devices wrote. Where each device stopped in each book is a
       question with one answer per device, and showing all of them is the point
+
 
 ## Phase 10 — Annotations (UC05)
 
@@ -984,18 +1035,21 @@ disproved rather than fixed — which is why they are recorded instead of delete
 
 ### Shaping a design
 
-- **A webview on Linux and Windows.** The reader is epub.js on every target, and five of the six
-  have a maintained host for it. Linux and Windows rest on `webview_cef` — a community package
-  over CEF, whose Linux path is software-rendered, and which is a large native dependency to
-  bind into a build for six platforms. If it does not hold, the fallback is not a Dart renderer
-  — that would be a second CFI implementation and phase 9 says why it must not exist — but
-  shipping those two targets without the reader while the library, the sync and the annotations
-  still work. It is an empirical question and not a judgement: spike it before phase 9 rather
-  than deciding it. *Phase 9.*
-- **`flutter_inappwebview` was last published 23 months ago.** It is what carries the reader on
-  Android, iOS and macOS, through `flutter_epub_viewer`. The package above it is current, and
-  whether this one still builds clean against Flutter 3.47 is a thing to check rather than a
-  risk to accept. *Phase 9.*
+- ~~**A webview on Linux and Windows.**~~ Spiked before phase 9, as this entry asked, and both
+  halves of it moved. **Windows never needed CEF**: `flutter_inappwebview` supports it and
+  `flutter_epub_viewer` selects its native path on `dart.library.io` rather than on a platform
+  list, so Windows runs the same host as Android, iOS and macOS with nothing written for it.
+  **Linux holds**: `flutter build linux --debug` against `webview_cef` 0.6.2 and Flutter 3.47.1
+  succeeds, and the fallback of shipping the target without a reader is not needed. What it costs
+  is recorded in phase 9 — a 658 MB build-time download, a 244 MB stripped `libcef.so` in the
+  bundle, and a small idempotent patch to the Linux runner that is committed rather than applied
+  behind the build's back.
+- ~~**`flutter_inappwebview` was last published 23 months ago.**~~ 6.1.5 is still the stable
+  release and it is still what carries the reader, now on four native targets rather than three.
+  It builds and resolves clean against Flutter 3.47.1. The gap is real and is worth watching
+  rather than acting on: a `6.2.0-beta.3` was published in February 2026, so the package is not
+  abandoned, and the alternative to it is `webview_cef` on four more targets — which the spike
+  priced at a quarter of a gigabyte each.
 
 ### Watching upstream
 

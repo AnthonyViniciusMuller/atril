@@ -32,6 +32,7 @@ import 'package:provider/provider.dart';
 import 'config/dependencies.dart';
 import 'config/environment.dart';
 import 'config/window.dart';
+import 'data/services/epub/engine.dart';
 import 'ui/core/ui/atril_app.dart';
 import 'utils/logging.dart';
 
@@ -59,6 +60,14 @@ Future<void> main() async {
     'starting $environment, '
     '${certificateAuthority == null ? 'trusting the platform store' : 'trusting a pinned authority'}',
   );
+
+  // The two libraries this app redistributes inside somebody else's package.
+  // Flutter registers a resolved package's own LICENSE and knows nothing about
+  // the files vendored into it, so epub.js and JSZip would otherwise ship
+  // uncredited. It is lazy — nothing is read unless a reader opens the
+  // licences page — which is why it costs nothing to do before the first
+  // frame.
+  EpubEngine.registerLicenses();
 
   // A no-op on the three targets with no window to configure, so neither
   // entry point has to decide which platform it is.

@@ -212,6 +212,30 @@ dependencies:
   # It was a dev dependency until this phase, where the import needs it.
   crypto: ^3.0.7
 
+  # The EPUB engine, and the reason this line is pinned to one version rather
+  # than to a range.
+  #
+  # The package carries epub.js as an asset of its own — the renderer, JSZip
+  # beneath it, and the page and glue that drive them — and Atril reads those
+  # assets directly, through the `packages/flutter_epub_viewer/…` keys the
+  # bundle publishes them under. That is what makes the six targets *one*
+  # engine rather than several: the webview hosts and the Linux one load the
+  # same bytes, so a CFI authored on a phone resolves on the desktop because
+  # there is only one implementation that could answer.
+  #
+  # A caret would let `pub upgrade` change the renderer under a locator that
+  # has already been written down and replicated, which is precisely what
+  # `docs/architecture.md` says must not happen. So the constraint is exact and
+  # `data/services/epub/engine.dart` records the digest of every asset it
+  # loads; the test beside it fails when a resolved package ships other bytes,
+  # which turns "the engine moved" into a red build instead of a highlight that
+  # lands on the wrong paragraph after a sync.
+  #
+  # It is also what carries the reader on five of the six targets, through
+  # `flutter_inappwebview` on the four native ones and a same-origin `<iframe>`
+  # in a browser. Linux is the sixth and is the only one it does not reach.
+  flutter_epub_viewer: 2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -268,10 +292,18 @@ flutter:
   # edit.
   generate: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  # The licences of the two libraries Atril redistributes inside somebody
+  # else's package.
+  #
+  # Flutter registers the `LICENSE` of every package it resolves, so
+  # `flutter_epub_viewer`'s own is already in the about box. epub.js and JSZip
+  # are not packages here — they are files vendored into that one, and its
+  # BSD-3 licence covers its author's work and says nothing about theirs. So
+  # the two texts are committed here and `data/services/epub/engine.dart`
+  # registers them, which is what makes a shipped build honest about the code
+  # it actually contains.
+  assets:
+    - assets/licenses/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

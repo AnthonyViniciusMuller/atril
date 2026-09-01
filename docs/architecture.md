@@ -157,13 +157,45 @@ that looks applied on this device and reconciles differently on every other. So 
 
 ### The EPUB engine is one file; only its host varies
 
-The reader is epub.js on all six targets, bundled as an asset, behind an `EpubHost` port with
-three implementations — a native webview, an `<iframe>`, and a CEF texture. This is a platform
-split for the same reason the channel below is one, and it has a constraint the channel does
-not: the `locator` a device writes is replicated to the reader's other devices, so a CFI
-authored under one host has to resolve under another. Two CFI implementations would agree
-almost always and disagree as annotations landing on the wrong paragraph after a sync, so there
-is one engine and the split is only in what gives it a DOM.
+The reader is epub.js on all six targets, behind an `EpubHost` port with two implementations —
+`flutter_epub_viewer` on five, and a CEF texture on Linux. This is a platform split for the same
+reason the channel below is one, and it has a constraint the channel does not: the `locator` a
+device writes is replicated to the reader's other devices, so a CFI authored under one host has
+to resolve under another. Two CFI implementations would agree almost always and disagree as
+annotations landing on the wrong paragraph after a sync, so there is one engine and the split is
+only in what gives it a DOM.
+
+**The engine is pinned, not vendored.** `flutter_epub_viewer` ships epub.js, JSZip and the page
+and glue that drive them as its own assets, published under
+`packages/flutter_epub_viewer/lib/assets/webpage/…`, and every host loads *those* keys — the
+webview hosts by handing the page to the platform's webview, the Linux host by serving the same
+directory over a loopback socket. Committing a second copy for the desktop, which is what the
+roadmap first asked for, would have put two engines in one application and left one target
+running the file the other five do not.
+
+What the bundling was for is a renderer that cannot change under a locator already written down
+and replicated, and a version string cannot promise that. So the pubspec constrains the package
+to an exact version and `data/services/epub/engine.dart` records the sha-256 of every asset the
+host page reaches, with a test that hashes what the bundle actually holds. The digests cover the
+closure rather than `epub.js` alone: `epubView.js` is what asks the renderer where the page
+starts and hands the answer back across the bridge, so a change there moves the locator exactly
+as a change to the renderer would.
+
+There are three hosts in the earlier drafts of this section and there are two. `flutter_epub_viewer`
+splits internally on `dart.library.io` — a webview on the four native targets it reaches, and a
+same-origin `<iframe>` driven through `dart:js_interop` in a browser — so a second class over it
+would have the same body. Windows is among the four and not on CEF, because
+`flutter_inappwebview` supports it and the package selects on the library rather than on a
+platform list; that leaves `webview_cef` carrying Linux alone, which is the one target whose
+operating system ships no webview a Flutter plugin can embed.
+
+Two facts about that target belong here rather than in a build file. Its `libcef.so` is 244 MB
+stripped, so a Linux bundle is about 300 MB against a few megabytes elsewhere — the size an
+Electron application ships, and the price of the sixth target having a reader at all. And the
+plugin's CMake step patches `linux/runner/main.cc` and `my_application.cc`: a CEF process
+bootstrap runs before `g_application_run`, so on Linux `main` branches before the Flutter
+application is constructed. The patch is idempotent and is committed, which makes it a diff
+somebody reviewed instead of a mutation of tracked files that happens during a build.
 
 ### Four things are chosen by conditional export
 
