@@ -193,9 +193,8 @@ void main() {
   });
 
   test('says so when this device is signed in nowhere', () async {
-    await (database.update(database.knownServers)).write(
-      const KnownServersCompanion(isOrigin: Value<bool>(false)),
-    );
+    await (database.update(database.knownServers))
+        .write(const KnownServersCompanion(isOrigin: Value<bool>(false)));
 
     await expectLater(
       puller.run(),

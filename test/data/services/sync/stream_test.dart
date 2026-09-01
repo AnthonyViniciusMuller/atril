@@ -192,8 +192,7 @@ void main() {
 
   /// Puts [count] changes this device made into the outbox.
   Future<void> owe(int count) => database.syncDao.appendAll(<Operation>[
-    for (var n = 1; n <= count; n++)
-      _import(n, device: _here, half: '1111'),
+    for (var n = 1; n <= count; n++) _import(n, device: _here, half: '1111'),
   ]);
 
   setUp(() async {
@@ -265,7 +264,9 @@ void main() {
 
     unawaited(stream.open());
 
-    await until(() async => (await database.libraryDao.readEbooks()).length == 3);
+    await until(
+      () async => (await database.libraryDao.readEbooks()).length == 3,
+    );
 
     expect(await database.syncDao.cursor(_node), 3);
   });
@@ -296,7 +297,9 @@ void main() {
 
     unawaited(stream.open());
 
-    await until(() async => (await database.libraryDao.readEbooks()).length == 1);
+    await until(
+      () async => (await database.libraryDao.readEbooks()).length == 1,
+    );
 
     // Only the third arrived: the start carried the cursor and the node sent
     // what is after it.
@@ -323,7 +326,10 @@ void main() {
 
     await until(() async => await database.syncDao.pendingCount() == 0);
 
-    expect(node.pushes.map((List<String> batch) => batch.length), everyElement(5));
+    expect(
+      node.pushes.map((List<String> batch) => batch.length),
+      everyElement(5),
+    );
   });
 
   test('quarantines a refused change and stops offering it', () async {

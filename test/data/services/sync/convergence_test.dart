@@ -306,14 +306,8 @@ void main() {
     await one.exchange();
 
     expect(await one.title(), 'ainda aqui');
-    expect(
-      (await one.database.libraryDao.readEbook(_work))?.deleted,
-      isFalse,
-    );
-    expect(
-      (await two.database.libraryDao.readEbook(_work))?.deleted,
-      isFalse,
-    );
+    expect((await one.database.libraryDao.readEbook(_work))?.deleted, isFalse);
+    expect((await two.database.libraryDao.readEbook(_work))?.deleted, isFalse);
   });
 
   test('both devices end with the same causal state', () async {

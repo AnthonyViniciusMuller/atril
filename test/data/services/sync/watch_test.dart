@@ -177,7 +177,9 @@ void main() {
 
     unawaited(watch.open());
 
-    await until(() async => (await database.libraryDao.readEbooks()).length == 1);
+    await until(
+      () async => (await database.libraryDao.readEbooks()).length == 1,
+    );
 
     final asked = node.pulls.length;
 

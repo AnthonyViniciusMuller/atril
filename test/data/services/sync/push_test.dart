@@ -218,17 +218,20 @@ void main() {
     expect(await database.syncDao.pendingCount(), 1);
   });
 
-  test('keeps what a failure left behind and loses nothing before it', () async {
-    // A pass that fails half way has still made half the progress: each batch
-    // is answered for and retired before the next is read.
-    await owe(4);
+  test(
+    'keeps what a failure left behind and loses nothing before it',
+    () async {
+      // A pass that fails half way has still made half the progress: each batch
+      // is answered for and retired before the next is read.
+      await owe(4);
 
-    await server.shutdown();
+      await server.shutdown();
 
-    await expectLater(pusher.run(), throwsA(isA<AppException>()));
-    expect(await database.syncDao.pendingCount(), 4);
-    expect(pusher.isRunning, isFalse);
-  });
+      await expectLater(pusher.run(), throwsA(isA<AppException>()));
+      expect(await database.syncDao.pendingCount(), 4);
+      expect(pusher.isRunning, isFalse);
+    },
+  );
 
   test('does nothing while a pass is already running', () async {
     await owe(1);

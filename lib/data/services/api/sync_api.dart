@@ -298,9 +298,7 @@ final class SyncApi extends ApiClient {
         operations: <Operation>[
           for (final operation in delivered) operationOf(operation),
         ],
-        lastPosition: delivered.isEmpty
-            ? 0
-            : delivered.last.position.toInt(),
+        lastPosition: delivered.isEmpty ? 0 : delivered.last.position.toInt(),
       );
     }
 

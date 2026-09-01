@@ -78,20 +78,19 @@ final class SyncRepositoryImpl implements SyncRepository {
             pending = owed;
             emit();
           }),
-          sync.watchRefused().listen(
-            (List<(Operation, RefusedOperationRow)> refused) {
-              refusals = <RefusedChange>[
-                for (final (Operation change, RefusedOperationRow row)
-                    in refused)
-                  RefusedChange(
-                    change: change,
-                    reason: row.reason,
-                    refusedAt: row.refusedAt,
-                  ),
-              ];
-              emit();
-            },
-          ),
+          sync.watchRefused().listen((
+            List<(Operation, RefusedOperationRow)> refused,
+          ) {
+            refusals = <RefusedChange>[
+              for (final (Operation change, RefusedOperationRow row) in refused)
+                RefusedChange(
+                  change: change,
+                  reason: row.reason,
+                  refusedAt: row.refusedAt,
+                ),
+            ];
+            emit();
+          }),
           _lastSynced().listen((DateTime? at) {
             lastSyncedAt = at;
             emit();

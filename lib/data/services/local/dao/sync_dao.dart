@@ -107,7 +107,11 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
     required String reason,
     required DateTime at,
   }) => into(refusedOperations).insertOnConflictUpdate(
-    RefusedOperationsCompanion.insert(id: id, refusedAt: at, reason: Value<String>(reason)),
+    RefusedOperationsCompanion.insert(
+      id: id,
+      refusedAt: at,
+      reason: Value<String>(reason),
+    ),
   );
 
   /// The changes a node refused, most recently refused first.
@@ -246,14 +250,13 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
 
   JoinedSelectStatement<HasResultSet, dynamic> _refusedQuery() =>
       select(refusedOperations).join(<Join<HasResultSet, dynamic>>[
-          innerJoin(
-            pendingOperations,
-            pendingOperations.id.equalsExp(refusedOperations.id),
-          ),
-        ])
-        ..orderBy(<OrderingTerm>[
-          OrderingTerm.desc(refusedOperations.refusedAt),
-        ]);
+        innerJoin(
+          pendingOperations,
+          pendingOperations.id.equalsExp(refusedOperations.id),
+        ),
+      ])..orderBy(<OrderingTerm>[
+        OrderingTerm.desc(refusedOperations.refusedAt),
+      ]);
 
   List<(Operation, RefusedOperationRow)> _refusalsOf(List<TypedResult> rows) =>
       <(Operation, RefusedOperationRow)>[

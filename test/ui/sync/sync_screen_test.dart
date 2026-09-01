@@ -118,10 +118,7 @@ void main() {
     // needs told, and a blank would read as *recently*.
     await _pump(tester, FakeSyncRepository());
 
-    expect(
-      find.text('Este aparelho ainda não alcançou o nó.'),
-      findsOneWidget,
-    );
+    expect(find.text('Este aparelho ainda não alcançou o nó.'), findsOneWidget);
   });
 
   testWidgets('calls an unanswering node a wait and not a fault', (

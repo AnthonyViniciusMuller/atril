@@ -126,8 +126,7 @@ void main() {
     testWidgets('counts what has not left this device, in the bar', (
       WidgetTester tester,
     ) async {
-      final sync = FakeSyncRepository()
-        ..emit(const SyncState(pending: 3));
+      final sync = FakeSyncRepository()..emit(const SyncState(pending: 3));
 
       addTearDown(sync.dispose);
 
