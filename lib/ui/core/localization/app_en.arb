@@ -297,5 +297,26 @@
   "@readerMarkUndo": {},
 
   "readerMarkFailed": "The mark could not be saved.",
-  "@readerMarkFailed": {}
+  "@readerMarkFailed": {},
+
+  "readerNote": "Note",
+  "@readerNote": {},
+
+  "readerNoteTitle": "Note",
+  "@readerNoteTitle": {},
+
+  "readerNoteLabel": "What you want to record",
+  "@readerNoteLabel": {},
+
+  "readerNoteRequired": "A note with no text is an empty note.",
+  "@readerNoteRequired": {},
+
+  "readerNoteCancel": "Cancel",
+  "@readerNoteCancel": {},
+
+  "readerNoteSave": "Save",
+  "@readerNoteSave": {},
+
+  "readerNoted": "Note saved.",
+  "@readerNoted": {}
 }

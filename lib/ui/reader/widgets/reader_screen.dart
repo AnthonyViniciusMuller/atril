@@ -31,6 +31,7 @@ import '../../../data/services/epub/epub_host.dart';
 import '../../../data/services/storage/reader_settings_store.dart';
 import '../../../domain/models/annotation.dart';
 import '../../../routing/routes.dart';
+import '../../../utils/command.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -554,9 +555,20 @@ class _SelectionActions extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   TextButton.icon(
-                    onPressed: () => _mark(context, model),
+                    onPressed: () => _mark(
+                      context,
+                      model,
+                      () => model.highlight.execute(),
+                      model.highlight,
+                      l10n.readerHighlighted,
+                    ),
                     icon: const Icon(Icons.brush_outlined),
                     label: Text(l10n.readerHighlight),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _writeNote(context, model),
+                    icon: const Icon(Icons.edit_note),
+                    label: Text(l10n.readerNote),
                   ),
                   IconButton(
                     onPressed: model.dismissSelection,
@@ -573,24 +585,34 @@ class _SelectionActions extends StatelessWidget {
   }
 }
 
-/// Marks the selected passage, and offers to undo it.
+/// Runs [make] over the selection, and offers to undo what it made.
 ///
 /// The undo is offered rather than a confirmation asked for, and the asymmetry
 /// is the point: marking a passage is what the reader came here to do, and a
 /// dialog in front of it would be the app asking whether they meant the gesture
 /// they just made. Unmaking it is one operation, because the removal is a
 /// tombstone and the undo lifts it.
-Future<void> _mark(BuildContext context, ReaderViewModel model) async {
+///
+/// [command] is the same command [make] runs, read back for its result — a
+/// `Command` is what carries the outcome in this app, and a second return path
+/// beside it would be two answers to one question.
+Future<void> _mark(
+  BuildContext context,
+  ReaderViewModel model,
+  Future<void> Function() make,
+  Command<Annotation> command,
+  String announcement,
+) async {
   final AppLocalizations l10n = AppLocalizations.of(context);
   final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
 
-  await model.highlight.execute();
+  await make();
 
-  switch (model.highlight.result) {
+  switch (command.result) {
     case Ok<Annotation>(:final Annotation value):
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.readerHighlighted),
+          content: Text(announcement),
           action: SnackBarAction(
             label: l10n.readerMarkUndo,
             onPressed: () => model.removeMark.execute(value.id),
@@ -601,5 +623,90 @@ Future<void> _mark(BuildContext context, ReaderViewModel model) async {
       messenger.showSnackBar(SnackBar(content: Text(l10n.readerMarkFailed)));
     case null:
       break;
+  }
+}
+
+/// Asks the reader what they want to say about the passage, and notes it.
+///
+/// A dialog and not a location, unlike every form elsewhere in this app. The
+/// reason the others are locations is that a reader who switched away should
+/// come back to the form; here they would come back to a *selection*, which the
+/// engine will not have kept — so a note started and abandoned is a note that
+/// was never made, and a route that promised otherwise would be lying.
+Future<void> _writeNote(BuildContext context, ReaderViewModel model) async {
+  final String? written = await showDialog<String>(
+    context: context,
+    builder: (BuildContext context) => const _NoteDialog(),
+  );
+
+  if (written == null || !context.mounted) {
+    return;
+  }
+
+  await _mark(
+    context,
+    model,
+    () => model.note.execute(written),
+    model.note,
+    AppLocalizations.of(context).readerNoted,
+  );
+}
+
+/// The words a reader is putting against a passage.
+class _NoteDialog extends StatefulWidget {
+  const _NoteDialog();
+
+  @override
+  State<_NoteDialog> createState() => _NoteDialogState();
+}
+
+class _NoteDialogState extends State<_NoteDialog> {
+  final TextEditingController _text = TextEditingController();
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    return AlertDialog(
+      title: Text(l10n.readerNoteTitle),
+      content: TextField(
+        controller: _text,
+        autofocus: true,
+        maxLines: 5,
+        minLines: 3,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(
+          labelText: l10n.readerNoteLabel,
+          // Said here rather than reported after the fact: the contract
+          // requires a note to carry text, and a reader should learn that from
+          // the field and not from a refusal.
+          helperText: l10n.readerNoteRequired,
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.readerNoteCancel),
+        ),
+        ListenableBuilder(
+          listenable: _text,
+          builder: (BuildContext context, Widget? _) => FilledButton(
+            // Disabled rather than refused. The rule is the contract's and it
+            // is not a surprise worth springing on somebody who has just
+            // typed nothing.
+            onPressed: _text.text.trim().isEmpty
+                ? null
+                : () => Navigator.of(context).pop(_text.text),
+            child: Text(l10n.readerNoteSave),
+          ),
+        ),
+      ],
+    );
   }
 }

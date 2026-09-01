@@ -79,6 +79,7 @@ final class ReaderViewModel extends ChangeNotifier {
     turnBack = Command0<void>(() => _guard(host.previousPage));
     goTo = Command1<void, String>(_goTo);
     highlight = Command0<Annotation>(_highlight);
+    note = Command1<Annotation, String>(_note);
     removeMark = Command1<void, String>(_removeMark);
     restoreMark = Command1<void, String>(_restoreMark);
 
@@ -149,6 +150,12 @@ final class ReaderViewModel extends ChangeNotifier {
   /// can offer to undo the one it just made rather than the most recent one it
   /// happens to be showing.
   late final Command0<Annotation> highlight;
+
+  /// UC05. Marks the selected passage and says something about it.
+  ///
+  /// The argument is what the reader wrote, which the contract requires a note
+  /// to carry: a note with nothing in it is the highlight they already had.
+  late final Command1<Annotation, String> note;
 
   /// UC05. Removes a mark.
   late final Command1<void, String> removeMark;
@@ -317,8 +324,30 @@ final class ReaderViewModel extends ChangeNotifier {
     }
   }
 
-  /// Marks the passage the reader has selected.
-  Future<Result<Annotation>> _highlight() async {
+  Future<Result<Annotation>> _highlight() => _mark(
+    (EpubSelection selected) => annotations.highlight(
+      ebookId: ebookId,
+      cfiRange: selected.cfiRange,
+      passage: selected.text,
+    ),
+  );
+
+  Future<Result<Annotation>> _note(String text) => _mark(
+    (EpubSelection selected) => annotations.note(
+      ebookId: ebookId,
+      cfiRange: selected.cfiRange,
+      text: text,
+    ),
+  );
+
+  /// Marks the passage the reader has selected, in whichever way [made] says.
+  ///
+  /// The two kinds differ in one line and share the rest, and the rest is what
+  /// matters: the range comes from the selection and never from anywhere else,
+  /// and the selection survives a refusal.
+  Future<Result<Annotation>> _mark(
+    Future<Result<Annotation>> Function(EpubSelection selected) made,
+  ) async {
     final EpubSelection? selected = _selection;
 
     if (selected == null) {
@@ -332,24 +361,20 @@ final class ReaderViewModel extends ChangeNotifier {
           // hosts and identifiers freely because it is written to the log, and
           // what a reader sees is chosen from the kind and the code.
           message: 'nothing is selected in $ebookId', // l10n-ignore
-          op: 'ui/reader: highlight',
+          op: 'ui/reader: mark',
         ),
       );
     }
 
-    final Result<Annotation> made = await annotations.highlight(
-      ebookId: ebookId,
-      cfiRange: selected.cfiRange,
-      passage: selected.text,
-    );
+    final Result<Annotation> mark = await made(selected);
 
-    if (made is Ok<Annotation>) {
+    if (mark is Ok<Annotation>) {
       // Cleared on success only. A selection dropped after a failure would
       // leave the reader with nothing to try again on.
       dismissSelection();
     }
 
-    return made;
+    return mark;
   }
 
   Future<Result<void>> _removeMark(String annotationId) =>
@@ -518,6 +543,7 @@ final class ReaderViewModel extends ChangeNotifier {
     turnBack.dispose();
     goTo.dispose();
     highlight.dispose();
+    note.dispose();
     removeMark.dispose();
     restoreMark.dispose();
     super.dispose();

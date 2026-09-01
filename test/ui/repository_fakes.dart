@@ -633,6 +633,36 @@ final class FakeAnnotationRepository implements AnnotationRepository {
     );
   }
 
+  /// Every note it was asked to make, in order.
+  final List<({String ebookId, String cfiRange, String text})> noted =
+      <({String ebookId, String cfiRange, String text})>[];
+
+  @override
+  Future<Result<Annotation>> note({
+    required String ebookId,
+    required String cfiRange,
+    required String text,
+  }) async {
+    noted.add((ebookId: ebookId, cfiRange: cfiRange, text: text));
+
+    final Exception? refused = refusal;
+
+    if (refused != null) {
+      return Result<Annotation>.error(refused);
+    }
+
+    return Result<Annotation>.ok(
+      Annotation(
+        id: 'mark-${highlighted.length + noted.length}',
+        ebookId: ebookId,
+        kind: AnnotationKind.note,
+        locator: cfiRange,
+        text: text,
+        revision: Revision.first('device', DateTime.utc(2026, 9, 1)),
+      ),
+    );
+  }
+
   @override
   Future<Result<void>> removeMark(String annotationId) async {
     removed.add(annotationId);

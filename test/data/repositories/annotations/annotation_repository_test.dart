@@ -20,7 +20,6 @@ import 'package:atril/domain/models/annotation.dart';
 import 'package:atril/domain/models/operation.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
-import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -207,6 +206,45 @@ void main() {
         cfiRange: '   ',
       );
 
+      expect(kindOf(made), ErrorKind.invalidArgument);
+      expect(await database.syncDao.pending(), isEmpty);
+    });
+  });
+
+  group('noting a passage', () {
+    test('keeps the reader\'s words and calls the mark a note', () async {
+      await seedWork('a');
+
+      final Result<Annotation> made = await annotations.note(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        text: 'Euclides está descrevendo a seca como personagem.',
+      );
+
+      final Annotation mark = (made as Ok<Annotation>).value;
+
+      expect(mark.kind, AnnotationKind.note);
+      expect(mark.text, 'Euclides está descrevendo a seca como personagem.');
+      expect(mark.locator, _range);
+      expect(
+        (await database.syncDao.pending()).single.delta[fieldKind],
+        'note',
+      );
+    });
+
+    test('with nothing in it is refused before it is authored', () async {
+      // The contract requires a note to carry text and the schema carries the
+      // same rule, but a `CHECK` constraint names a table. Refusing it here
+      // names the note, which is what a reader can be told about.
+      await seedWork('a');
+
+      final Result<Annotation> made = await annotations.note(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        text: '   ',
+      );
+
+      expect(codeOf(made), codeNoteWithoutText);
       expect(kindOf(made), ErrorKind.invalidArgument);
       expect(await database.syncDao.pending(), isEmpty);
     });

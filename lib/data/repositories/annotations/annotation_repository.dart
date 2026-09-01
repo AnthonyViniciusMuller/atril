@@ -69,6 +69,24 @@ abstract interface class AnnotationRepository {
     String? passage,
   });
 
+  /// UC05. Marks a passage and says something about it.
+  ///
+  /// A note is a highlight the reader wrote on, and [text] is what they wrote.
+  /// It is required rather than optional because the contract requires it, and
+  /// the contract is right: a note with nothing in it is an empty note, and the
+  /// mark that would be left is the highlight the reader already had.
+  ///
+  /// The passage itself is not kept. There is one text field on the record and
+  /// the reader's own words are what belongs in it — the passage is addressed
+  /// by [cfiRange], which is what the engine resolves when the book is open.
+  ///
+  /// It is refused with [codeNoteWithoutText] where the words are blank.
+  Future<Result<Annotation>> note({
+    required String ebookId,
+    required String cfiRange,
+    required String text,
+  });
+
   /// UC05. Removes a mark.
   ///
   /// A tombstone and never a deletion, like every other removal here: a row

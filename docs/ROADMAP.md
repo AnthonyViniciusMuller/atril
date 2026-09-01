@@ -1071,8 +1071,16 @@ and they are recorded here because none of them is visible from the package's RE
       the same as the first draw. And **the marks come back most recent first, never in reading
       order**: two CFIs are compared by parsing them, and a CFI parser in Dart is the second
       implementation `architecture.md` forbids outright
-- [ ] `feat: add notes` — a highlight with text, which the contract requires to be present
-      because a note without it is an empty note
+- [x] `feat: add notes` — a highlight with text, which the contract requires to be present
+      because a note without it is an empty note. The requirement is enforced twice over and in
+      neither place as a surprise: the dialog's save button is disabled while the field is blank,
+      and the repository refuses a blank note with a code of its own — because the `CHECK`
+      constraint below would refuse the same thing while naming a table. The note is where the
+      single text field diverges from a highlight's: a highlight spends it on the passage and a
+      note on the reader's own words, since those are what the contract says a note cannot be
+      without. It is a dialog and not a location, which is the one place this app departs from
+      *every form is a screen*: a reader who switched away would come back to a **selection** the
+      engine has not kept, so a route promising otherwise would be lying
 - [ ] `feat: add bookmarks` — a position, no text, no selection
 - [ ] `feat: add the annotations screen` — everything marked in one book and everything marked
       across the library, each navigating back to its passage

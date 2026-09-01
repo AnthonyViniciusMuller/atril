@@ -742,4 +742,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerMarkFailed => 'The mark could not be saved.';
+
+  @override
+  String get readerNote => 'Note';
+
+  @override
+  String get readerNoteTitle => 'Note';
+
+  @override
+  String get readerNoteLabel => 'What you want to record';
+
+  @override
+  String get readerNoteRequired => 'A note with no text is an empty note.';
+
+  @override
+  String get readerNoteCancel => 'Cancel';
+
+  @override
+  String get readerNoteSave => 'Save';
+
+  @override
+  String get readerNoted => 'Note saved.';
 }

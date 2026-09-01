@@ -89,6 +89,37 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
     text: passage,
   );
 
+  @override
+  Future<Result<Annotation>> note({
+    required String ebookId,
+    required String cfiRange,
+    required String text,
+  }) async {
+    if (_blankIsNothing(text) == null) {
+      // Refused here and not by the column, so that the sentence names the
+      // note rather than a `CHECK` constraint. The schema carries the same
+      // rule — a note is the one kind whose text cannot be null — and this is
+      // where a reader can be told about it.
+      _log.warning('a note in $ebookId was written with no words in it');
+
+      return Result<Annotation>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'a note with no text is an empty note',
+          code: codeNoteWithoutText,
+          op: opMark,
+        ),
+      );
+    }
+
+    return _made(
+      ebookId: ebookId,
+      kind: AnnotationKind.note,
+      locator: cfiRange,
+      text: text,
+    );
+  }
+
   /// Authors a new mark of [kind] over [locator], and answers with it as the
   /// replica now holds it.
   ///

@@ -1217,5 +1217,40 @@
   "readerMarkFailed": "Não foi possível guardar a marcação.",
   "@readerMarkFailed": {
     "description": "Erro mostrado quando uma marcação não pôde ser gravada na réplica local. Não é falha de rede: a marcação é escrita aqui e sincronizada depois."
+  },
+
+  "readerNote": "Anotar",
+  "@readerNote": {
+    "description": "Ação que anota o trecho selecionado — grifa e guarda o que o leitor escreveu sobre ele. Aparece na barra que a seleção levanta."
+  },
+
+  "readerNoteTitle": "Anotação",
+  "@readerNoteTitle": {
+    "description": "Título da caixa em que o leitor escreve uma anotação sobre o trecho selecionado."
+  },
+
+  "readerNoteLabel": "O que você quer registrar",
+  "@readerNoteLabel": {
+    "description": "Rótulo do campo em que o leitor escreve a anotação. São as palavras dele, e não o trecho — o trecho está endereçado pelo localizador."
+  },
+
+  "readerNoteRequired": "Uma anotação sem texto é uma anotação vazia.",
+  "@readerNoteRequired": {
+    "description": "Dito abaixo do campo da anotação. O contrato exige que uma anotação tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois."
+  },
+
+  "readerNoteCancel": "Cancelar",
+  "@readerNoteCancel": {
+    "description": "Ação que fecha a caixa da anotação sem guardar nada. Quem desistiu não fez nada de errado."
+  },
+
+  "readerNoteSave": "Guardar",
+  "@readerNoteSave": {
+    "description": "Ação que guarda a anotação escrita. Fica desabilitada enquanto o campo estiver vazio."
+  },
+
+  "readerNoted": "Anotação guardada.",
+  "@readerNoted": {
+    "description": "Aviso mostrado depois que uma anotação é guardada, acompanhado da ação de desfazer."
   }
 }

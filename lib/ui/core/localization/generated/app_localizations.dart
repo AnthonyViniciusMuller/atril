@@ -1346,6 +1346,48 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível guardar a marcação.'**
   String get readerMarkFailed;
+
+  /// Ação que anota o trecho selecionado — grifa e guarda o que o leitor escreveu sobre ele. Aparece na barra que a seleção levanta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Anotar'**
+  String get readerNote;
+
+  /// Título da caixa em que o leitor escreve uma anotação sobre o trecho selecionado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Anotação'**
+  String get readerNoteTitle;
+
+  /// Rótulo do campo em que o leitor escreve a anotação. São as palavras dele, e não o trecho — o trecho está endereçado pelo localizador.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que você quer registrar'**
+  String get readerNoteLabel;
+
+  /// Dito abaixo do campo da anotação. O contrato exige que uma anotação tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Uma anotação sem texto é uma anotação vazia.'**
+  String get readerNoteRequired;
+
+  /// Ação que fecha a caixa da anotação sem guardar nada. Quem desistiu não fez nada de errado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cancelar'**
+  String get readerNoteCancel;
+
+  /// Ação que guarda a anotação escrita. Fica desabilitada enquanto o campo estiver vazio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Guardar'**
+  String get readerNoteSave;
+
+  /// Aviso mostrado depois que uma anotação é guardada, acompanhado da ação de desfazer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Anotação guardada.'**
+  String get readerNoted;
 }
 
 class _AppLocalizationsDelegate

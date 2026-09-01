@@ -743,6 +743,28 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerMarkFailed => 'Não foi possível guardar a marcação.';
+
+  @override
+  String get readerNote => 'Anotar';
+
+  @override
+  String get readerNoteTitle => 'Anotação';
+
+  @override
+  String get readerNoteLabel => 'O que você quer registrar';
+
+  @override
+  String get readerNoteRequired =>
+      'Uma anotação sem texto é uma anotação vazia.';
+
+  @override
+  String get readerNoteCancel => 'Cancelar';
+
+  @override
+  String get readerNoteSave => 'Guardar';
+
+  @override
+  String get readerNoted => 'Anotação guardada.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1483,4 +1505,26 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerMarkFailed => 'Não foi possível guardar a marcação.';
+
+  @override
+  String get readerNote => 'Anotar';
+
+  @override
+  String get readerNoteTitle => 'Anotação';
+
+  @override
+  String get readerNoteLabel => 'O que você quer registrar';
+
+  @override
+  String get readerNoteRequired =>
+      'Uma anotação sem texto é uma anotação vazia.';
+
+  @override
+  String get readerNoteCancel => 'Cancelar';
+
+  @override
+  String get readerNoteSave => 'Guardar';
+
+  @override
+  String get readerNoted => 'Anotação guardada.';
 }

@@ -768,6 +768,100 @@ void main() {
     });
   });
 
+  group('noting a passage', () {
+    const String range = 'epubcfi(/6/14!/4/10,/2/1:1,/3:4)';
+
+    testWidgets('asks what the reader wants to say and keeps it', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_pt().readerNote));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().readerNoteTitle), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'a seca é personagem');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerNoteSave));
+      await tester.pumpAndSettle();
+
+      expect(marks.noted, hasLength(1));
+      expect(marks.noted.single.cfiRange, range);
+      expect(marks.noted.single.text, 'a seca é personagem');
+      expect(find.text(_pt().readerNoted), findsOneWidget);
+    });
+
+    testWidgets('cannot be saved with nothing in it', (
+      WidgetTester tester,
+    ) async {
+      // Disabled rather than refused afterwards. The rule is the contract's
+      // and it is not a surprise worth springing on somebody who has just
+      // typed nothing.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerNote));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+
+      await tester.enterText(find.byType(TextField), '   ');
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('abandoned, it marks nothing at all', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerNote));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerNoteCancel));
+      await tester.pumpAndSettle();
+
+      expect(marks.noted, isEmpty);
+      expect(marks.highlighted, isEmpty);
+      // The selection survives: nothing was decided, so nothing was answered.
+      expect(find.byKey(readerSelectionKey), findsOneWidget);
+    });
+  });
+
   group('the marks over the page', () {
     testWidgets('are painted from the list and never from the gesture', (
       WidgetTester tester,
