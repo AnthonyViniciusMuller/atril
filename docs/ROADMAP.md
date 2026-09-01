@@ -1129,9 +1129,13 @@ and they are recorded here because none of them is visible from the package's RE
       being guessed at — the worst that follows is a `duplicate` on the next pass. The pass ends
       when a batch retires nothing, which is what keeps a head batch of refusals from being
       offered for ever before the quarantine lands
-- [ ] `feat: add pull` — `PullOperations` from this node's cursor, through the reconciler, with
+- [x] `feat: add pull` — `PullOperations` from this node's cursor, through the reconciler, with
       the cursor advanced only after the batch is committed. `has_more` is a loop and not a
-      recursion
+      recursion. What makes that ordering safe rather than merely careful is `applied_operations`:
+      a page re-read after an interruption comes back `duplicate` by the identifier its author
+      minted and the replica is untouched, so the cost of dying between the commit and the cursor
+      is one decode. The loop also ends on a page that carried operations and did not move the
+      cursor past them — a node this build cannot follow, rather than a log it has caught up with
 - [ ] `feat: add the sync stream` — `Sync`, the bidirectional one, on the five native targets:
       `SyncStart` with the cursor, then pushes and acks in one direction and operations in the
       other. The ack is sent after the write commits and not after the read returns, because an
