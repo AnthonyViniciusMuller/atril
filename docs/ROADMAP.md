@@ -1572,6 +1572,22 @@ disproved rather than fixed — which is why they are recorded instead of delete
   pushes, the reason the twelve write RPCs are forbidden, and the reason phase 6 seeds a new
   device through the read calls. The day it closes, all three are revisited deliberately — the
   rule becomes a preference and the seeding step becomes unnecessary.
+- **Flutter's service worker is deprecated and already gutted.** `flutter/flutter#156910`. In
+  3.47.1 the generated `flutter_service_worker.js` is thirty-one lines that unregister the worker
+  and reload every client; `--pwa-strategy=none` writes an empty file instead. Atril ships its
+  own worker and deletes Flutter's, so the *removal* of the feature costs this project nothing —
+  but the flag may go with it, and `make build-web` passes it. The day `--pwa-strategy` stops
+  being accepted, drop it from the Makefile and from `tool/make_service_worker.dart`'s tombstone
+  cleanup. *Watch.*
+- **`--no-web-resources-cdn` ships every renderer, not the one in use.** 36.1 MB of a 45.4 MB
+  build, including `skwasm`, `skwasm_heavy`, `wimp` and `webparagraph` — which a JavaScript build
+  never loads — and 8.2 MB of `.symbols` files, which are symbol maps for the profiler. Four
+  fifths of the offline shell is renderers and one of them runs. The flag is not the problem and
+  must not be dropped: the default fetches CanvasKit from gstatic, which is a cold load with
+  nothing to render with. What is worth watching is whether the tool grows a way to copy only the
+  selected renderer, because pruning the directory by hand means guessing which variants the
+  engine can ask for at run time, and guessing wrong is a blank page on somebody else's browser.
+  *Watch.*
 - **C22 is still open.** Nothing in the contract can tell a node that it is a replica, so the
   authorization screen of phase 12 grants a permission it cannot act on. The wording landed with
   that screen and is a paragraph rather than a caveat — the permission is on the reader's own

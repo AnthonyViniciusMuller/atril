@@ -573,6 +573,112 @@ on while they fill in a form, so committing and connecting are one act — and a
 fails points the device back, since a device holding a session for one node while dialling another
 fails every call for a reason nothing on screen explains.
 
+## Shipping it
+
+Phase 13 is the first one whose work is mostly outside `lib/`, and four of its findings are
+architecture rather than build configuration: each one is a place where something this project
+already decided stops being true at a platform boundary.
+
+### The application icon is a program, not artwork
+
+Six targets want one mark at twenty-nine sizes, in three container formats, and two of them
+disagree about the alpha channel — an Android adaptive foreground *is* one, and App Store Connect
+rejects a marketing icon that carries one. A directory of exported PNGs answers that with
+twenty-nine files nobody can regenerate once the file the designer worked in is gone.
+
+So `tool/make_icons.dart` holds the geometry, a rasterizer, a PNG encoder and an ICO encoder, and
+`make icons` rewrites every file. The output is committed, because a build must not depend on a
+generator having been run, and CI regenerates and diffs it exactly as it does the contract, the
+drift code and the localizations. That diff is only meaningful because `FLUTTER_VERSION` is
+pinned and the deflate writing those files is the SDK's — the same argument the pinned `protoc`
+makes about `.pbjson.dart` descriptors.
+
+One detail generalizes. The spine down the lectern's desk is a **hole**, wound against the shape
+that contains it, and not a second colour. That is what lets one description serve a mark drawn
+on ink and a mark drawn on nothing: the five targets that get a background show the ink through
+it, and the Android foreground layer shows transparency.
+
+### Atril owns a service worker, because Flutter no longer does
+
+`flutter_service_worker.js` is deprecated — `flutter/flutter#156910` — and in Flutter 3.47.1 the
+file the tool generates is thirty-one lines that call `registration.unregister()` and reload every
+client. It is a tombstone. So the target whose whole promise is that the network is an
+optimization had nothing caching its own application, and the *default* `flutter_bootstrap.js` is
+worse than nothing: it registers that file, at the same scope Atril's worker wants, so the
+tombstone would remove Atril's along with itself.
+
+`web/atril_service_worker.js` is this project's own, and `web/flutter_bootstrap.js` is written out
+so that the loader is called with no `serviceWorkerSettings`. Four of the worker's decisions are
+places the obvious answer is wrong, and all four follow from decisions this document already
+records.
+
+**It caches the shell and never a book.** The books are the per-book opt-in of phase 8, held in
+the origin-private file system against a budget the reader can see. A worker that quietly cached
+them as they streamed would be the one thing that decision forbids — storage spent without being
+shown.
+
+**It calls neither `skipWaiting` nor `clients.claim`**, and the cost is stated where it is paid:
+the *first* visit to the app is not offline-capable, and every load after it is. The alternative
+is a worker taking over a page already running and serving it the JavaScript of one build with the
+assets of another for the rest of the session.
+
+**Every non-`GET` and every cross-origin request goes past untouched.** That is not defensive.
+A node is normally a different origin, so the origin check alone excludes every gRPC-Web call and
+the `.well-known` lookup — but a build *served from its own node's origin* is legal, and a cached
+`POST` response there would be one device replaying another's answer to a synchronization request.
+
+**The cache version is a digest over the sorted file list and each file's own digest**, so an
+asset that moved and an asset that changed both produce a new cache. A build number would produce
+neither. `tool/make_service_worker.dart` computes it, and rewrites exactly two lines of a worker
+that is otherwise reviewed as source.
+
+The renderer stays CanvasKit, and the measurement is worth recording because it contradicts the
+guess. `--wasm` does not replace the JavaScript build; it adds a WasmGC one and keeps the other as
+the fallback, which is 49.5 MB against 45.4 MB — nine percent, not a doubling. What is worth
+knowing is the other number: `--no-web-resources-cdn` copies the whole renderer directory out of
+the web SDK, **36.1 MB of the 45.4**, including variants a JavaScript build never loads and 8.2 MB
+of `.symbols` files. Four fifths of the offline shell is renderers and one of them runs. The flag
+is still right — the default fetches CanvasKit from gstatic, which is a cold load on a train with
+nothing to render with — but its cost is not where anybody would look for it.
+
+### The locale is declared three times, and the ARB is none of them
+
+`pt_BR` is this app's default locale and `en` is its second, and until phase 13 that was true
+everywhere except at the boundary where it is read from outside. **A Flutter app declares no
+localizations to the platform.** The ARB files are compiled into Dart; the operating system never
+sees them, and the template leaves the development region as an Xcode variable that resolves to
+`en`.
+
+So the language is declared once for the framework, in `l10n.yaml` and the ARB directory, and
+three more times for the systems that ask: `CFBundleLocalizations` and `CFBundleDevelopmentRegion`
+in each of the two Apple `Info.plist` files, and `languages` in the `msix_config`. It is not
+cosmetic on any of them. `share_plus` documents those two keys as the fix for a share sheet that
+appears in the wrong language — and the share sheet is how the export of phase 10 leaves iOS and
+Android.
+
+### What each platform's sandbox has to be told
+
+Three of the six run this application inside a sandbox, and each one had to be told something
+different before code that already worked kept working.
+
+**macOS: the picker opens and the file cannot be read.** A sandboxed app reaches a path the reader
+chose only through the powerbox, and `com.apple.security.files.user-selected.read-write` is the
+entitlement that grants it. Without it both ends of UC02 were broken on a release build and on
+nothing else — the import could not read the book and the export could not write the file.
+
+**iOS: the keychain needs a group.** `flutter_secure_storage` reaches the keychain through an
+access group the app is entitled to, and this target had no entitlements files at all. The store
+would have raised at its first write, which is the moment the reader signs in.
+
+**Linux: the sandbox is the package's, because Chromium's is off.** `webview_cef` appends
+`--no-sandbox` to CEF's command line and leaves the setuid helper unprivileged, so the engine is
+unsandboxed whatever ships it. That is the argument for Flatpak over AppImage rather than a
+packaging preference. And the Flatpak grants **no `--filesystem` at all**: `file_selector_linux`
+opens a `GtkFileChooserNative`, which GTK routes through the desktop portal inside a sandbox, so
+an import and an export each hand the app the one file the reader chose. The claim
+`docs/architecture.md` makes about the export — that the reader chooses where their data goes — is
+the same claim the sandbox makes, one layer down.
+
 ## What the node will not tell us
 
 Recorded here because each one shapes a screen rather than a line of code.
