@@ -44,6 +44,8 @@ import '../data/services/api/reading_api.dart';
 import '../data/services/api/session.dart';
 import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
+import '../data/services/content/content_uploader.dart';
+import '../data/services/content/upload_queue.dart';
 import '../data/services/discovery/well_known.dart';
 import '../data/services/files/file_source.dart';
 import '../data/services/files/system_file_picker.dart';
@@ -218,11 +220,29 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // It is what makes UC01 answerable on a train: the seed of a freshly bound
     // device is the one place the read RPCs are called, and after it this is
     // the truth.
+    // What the node is owed in bytes. It is separate from the operation log
+    // and it has to be: the record travels when the log is pushed, and the
+    // file waits for that push — C16 refuses an upload for a digest no work of
+    // the reader's names, and this app never calls `CreateEbook`.
+    Provider<ContentUploader>(
+      create: (BuildContext context) => ContentUploader(
+        api: context.read<LibraryApi>(),
+        blobs: blobs,
+      ),
+    ),
+    Provider<UploadQueue>(
+      create: (BuildContext context) => UploadQueue(
+        database: database,
+        uploader: context.read<ContentUploader>(),
+      ),
+    ),
+
     Provider<LibraryRepository>(
       create: (BuildContext context) => LibraryRepositoryImpl(
         library: database.libraryDao,
         author: context.read<OperationAuthor>(),
         blobs: blobs,
+        uploads: context.read<UploadQueue>(),
       ),
     ),
 

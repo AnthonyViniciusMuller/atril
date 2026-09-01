@@ -30,6 +30,7 @@ import 'converters.dart';
 import 'dao/identity_dao.dart';
 import 'dao/library_dao.dart';
 import 'dao/records_dao.dart';
+import 'dao/transfers_dao.dart';
 import 'dao/sync_dao.dart';
 import 'tables/covers.dart';
 import 'tables/identity.dart';
@@ -37,6 +38,7 @@ import 'tables/library.dart';
 import 'tables/reading.dart';
 import 'tables/records.dart';
 import 'tables/sync.dart';
+import 'tables/transfers.dart';
 
 part 'database.g.dart';
 
@@ -63,8 +65,9 @@ final _log = loggerFor('data/local');
     NodeCursors,
     AppliedOperations,
     RecordVersions,
+    ContentUploads,
   ],
-  daos: <Type>[IdentityDao, LibraryDao, SyncDao, RecordsDao],
+  daos: <Type>[IdentityDao, LibraryDao, SyncDao, RecordsDao, TransfersDao],
 )
 class AtrilDatabase extends _$AtrilDatabase {
   /// The replica over [executor], or over the platform's own connection.
@@ -83,7 +86,7 @@ class AtrilDatabase extends _$AtrilDatabase {
   /// starts moving here, one step per table, and each step is exactly what
   /// [migration] says it is.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// How the schema is created, how it moves between versions, and what is
   /// switched on for every connection.

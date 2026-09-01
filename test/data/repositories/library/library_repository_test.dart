@@ -1,7 +1,13 @@
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/library/library_repository_impl.dart';
+import 'package:atril/data/services/api/library_api.dart';
+import 'package:atril/data/services/api/session.dart';
+import 'package:atril/data/services/channel/channel.dart';
+import 'package:atril/data/services/content/content_uploader.dart';
+import 'package:atril/data/services/content/upload_queue.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/data/services/local/database.dart';
+import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/data/services/sync/author.dart';
 import 'package:atril/data/services/sync/reconciler.dart';
 import 'package:atril/domain/crdt/hybrid_clock.dart';
@@ -79,6 +85,24 @@ Future<LibraryRepository> _repository(
       mint: _nextId,
     ),
     blobs: blobs,
+    uploads: UploadQueue(
+      database: database,
+      // The queue is never run in these tests. What is being checked is that
+      // an import leaves the node owed a file, which is a row and not a call.
+      uploader: ContentUploader(
+        api: LibraryApi(
+          connection: NodeConnection(
+            NodeEndpoint(authority: 'nowhere.example:9090'),
+          ),
+          session: SessionHolder(
+            store: MemorySessionStore(),
+            refresher: () => throw StateError('an import dials nothing'),
+          ),
+        ),
+        blobs: blobs,
+      ),
+      now: () => _at,
+    ),
     mint: _nextId,
     now: () => _at,
   );

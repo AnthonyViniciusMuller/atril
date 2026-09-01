@@ -156,13 +156,16 @@ final class ContentUploader {
     String contentHash, {
     required String mediaType,
     String? resuming,
-    void Function(UploadProgress progress)? onProgress,
+    Future<void> Function(UploadProgress progress)? onProgress,
   }) async {
     final size = await blobs.sizeOf(contentHash);
 
     if (size == null) {
+      // Not found and not a failed precondition: nothing that happens later
+      // makes a file this device does not have appear, so a queue that read
+      // this as *not yet* would wait on it forever.
       throw AppException(
-        kind: ErrorKind.failedPrecondition,
+        kind: ErrorKind.notFound,
         message: 'this device does not hold the bytes of $contentHash',
         code: codeBlobMissing,
         op: opUploadContent,
@@ -204,6 +207,18 @@ final class ContentUploader {
       return UploadOutcome.alreadyHeld;
     }
 
+    // Reported before a byte travels, because the identifier is the thing a
+    // later launch resumes with: a device told about it only once a chunk had
+    // landed would forget every session that opened and then lost its
+    // connection — which is the case the whole shape exists for.
+    await onProgress?.call(
+      UploadProgress(
+        uploadId: started.uploadId,
+        sentBytes: 0,
+        totalBytes: size,
+      ),
+    );
+
     return _deliver(
       started.uploadId,
       contentHash,
@@ -224,7 +239,7 @@ final class ContentUploader {
     String uploadId,
     String contentHash,
     int size, {
-    void Function(UploadProgress progress)? onProgress,
+    Future<void> Function(UploadProgress progress)? onProgress,
   }) async {
     try {
       // Where the node is, asked with a chunk of no bytes. A chunk at an
@@ -262,7 +277,7 @@ final class ContentUploader {
     String contentHash,
     int size, {
     int from = 0,
-    void Function(UploadProgress progress)? onProgress,
+    Future<void> Function(UploadProgress progress)? onProgress,
   }) async {
     try {
       await _send(
@@ -349,7 +364,7 @@ final class ContentUploader {
     String contentHash,
     int size, {
     int from = 0,
-    void Function(UploadProgress progress)? onProgress,
+    Future<void> Function(UploadProgress progress)? onProgress,
   }) async {
     var offset = from;
     var stalled = 0;
@@ -409,7 +424,7 @@ final class ContentUploader {
     String contentHash,
     int from, {
     required int size,
-    void Function(UploadProgress progress)? onProgress,
+    Future<void> Function(UploadProgress progress)? onProgress,
   }) async {
     var offset = from;
 
@@ -423,7 +438,11 @@ final class ContentUploader {
       // Reported from the node's own count and never from this device's. It is
       // the number a restart continues from, and a device that recorded what
       // it *sent* would resume past bytes that never landed.
-      onProgress?.call(
+      // Awaited, not fired and forgotten. What the caller does with it is
+      // write the offset a later launch will resume from, and a write that had
+      // not landed when the connection dropped is a transfer that starts again
+      // from nothing.
+      await onProgress?.call(
         UploadProgress(
           uploadId: uploadId,
           sentBytes: received,

@@ -6708,6 +6708,630 @@ class RecordVersionsCompanion extends UpdateCompanion<RecordVersionRow> {
   }
 }
 
+class $ContentUploadsTable extends ContentUploads
+    with TableInfo<$ContentUploadsTable, ContentUploadRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContentUploadsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 64,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mediaTypeMeta = const VerificationMeta(
+    'mediaType',
+  );
+  @override
+  late final GeneratedColumn<String> mediaType = GeneratedColumn<String>(
+    'media_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _uploadIdMeta = const VerificationMeta(
+    'uploadId',
+  );
+  @override
+  late final GeneratedColumn<String> uploadId = GeneratedColumn<String>(
+    'upload_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sentBytesMeta = const VerificationMeta(
+    'sentBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sentBytes = GeneratedColumn<int>(
+    'sent_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> queuedAt =
+      GeneratedColumn<int>(
+        'queued_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ContentUploadsTable.$converterqueuedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> attemptedAt =
+      GeneratedColumn<int>(
+        'attempted_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($ContentUploadsTable.$converterattemptedAtn);
+  static const VerificationMeta _refusedCodeMeta = const VerificationMeta(
+    'refusedCode',
+  );
+  @override
+  late final GeneratedColumn<String> refusedCode = GeneratedColumn<String>(
+    'refused_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    contentHash,
+    mediaType,
+    sizeBytes,
+    uploadId,
+    sentBytes,
+    queuedAt,
+    attemptedAt,
+    refusedCode,
+    attempts,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'content_uploads';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContentUploadRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('media_type')) {
+      context.handle(
+        _mediaTypeMeta,
+        mediaType.isAcceptableOrUnknown(data['media_type']!, _mediaTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mediaTypeMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('upload_id')) {
+      context.handle(
+        _uploadIdMeta,
+        uploadId.isAcceptableOrUnknown(data['upload_id']!, _uploadIdMeta),
+      );
+    }
+    if (data.containsKey('sent_bytes')) {
+      context.handle(
+        _sentBytesMeta,
+        sentBytes.isAcceptableOrUnknown(data['sent_bytes']!, _sentBytesMeta),
+      );
+    }
+    if (data.containsKey('refused_code')) {
+      context.handle(
+        _refusedCodeMeta,
+        refusedCode.isAcceptableOrUnknown(
+          data['refused_code']!,
+          _refusedCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentHash};
+  @override
+  ContentUploadRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContentUploadRow(
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      mediaType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_type'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      uploadId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upload_id'],
+      ),
+      sentBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sent_bytes'],
+      )!,
+      queuedAt: $ContentUploadsTable.$converterqueuedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}queued_at'],
+        )!,
+      ),
+      attemptedAt: $ContentUploadsTable.$converterattemptedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}attempted_at'],
+        ),
+      ),
+      refusedCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}refused_code'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+    );
+  }
+
+  @override
+  $ContentUploadsTable createAlias(String alias) {
+    return $ContentUploadsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, int> $converterqueuedAt =
+      const InstantConverter();
+  static TypeConverter<DateTime, int> $converterattemptedAt =
+      const InstantConverter();
+  static TypeConverter<DateTime?, int?> $converterattemptedAtn =
+      NullAwareTypeConverter.wrap($converterattemptedAt);
+}
+
+class ContentUploadRow extends DataClass
+    implements Insertable<ContentUploadRow> {
+  /// The file, lowercase hex sha-256.
+  final String contentHash;
+
+  /// What it is, as it was declared to the node.
+  ///
+  /// It is stored rather than derived on each attempt because it is part of
+  /// the declaration the node checked: a build that changed its mind about
+  /// what a `.mobi` is called would otherwise resume a transfer under a
+  /// description the node did not agree to.
+  final String mediaType;
+
+  /// How many bytes there are, by this device's own count.
+  final int sizeBytes;
+
+  /// The session the node opened, or `null` for a transfer that has not
+  /// started or whose session is known to be gone.
+  final String? uploadId;
+
+  /// How many bytes the node last said it holds.
+  ///
+  /// It is what the node reported and never what this device sent. A device
+  /// that recorded what it *sent* would resume past bytes that never landed,
+  /// and the digest at the end is what would notice — after the whole file had
+  /// travelled.
+  final int sentBytes;
+
+  /// When the transfer entered the queue.
+  final DateTime queuedAt;
+
+  /// When it was last attempted, or `null` for one nothing has tried.
+  final DateTime? attemptedAt;
+
+  /// Why the last attempt did not finish, as the node's stable reason or this
+  /// app's own code, or `null` for one that has not failed.
+  ///
+  /// `unclaimed_content` is the one worth naming here, because it is not a
+  /// failure at all: C16 refuses an upload for a digest no work of the reader's
+  /// names, and this app never calls `CreateEbook`, so every freshly imported
+  /// book answers that until the operation creating it has been pushed. The
+  /// row stays queued and the next attempt after a push succeeds.
+  final String? refusedCode;
+
+  /// How many attempts have been made, so that a screen can say *this one is
+  /// not working* rather than showing a queue that silently never drains.
+  final int attempts;
+  const ContentUploadRow({
+    required this.contentHash,
+    required this.mediaType,
+    required this.sizeBytes,
+    this.uploadId,
+    required this.sentBytes,
+    required this.queuedAt,
+    this.attemptedAt,
+    this.refusedCode,
+    required this.attempts,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_hash'] = Variable<String>(contentHash);
+    map['media_type'] = Variable<String>(mediaType);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    if (!nullToAbsent || uploadId != null) {
+      map['upload_id'] = Variable<String>(uploadId);
+    }
+    map['sent_bytes'] = Variable<int>(sentBytes);
+    {
+      map['queued_at'] = Variable<int>(
+        $ContentUploadsTable.$converterqueuedAt.toSql(queuedAt),
+      );
+    }
+    if (!nullToAbsent || attemptedAt != null) {
+      map['attempted_at'] = Variable<int>(
+        $ContentUploadsTable.$converterattemptedAtn.toSql(attemptedAt),
+      );
+    }
+    if (!nullToAbsent || refusedCode != null) {
+      map['refused_code'] = Variable<String>(refusedCode);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    return map;
+  }
+
+  ContentUploadsCompanion toCompanion(bool nullToAbsent) {
+    return ContentUploadsCompanion(
+      contentHash: Value(contentHash),
+      mediaType: Value(mediaType),
+      sizeBytes: Value(sizeBytes),
+      uploadId: uploadId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(uploadId),
+      sentBytes: Value(sentBytes),
+      queuedAt: Value(queuedAt),
+      attemptedAt: attemptedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attemptedAt),
+      refusedCode: refusedCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(refusedCode),
+      attempts: Value(attempts),
+    );
+  }
+
+  factory ContentUploadRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContentUploadRow(
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      mediaType: serializer.fromJson<String>(json['mediaType']),
+      sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
+      uploadId: serializer.fromJson<String?>(json['uploadId']),
+      sentBytes: serializer.fromJson<int>(json['sentBytes']),
+      queuedAt: serializer.fromJson<DateTime>(json['queuedAt']),
+      attemptedAt: serializer.fromJson<DateTime?>(json['attemptedAt']),
+      refusedCode: serializer.fromJson<String?>(json['refusedCode']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contentHash': serializer.toJson<String>(contentHash),
+      'mediaType': serializer.toJson<String>(mediaType),
+      'sizeBytes': serializer.toJson<int>(sizeBytes),
+      'uploadId': serializer.toJson<String?>(uploadId),
+      'sentBytes': serializer.toJson<int>(sentBytes),
+      'queuedAt': serializer.toJson<DateTime>(queuedAt),
+      'attemptedAt': serializer.toJson<DateTime?>(attemptedAt),
+      'refusedCode': serializer.toJson<String?>(refusedCode),
+      'attempts': serializer.toJson<int>(attempts),
+    };
+  }
+
+  ContentUploadRow copyWith({
+    String? contentHash,
+    String? mediaType,
+    int? sizeBytes,
+    Value<String?> uploadId = const Value.absent(),
+    int? sentBytes,
+    DateTime? queuedAt,
+    Value<DateTime?> attemptedAt = const Value.absent(),
+    Value<String?> refusedCode = const Value.absent(),
+    int? attempts,
+  }) => ContentUploadRow(
+    contentHash: contentHash ?? this.contentHash,
+    mediaType: mediaType ?? this.mediaType,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    uploadId: uploadId.present ? uploadId.value : this.uploadId,
+    sentBytes: sentBytes ?? this.sentBytes,
+    queuedAt: queuedAt ?? this.queuedAt,
+    attemptedAt: attemptedAt.present ? attemptedAt.value : this.attemptedAt,
+    refusedCode: refusedCode.present ? refusedCode.value : this.refusedCode,
+    attempts: attempts ?? this.attempts,
+  );
+  ContentUploadRow copyWithCompanion(ContentUploadsCompanion data) {
+    return ContentUploadRow(
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      mediaType: data.mediaType.present ? data.mediaType.value : this.mediaType,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      uploadId: data.uploadId.present ? data.uploadId.value : this.uploadId,
+      sentBytes: data.sentBytes.present ? data.sentBytes.value : this.sentBytes,
+      queuedAt: data.queuedAt.present ? data.queuedAt.value : this.queuedAt,
+      attemptedAt: data.attemptedAt.present
+          ? data.attemptedAt.value
+          : this.attemptedAt,
+      refusedCode: data.refusedCode.present
+          ? data.refusedCode.value
+          : this.refusedCode,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContentUploadRow(')
+          ..write('contentHash: $contentHash, ')
+          ..write('mediaType: $mediaType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('uploadId: $uploadId, ')
+          ..write('sentBytes: $sentBytes, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('refusedCode: $refusedCode, ')
+          ..write('attempts: $attempts')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    contentHash,
+    mediaType,
+    sizeBytes,
+    uploadId,
+    sentBytes,
+    queuedAt,
+    attemptedAt,
+    refusedCode,
+    attempts,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContentUploadRow &&
+          other.contentHash == this.contentHash &&
+          other.mediaType == this.mediaType &&
+          other.sizeBytes == this.sizeBytes &&
+          other.uploadId == this.uploadId &&
+          other.sentBytes == this.sentBytes &&
+          other.queuedAt == this.queuedAt &&
+          other.attemptedAt == this.attemptedAt &&
+          other.refusedCode == this.refusedCode &&
+          other.attempts == this.attempts);
+}
+
+class ContentUploadsCompanion extends UpdateCompanion<ContentUploadRow> {
+  final Value<String> contentHash;
+  final Value<String> mediaType;
+  final Value<int> sizeBytes;
+  final Value<String?> uploadId;
+  final Value<int> sentBytes;
+  final Value<DateTime> queuedAt;
+  final Value<DateTime?> attemptedAt;
+  final Value<String?> refusedCode;
+  final Value<int> attempts;
+  final Value<int> rowid;
+  const ContentUploadsCompanion({
+    this.contentHash = const Value.absent(),
+    this.mediaType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.uploadId = const Value.absent(),
+    this.sentBytes = const Value.absent(),
+    this.queuedAt = const Value.absent(),
+    this.attemptedAt = const Value.absent(),
+    this.refusedCode = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContentUploadsCompanion.insert({
+    required String contentHash,
+    required String mediaType,
+    required int sizeBytes,
+    this.uploadId = const Value.absent(),
+    this.sentBytes = const Value.absent(),
+    required DateTime queuedAt,
+    this.attemptedAt = const Value.absent(),
+    this.refusedCode = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : contentHash = Value(contentHash),
+       mediaType = Value(mediaType),
+       sizeBytes = Value(sizeBytes),
+       queuedAt = Value(queuedAt);
+  static Insertable<ContentUploadRow> custom({
+    Expression<String>? contentHash,
+    Expression<String>? mediaType,
+    Expression<int>? sizeBytes,
+    Expression<String>? uploadId,
+    Expression<int>? sentBytes,
+    Expression<int>? queuedAt,
+    Expression<int>? attemptedAt,
+    Expression<String>? refusedCode,
+    Expression<int>? attempts,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contentHash != null) 'content_hash': contentHash,
+      if (mediaType != null) 'media_type': mediaType,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (uploadId != null) 'upload_id': uploadId,
+      if (sentBytes != null) 'sent_bytes': sentBytes,
+      if (queuedAt != null) 'queued_at': queuedAt,
+      if (attemptedAt != null) 'attempted_at': attemptedAt,
+      if (refusedCode != null) 'refused_code': refusedCode,
+      if (attempts != null) 'attempts': attempts,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContentUploadsCompanion copyWith({
+    Value<String>? contentHash,
+    Value<String>? mediaType,
+    Value<int>? sizeBytes,
+    Value<String?>? uploadId,
+    Value<int>? sentBytes,
+    Value<DateTime>? queuedAt,
+    Value<DateTime?>? attemptedAt,
+    Value<String?>? refusedCode,
+    Value<int>? attempts,
+    Value<int>? rowid,
+  }) {
+    return ContentUploadsCompanion(
+      contentHash: contentHash ?? this.contentHash,
+      mediaType: mediaType ?? this.mediaType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      uploadId: uploadId ?? this.uploadId,
+      sentBytes: sentBytes ?? this.sentBytes,
+      queuedAt: queuedAt ?? this.queuedAt,
+      attemptedAt: attemptedAt ?? this.attemptedAt,
+      refusedCode: refusedCode ?? this.refusedCode,
+      attempts: attempts ?? this.attempts,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (mediaType.present) {
+      map['media_type'] = Variable<String>(mediaType.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (uploadId.present) {
+      map['upload_id'] = Variable<String>(uploadId.value);
+    }
+    if (sentBytes.present) {
+      map['sent_bytes'] = Variable<int>(sentBytes.value);
+    }
+    if (queuedAt.present) {
+      map['queued_at'] = Variable<int>(
+        $ContentUploadsTable.$converterqueuedAt.toSql(queuedAt.value),
+      );
+    }
+    if (attemptedAt.present) {
+      map['attempted_at'] = Variable<int>(
+        $ContentUploadsTable.$converterattemptedAtn.toSql(attemptedAt.value),
+      );
+    }
+    if (refusedCode.present) {
+      map['refused_code'] = Variable<String>(refusedCode.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContentUploadsCompanion(')
+          ..write('contentHash: $contentHash, ')
+          ..write('mediaType: $mediaType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('uploadId: $uploadId, ')
+          ..write('sentBytes: $sentBytes, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('refusedCode: $refusedCode, ')
+          ..write('attempts: $attempts, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -6729,6 +7353,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $AppliedOperationsTable appliedOperations =
       $AppliedOperationsTable(this);
   late final $RecordVersionsTable recordVersions = $RecordVersionsTable(this);
+  late final $ContentUploadsTable contentUploads = $ContentUploadsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
@@ -6749,6 +7374,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final LibraryDao libraryDao = LibraryDao(this as AtrilDatabase);
   late final SyncDao syncDao = SyncDao(this as AtrilDatabase);
   late final RecordsDao recordsDao = RecordsDao(this as AtrilDatabase);
+  late final TransfersDao transfersDao = TransfersDao(this as AtrilDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6768,6 +7394,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     nodeCursors,
     appliedOperations,
     recordVersions,
+    contentUploads,
     knownServersOrigin,
     ebooksContentHash,
     ebookCollectionsCollection,
@@ -11583,6 +12210,297 @@ typedef $$RecordVersionsTableProcessedTableManager =
       RecordVersionRow,
       PrefetchHooks Function()
     >;
+typedef $$ContentUploadsTableCreateCompanionBuilder =
+    ContentUploadsCompanion Function({
+      required String contentHash,
+      required String mediaType,
+      required int sizeBytes,
+      Value<String?> uploadId,
+      Value<int> sentBytes,
+      required DateTime queuedAt,
+      Value<DateTime?> attemptedAt,
+      Value<String?> refusedCode,
+      Value<int> attempts,
+      Value<int> rowid,
+    });
+typedef $$ContentUploadsTableUpdateCompanionBuilder =
+    ContentUploadsCompanion Function({
+      Value<String> contentHash,
+      Value<String> mediaType,
+      Value<int> sizeBytes,
+      Value<String?> uploadId,
+      Value<int> sentBytes,
+      Value<DateTime> queuedAt,
+      Value<DateTime?> attemptedAt,
+      Value<String?> refusedCode,
+      Value<int> attempts,
+      Value<int> rowid,
+    });
+
+class $$ContentUploadsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $ContentUploadsTable> {
+  $$ContentUploadsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaType => $composableBuilder(
+    column: $table.mediaType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uploadId => $composableBuilder(
+    column: $table.uploadId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sentBytes => $composableBuilder(
+    column: $table.sentBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get queuedAt =>
+      $composableBuilder(
+        column: $table.queuedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int> get attemptedAt =>
+      $composableBuilder(
+        column: $table.attemptedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get refusedCode => $composableBuilder(
+    column: $table.refusedCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ContentUploadsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $ContentUploadsTable> {
+  $$ContentUploadsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mediaType => $composableBuilder(
+    column: $table.mediaType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uploadId => $composableBuilder(
+    column: $table.uploadId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sentBytes => $composableBuilder(
+    column: $table.sentBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get queuedAt => $composableBuilder(
+    column: $table.queuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get refusedCode => $composableBuilder(
+    column: $table.refusedCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContentUploadsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $ContentUploadsTable> {
+  $$ContentUploadsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mediaType =>
+      $composableBuilder(column: $table.mediaType, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get uploadId =>
+      $composableBuilder(column: $table.uploadId, builder: (column) => column);
+
+  GeneratedColumn<int> get sentBytes =>
+      $composableBuilder(column: $table.sentBytes, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get queuedAt =>
+      $composableBuilder(column: $table.queuedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, int> get attemptedAt =>
+      $composableBuilder(
+        column: $table.attemptedAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get refusedCode => $composableBuilder(
+    column: $table.refusedCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+}
+
+class $$ContentUploadsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $ContentUploadsTable,
+          ContentUploadRow,
+          $$ContentUploadsTableFilterComposer,
+          $$ContentUploadsTableOrderingComposer,
+          $$ContentUploadsTableAnnotationComposer,
+          $$ContentUploadsTableCreateCompanionBuilder,
+          $$ContentUploadsTableUpdateCompanionBuilder,
+          (
+            ContentUploadRow,
+            BaseReferences<
+              _$AtrilDatabase,
+              $ContentUploadsTable,
+              ContentUploadRow
+            >,
+          ),
+          ContentUploadRow,
+          PrefetchHooks Function()
+        > {
+  $$ContentUploadsTableTableManager(
+    _$AtrilDatabase db,
+    $ContentUploadsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContentUploadsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContentUploadsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContentUploadsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> contentHash = const Value.absent(),
+                Value<String> mediaType = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<String?> uploadId = const Value.absent(),
+                Value<int> sentBytes = const Value.absent(),
+                Value<DateTime> queuedAt = const Value.absent(),
+                Value<DateTime?> attemptedAt = const Value.absent(),
+                Value<String?> refusedCode = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContentUploadsCompanion(
+                contentHash: contentHash,
+                mediaType: mediaType,
+                sizeBytes: sizeBytes,
+                uploadId: uploadId,
+                sentBytes: sentBytes,
+                queuedAt: queuedAt,
+                attemptedAt: attemptedAt,
+                refusedCode: refusedCode,
+                attempts: attempts,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String contentHash,
+                required String mediaType,
+                required int sizeBytes,
+                Value<String?> uploadId = const Value.absent(),
+                Value<int> sentBytes = const Value.absent(),
+                required DateTime queuedAt,
+                Value<DateTime?> attemptedAt = const Value.absent(),
+                Value<String?> refusedCode = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContentUploadsCompanion.insert(
+                contentHash: contentHash,
+                mediaType: mediaType,
+                sizeBytes: sizeBytes,
+                uploadId: uploadId,
+                sentBytes: sentBytes,
+                queuedAt: queuedAt,
+                attemptedAt: attemptedAt,
+                refusedCode: refusedCode,
+                attempts: attempts,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContentUploadsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $ContentUploadsTable,
+      ContentUploadRow,
+      $$ContentUploadsTableFilterComposer,
+      $$ContentUploadsTableOrderingComposer,
+      $$ContentUploadsTableAnnotationComposer,
+      $$ContentUploadsTableCreateCompanionBuilder,
+      $$ContentUploadsTableUpdateCompanionBuilder,
+      (
+        ContentUploadRow,
+        BaseReferences<_$AtrilDatabase, $ContentUploadsTable, ContentUploadRow>,
+      ),
+      ContentUploadRow,
+      PrefetchHooks Function()
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -11615,4 +12533,6 @@ class $AtrilDatabaseManager {
       $$AppliedOperationsTableTableManager(_db, _db.appliedOperations);
   $$RecordVersionsTableTableManager get recordVersions =>
       $$RecordVersionsTableTableManager(_db, _db.recordVersions);
+  $$ContentUploadsTableTableManager get contentUploads =>
+      $$ContentUploadsTableTableManager(_db, _db.contentUploads);
 }

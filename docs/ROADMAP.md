@@ -675,12 +675,23 @@ that reason.
       nothing can improve — the node's ceiling, a store contradicting itself — releases it. A
       failure to discard is never reported, because it would replace the reason the transfer
       stopped with the reason the courtesy did
-- [ ] `feat: carry an upload across a restart` — the `upload_id` and the offset in the local
+- [x] `feat: carry an upload across a restart` — the `upload_id` and the offset in the local
       database, so closing the app does not start a large book over. The node's `received_bytes`
       is the authority and this device's opinion is a hint: D11 stages the bytes in a temporary
       file held in the process, so a node restart or an expiry invalidates a session this device
       is still holding. Every call is therefore written to fall back to `BeginEbookUpload`, and a
-      refused chunk is a beginning rather than a failure
+      refused chunk is a beginning rather than a failure. The queue is a table beside the
+      operation log and not part of it, because the two are owed separately and C16 is why they
+      have to be: the record travels when the log is pushed and the file waits for that push, so
+      every freshly imported book's *first* attempt is refused `unclaimed_content` and stays
+      queued. Two things fell out of writing it. The session is recorded **before a byte
+      travels** — a device told about the identifier only once a chunk had landed would forget
+      every session that opened and then lost its connection, which is the case the whole shape
+      exists for. And the offset written down is what the node *reported*, never what this device
+      sent, which is visible in the test: a connection that drops with the reply in flight leaves
+      the row saying nought while the node holds sixty-four bytes, and the resume asks the node
+      rather than believing the row. A device that wrote down what it sent would resume past
+      bytes that never landed and find out at the digest, after the whole file had travelled
 - [ ] `feat: add content download` — `DownloadEbookContent` into the blob store, resumable,
       cancellable, and reported per book. A node that replicates this reader without their files
       answers that it does not hold them, and that is a legitimate state and not an error

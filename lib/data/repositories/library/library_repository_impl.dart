@@ -17,6 +17,7 @@ import '../../../utils/result.dart';
 import 'dart:typed_data';
 
 import '../../services/api/errors.dart';
+import '../../services/content/upload_queue.dart';
 import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_kind.dart';
 import '../../services/files/file_source.dart';
@@ -47,6 +48,7 @@ final class LibraryRepositoryImpl implements LibraryRepository {
     required this.library,
     required this.author,
     required this.blobs,
+    required this.uploads,
     String Function()? mint,
     DateTime Function()? now,
   }) : _mint = mint ?? mintIdentifier,
@@ -61,6 +63,9 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
   /// Where the bytes go.
   final BlobStore blobs;
+
+  /// What the node is owed, and what eventually pays it.
+  final UploadQueue uploads;
 
   final String Function() _mint;
   final DateTime Function() _now;
@@ -138,6 +143,17 @@ final class LibraryRepositoryImpl implements LibraryRepository {
           bytes: cover.bytes,
         );
       }
+
+      // The node is owed the file from here on, and the queue is a table: an
+      // import made on a train is a transfer that survives closing the app.
+      // It is queued and not sent — C16 refuses an upload for a digest no work
+      // of the reader's names, and the work reaches the node with the log, so
+      // the first attempt of a fresh import is a *not yet* by construction.
+      await uploads.owe(
+        contentHash: stored.contentHash,
+        mediaType: kind.mediaType,
+        sizeBytes: stored.sizeBytes,
+      );
 
       final imported = await library.readEbook(id);
 

@@ -255,10 +255,14 @@ void main() {
       await uploader.upload(
         digest,
         mediaType: 'application/epub+zip',
-        onProgress: (UploadProgress progress) => seen.add(progress.sentBytes),
+        onProgress: (UploadProgress progress) async =>
+            seen.add(progress.sentBytes),
       );
 
-      expect(seen, <int>[64, 128, 192, 200]);
+      // Nought first, before a byte travels: the identifier is what a later
+      // launch resumes with, and a device told about it only once a chunk had
+      // landed would forget every session that opened and lost its connection.
+      expect(seen, <int>[0, 64, 128, 192, 200]);
     });
   });
 

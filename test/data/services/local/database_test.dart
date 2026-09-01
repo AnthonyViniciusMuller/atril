@@ -40,7 +40,7 @@ void main() {
 
       await database.customSelect('SELECT 1').get();
 
-      expect(database.schemaVersion, 2);
+      expect(database.schemaVersion, 3);
     });
 
     test(
