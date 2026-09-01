@@ -167,7 +167,10 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
       return icon;
     }
 
-    return Badge.count(count: _sync.state.pending, child: icon);
+    // What is counted is everything this device holds and no node does, which
+    // includes what a node refused: both halves are still only here, and only
+    // the screen behind the badge has room to say why they differ.
+    return Badge.count(count: _sync.state.notHandedOver, child: icon);
   }
 
   /// Goes to the destination at [index].

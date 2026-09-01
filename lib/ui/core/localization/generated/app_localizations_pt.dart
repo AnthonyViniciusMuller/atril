@@ -955,6 +955,61 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get syncChangesSection => 'O que ainda não saiu';
+
+  @override
+  String get syncRefusedSection => 'Recusadas pelo nó';
+
+  @override
+  String get syncRefusedExplanation =>
+      'O nó não aceitou estas alterações e não vai aceitar numa próxima tentativa. Elas continuam valendo neste aparelho e não vão chegar a nenhum outro.';
+
+  @override
+  String syncRefusedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recusadas pelo nó',
+      one: '1 recusada pelo nó',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncRefusedNoReason => 'O nó não disse por quê.';
+
+  @override
+  String get syncDiscard => 'Descartar';
+
+  @override
+  String get syncDiscardExplanation =>
+      'Descartar não desfaz o que você fez. Só faz este aparelho parar de guardar uma entrega que não vai acontecer.';
+
+  @override
+  String get syncDiscardTitle => 'Descartar esta alteração?';
+
+  @override
+  String get syncDiscarded => 'Alteração descartada.';
+
+  @override
+  String get syncDiscardFailed => 'Não foi possível descartar.';
+
+  @override
+  String get syncCancel => 'Cancelar';
+
+  @override
+  String get syncRecordEbook => 'Um livro';
+
+  @override
+  String get syncRecordCollection => 'Uma estante';
+
+  @override
+  String get syncRecordFiling => 'Um livro numa estante';
+
+  @override
+  String get syncRecordProgress => 'Onde você parou';
+
+  @override
+  String get syncRecordAnnotation => 'Uma marcação';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1907,4 +1962,59 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get syncChangesSection => 'O que ainda não saiu';
+
+  @override
+  String get syncRefusedSection => 'Recusadas pelo nó';
+
+  @override
+  String get syncRefusedExplanation =>
+      'O nó não aceitou estas alterações e não vai aceitar numa próxima tentativa. Elas continuam valendo neste aparelho e não vão chegar a nenhum outro.';
+
+  @override
+  String syncRefusedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recusadas pelo nó',
+      one: '1 recusada pelo nó',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncRefusedNoReason => 'O nó não disse por quê.';
+
+  @override
+  String get syncDiscard => 'Descartar';
+
+  @override
+  String get syncDiscardExplanation =>
+      'Descartar não desfaz o que você fez. Só faz este aparelho parar de guardar uma entrega que não vai acontecer.';
+
+  @override
+  String get syncDiscardTitle => 'Descartar esta alteração?';
+
+  @override
+  String get syncDiscarded => 'Alteração descartada.';
+
+  @override
+  String get syncDiscardFailed => 'Não foi possível descartar.';
+
+  @override
+  String get syncCancel => 'Cancelar';
+
+  @override
+  String get syncRecordEbook => 'Um livro';
+
+  @override
+  String get syncRecordCollection => 'Uma estante';
+
+  @override
+  String get syncRecordFiling => 'Um livro numa estante';
+
+  @override
+  String get syncRecordProgress => 'Onde você parou';
+
+  @override
+  String get syncRecordAnnotation => 'Uma marcação';
 }

@@ -955,4 +955,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncChangesSection => 'What has not left yet';
+
+  @override
+  String get syncRefusedSection => 'Refused by the node';
+
+  @override
+  String get syncRefusedExplanation =>
+      'The node did not accept these changes and will not accept them on another try. They still hold on this device and have reached no other.';
+
+  @override
+  String syncRefusedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count refused by the node',
+      one: '1 refused by the node',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncRefusedNoReason => 'The node did not say why.';
+
+  @override
+  String get syncDiscard => 'Discard';
+
+  @override
+  String get syncDiscardExplanation =>
+      'Discarding does not undo what you did. It only stops this device from holding a delivery that is not going to happen.';
+
+  @override
+  String get syncDiscardTitle => 'Discard this change?';
+
+  @override
+  String get syncDiscarded => 'Change discarded.';
+
+  @override
+  String get syncDiscardFailed => 'It was not possible to discard it.';
+
+  @override
+  String get syncCancel => 'Cancel';
+
+  @override
+  String get syncRecordEbook => 'A book';
+
+  @override
+  String get syncRecordCollection => 'A shelf';
+
+  @override
+  String get syncRecordFiling => 'A book on a shelf';
+
+  @override
+  String get syncRecordProgress => 'Where you stopped';
+
+  @override
+  String get syncRecordAnnotation => 'A mark';
 }

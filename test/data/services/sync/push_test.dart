@@ -138,10 +138,10 @@ void main() {
     expect(await database.syncDao.pendingCount(), 0);
   });
 
-  test('keeps a refused change and reports it', () async {
-    // The one outcome that reaches a reader. The quarantine is what later
-    // stops it being offered for ever; until then it stays owed, which is the
-    // honest state — the node does not have it.
+  test('quarantines a refused change, with what the node said', () async {
+    // The one outcome that reaches a reader. The local write stays exactly as
+    // it landed; what changes is that this device stops offering the change
+    // and starts saying so.
     await owe(1);
 
     node.refusing[_id(1)] = 'the work names a format this node does not admit';
@@ -150,20 +150,58 @@ void main() {
 
     expect(run.refused, 1);
     expect(run.handedOver, 0);
-    expect(await database.syncDao.pendingCount(), 1);
+
+    final refused = await database.syncDao.refused();
+
+    expect(refused, hasLength(1));
+    expect(refused.single.$1.id, _id(1));
+    expect(
+      refused.single.$2.reason,
+      'the work names a format this node does not admit',
+    );
   });
 
-  test('stops when a batch retires nothing', () async {
-    // Every operation in the head batch was refused, so the next read would
-    // answer with the same batch for ever. The pass reports it and ends.
-    await owe(2);
+  test('stops offering a change that was refused', () async {
+    // Without this the head of the outbox is offered for ever and nothing
+    // behind it is offered at all.
+    await owe(1);
 
-    node.refusing
-      ..[_id(1)] = 'no'
-      ..[_id(2)] = 'no';
+    node.refusing[_id(1)] = 'no';
 
-    expect((await pusher.run()).refused, 2);
+    await pusher.run();
+    await pusher.run();
+
     expect(node.pushes, hasLength(1));
+    expect(await database.syncDao.pendingCount(), 0);
+  });
+
+  test('goes on to the changes behind a refused one', () async {
+    // The whole point of quarantining rather than leaving it queued: one
+    // refusal must not stop a reader's other work from reaching anybody.
+    await owe(3);
+
+    node.refusing[_id(1)] = 'no';
+
+    final run = await pusher.run(batchSize: 1);
+
+    expect(run.refused, 1);
+    expect(run.applied, 2);
+    expect(node.pushes, <List<String>>[
+      <String>[_id(1)],
+      <String>[_id(2)],
+      <String>[_id(3)],
+    ]);
+  });
+
+  test('forgets a refused change and its refusal together', () async {
+    await owe(1);
+
+    node.refusing[_id(1)] = 'no';
+
+    await pusher.run();
+
+    expect(await database.syncDao.discard(_id(1)), 1);
+    expect(await database.syncDao.refused(), isEmpty);
   });
 
   test('keeps a verdict this build cannot name', () async {

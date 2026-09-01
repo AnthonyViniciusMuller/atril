@@ -10,6 +10,8 @@ mixin _$SyncDaoMixin on DatabaseAccessor<AtrilDatabase> {
   $NodeCursorsTable get nodeCursors => attachedDatabase.nodeCursors;
   $AppliedOperationsTable get appliedOperations =>
       attachedDatabase.appliedOperations;
+  $RefusedOperationsTable get refusedOperations =>
+      attachedDatabase.refusedOperations;
   SyncDaoManager get managers => SyncDaoManager(this);
 }
 
@@ -29,5 +31,10 @@ class SyncDaoManager {
       $$AppliedOperationsTableTableManager(
         _db.attachedDatabase,
         _db.appliedOperations,
+      );
+  $$RefusedOperationsTableTableManager get refusedOperations =>
+      $$RefusedOperationsTableTableManager(
+        _db.attachedDatabase,
+        _db.refusedOperations,
       );
 }

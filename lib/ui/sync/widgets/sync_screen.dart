@@ -17,12 +17,22 @@
 /// whenever the cursor moves — a device that is up to date exchanges no
 /// operations, and a timestamp that only moved on a pull would tell a reader
 /// their last sync was whenever somebody last wrote something.
+///
+/// **The refused section is the only thing here that asks the reader for
+/// anything**, and it appears only when there is something in it. A change the
+/// node will not take is the state the local-first write path makes possible:
+/// the reader watched it land, it is in the replica, and it will reach nobody.
+/// The screen names the *kind* of record rather than the record — the record
+/// may be exactly what the node does not know about — gives the node's reason,
+/// and offers a discard whose confirmation says the one thing a reader could
+/// otherwise get wrong: discarding undoes nothing they wrote.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/sync/sync_repository.dart';
+import '../../../domain/models/operation.dart';
 import '../../../domain/models/sync_state.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
@@ -113,12 +123,92 @@ class _SyncScreenState extends State<SyncScreen> {
                 enabled: !_model.now.running,
                 onTap: _model.now.execute,
               ),
+              if (state.refusals.isNotEmpty) ...<Widget>[
+                _heading(theme, l10n.syncRefusedSection),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    l10n.syncRefusedExplanation,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                for (final refusal in state.refusals)
+                  ListTile(
+                    leading: const Icon(Icons.report_gmailerrorred_outlined),
+                    title: Text(_recordOf(l10n, refusal.change.entity)),
+                    subtitle: Text(
+                      refusal.reason.isEmpty
+                          ? l10n.syncRefusedNoReason
+                          : refusal.reason,
+                    ),
+                    trailing: TextButton(
+                      onPressed: () => _confirmDiscard(refusal.change.id),
+                      child: Text(l10n.syncDiscard),
+                    ),
+                  ),
+              ],
             ],
           );
         },
       ),
     );
   }
+
+  /// Asks before forgetting a refused change, and says what forgetting means.
+  ///
+  /// The confirmation exists for one sentence: discarding undoes nothing the
+  /// reader wrote. Without it the action reads as *delete my change*, which is
+  /// exactly what this app refuses to do about a refusal.
+  Future<void> _confirmDiscard(String operationId) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.syncDiscardTitle),
+        content: Text(l10n.syncDiscardExplanation),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.syncCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.syncDiscard),
+          ),
+        ],
+      ),
+    );
+
+    if (discard != true) {
+      return;
+    }
+
+    final outcome = await _model.discard(operationId);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          outcome is Ok<void> ? l10n.syncDiscarded : l10n.syncDiscardFailed,
+        ),
+      ),
+    );
+  }
+
+  /// What kind of record a refused change was about.
+  ///
+  /// It names the kind and not the record, because the record may be precisely
+  /// what the node does not have: a refusal about a work whose creation never
+  /// landed there has no title on that side to report.
+  String _recordOf(AppLocalizations l10n, TargetEntity entity) =>
+      switch (entity) {
+        TargetEntity.ebook => l10n.syncRecordEbook,
+        TargetEntity.collection => l10n.syncRecordCollection,
+        TargetEntity.ebookCollection => l10n.syncRecordFiling,
+        TargetEntity.readingProgress => l10n.syncRecordProgress,
+        TargetEntity.annotation => l10n.syncRecordAnnotation,
+      };
 
   Widget _heading(ThemeData theme, String text) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import '../../../data/repositories/sync/sync_repository.dart';
 import '../../../domain/models/sync_state.dart';
 import '../../../utils/command.dart';
+import '../../../utils/result.dart';
 
 /// The state of the sync surface.
 final class SyncViewModel extends ChangeNotifier {
@@ -28,6 +29,16 @@ final class SyncViewModel extends ChangeNotifier {
 
   /// Synchronizes at the reader's asking, clearing whatever wait was running.
   late final Command0<void> now;
+
+  /// Forgets the refused change [operationId], and answers for it.
+  ///
+  /// It is a method and not a `Command` deliberately, which is the one place
+  /// this app departs from *view models expose commands*: a command carries the
+  /// state of *one* running action, and there is one of these per refused
+  /// change in a list. A single command would report the last one's outcome
+  /// against every row.
+  Future<Result<void>> discard(String operationId) =>
+      sync.discard(operationId);
 
   late final StreamSubscription<SyncState> _states;
 

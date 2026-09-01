@@ -1183,14 +1183,19 @@ and they are recorded here because none of them is visible from the package's RE
       And **waiting is not failing**: the screen distinguishes a node that did not answer, which
       it calls a wait, from a refusal no retry fixes, which it names — an offline-first app whose
       ordinary state looks like a fault has taught its reader to ignore the one time it is not
-- [ ] `feat: quarantine a refused change` — the case the local-first write path makes possible:
+- [x] `feat: quarantine a refused change` — the case the local-first write path makes possible:
       the reader has seen the change land and the node will not take it, so the device is showing
       something that will reach nobody. The record carries a refused flag and the node's reason,
       the sync screen lists it, and the reader can discard it. It is deliberately not a rollback
       — the write may have others built on top of it, and destroying those to satisfy a refusal
       is the one outcome worse than the refusal — and deliberately not silence, which would leave
       this device disagreeing with every replica and saying nothing. A correct client should
-      rarely produce one, so this is a flag and a list and not a merge interface
+      rarely produce one, so this is a flag and a list and not a merge interface. Two details the
+      plan left open. It is a **side table** and not a column on `pending_operations`, which keeps
+      the upgrade `createAll` — every version of this schema still only adds — and keeps the
+      outbox as dumb as its own comment asks for. And a quarantined change **stops being offered**,
+      which is the half that makes the drain work at all: the head of the outbox moves without
+      retiring, so one refusal no longer stops every change behind it from ever being pushed
 - [ ] `test: prove two devices converge` — two databases, one operation log, the later write
       pushed first, both landing on the write that wins on `(updated_at, device_id)`. It is
       Quire's own end-to-end reconciliation test, written from this side

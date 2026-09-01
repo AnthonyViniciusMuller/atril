@@ -28,6 +28,15 @@ abstract interface class SyncRepository {
   /// that is not one.
   Stream<SyncState> watchState();
 
+  /// Forgets a change a node refused, at the reader's asking.
+  ///
+  /// It removes the outbox entry and the refusal beside it, and touches the
+  /// record itself not at all. That is the whole of what discarding means here
+  /// and it is deliberately not a rollback: the write may have others built on
+  /// top of it — a note on a work whose creation was refused — and destroying
+  /// those to satisfy a refusal is the one outcome worse than the refusal.
+  Future<Result<void>> discard(String operationId);
+
   /// Synchronizes now, because the reader asked.
   ///
   /// It clears a backoff that is already running, which is the difference

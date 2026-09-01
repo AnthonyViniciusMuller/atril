@@ -20,10 +20,11 @@
 /// device that silently stops hearing from the reader's other ones.
 ///
 /// **One batch is offered at a time.** The stream is not a queue this device
-/// can fill: a batch goes out, its verdicts come back, and what they retired
-/// decides whether another follows. A pass that retired nothing stops, for the
-/// same reason the unary drain stops — the head of the outbox was refused, and
-/// offering it again is offering it for ever.
+/// can fill: a batch goes out, its verdicts come back, and whether they moved
+/// the head of the outbox decides whether another follows. A batch that moved
+/// nothing stops the pump, for the same reason the unary drain stops — the next
+/// read would return the same operations, and offering them again is offering
+/// them for ever.
 ///
 /// **It is not reachable from a browser**, because gRPC-Web carries a unary
 /// call and a server stream and neither of the other two. `watch.dart` is what
@@ -250,11 +251,12 @@ final class SyncStream implements SyncChannel {
 
         _offered.clear();
 
-        if (settlement.retired == 0) {
-          // The head of the outbox was refused, so the next batch would be the
-          // same one. It stops here and waits for the quarantine or for a
-          // change that supersedes it.
-          _log.warning('a batch of ${results.length} retired nothing');
+        if (!settlement.movedTheQueue) {
+          // The head of the outbox did not move, so the next batch would be
+          // the same one. A refusal does move it — the change is quarantined
+          // and stops being offered — so what reaches here is a batch answered
+          // entirely with verdicts this build cannot name.
+          _log.warning('a batch of ${results.length} moved nothing');
 
           return;
         }

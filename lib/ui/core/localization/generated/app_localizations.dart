@@ -1724,6 +1724,96 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'O que ainda não saiu'**
   String get syncChangesSection;
+
+  /// Título da seção que lista as alterações que o nó não aceitou. É a única coisa nesta tela que pede uma decisão do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Recusadas pelo nó'**
+  String get syncRefusedSection;
+
+  /// Dito acima da lista de alterações recusadas. O leitor precisa entender as duas metades: o que ele fez continua aqui, e não chegou a lugar nenhum.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O nó não aceitou estas alterações e não vai aceitar numa próxima tentativa. Elas continuam valendo neste aparelho e não vão chegar a nenhum outro.'**
+  String get syncRefusedExplanation;
+
+  /// Quantas alterações o nó recusou, dito na linha das configurações que leva a esta tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{count, plural, =1{1 recusada pelo nó} other{{count} recusadas pelo nó}}'**
+  String syncRefusedCount(int count);
+
+  /// Dito no lugar do motivo quando o nó recusou sem explicar. O contrato permite, e um espaço em branco pareceria um erro desta tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O nó não disse por quê.'**
+  String get syncRefusedNoReason;
+
+  /// Ação que faz o aparelho parar de guardar uma alteração recusada. Não desfaz nada do que o leitor escreveu: apaga o registro da entrega que não vai acontecer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Descartar'**
+  String get syncDiscard;
+
+  /// Dito na confirmação do descarte. É a distinção que a tela inteira existe para deixar clara.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Descartar não desfaz o que você fez. Só faz este aparelho parar de guardar uma entrega que não vai acontecer.'**
+  String get syncDiscardExplanation;
+
+  /// Título da confirmação do descarte de uma alteração recusada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Descartar esta alteração?'**
+  String get syncDiscardTitle;
+
+  /// Aviso mostrado depois que uma alteração recusada deixa de ser guardada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Alteração descartada.'**
+  String get syncDiscarded;
+
+  /// Erro mostrado quando o descarte de uma alteração recusada não pôde ser feito.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível descartar.'**
+  String get syncDiscardFailed;
+
+  /// Ação que fecha a confirmação do descarte sem descartar nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cancelar'**
+  String get syncCancel;
+
+  /// Como uma alteração recusada num livro é nomeada na lista. É o tipo de registro e não o título, porque o registro pode ser justamente o que o nó não conhece.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Um livro'**
+  String get syncRecordEbook;
+
+  /// Como uma alteração recusada numa estante é nomeada na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Uma estante'**
+  String get syncRecordCollection;
+
+  /// Como uma alteração recusada no arquivamento de um livro numa estante é nomeada na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Um livro numa estante'**
+  String get syncRecordFiling;
+
+  /// Como uma alteração recusada numa posição de leitura é nomeada na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Onde você parou'**
+  String get syncRecordProgress;
+
+  /// Como uma alteração recusada numa marcação é nomeada na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Uma marcação'**
+  String get syncRecordAnnotation;
 }
 
 class _AppLocalizationsDelegate

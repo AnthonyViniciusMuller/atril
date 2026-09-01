@@ -799,6 +799,12 @@ final class FakeSyncRepository implements SyncRepository {
   /// How many times a reader asked for a synchronization.
   int asked = 0;
 
+  /// The refused changes a reader asked this device to forget.
+  final List<String> discarded = <String>[];
+
+  /// What [discard] answers with.
+  Result<void> discards = const Result<void>.ok(null);
+
   /// What [syncNow] answers with.
   Result<void> answers = const Result<void>.ok(null);
 
@@ -820,6 +826,13 @@ final class FakeSyncRepository implements SyncRepository {
 
         listener.onCancel = subscription.cancel;
       });
+
+  @override
+  Future<Result<void>> discard(String operationId) async {
+    discarded.add(operationId);
+
+    return discards;
+  }
 
   @override
   Future<Result<void>> syncNow() async {

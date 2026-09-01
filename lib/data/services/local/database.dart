@@ -67,6 +67,7 @@ final _log = loggerFor('data/local');
     PendingOperations,
     NodeCursors,
     AppliedOperations,
+    RefusedOperations,
     RecordVersions,
     ContentUploads,
     ContentPins,
@@ -98,7 +99,7 @@ class AtrilDatabase extends _$AtrilDatabase {
   /// starts moving here, one step per table, and each step is exactly what
   /// [migration] says it is.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// How the schema is created, how it moves between versions, and what is
   /// switched on for every connection.

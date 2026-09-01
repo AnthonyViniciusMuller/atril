@@ -20,8 +20,13 @@
 /// it lost the merge there; the replica is left exactly as it is, because a
 /// change that lost on the node lost on the same rule this device would apply
 /// and re-applying anything would be undoing a merge that already happened.
-/// Only *rejected* stays, and phase 11's quarantine is what stops it being
-/// offered again for ever.
+/// Only *rejected* stays, and it stops being offered: it is quarantined, which
+/// is the local-first write path's own failure mode made visible. The reader
+/// has seen the change land and the node will not take it, so this device is
+/// showing something that will reach nobody — and the response is a flag, the
+/// node's reason, and a discard the reader may use. Not a rollback, because the
+/// write may have others built on top of it; not silence, because a device
+/// disagreeing with every replica and saying nothing is the worse of the two.
 ///
 /// **An outcome this build cannot name retires nothing.** A node running a
 /// later version of the contract may answer with a fifth verdict, and the one
@@ -75,9 +80,18 @@ final class Settlement {
 
   /// How many verdicts this build could name.
   int get answered => applied + duplicate + superseded + refused;
+
+  /// Whether the head of the outbox moved.
+  ///
+  /// Retiring moves it and so does quarantining, which is the half that is easy
+  /// to miss: a refused change leaves the offerable queue without leaving the
+  /// table, and a drain that treated it as no progress would stop at the first
+  /// refusal and never reach the changes behind it.
+  bool get movedTheQueue => retired > 0 || refused > 0;
 }
 
-/// Retires what [results] says a node has, and tallies the four outcomes.
+/// Retires what [results] says a node has, quarantines what it refused, and
+/// tallies the four outcomes.
 ///
 /// It is shared by the unary push and by the bidirectional stream, because the
 /// verdicts mean the same thing on both and a second reading of them would be a
@@ -86,8 +100,10 @@ final class Settlement {
 /// counts what it was told about rather than what was offered.
 Future<Settlement> settle(
   AtrilDatabase database,
-  Iterable<OperationResult> results,
-) async {
+  Iterable<OperationResult> results, {
+  DateTime Function()? now,
+}) async {
+  final at = (now ?? DateTime.now)();
   var applied = 0;
   var duplicate = 0;
   var superseded = 0;
@@ -111,6 +127,16 @@ Future<Settlement> settle(
         retiring.add(result.operationId);
       case OperationOutcome.rejected:
         refused++;
+
+        // It stays in the outbox and stops being offered. The record it
+        // changed is left exactly as the reader saw it land.
+        await database.syncDao.quarantine(
+          result.operationId,
+          reason: result.detail,
+          at: at,
+        );
+
+        _log.warning('a node refused an operation: $result');
       case null:
         // A verdict this build cannot name retires nothing. A node running a
         // later contract may answer with a fifth, and the one thing that is
@@ -235,12 +261,12 @@ final class OperationPusher {
         refused += settlement.refused;
         unanswered += batch.length - settlement.answered;
 
-        if (settlement.retired == 0) {
-          // Nothing left the outbox, so the next read would return this same
-          // batch and offer it again for ever. Every operation in it was
-          // refused or unanswered, and both are states the pass reports rather
-          // than states it can push past.
-          _log.warning('a batch of ${batch.length} retired nothing');
+        if (!settlement.movedTheQueue) {
+          // Nothing left the offerable queue, so the next read would return
+          // this same batch and offer it again for ever. Every operation in it
+          // was answered with a verdict this build cannot name, which is a
+          // state the pass reports rather than one it can push past.
+          _log.warning('a batch of ${batch.length} moved nothing');
 
           break;
         }

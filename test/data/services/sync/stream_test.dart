@@ -326,9 +326,10 @@ void main() {
     expect(node.pushes.map((List<String> batch) => batch.length), everyElement(5));
   });
 
-  test('stops offering when a batch retires nothing', () async {
-    // The head of the outbox was refused, so the next batch would be the same
-    // one and offering it again is offering it for ever.
+  test('quarantines a refused change and stops offering it', () async {
+    // A refusal moves the head of the outbox without retiring it: the change
+    // stays, stops being offered, and the reader is told. Offering it again
+    // would be offering it for ever.
     await owe(1);
 
     node.refusing[_id('1111', 1)] = 'no';
@@ -339,7 +340,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     expect(node.pushes, hasLength(1));
-    expect(await database.syncDao.pendingCount(), 1);
+    expect(await database.syncDao.pendingCount(), 0);
+    expect(await database.syncDao.refused(), hasLength(1));
   });
 
   test('offers a change authored while it is open', () async {

@@ -507,5 +507,56 @@
   "@syncStateSection": {},
 
   "syncChangesSection": "What has not left yet",
-  "@syncChangesSection": {}
+  "@syncChangesSection": {},
+
+  "syncRefusedSection": "Refused by the node",
+  "@syncRefusedSection": {},
+
+  "syncRefusedExplanation": "The node did not accept these changes and will not accept them on another try. They still hold on this device and have reached no other.",
+  "@syncRefusedExplanation": {},
+
+  "syncRefusedCount": "{count, plural, =1{1 refused by the node} other{{count} refused by the node}}",
+  "@syncRefusedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "syncRefusedNoReason": "The node did not say why.",
+  "@syncRefusedNoReason": {},
+
+  "syncDiscard": "Discard",
+  "@syncDiscard": {},
+
+  "syncDiscardExplanation": "Discarding does not undo what you did. It only stops this device from holding a delivery that is not going to happen.",
+  "@syncDiscardExplanation": {},
+
+  "syncDiscardTitle": "Discard this change?",
+  "@syncDiscardTitle": {},
+
+  "syncDiscarded": "Change discarded.",
+  "@syncDiscarded": {},
+
+  "syncDiscardFailed": "It was not possible to discard it.",
+  "@syncDiscardFailed": {},
+
+  "syncCancel": "Cancel",
+  "@syncCancel": {},
+
+  "syncRecordEbook": "A book",
+  "@syncRecordEbook": {},
+
+  "syncRecordCollection": "A shelf",
+  "@syncRecordCollection": {},
+
+  "syncRecordFiling": "A book on a shelf",
+  "@syncRecordFiling": {},
+
+  "syncRecordProgress": "Where you stopped",
+  "@syncRecordProgress": {},
+
+  "syncRecordAnnotation": "A mark",
+  "@syncRecordAnnotation": {}
 }

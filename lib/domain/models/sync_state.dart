@@ -15,6 +15,7 @@
 library;
 
 import '../../utils/errors.dart';
+import 'operation.dart';
 
 /// What the synchronization loop is doing.
 enum SyncActivity {
@@ -40,12 +41,44 @@ enum SyncActivity {
   String toString() => label;
 }
 
+/// A change a node refused, and what it said.
+///
+/// It is the state the local-first write path makes possible and nothing else
+/// in this app produces: the reader has seen the change land, it is in the
+/// replica, and the node will not take it — so this device is holding something
+/// that will reach nobody. A correct client should rarely author one, which is
+/// why this is a flag and a list rather than a merge interface.
+final class RefusedChange {
+  /// The change [refusedAt], because [reason].
+  const RefusedChange({
+    required this.change,
+    required this.reason,
+    required this.refusedAt,
+  });
+
+  /// The operation the node refused, which is still in this device's outbox and
+  /// is no longer offered.
+  final Operation change;
+
+  /// What the node said. It is written for an operator rather than for a
+  /// reader, and it is shown anyway: a screen that knows why and does not say
+  /// is worse than one that says something only half its readers can act on.
+  final String reason;
+
+  /// When this device was told.
+  final DateTime refusedAt;
+
+  @override
+  String toString() => 'RefusedChange(${change.id}: $reason)';
+}
+
 /// What this device owes, what it has heard, and what it is doing about it.
 final class SyncState {
   /// The state.
   const SyncState({
     this.activity = SyncActivity.idle,
     this.pending = 0,
+    this.refusals = const <RefusedChange>[],
     this.lastSyncedAt,
     this.failure,
     this.retryIn,
@@ -59,6 +92,24 @@ final class SyncState {
   /// It is read from the outbox and not from the loop, so it is true across a
   /// restart and true while nothing is running.
   final int pending;
+
+  /// The changes a node refused outright.
+  ///
+  /// They are held apart from [pending] because they are not waiting for
+  /// anything: no connection makes them go, and a surface that folded them into
+  /// one number would be telling a reader to be patient about a change that
+  /// will never leave.
+  final List<RefusedChange> refusals;
+
+  /// How many of those there are.
+  int get refused => refusals.length;
+
+  /// How many changes this device holds that no node does.
+  ///
+  /// It is the honest answer to *are my notes only on this phone*, and it is
+  /// what the navigation surface's badge counts: both halves are still only
+  /// here, and only the screen behind it has room to say why they differ.
+  int get notHandedOver => pending + refused;
 
   /// When this device last reached its node, or `null` if it never has.
   final DateTime? lastSyncedAt;
@@ -74,9 +125,10 @@ final class SyncState {
   final Duration? retryIn;
 
   /// Whether everything this device authored has reached a node.
-  bool get isHandedOver => pending == 0;
+  bool get isHandedOver => notHandedOver == 0;
 
   @override
   String toString() =>
-      'SyncState($activity, $pending pending, last $lastSyncedAt)';
+      'SyncState($activity, $pending pending, $refused refused, '
+      'last $lastSyncedAt)';
 }

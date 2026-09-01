@@ -107,6 +107,53 @@ class AppliedOperations extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
 
+/// The changes a node refused, and the reason it gave.
+///
+/// It is the quarantine, and it is deliberately minimal. A refusal is the one
+/// outcome of a push that reaches a reader, and the shape of the response is
+/// argued in the roadmap's decision table: **the local write stays**, the change
+/// is flagged, and the reader is shown the node's reason with a discard.
+///
+/// It is not a rollback. The change may have others built on top of it — a note
+/// on a work whose creation was refused, a filing under a shelf — and destroying
+/// those to satisfy a refusal is the one outcome worse than the refusal. And it
+/// is not silence: a device holding a change nobody will ever receive, and
+/// saying nothing about it, is a device disagreeing with every replica while its
+/// reader believes otherwise.
+///
+/// It is a **side table and not a column** on `pending_operations`, for a reason
+/// this schema's migration makes concrete: every version so far only adds, so
+/// the upgrade is `createAll` and its statements are `CREATE TABLE IF NOT
+/// EXISTS`. A column would make this the first stepped migration in the project,
+/// which is a change worth making on the day a column actually has to change and
+/// not for a flag. It also keeps the outbox dumb, which its own comment asks
+/// for.
+///
+/// The row is deleted with the operation it names. Discarding a refused change
+/// removes the outbox entry and this goes with it; so does a change the node
+/// later accepted, which is what happens when a refusal was about something the
+/// reader has since fixed.
+@DataClassName('RefusedOperationRow')
+class RefusedOperations extends Table {
+  /// The operation refused, which is still in the outbox.
+  TextColumn get id => text()
+      .withLength(min: 36, max: 36)
+      .references(PendingOperations, #id, onDelete: KeyAction.cascade)();
+
+  /// What the node said, verbatim.
+  ///
+  /// The contract writes it for an operator rather than for a reader, and it is
+  /// stored and shown unchanged anyway: a screen that knows why and does not say
+  /// is worse than one that says something only half its readers can act on.
+  TextColumn get reason => text().withDefault(const Constant(''))();
+
+  /// When this device was told, on a wall clock.
+  IntColumn get refusedAt => integer().map(const InstantConverter())();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 /// How far this device has read from each node's log.
 ///
 /// The cursor is keyed by the node because a position is *that node's* order

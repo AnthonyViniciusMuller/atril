@@ -1563,5 +1563,85 @@
   "syncChangesSection": "O que ainda não saiu",
   "@syncChangesSection": {
     "description": "Título da seção da tela de sincronização que conta as alterações feitas aqui e ainda não entregues."
+  },
+
+  "syncRefusedSection": "Recusadas pelo nó",
+  "@syncRefusedSection": {
+    "description": "Título da seção que lista as alterações que o nó não aceitou. É a única coisa nesta tela que pede uma decisão do leitor."
+  },
+
+  "syncRefusedExplanation": "O nó não aceitou estas alterações e não vai aceitar numa próxima tentativa. Elas continuam valendo neste aparelho e não vão chegar a nenhum outro.",
+  "@syncRefusedExplanation": {
+    "description": "Dito acima da lista de alterações recusadas. O leitor precisa entender as duas metades: o que ele fez continua aqui, e não chegou a lugar nenhum."
+  },
+
+  "syncRefusedCount": "{count, plural, =1{1 recusada pelo nó} other{{count} recusadas pelo nó}}",
+  "@syncRefusedCount": {
+    "description": "Quantas alterações o nó recusou, dito na linha das configurações que leva a esta tela.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "syncRefusedNoReason": "O nó não disse por quê.",
+  "@syncRefusedNoReason": {
+    "description": "Dito no lugar do motivo quando o nó recusou sem explicar. O contrato permite, e um espaço em branco pareceria um erro desta tela."
+  },
+
+  "syncDiscard": "Descartar",
+  "@syncDiscard": {
+    "description": "Ação que faz o aparelho parar de guardar uma alteração recusada. Não desfaz nada do que o leitor escreveu: apaga o registro da entrega que não vai acontecer."
+  },
+
+  "syncDiscardExplanation": "Descartar não desfaz o que você fez. Só faz este aparelho parar de guardar uma entrega que não vai acontecer.",
+  "@syncDiscardExplanation": {
+    "description": "Dito na confirmação do descarte. É a distinção que a tela inteira existe para deixar clara."
+  },
+
+  "syncDiscardTitle": "Descartar esta alteração?",
+  "@syncDiscardTitle": {
+    "description": "Título da confirmação do descarte de uma alteração recusada."
+  },
+
+  "syncDiscarded": "Alteração descartada.",
+  "@syncDiscarded": {
+    "description": "Aviso mostrado depois que uma alteração recusada deixa de ser guardada."
+  },
+
+  "syncDiscardFailed": "Não foi possível descartar.",
+  "@syncDiscardFailed": {
+    "description": "Erro mostrado quando o descarte de uma alteração recusada não pôde ser feito."
+  },
+
+  "syncCancel": "Cancelar",
+  "@syncCancel": {
+    "description": "Ação que fecha a confirmação do descarte sem descartar nada."
+  },
+
+  "syncRecordEbook": "Um livro",
+  "@syncRecordEbook": {
+    "description": "Como uma alteração recusada num livro é nomeada na lista. É o tipo de registro e não o título, porque o registro pode ser justamente o que o nó não conhece."
+  },
+
+  "syncRecordCollection": "Uma estante",
+  "@syncRecordCollection": {
+    "description": "Como uma alteração recusada numa estante é nomeada na lista."
+  },
+
+  "syncRecordFiling": "Um livro numa estante",
+  "@syncRecordFiling": {
+    "description": "Como uma alteração recusada no arquivamento de um livro numa estante é nomeada na lista."
+  },
+
+  "syncRecordProgress": "Onde você parou",
+  "@syncRecordProgress": {
+    "description": "Como uma alteração recusada numa posição de leitura é nomeada na lista."
+  },
+
+  "syncRecordAnnotation": "Uma marcação",
+  "@syncRecordAnnotation": {
+    "description": "Como uma alteração recusada numa marcação é nomeada na lista."
   }
 }

@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 
+import '../../../domain/models/operation.dart';
 import '../../../domain/models/sync_state.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
@@ -19,7 +20,13 @@ final _log = loggerFor('data/sync');
 /// The operation a reader-asked synchronization reports under.
 const String opSyncNow = 'sync: now';
 
-/// The state of synchronization, joined out of its three sources.
+/// The operation discarding a refused change reports under.
+const String opDiscard = 'sync: discard';
+
+/// The stable code of a refused change this device no longer holds.
+const String codeNoSuchRefusal = 'refusal_not_found';
+
+/// The state of synchronization, joined out of its four sources.
 final class SyncRepositoryImpl implements SyncRepository {
   /// The repository over [sync] and [identity], watching [scheduler].
   SyncRepositoryImpl({
@@ -42,18 +49,20 @@ final class SyncRepositoryImpl implements SyncRepository {
   @override
   Stream<SyncState> watchState() =>
       Stream<SyncState>.multi((MultiStreamController<SyncState> listener) {
-        // The three sources are merged by hand rather than with a combinator,
-        // because two of them are database streams that emit at once and the
-        // third replays its current value to every listener — so the first
-        // frame is complete without anything having to wait for the other two.
+        // The four sources are merged by hand rather than with a combinator,
+        // because three of them are database streams that emit at once and the
+        // fourth replays its current value to every listener — so the first
+        // frame is complete without anything having to wait for the rest.
         var status = scheduler.status;
         var pending = 0;
+        var refusals = const <RefusedChange>[];
         DateTime? lastSyncedAt;
 
         void emit() => listener.add(
           SyncState(
             activity: status.activity,
             pending: pending,
+            refusals: refusals,
             lastSyncedAt: lastSyncedAt,
             failure: status.failure,
             retryIn: status.retryIn,
@@ -69,6 +78,20 @@ final class SyncRepositoryImpl implements SyncRepository {
             pending = owed;
             emit();
           }),
+          sync.watchRefused().listen(
+            (List<(Operation, RefusedOperationRow)> refused) {
+              refusals = <RefusedChange>[
+                for (final (Operation change, RefusedOperationRow row)
+                    in refused)
+                  RefusedChange(
+                    change: change,
+                    reason: row.reason,
+                    refusedAt: row.refusedAt,
+                  ),
+              ];
+              emit();
+            },
+          ),
           _lastSynced().listen((DateTime? at) {
             lastSyncedAt = at;
             emit();
@@ -81,6 +104,30 @@ final class SyncRepositoryImpl implements SyncRepository {
           }
         };
       });
+
+  @override
+  Future<Result<void>> discard(String operationId) async {
+    try {
+      if (await sync.discard(operationId) == 0) {
+        return Result<void>.error(
+          const AppException(
+            kind: ErrorKind.notFound,
+            message: 'this device does not hold that refused change',
+            code: codeNoSuchRefusal,
+            op: opDiscard,
+          ),
+        );
+      }
+
+      _log.info('a refused change was discarded: $operationId');
+
+      return const Result<void>.ok(null);
+    } on Exception catch (error, trace) {
+      _log.warning('discarding a refused change failed', error, trace);
+
+      return Result<void>.error(failureFrom(error, op: opDiscard));
+    }
+  }
 
   @override
   Future<Result<void>> syncNow() async {
@@ -123,11 +170,3 @@ final class SyncRepositoryImpl implements SyncRepository {
     return null;
   }
 }
-
-/// The kind of failure a reader is shown for [failure], where they are shown
-/// one at all.
-///
-/// It is here rather than in the screen because the screen's job is a sentence
-/// and this is a classification: a node that is not answering is a *wait*, and
-/// anything else is a *this needs looking at*.
-bool isWaitingOn(AppException failure) => failure.kind.isRetryable;

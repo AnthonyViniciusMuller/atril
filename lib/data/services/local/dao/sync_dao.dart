@@ -19,7 +19,12 @@ part 'sync_dao.g.dart';
 /// two, and it is deliberately dumb — an outbox that reordered, deduplicated or
 /// interpreted what it holds would be a second reconciler with no tests.
 @DriftAccessor(
-  tables: <Type>[PendingOperations, NodeCursors, AppliedOperations],
+  tables: <Type>[
+    PendingOperations,
+    NodeCursors,
+    AppliedOperations,
+    RefusedOperations,
+  ],
 )
 class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
   /// The accessor over [database].
@@ -43,8 +48,14 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
   /// The order is the order it was authored in, which is the order it has to be
   /// pushed in: a log whose updates arrive before their inserts is a log the
   /// node refuses half of.
+  ///
+  /// A quarantined change is not among them. It is still owed in the sense that
+  /// this device holds it and no node does, and it is not *offerable*: the node
+  /// refused it and will refuse it again, and leaving it at the head of the
+  /// queue would stop every change behind it from ever being offered.
   Future<List<Operation>> pending({int? limit}) async {
     final query = select(pendingOperations)
+      ..where((row) => notExistsQuery(_refusal(row.id)))
       ..orderBy(<OrderClauseGenerator<$PendingOperationsTable>>[
         (row) => OrderingTerm(expression: row.sequence),
       ]);
@@ -56,12 +67,20 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
     return (await query.get()).map(_operationOf).toList();
   }
 
-  /// How many changes are waiting, which is what the sync surface counts.
+  /// How many changes are still going to be offered, which is what the sync
+  /// surface counts as *waiting*.
+  ///
+  /// A quarantined change is not among them, for the reason it is not among
+  /// [pending]: it is not waiting for anything, and counting it as though it
+  /// were would be telling a reader to be patient about a change that will
+  /// never leave.
   Future<int> pendingCount() async {
     final count = pendingOperations.sequence.count();
-    final row = await (selectOnly(
-      pendingOperations,
-    )..addColumns(<Expression<Object>>[count])).getSingle();
+    final row =
+        await (selectOnly(pendingOperations)
+              ..addColumns(<Expression<Object>>[count])
+              ..where(notExistsQuery(_refusal(pendingOperations.id))))
+            .getSingle();
 
     return row.read(count) ?? 0;
   }
@@ -71,10 +90,46 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
     final count = pendingOperations.sequence.count();
 
     return (selectOnly(pendingOperations)
-          ..addColumns(<Expression<Object>>[count]))
+          ..addColumns(<Expression<Object>>[count])
+          ..where(notExistsQuery(_refusal(pendingOperations.id))))
         .watchSingle()
         .map((row) => row.read(count) ?? 0);
   }
+
+  /// Records that a node refused [id], because [reason].
+  ///
+  /// The operation stays in the outbox and stops being offered. Nothing about
+  /// the replica changes: the reader has seen the change land, others may be
+  /// built on top of it, and undoing those to satisfy a refusal is the one
+  /// outcome worse than the refusal itself.
+  Future<void> quarantine(
+    String id, {
+    required String reason,
+    required DateTime at,
+  }) => into(refusedOperations).insertOnConflictUpdate(
+    RefusedOperationsCompanion.insert(id: id, refusedAt: at, reason: Value<String>(reason)),
+  );
+
+  /// The changes a node refused, most recently refused first.
+  ///
+  /// It answers with the operation and what the node said, because a reader
+  /// looking at this list is looking at a change they made and needs to
+  /// recognize it as one.
+  Future<List<(Operation, RefusedOperationRow)>> refused() async =>
+      _refusalsOf(await _refusedQuery().get());
+
+  /// [refused], as it changes.
+  Stream<List<(Operation, RefusedOperationRow)>> watchRefused() =>
+      _refusedQuery().watch().map(_refusalsOf);
+
+  /// Forgets the refused change [id], at the reader's asking.
+  ///
+  /// It removes the outbox entry and the refusal with it. The record itself is
+  /// untouched, which is the whole of what *discard* means here: the reader
+  /// stops being told about a delivery that will not happen, and nothing they
+  /// wrote is destroyed.
+  Future<int> discard(String id) =>
+      (delete(pendingOperations)..where((row) => row.id.equals(id))).go();
 
   /// Retires the operations a node has answered for.
   ///
@@ -177,6 +232,31 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
 
   /// Every cursor this device holds.
   Future<List<NodeCursorRow>> cursors() => select(nodeCursors).get();
+
+  JoinedSelectStatement<HasResultSet, dynamic> _refusedQuery() =>
+      select(refusedOperations).join(<Join<HasResultSet, dynamic>>[
+          innerJoin(
+            pendingOperations,
+            pendingOperations.id.equalsExp(refusedOperations.id),
+          ),
+        ])
+        ..orderBy(<OrderingTerm>[
+          OrderingTerm.desc(refusedOperations.refusedAt),
+        ]);
+
+  List<(Operation, RefusedOperationRow)> _refusalsOf(List<TypedResult> rows) =>
+      <(Operation, RefusedOperationRow)>[
+        for (final row in rows)
+          (
+            _operationOf(row.readTable(pendingOperations)),
+            row.readTable(refusedOperations),
+          ),
+      ];
+
+  /// The refusal naming [id], as the subquery `pending` excludes rows by.
+  SimpleSelectStatement<$RefusedOperationsTable, RefusedOperationRow> _refusal(
+    Expression<String> id,
+  ) => select(refusedOperations)..where((row) => row.id.equalsExp(id));
 
   PendingOperationsCompanion _rowOf(Operation operation) =>
       PendingOperationsCompanion.insert(

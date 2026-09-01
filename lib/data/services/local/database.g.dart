@@ -5963,11 +5963,15 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   /// from.
   final int lastPosition;
 
-  /// When the cursor last moved, on a wall clock.
+  /// When this device last completed an exchange with the node, on a wall
+  /// clock.
   ///
-  /// It is a diagnostic and never a cursor: it is what the sync surface of
-  /// phase 11 shows a reader who wants to know whether their notes are only on
-  /// this phone.
+  /// It is a diagnostic and never a cursor: it is what the sync surface shows a
+  /// reader who wants to know whether their notes are only on this phone. It
+  /// moves when the cursor does *and* when a live channel opens onto a log that
+  /// had nothing new in it — a device that is up to date exchanges nothing, and
+  /// a column that only moved on a pull would tell that reader their last sync
+  /// was a week ago because nothing has happened since.
   final DateTime? pulledAt;
   const NodeCursorRow({
     required this.serverDomain,
@@ -6354,6 +6358,284 @@ class AppliedOperationsCompanion extends UpdateCompanion<AppliedOperationRow> {
     return (StringBuffer('AppliedOperationsCompanion(')
           ..write('id: $id, ')
           ..write('appliedAt: $appliedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RefusedOperationsTable extends RefusedOperations
+    with TableInfo<$RefusedOperationsTable, RefusedOperationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RefusedOperationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES pending_operations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> refusedAt =
+      GeneratedColumn<int>(
+        'refused_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($RefusedOperationsTable.$converterrefusedAt);
+  @override
+  List<GeneratedColumn> get $columns => [id, reason, refusedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'refused_operations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RefusedOperationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RefusedOperationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RefusedOperationRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      )!,
+      refusedAt: $RefusedOperationsTable.$converterrefusedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}refused_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $RefusedOperationsTable createAlias(String alias) {
+    return $RefusedOperationsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, int> $converterrefusedAt =
+      const InstantConverter();
+}
+
+class RefusedOperationRow extends DataClass
+    implements Insertable<RefusedOperationRow> {
+  /// The operation refused, which is still in the outbox.
+  final String id;
+
+  /// What the node said, verbatim.
+  ///
+  /// The contract writes it for an operator rather than for a reader, and it is
+  /// stored and shown unchanged anyway: a screen that knows why and does not say
+  /// is worse than one that says something only half its readers can act on.
+  final String reason;
+
+  /// When this device was told, on a wall clock.
+  final DateTime refusedAt;
+  const RefusedOperationRow({
+    required this.id,
+    required this.reason,
+    required this.refusedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['reason'] = Variable<String>(reason);
+    {
+      map['refused_at'] = Variable<int>(
+        $RefusedOperationsTable.$converterrefusedAt.toSql(refusedAt),
+      );
+    }
+    return map;
+  }
+
+  RefusedOperationsCompanion toCompanion(bool nullToAbsent) {
+    return RefusedOperationsCompanion(
+      id: Value(id),
+      reason: Value(reason),
+      refusedAt: Value(refusedAt),
+    );
+  }
+
+  factory RefusedOperationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RefusedOperationRow(
+      id: serializer.fromJson<String>(json['id']),
+      reason: serializer.fromJson<String>(json['reason']),
+      refusedAt: serializer.fromJson<DateTime>(json['refusedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'reason': serializer.toJson<String>(reason),
+      'refusedAt': serializer.toJson<DateTime>(refusedAt),
+    };
+  }
+
+  RefusedOperationRow copyWith({
+    String? id,
+    String? reason,
+    DateTime? refusedAt,
+  }) => RefusedOperationRow(
+    id: id ?? this.id,
+    reason: reason ?? this.reason,
+    refusedAt: refusedAt ?? this.refusedAt,
+  );
+  RefusedOperationRow copyWithCompanion(RefusedOperationsCompanion data) {
+    return RefusedOperationRow(
+      id: data.id.present ? data.id.value : this.id,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      refusedAt: data.refusedAt.present ? data.refusedAt.value : this.refusedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RefusedOperationRow(')
+          ..write('id: $id, ')
+          ..write('reason: $reason, ')
+          ..write('refusedAt: $refusedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, reason, refusedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RefusedOperationRow &&
+          other.id == this.id &&
+          other.reason == this.reason &&
+          other.refusedAt == this.refusedAt);
+}
+
+class RefusedOperationsCompanion extends UpdateCompanion<RefusedOperationRow> {
+  final Value<String> id;
+  final Value<String> reason;
+  final Value<DateTime> refusedAt;
+  final Value<int> rowid;
+  const RefusedOperationsCompanion({
+    this.id = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.refusedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RefusedOperationsCompanion.insert({
+    required String id,
+    this.reason = const Value.absent(),
+    required DateTime refusedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       refusedAt = Value(refusedAt);
+  static Insertable<RefusedOperationRow> custom({
+    Expression<String>? id,
+    Expression<String>? reason,
+    Expression<int>? refusedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (reason != null) 'reason': reason,
+      if (refusedAt != null) 'refused_at': refusedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RefusedOperationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? reason,
+    Value<DateTime>? refusedAt,
+    Value<int>? rowid,
+  }) {
+    return RefusedOperationsCompanion(
+      id: id ?? this.id,
+      reason: reason ?? this.reason,
+      refusedAt: refusedAt ?? this.refusedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (refusedAt.present) {
+      map['refused_at'] = Variable<int>(
+        $RefusedOperationsTable.$converterrefusedAt.toSql(refusedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RefusedOperationsCompanion(')
+          ..write('id: $id, ')
+          ..write('reason: $reason, ')
+          ..write('refusedAt: $refusedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7642,6 +7924,8 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $NodeCursorsTable nodeCursors = $NodeCursorsTable(this);
   late final $AppliedOperationsTable appliedOperations =
       $AppliedOperationsTable(this);
+  late final $RefusedOperationsTable refusedOperations =
+      $RefusedOperationsTable(this);
   late final $RecordVersionsTable recordVersions = $RecordVersionsTable(this);
   late final $ContentUploadsTable contentUploads = $ContentUploadsTable(this);
   late final $ContentPinsTable contentPins = $ContentPinsTable(this);
@@ -7688,6 +7972,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     pendingOperations,
     nodeCursors,
     appliedOperations,
+    refusedOperations,
     recordVersions,
     contentUploads,
     contentPins,
@@ -7739,6 +8024,13 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('node_cursors', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'pending_operations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('refused_operations', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -11612,6 +11904,41 @@ typedef $$PendingOperationsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
     });
 
+final class $$PendingOperationsTableReferences
+    extends
+        BaseReferences<
+          _$AtrilDatabase,
+          $PendingOperationsTable,
+          PendingOperationRow
+        > {
+  $$PendingOperationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$RefusedOperationsTable, List<RefusedOperationRow>>
+  _refusedOperationsRefsTable(_$AtrilDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.refusedOperations,
+        aliasName: 'pending_operations__id__refused_operations__id',
+      );
+
+  $$RefusedOperationsTableProcessedTableManager get refusedOperationsRefs {
+    final manager = $$RefusedOperationsTableTableManager(
+      $_db,
+      $_db.refusedOperations,
+    ).filter((f) => f.id.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _refusedOperationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$PendingOperationsTableFilterComposer
     extends Composer<_$AtrilDatabase, $PendingOperationsTable> {
   $$PendingOperationsTableFilterComposer({
@@ -11667,6 +11994,31 @@ class $$PendingOperationsTableFilterComposer
         column: $table.createdAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  Expression<bool> refusedOperationsRefs(
+    Expression<bool> Function($$RefusedOperationsTableFilterComposer f) f,
+  ) {
+    final $$RefusedOperationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.refusedOperations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RefusedOperationsTableFilterComposer(
+            $db: $db,
+            $table: $db.refusedOperations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PendingOperationsTableOrderingComposer
@@ -11764,6 +12116,32 @@ class $$PendingOperationsTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> refusedOperationsRefs<T extends Object>(
+    Expression<T> Function($$RefusedOperationsTableAnnotationComposer a) f,
+  ) {
+    final $$RefusedOperationsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.refusedOperations,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RefusedOperationsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.refusedOperations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$PendingOperationsTableTableManager
@@ -11777,16 +12155,9 @@ class $$PendingOperationsTableTableManager
           $$PendingOperationsTableAnnotationComposer,
           $$PendingOperationsTableCreateCompanionBuilder,
           $$PendingOperationsTableUpdateCompanionBuilder,
-          (
-            PendingOperationRow,
-            BaseReferences<
-              _$AtrilDatabase,
-              $PendingOperationsTable,
-              PendingOperationRow
-            >,
-          ),
+          (PendingOperationRow, $$PendingOperationsTableReferences),
           PendingOperationRow,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool refusedOperationsRefs})
         > {
   $$PendingOperationsTableTableManager(
     _$AtrilDatabase db,
@@ -11849,9 +12220,45 @@ class $$PendingOperationsTableTableManager
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PendingOperationsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({refusedOperationsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (refusedOperationsRefs) db.refusedOperations,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (refusedOperationsRefs)
+                    await $_getPrefetchedData<
+                      PendingOperationRow,
+                      $PendingOperationsTable,
+                      RefusedOperationRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PendingOperationsTableReferences
+                          ._refusedOperationsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$PendingOperationsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).refusedOperationsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.id == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -11866,16 +12273,9 @@ typedef $$PendingOperationsTableProcessedTableManager =
       $$PendingOperationsTableAnnotationComposer,
       $$PendingOperationsTableCreateCompanionBuilder,
       $$PendingOperationsTableUpdateCompanionBuilder,
-      (
-        PendingOperationRow,
-        BaseReferences<
-          _$AtrilDatabase,
-          $PendingOperationsTable,
-          PendingOperationRow
-        >,
-      ),
+      (PendingOperationRow, $$PendingOperationsTableReferences),
       PendingOperationRow,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool refusedOperationsRefs})
     >;
 typedef $$NodeCursorsTableCreateCompanionBuilder =
     NodeCursorsCompanion Function({
@@ -12314,6 +12714,300 @@ typedef $$AppliedOperationsTableProcessedTableManager =
       ),
       AppliedOperationRow,
       PrefetchHooks Function()
+    >;
+typedef $$RefusedOperationsTableCreateCompanionBuilder =
+    RefusedOperationsCompanion Function({
+      required String id,
+      Value<String> reason,
+      required DateTime refusedAt,
+      Value<int> rowid,
+    });
+typedef $$RefusedOperationsTableUpdateCompanionBuilder =
+    RefusedOperationsCompanion Function({
+      Value<String> id,
+      Value<String> reason,
+      Value<DateTime> refusedAt,
+      Value<int> rowid,
+    });
+
+final class $$RefusedOperationsTableReferences
+    extends
+        BaseReferences<
+          _$AtrilDatabase,
+          $RefusedOperationsTable,
+          RefusedOperationRow
+        > {
+  $$RefusedOperationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PendingOperationsTable _idTable(_$AtrilDatabase db) => db
+      .pendingOperations
+      .createAlias('refused_operations__id__pending_operations__id');
+
+  $$PendingOperationsTableProcessedTableManager get id {
+    final $_column = $_itemColumn<String>('id')!;
+
+    final manager = $$PendingOperationsTableTableManager(
+      $_db,
+      $_db.pendingOperations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_idTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RefusedOperationsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $RefusedOperationsTable> {
+  $$RefusedOperationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get refusedAt =>
+      $composableBuilder(
+        column: $table.refusedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$PendingOperationsTableFilterComposer get id {
+    final $$PendingOperationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOperations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOperationsTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingOperations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RefusedOperationsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $RefusedOperationsTable> {
+  $$RefusedOperationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get refusedAt => $composableBuilder(
+    column: $table.refusedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PendingOperationsTableOrderingComposer get id {
+    final $$PendingOperationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingOperations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingOperationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.pendingOperations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RefusedOperationsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $RefusedOperationsTable> {
+  $$RefusedOperationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get refusedAt =>
+      $composableBuilder(column: $table.refusedAt, builder: (column) => column);
+
+  $$PendingOperationsTableAnnotationComposer get id {
+    final $$PendingOperationsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pendingOperations,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PendingOperationsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pendingOperations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$RefusedOperationsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $RefusedOperationsTable,
+          RefusedOperationRow,
+          $$RefusedOperationsTableFilterComposer,
+          $$RefusedOperationsTableOrderingComposer,
+          $$RefusedOperationsTableAnnotationComposer,
+          $$RefusedOperationsTableCreateCompanionBuilder,
+          $$RefusedOperationsTableUpdateCompanionBuilder,
+          (RefusedOperationRow, $$RefusedOperationsTableReferences),
+          RefusedOperationRow,
+          PrefetchHooks Function({bool id})
+        > {
+  $$RefusedOperationsTableTableManager(
+    _$AtrilDatabase db,
+    $RefusedOperationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RefusedOperationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RefusedOperationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RefusedOperationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> reason = const Value.absent(),
+                Value<DateTime> refusedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RefusedOperationsCompanion(
+                id: id,
+                reason: reason,
+                refusedAt: refusedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> reason = const Value.absent(),
+                required DateTime refusedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RefusedOperationsCompanion.insert(
+                id: id,
+                reason: reason,
+                refusedAt: refusedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RefusedOperationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({id = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (id) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.id,
+                        referencedTable: $$RefusedOperationsTableReferences
+                            ._idTable(db),
+                        referencedColumn: $$RefusedOperationsTableReferences
+                            ._idTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RefusedOperationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $RefusedOperationsTable,
+      RefusedOperationRow,
+      $$RefusedOperationsTableFilterComposer,
+      $$RefusedOperationsTableOrderingComposer,
+      $$RefusedOperationsTableAnnotationComposer,
+      $$RefusedOperationsTableCreateCompanionBuilder,
+      $$RefusedOperationsTableUpdateCompanionBuilder,
+      (RefusedOperationRow, $$RefusedOperationsTableReferences),
+      RefusedOperationRow,
+      PrefetchHooks Function({bool id})
     >;
 typedef $$RecordVersionsTableCreateCompanionBuilder =
     RecordVersionsCompanion Function({
@@ -12992,6 +13686,8 @@ class $AtrilDatabaseManager {
       $$NodeCursorsTableTableManager(_db, _db.nodeCursors);
   $$AppliedOperationsTableTableManager get appliedOperations =>
       $$AppliedOperationsTableTableManager(_db, _db.appliedOperations);
+  $$RefusedOperationsTableTableManager get refusedOperations =>
+      $$RefusedOperationsTableTableManager(_db, _db.refusedOperations);
   $$RecordVersionsTableTableManager get recordVersions =>
       $$RecordVersionsTableTableManager(_db, _db.recordVersions);
   $$ContentUploadsTableTableManager get contentUploads =>
