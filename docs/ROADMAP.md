@@ -1474,7 +1474,29 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       8.2 MB of `.symbols` files. Four fifths of the offline shell is renderers and one of them
       runs. The manifest loses the template's `portrait-primary` — this app runs on a desktop —
       and gains the ink the icon is drawn on, so the splash is the app's colour and not white
-- [ ] `ci: add the release workflow` — tagged builds for all six, with the artifacts attached
+- [x] `ci: add the release workflow` — tagged builds for all six, with the artifacts attached.
+      `.github/workflows/release.yml`, on `v*` and on a manual run. **Every signing step is
+      conditional on a secret and says so in the artifact's name when it is absent**, which is
+      the shape a project with no certificates needs: a tag pushed today produces six installable
+      things, none of which can be mistaken for a signed release, and acquiring a certificate
+      later changes a secret rather than this file. Four things in it are decisions. **The
+      version is derived once, in a job of its own**, because six targets stamping their own
+      would be six that can disagree — and it is `build-name` from the tag with `build-number`
+      the run number, since Android's `versionCode` and Apple's `CFBundleVersion` both need a
+      monotonic integer and a tag is not one. A manual run builds `0.0.0` and not something
+      obviously fake like `0.0.0-dev`, because `CFBundleShortVersionString` has to be three
+      numbers and failing a dry run on the name of the dry run is the least useful failure
+      available. **Android ships both the bundle and the APK**, because a store takes one and a
+      person installing from a release page takes the other. **Linux has no signed and unsigned
+      case at all**: a Flatpak is trusted through a repository's GPG key and a single-file bundle
+      carries none, so there is one artifact and installing it is `flatpak install ./atril-*.flatpak`.
+      And the **Windows job spells out the two commands `make package-windows` runs**, because a
+      Windows runner has no `make` and a job that installed one to save two lines would fail for
+      a reason unrelated to this project. The release job `needs` all six: a commit that builds
+      on five is not done, and a release that ships five is that rule one step out. **Nothing
+      here has been executed** — it needs a tag, three runners and secrets this repository does
+      not have — so it is reviewed and not proven, which is the honest state of every release
+      workflow before its first tag
 - [ ] `docs: update the readme` — the status section stops saying *not started*, and the
       getting-started section says how to reach `make dev-up` from each target, which differs on
       the web and should not be discovered

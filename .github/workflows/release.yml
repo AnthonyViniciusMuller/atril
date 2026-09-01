@@ -1,0 +1,440 @@
+# The tagged build. Six targets, six artifacts, one release.
+#
+# Every signing step in this file is conditional on a secret being present, and
+# every one of them says so in the artifact's name when it is not. That is the
+# shape a project with no certificates needs: a tag pushed today produces six
+# installable things, none of which can be mistaken for a signed release, and
+# adding a certificate later changes a secret rather than this file.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  # So that the whole thing can be exercised without minting a tag. A manual run
+  # produces the artifacts and stops short of creating a release.
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.1
+
+jobs:
+  # The version every job stamps into its build, derived once so that six
+  # targets cannot disagree about what they are.
+  #
+  # `build-name` is the tag without its `v`, and `build-number` is the run
+  # number: a monotonic integer is what Android's versionCode and Apple's
+  # CFBundleVersion both require, and the tag alone is not one.
+  #
+  # A manual run builds 0.0.0 rather than something obviously fake like
+  # `0.0.0-dev`, because Apple's CFBundleShortVersionString has to be three
+  # numbers and a build that failed at the very end over the name of a
+  # dry run would be the least useful failure this workflow could have.
+  version:
+    name: version
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.derive.outputs.name }}
+      number: ${{ steps.derive.outputs.number }}
+    steps:
+      - id: derive
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            name="${GITHUB_REF#refs/tags/v}"
+          else
+            name="0.0.0"
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "number=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "building $name+${GITHUB_RUN_NUMBER}"
+
+  android:
+    name: android
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # `android/app/build.gradle.kts` reads this file when it exists and falls
+      # back to the debug key when it does not, announcing the fallback. The
+      # keystore is written outside the workspace so that no later step can
+      # archive it by accident.
+      - name: Write the signing configuration
+        id: signing
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -z "$KEYSTORE" ]]; then
+            echo "no ANDROID_KEYSTORE_BASE64: this build will carry the debug key"
+            echo "suffix=-unsigned" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          store="$RUNNER_TEMP/atril-release.jks"
+          echo "$KEYSTORE" | base64 --decode > "$store"
+          {
+            echo "storeFile=$store"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android/key.properties
+          echo "suffix=" >> "$GITHUB_OUTPUT"
+
+      # The bundle is what a store takes and the APK is what a person installs
+      # from a release page. Both, because this project is distributed by both.
+      - name: Build
+        env:
+          JAVA_TOOL_OPTIONS: -Xlog:disable
+        run: |
+          flutter build appbundle --release \
+            --build-name=${{ needs.version.outputs.name }} \
+            --build-number=${{ needs.version.outputs.number }}
+          flutter build apk --release \
+            --build-name=${{ needs.version.outputs.name }} \
+            --build-number=${{ needs.version.outputs.number }}
+
+      - name: Name the artifacts
+        run: |
+          mkdir -p artifacts
+          v="${{ needs.version.outputs.name }}${{ steps.signing.outputs.suffix }}"
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/atril-$v-android.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/atril-$v-android.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: artifacts/
+
+  ios:
+    name: ios
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # Signing an iOS build needs three things and there is no partial credit:
+      # a distribution certificate, a provisioning profile that matches the
+      # bundle identifier and the entitlements, and an export options plist that
+      # names the method. With all three this produces an .ipa; with none it
+      # produces the unsigned .app, which is what a CI check has been building
+      # for twelve phases and is not installable on a device.
+      - name: Import the signing identity
+        id: signing
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          EXPORT_OPTIONS: ${{ secrets.APPLE_EXPORT_OPTIONS_PLIST }}
+        run: |
+          if [[ -z "$CERTIFICATE" || -z "$PROFILE" || -z "$EXPORT_OPTIONS" ]]; then
+            echo "the Apple signing secrets are not all present: building unsigned"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/atril.keychain-db"
+          password="$(uuidgen)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 900 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" \
+            -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$password" "$keychain"
+          security list-keychain -d user -s "$keychain" login.keychain-db
+          profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$profiles"
+          echo "$PROFILE" | base64 --decode > "$profiles/atril.mobileprovision"
+          echo "$EXPORT_OPTIONS" > "$RUNNER_TEMP/ExportOptions.plist"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          mkdir -p artifacts
+          v="${{ needs.version.outputs.name }}"
+          args=(--release
+            --build-name=${{ needs.version.outputs.name }}
+            --build-number=${{ needs.version.outputs.number }})
+          if [[ "${{ steps.signing.outputs.signed }}" == "true" ]]; then
+            flutter build ipa "${args[@]}" \
+              --export-options-plist="$RUNNER_TEMP/ExportOptions.plist"
+            cp build/ios/ipa/*.ipa "artifacts/atril-$v-ios.ipa"
+          else
+            flutter build ios "${args[@]}" --no-codesign
+            ditto -c -k --keepParent build/ios/iphoneos/Runner.app \
+              "artifacts/atril-$v-ios-unsigned.zip"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: artifacts/
+
+  macos:
+    name: macos
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # The Developer ID identity, and separately the notary credentials. They
+      # are separate because they fail separately: a build can be signed and not
+      # notarized, which Gatekeeper still quarantines, and `packaging/macos/
+      # package.sh` says which of the two happened.
+      - name: Import the signing identity
+        id: signing
+        env:
+          CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [[ -z "$CERTIFICATE" ]]; then
+            echo "no MACOS_CERTIFICATE_BASE64: the bundle will be signed ad hoc"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/atril.keychain-db"
+          password="$(uuidgen)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 900 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" \
+            -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -k "$password" "$keychain"
+          security list-keychain -d user -s "$keychain" login.keychain-db
+
+      # notarytool takes a stored profile rather than three arguments, so the
+      # profile is created here and its name is what package.sh is handed.
+      - name: Store the notary credentials
+        id: notary
+        env:
+          APPLE_ID: ${{ secrets.APPLE_NOTARY_APPLE_ID }}
+          TEAM_ID: ${{ secrets.APPLE_NOTARY_TEAM_ID }}
+          APP_PASSWORD: ${{ secrets.APPLE_NOTARY_APP_PASSWORD }}
+        run: |
+          if [[ -z "$APPLE_ID" || -z "$TEAM_ID" || -z "$APP_PASSWORD" ]]; then
+            echo "the notary secrets are not all present: not notarizing"
+            exit 0
+          fi
+          xcrun notarytool store-credentials atril-notary \
+            --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$APP_PASSWORD"
+          echo "profile=atril-notary" >> "$GITHUB_OUTPUT"
+
+      - name: Build and package
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          MACOS_NOTARY_PROFILE: ${{ steps.notary.outputs.profile }}
+        run: |
+          flutter build macos --release \
+            --build-name=${{ needs.version.outputs.name }} \
+            --build-number=${{ needs.version.outputs.number }}
+          packaging/macos/package.sh
+          mkdir -p artifacts
+          v="${{ needs.version.outputs.name }}"
+          for f in build/macos/packaged/*.zip; do
+            # atril-macos.zip and atril-macos-unsigned.zip become
+            # atril-<version>-macos.zip and atril-<version>-macos-unsigned.zip,
+            # so a release page sorts by version rather than by target.
+            base="$(basename "$f" .zip)"
+            cp "$f" "artifacts/${base/atril-/atril-$v-}.zip"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: artifacts/
+
+  windows:
+    name: windows
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # The two commands `make package-windows` runs, spelled out: a Windows
+      # runner has no make on its PATH, and a job that installed one to save two
+      # lines would be a job that fails for a reason unrelated to this project.
+      - name: Build
+        run: |
+          flutter build windows --release `
+            --build-name=${{ needs.version.outputs.name }} `
+            --build-number=${{ needs.version.outputs.number }}
+
+      - name: Package
+        shell: pwsh
+        env:
+          CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $v = "${{ needs.version.outputs.name }}"
+          if ($env:CERTIFICATE) {
+            $pfx = Join-Path $env:RUNNER_TEMP "atril.pfx"
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERTIFICATE))
+            dart run msix:create --certificate-path $pfx `
+              --certificate-password $env:CERTIFICATE_PASSWORD
+            $name = "atril-$v-windows.msix"
+          } else {
+            # msix falls back to its own test certificate, which is exactly what
+            # a development install wants and is not a release. The name is what
+            # says so, since the file is otherwise indistinguishable.
+            Write-Host "no WINDOWS_CERTIFICATE_BASE64: signing with the msix test certificate"
+            dart run msix:create
+            $name = "atril-$v-windows-unsigned.msix"
+          }
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          Copy-Item build/windows/packaged/atril-windows.msix "artifacts/$name"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: artifacts/
+
+  linux:
+    name: linux
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the Linux desktop toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libsecret-1-dev flatpak flatpak-builder
+          flatpak remote-add --if-not-exists --user flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub \
+            org.gnome.Platform//49 org.gnome.Sdk//49
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # A Flatpak is not signed by a certificate: what a repository is trusted
+      # by is its GPG key, and a single-file bundle carries none. So this target
+      # has no signed and unsigned case — it has one artifact, and installing it
+      # is `flatpak install ./atril-*.flatpak`.
+      - name: Build and package
+        run: make package-linux
+
+      - name: Name the artifact
+        run: |
+          mkdir -p artifacts
+          cp build/atril-linux.flatpak \
+            "artifacts/atril-${{ needs.version.outputs.name }}-linux.flatpak"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: artifacts/
+
+  web:
+    name: web
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      # Through the make target, because the web build is three flags and the
+      # service-worker step afterwards. An archive of `build/web` is the whole
+      # artifact: this target ships as files somebody serves.
+      - name: Build
+        run: make build-web
+
+      - name: Name the artifact
+        run: |
+          mkdir -p artifacts
+          (cd build/web && zip -qr "$GITHUB_WORKSPACE/artifacts/atril-${{ needs.version.outputs.name }}-web.zip" .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: artifacts/
+
+  # A commit that builds on five is not done, and a release that ships five is
+  # the same rule one step further out: this job needs all six.
+  release:
+    name: release
+    needs: [version, android, ios, macos, windows, linux, web]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Attach everything to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -t files < <(find artifacts -type f | sort)
+          printf '%s\n' "${files[@]}"
+          gh release create "${GITHUB_REF#refs/tags/}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Atril ${{ needs.version.outputs.name }}" \
+            --generate-notes \
+            "${files[@]}"

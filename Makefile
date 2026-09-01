@@ -360,7 +360,7 @@ build-windows:
 .PHONY: package-linux
 package-linux:
 	$(FLUTTER) build linux --release
-	flatpak-builder --force-clean --repo=build/flatpak-repo \
+	flatpak-builder --user --force-clean --repo=build/flatpak-repo \
 		build/flatpak-build packaging/linux/dev.quire.atril.yml
 	flatpak build-bundle build/flatpak-repo build/atril-linux.flatpak dev.quire.atril
 	@echo "wrote build/atril-linux.flatpak"
