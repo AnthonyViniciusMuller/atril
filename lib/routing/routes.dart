@@ -134,7 +134,31 @@ abstract final class Routes {
   static const String readSegment = 'read';
 
   /// Where one work is read (UC04).
-  static String readEbook(String id) => '${ebook(id)}/$readSegment';
+  ///
+  /// [at] is a locator to open the book at — a CFI a mark carries, so that a
+  /// highlight in the annotations screen leads back to the passage it is on.
+  /// It is a query parameter and not a path segment because it is not part of
+  /// the *identity* of the screen: the same reader, the same book, opened at a
+  /// different place. It also has to survive being pasted, which is why it is
+  /// encoded rather than written in.
+  static String readEbook(String id, {String? at}) => at == null
+      ? '${ebook(id)}/$readSegment'
+      : '${ebook(id)}/$readSegment'
+            '?$locatorParameter=${Uri.encodeQueryComponent(at)}';
+
+  /// The query parameter [readEbook] carries a locator in.
+  static const String locatorParameter = 'at';
+
+  /// The path segment one work's marks are shown under, relative to
+  /// [ebookSegment].
+  ///
+  /// It is *marks* and not *annotations* so that the two scopes of one screen
+  /// do not look like two screens sharing a word: [annotations] is everything
+  /// the reader has marked, and this is the same screen narrowed to one book.
+  static const String marksSegment = 'marks';
+
+  /// Where one work's marks are shown (UC05).
+  static String ebookMarks(String id) => '${ebook(id)}/$marksSegment';
 
   /// Everything the reader has marked, across every book.
   static const String annotations = '/annotations';

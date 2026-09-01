@@ -54,6 +54,30 @@ abstract interface class AnnotationRepository {
   /// is the second implementation `architecture.md` forbids.
   Stream<Result<List<Annotation>>> watchMarksIn(String ebookId);
 
+  /// UC05. Everything the reader has marked, with the work each mark is in,
+  /// most recent first.
+  ///
+  /// [ebookId] narrows it to one book and [kind] to one sort of mark. It is one
+  /// method and not two because it answers one question — *what have I marked*
+  /// — asked at two widths, and the screen that asks it is the same screen.
+  ///
+  /// A mark in a tombstoned work is left out. A reader who deleted a book has
+  /// said they are not reading it, and its highlights are not a second opinion.
+  Stream<Result<List<MarkedPassage>>> watchMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  });
+
+  /// UC05. Everything the reader has marked, once.
+  ///
+  /// It is the reading an export is built from, and it is a `Future` for that
+  /// reason: a file is written from what is true at the moment the reader asked
+  /// for it, not from a stream that would still be open afterwards.
+  Future<Result<List<MarkedPassage>>> readMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  });
+
   /// UC05. Marks a passage the reader selected.
   ///
   /// [cfiRange] is the range the engine reported and it crosses every layer
@@ -103,6 +127,23 @@ abstract interface class AnnotationRepository {
     required String ebookId,
     required String locator,
   });
+
+  /// UC05. Changes what a mark says.
+  ///
+  /// It is what edits a note, and it is also how a highlight is given words:
+  /// the mark becomes a note, because a mark the reader has written on is what
+  /// a note *is*.
+  ///
+  /// **A promoted highlight gives up the passage it had stored.** There is one
+  /// text field and the contract says a note's belongs to the reader, so the
+  /// two cannot both be in it. Nothing is lost behind anybody's back: the screen
+  /// that offers this fills the field with the passage first, so what is stored
+  /// is what the reader was looking at when they pressed save.
+  ///
+  /// It is refused with [codeNoteWithoutText] where the words are blank — a
+  /// note cannot be emptied into a highlight again, because the passage that
+  /// would have to come back is not anywhere to come back from.
+  Future<Result<void>> reword(String annotationId, String text);
 
   /// UC05. Removes a mark.
   ///

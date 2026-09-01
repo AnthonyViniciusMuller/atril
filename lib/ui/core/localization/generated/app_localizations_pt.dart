@@ -748,14 +748,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get readerNote => 'Anotar';
 
   @override
-  String get readerNoteTitle => 'Anotação';
+  String get readerNoteTitle => 'Nota';
 
   @override
   String get readerNoteLabel => 'O que você quer registrar';
 
   @override
-  String get readerNoteRequired =>
-      'Uma anotação sem texto é uma anotação vazia.';
+  String get readerNoteRequired => 'Uma nota sem texto é uma nota vazia.';
 
   @override
   String get readerNoteCancel => 'Cancelar';
@@ -764,7 +763,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get readerNoteSave => 'Guardar';
 
   @override
-  String get readerNoted => 'Anotação guardada.';
+  String get readerNoted => 'Nota guardada.';
 
   @override
   String get readerBookmark => 'Marcar esta página';
@@ -777,6 +776,96 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerBookmarkRemoved => 'Marcação da página removida.';
+
+  @override
+  String get annotationsInThisBook => 'Marcações deste livro';
+
+  @override
+  String get annotationsAll => 'Todas';
+
+  @override
+  String get annotationsHighlights => 'Grifos';
+
+  @override
+  String get annotationsNotes => 'Notas';
+
+  @override
+  String get annotationsBookmarks => 'Marcadores';
+
+  @override
+  String get annotationsHighlight => 'Grifo';
+
+  @override
+  String get annotationsNote => 'Nota';
+
+  @override
+  String get annotationsBookmark => 'Marcador de página';
+
+  @override
+  String get annotationsUnknownKind => 'Marcação';
+
+  @override
+  String annotationsFromBook(String title, String date) {
+    return '$title · $date';
+  }
+
+  @override
+  String get annotationsEmptyTitle => 'Nada marcado ainda';
+
+  @override
+  String get annotationsEmptyMessage =>
+      'Grifos, anotações e marcadores feitos durante a leitura aparecem aqui, e acompanham você para os seus outros aparelhos.';
+
+  @override
+  String get annotationsNoneOfThisKindTitle => 'Nenhuma marcação desse tipo';
+
+  @override
+  String get annotationsNoneOfThisKindMessage =>
+      'Você tem marcações, mas nenhuma do tipo escolhido.';
+
+  @override
+  String get annotationsShowAll => 'Mostrar todas';
+
+  @override
+  String get annotationsFailedTitle => 'Não foi possível ler as marcações';
+
+  @override
+  String get annotationsFailedMessage =>
+      'As marcações estão guardadas neste aparelho e a consulta a elas falhou. Nada foi perdido.';
+
+  @override
+  String get annotationsActions => 'O que fazer com esta marcação';
+
+  @override
+  String get annotationsEdit => 'Editar a nota';
+
+  @override
+  String get annotationsAddNote => 'Anotar';
+
+  @override
+  String get annotationsRemove => 'Remover';
+
+  @override
+  String get annotationsRemoved => 'Marcação removida.';
+
+  @override
+  String get annotationsUndo => 'Desfazer';
+
+  @override
+  String get annotationsSaved => 'Nota guardada.';
+
+  @override
+  String get annotationsNoteTitle => 'Nota';
+
+  @override
+  String get annotationsPassageGivesWay =>
+      'O que ficar aqui substitui o trecho guardado: o registro tem um só campo de texto, e numa anotação ele é seu.';
+
+  @override
+  String get ebookMarksSection => 'Marcações';
+
+  @override
+  String get ebookMarksOpen => 'Ver as marcações';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1522,14 +1611,13 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get readerNote => 'Anotar';
 
   @override
-  String get readerNoteTitle => 'Anotação';
+  String get readerNoteTitle => 'Nota';
 
   @override
   String get readerNoteLabel => 'O que você quer registrar';
 
   @override
-  String get readerNoteRequired =>
-      'Uma anotação sem texto é uma anotação vazia.';
+  String get readerNoteRequired => 'Uma nota sem texto é uma nota vazia.';
 
   @override
   String get readerNoteCancel => 'Cancelar';
@@ -1538,7 +1626,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get readerNoteSave => 'Guardar';
 
   @override
-  String get readerNoted => 'Anotação guardada.';
+  String get readerNoted => 'Nota guardada.';
 
   @override
   String get readerBookmark => 'Marcar esta página';
@@ -1551,4 +1639,94 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerBookmarkRemoved => 'Marcação da página removida.';
+
+  @override
+  String get annotationsInThisBook => 'Marcações deste livro';
+
+  @override
+  String get annotationsAll => 'Todas';
+
+  @override
+  String get annotationsHighlights => 'Grifos';
+
+  @override
+  String get annotationsNotes => 'Notas';
+
+  @override
+  String get annotationsBookmarks => 'Marcadores';
+
+  @override
+  String get annotationsHighlight => 'Grifo';
+
+  @override
+  String get annotationsNote => 'Nota';
+
+  @override
+  String get annotationsBookmark => 'Marcador de página';
+
+  @override
+  String get annotationsUnknownKind => 'Marcação';
+
+  @override
+  String annotationsFromBook(String title, String date) {
+    return '$title · $date';
+  }
+
+  @override
+  String get annotationsEmptyTitle => 'Nada marcado ainda';
+
+  @override
+  String get annotationsEmptyMessage =>
+      'Grifos, anotações e marcadores feitos durante a leitura aparecem aqui, e acompanham você para os seus outros aparelhos.';
+
+  @override
+  String get annotationsNoneOfThisKindTitle => 'Nenhuma marcação desse tipo';
+
+  @override
+  String get annotationsNoneOfThisKindMessage =>
+      'Você tem marcações, mas nenhuma do tipo escolhido.';
+
+  @override
+  String get annotationsShowAll => 'Mostrar todas';
+
+  @override
+  String get annotationsFailedTitle => 'Não foi possível ler as marcações';
+
+  @override
+  String get annotationsFailedMessage =>
+      'As marcações estão guardadas neste aparelho e a consulta a elas falhou. Nada foi perdido.';
+
+  @override
+  String get annotationsActions => 'O que fazer com esta marcação';
+
+  @override
+  String get annotationsEdit => 'Editar a nota';
+
+  @override
+  String get annotationsAddNote => 'Anotar';
+
+  @override
+  String get annotationsRemove => 'Remover';
+
+  @override
+  String get annotationsRemoved => 'Marcação removida.';
+
+  @override
+  String get annotationsUndo => 'Desfazer';
+
+  @override
+  String get annotationsSaved => 'Nota guardada.';
+
+  @override
+  String get annotationsNoteTitle => 'Nota';
+
+  @override
+  String get annotationsPassageGivesWay =>
+      'O que ficar aqui substitui o trecho guardado: o registro tem um só campo de texto, e numa anotação ele é seu.';
+
+  @override
+  String get ebookMarksSection => 'Marcações';
+
+  @override
+  String get ebookMarksOpen => 'Ver as marcações';
 }

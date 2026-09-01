@@ -775,4 +775,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerBookmarkRemoved => 'Bookmark removed.';
+
+  @override
+  String get annotationsInThisBook => 'Marks in this book';
+
+  @override
+  String get annotationsAll => 'All';
+
+  @override
+  String get annotationsHighlights => 'Highlights';
+
+  @override
+  String get annotationsNotes => 'Notes';
+
+  @override
+  String get annotationsBookmarks => 'Bookmarks';
+
+  @override
+  String get annotationsHighlight => 'Highlight';
+
+  @override
+  String get annotationsNote => 'Note';
+
+  @override
+  String get annotationsBookmark => 'Bookmark';
+
+  @override
+  String get annotationsUnknownKind => 'Mark';
+
+  @override
+  String annotationsFromBook(String title, String date) {
+    return '$title · $date';
+  }
+
+  @override
+  String get annotationsEmptyTitle => 'Nothing marked yet';
+
+  @override
+  String get annotationsEmptyMessage =>
+      'Highlights, notes and bookmarks made while reading appear here, and follow you to your other devices.';
+
+  @override
+  String get annotationsNoneOfThisKindTitle => 'No marks of that kind';
+
+  @override
+  String get annotationsNoneOfThisKindMessage =>
+      'You have marks, but none of the kind you chose.';
+
+  @override
+  String get annotationsShowAll => 'Show all';
+
+  @override
+  String get annotationsFailedTitle => 'The marks could not be read';
+
+  @override
+  String get annotationsFailedMessage =>
+      'They are stored on this device and the query for them failed. Nothing has been lost.';
+
+  @override
+  String get annotationsActions => 'What to do with this mark';
+
+  @override
+  String get annotationsEdit => 'Edit the note';
+
+  @override
+  String get annotationsAddNote => 'Add a note';
+
+  @override
+  String get annotationsRemove => 'Remove';
+
+  @override
+  String get annotationsRemoved => 'Mark removed.';
+
+  @override
+  String get annotationsUndo => 'Undo';
+
+  @override
+  String get annotationsSaved => 'Note saved.';
+
+  @override
+  String get annotationsNoteTitle => 'Note';
+
+  @override
+  String get annotationsPassageGivesWay =>
+      'What stays here replaces the passage stored: the record has one text field, and on a note it is yours.';
+
+  @override
+  String get ebookMarksSection => 'Marks';
+
+  @override
+  String get ebookMarksOpen => 'See the marks';
 }

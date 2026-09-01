@@ -103,6 +103,9 @@ void main() {
       // precedes it — is `intl`'s placement rather than a translator's word.
       'readerFontSizeValue',
       'libraryContinuePercent',
+      // Two placeholders and a separator, and nothing of either language: the
+      // title is the book's own and the date is `MaterialLocalizations`'.
+      'annotationsFromBook',
     };
 
     for (final message in messagesOf(template).difference(sameInBoth)) {

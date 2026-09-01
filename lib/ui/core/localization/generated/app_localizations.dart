@@ -1353,10 +1353,10 @@ abstract class AppLocalizations {
   /// **'Anotar'**
   String get readerNote;
 
-  /// Título da caixa em que o leitor escreve uma anotação sobre o trecho selecionado.
+  /// Título da caixa em que o leitor escreve uma nota sobre o trecho selecionado.
   ///
   /// In pt_BR, this message translates to:
-  /// **'Anotação'**
+  /// **'Nota'**
   String get readerNoteTitle;
 
   /// Rótulo do campo em que o leitor escreve a anotação. São as palavras dele, e não o trecho — o trecho está endereçado pelo localizador.
@@ -1365,10 +1365,10 @@ abstract class AppLocalizations {
   /// **'O que você quer registrar'**
   String get readerNoteLabel;
 
-  /// Dito abaixo do campo da anotação. O contrato exige que uma anotação tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois.
+  /// Dito abaixo do campo da nota. O contrato exige que uma nota tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois.
   ///
   /// In pt_BR, this message translates to:
-  /// **'Uma anotação sem texto é uma anotação vazia.'**
+  /// **'Uma nota sem texto é uma nota vazia.'**
   String get readerNoteRequired;
 
   /// Ação que fecha a caixa da anotação sem guardar nada. Quem desistiu não fez nada de errado.
@@ -1383,10 +1383,10 @@ abstract class AppLocalizations {
   /// **'Guardar'**
   String get readerNoteSave;
 
-  /// Aviso mostrado depois que uma anotação é guardada, acompanhado da ação de desfazer.
+  /// Aviso mostrado depois que uma nota é guardada, acompanhado da ação de desfazer.
   ///
   /// In pt_BR, this message translates to:
-  /// **'Anotação guardada.'**
+  /// **'Nota guardada.'**
   String get readerNoted;
 
   /// Ação que marca a página aberta para o leitor voltar a ela depois. Dica do botão na barra do leitor, quando a página ainda não está marcada.
@@ -1412,6 +1412,174 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Marcação da página removida.'**
   String get readerBookmarkRemoved;
+
+  /// Título da tela de marcações quando ela está restrita a um livro. A mesma tela sem restrição usa o rótulo da navegação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcações deste livro'**
+  String get annotationsInThisBook;
+
+  /// Filtro que mostra todas as marcações, de qualquer tipo. É o estado inicial da tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todas'**
+  String get annotationsAll;
+
+  /// Filtro que mostra só os grifos — trechos marcados sem nada escrito sobre eles.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Grifos'**
+  String get annotationsHighlights;
+
+  /// Filtro que mostra só as notas — trechos sobre os quais o leitor escreveu algo. É *notas* e não *anotações* porque *Anotações* é o nome da tela inteira, que reúne os três tipos.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Notas'**
+  String get annotationsNotes;
+
+  /// Filtro que mostra só os marcadores de página — posições, sem trecho e sem texto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcadores'**
+  String get annotationsBookmarks;
+
+  /// Nome de um grifo, usado no cartão quando não há texto guardado para mostrar no lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Grifo'**
+  String get annotationsHighlight;
+
+  /// Nome de uma nota, usado no cartão quando não há texto para mostrar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nota'**
+  String get annotationsNote;
+
+  /// Nome de um marcador de página no cartão. Um marcador não tem texto: ele é um lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcador de página'**
+  String get annotationsBookmark;
+
+  /// Nome de uma marcação de um tipo que esta versão do aplicativo não sabe nomear — feita por uma versão mais nova e ainda assim do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcação'**
+  String get annotationsUnknownKind;
+
+  /// Rodapé do cartão na listagem de toda a biblioteca: o livro de onde a marcação veio e a data em que foi feita.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{title} · {date}'**
+  String annotationsFromBook(String title, String date);
+
+  /// Título do estado vazio da tela de marcações, quando o leitor ainda não marcou nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nada marcado ainda'**
+  String get annotationsEmptyTitle;
+
+  /// Explicação do estado vazio: diz para que servem as marcações e que elas acompanham o leitor entre aparelhos, que é o que a federação promete.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Grifos, anotações e marcadores feitos durante a leitura aparecem aqui, e acompanham você para os seus outros aparelhos.'**
+  String get annotationsEmptyMessage;
+
+  /// Título mostrado quando existem marcações mas nenhuma do tipo escolhido no filtro. É frase diferente do vazio de verdade.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhuma marcação desse tipo'**
+  String get annotationsNoneOfThisKindTitle;
+
+  /// Explicação de que o vazio é do filtro e não do acervo, acompanhada da ação que devolve todas as marcações.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você tem marcações, mas nenhuma do tipo escolhido.'**
+  String get annotationsNoneOfThisKindMessage;
+
+  /// Ação que limpa o filtro por tipo e mostra todas as marcações de novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mostrar todas'**
+  String get annotationsShowAll;
+
+  /// Título mostrado quando a consulta às marcações falha. Elas estão neste aparelho, então não é falha de rede.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler as marcações'**
+  String get annotationsFailedTitle;
+
+  /// Explicação da falha de leitura das marcações, dizendo o que importa: nada foi perdido, só não pôde ser lido agora.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'As marcações estão guardadas neste aparelho e a consulta a elas falhou. Nada foi perdido.'**
+  String get annotationsFailedMessage;
+
+  /// Dica do botão que abre o menu de ações de uma marcação — anotar, editar, remover.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que fazer com esta marcação'**
+  String get annotationsActions;
+
+  /// Ação que abre a caixa para mudar o texto de uma nota existente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Editar a nota'**
+  String get annotationsEdit;
+
+  /// Ação que escreve algo sobre um grifo, o que o transforma em anotação. O campo já vem com o trecho guardado, para que nada suma sem o leitor ver.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Anotar'**
+  String get annotationsAddNote;
+
+  /// Ação que remove uma marcação. Vem acompanhada de desfazer, porque a remoção é uma lápide e desfazê-la custa uma operação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Remover'**
+  String get annotationsRemove;
+
+  /// Aviso mostrado depois que uma marcação é removida, acompanhado da ação de desfazer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcação removida.'**
+  String get annotationsRemoved;
+
+  /// Ação que traz de volta a marcação recém-removida, no aviso que a anuncia.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desfazer'**
+  String get annotationsUndo;
+
+  /// Aviso mostrado depois que o texto de uma marcação é guardado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nota guardada.'**
+  String get annotationsSaved;
+
+  /// Título da caixa em que o texto de uma marcação é escrito ou alterado, na tela de marcações.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nota'**
+  String get annotationsNoteTitle;
+
+  /// Dito abaixo do campo quando um grifo está virando anotação. O registro tem um único campo de texto e numa anotação ele é do leitor, então o trecho guardado dá lugar ao que ele escrever — e ele vê isso antes de guardar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que ficar aqui substitui o trecho guardado: o registro tem um só campo de texto, e numa anotação ele é seu.'**
+  String get annotationsPassageGivesWay;
+
+  /// Título da seção da tela do livro que leva às marcações feitas nele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcações'**
+  String get ebookMarksSection;
+
+  /// Ação, na tela de um livro, que abre a lista das marcações feitas nele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ver as marcações'**
+  String get ebookMarksOpen;
 }
 
 class _AppLocalizationsDelegate

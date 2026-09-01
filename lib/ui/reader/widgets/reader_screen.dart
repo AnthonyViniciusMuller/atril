@@ -52,11 +52,19 @@ const Duration readerChromeFade = Duration(milliseconds: 150);
 
 /// The reader.
 class ReaderScreen extends StatefulWidget {
-  /// Creates the reader of the work [ebookId] names.
-  const ReaderScreen({required this.ebookId, super.key});
+  /// Creates the reader of the work [ebookId] names, opened [at].
+  const ReaderScreen({required this.ebookId, this.at, super.key});
 
   /// The work, from the location.
   final String ebookId;
+
+  /// Where in it to open, from the location, or `null` to resume where this
+  /// device stopped.
+  ///
+  /// It is what a mark navigates back to. A locator that no longer resolves is
+  /// not a failure — the host opens at the beginning instead — so nothing here
+  /// validates it.
+  final String? at;
 
   @override
   State<ReaderScreen> createState() => _ReaderScreenState();
@@ -69,6 +77,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     hosts: context.read<EpubHostFactory>(),
     settings: context.read<ReaderSettingsStore>(),
     ebookId: widget.ebookId,
+    at: widget.at,
   );
 
   @override
@@ -417,6 +426,15 @@ class _ReaderBar extends StatelessWidget {
                 icon: const Icon(Icons.text_fields),
                 color: Colors.white,
                 tooltip: l10n.readerSettings,
+              ),
+              IconButton(
+                // Pushed rather than gone to, so that the way back from the
+                // marks is the page the reader was on: closing the book to
+                // look at what they wrote in it would be an odd price.
+                onPressed: () => context.push(Routes.ebookMarks(model.ebookId)),
+                icon: const Icon(Icons.brush_outlined),
+                color: Colors.white,
+                tooltip: l10n.ebookMarksOpen,
               ),
               IconButton(
                 onPressed: () => _showContents(context, model),

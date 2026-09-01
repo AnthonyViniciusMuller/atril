@@ -330,5 +330,89 @@
   "@readerBookmarked": {},
 
   "readerBookmarkRemoved": "Bookmark removed.",
-  "@readerBookmarkRemoved": {}
+  "@readerBookmarkRemoved": {},
+
+  "annotationsInThisBook": "Marks in this book",
+  "@annotationsInThisBook": {},
+
+  "annotationsAll": "All",
+  "@annotationsAll": {},
+
+  "annotationsHighlights": "Highlights",
+  "@annotationsHighlights": {},
+
+  "annotationsNotes": "Notes",
+  "@annotationsNotes": {},
+
+  "annotationsBookmarks": "Bookmarks",
+  "@annotationsBookmarks": {},
+
+  "annotationsHighlight": "Highlight",
+  "@annotationsHighlight": {},
+
+  "annotationsNote": "Note",
+  "@annotationsNote": {},
+
+  "annotationsBookmark": "Bookmark",
+  "@annotationsBookmark": {},
+
+  "annotationsUnknownKind": "Mark",
+  "@annotationsUnknownKind": {},
+
+  "annotationsFromBook": "{title} · {date}",
+  "@annotationsFromBook": {},
+
+  "annotationsEmptyTitle": "Nothing marked yet",
+  "@annotationsEmptyTitle": {},
+
+  "annotationsEmptyMessage": "Highlights, notes and bookmarks made while reading appear here, and follow you to your other devices.",
+  "@annotationsEmptyMessage": {},
+
+  "annotationsNoneOfThisKindTitle": "No marks of that kind",
+  "@annotationsNoneOfThisKindTitle": {},
+
+  "annotationsNoneOfThisKindMessage": "You have marks, but none of the kind you chose.",
+  "@annotationsNoneOfThisKindMessage": {},
+
+  "annotationsShowAll": "Show all",
+  "@annotationsShowAll": {},
+
+  "annotationsFailedTitle": "The marks could not be read",
+  "@annotationsFailedTitle": {},
+
+  "annotationsFailedMessage": "They are stored on this device and the query for them failed. Nothing has been lost.",
+  "@annotationsFailedMessage": {},
+
+  "annotationsActions": "What to do with this mark",
+  "@annotationsActions": {},
+
+  "annotationsEdit": "Edit the note",
+  "@annotationsEdit": {},
+
+  "annotationsAddNote": "Add a note",
+  "@annotationsAddNote": {},
+
+  "annotationsRemove": "Remove",
+  "@annotationsRemove": {},
+
+  "annotationsRemoved": "Mark removed.",
+  "@annotationsRemoved": {},
+
+  "annotationsUndo": "Undo",
+  "@annotationsUndo": {},
+
+  "annotationsSaved": "Note saved.",
+  "@annotationsSaved": {},
+
+  "annotationsNoteTitle": "Note",
+  "@annotationsNoteTitle": {},
+
+  "annotationsPassageGivesWay": "What stays here replaces the passage stored: the record has one text field, and on a note it is yours.",
+  "@annotationsPassageGivesWay": {},
+
+  "ebookMarksSection": "Marks",
+  "@ebookMarksSection": {},
+
+  "ebookMarksOpen": "See the marks",
+  "@ebookMarksOpen": {}
 }

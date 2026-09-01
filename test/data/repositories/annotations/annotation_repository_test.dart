@@ -21,6 +21,7 @@ import 'package:atril/domain/models/operation.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 
 final DateTime _at = DateTime.utc(2026, 9, 1, 12);
@@ -349,6 +350,146 @@ void main() {
           .first;
 
       expect((other as Ok<List<Annotation>>).value, isEmpty);
+    });
+  });
+
+  group('every mark the reader holds', () {
+    test('comes back with the work each one is in', () async {
+      await seedWork('a');
+
+      await annotations.highlight(ebookId: _id('a'), cfiRange: _range);
+
+      final Result<List<MarkedPassage>> everything = await annotations
+          .watchMarks()
+          .first;
+      final List<MarkedPassage> passages =
+          (everything as Ok<List<MarkedPassage>>).value;
+
+      expect(passages, hasLength(1));
+      expect(passages.single.work.title, 'Os Sertões');
+      expect(passages.single.mark.locator, _range);
+    });
+
+    test('narrows to one book and to one kind', () async {
+      await seedWork('a');
+      await seedWork('b');
+
+      await annotations.highlight(ebookId: _id('a'), cfiRange: _range);
+      await annotations.note(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        text: 'a seca',
+      );
+      await annotations.bookmark(ebookId: _id('b'), locator: _range);
+
+      Future<int> count({String? ebookId, AnnotationKind? kind}) async =>
+          ((await annotations.watchMarks(ebookId: ebookId, kind: kind).first)
+                  as Ok<List<MarkedPassage>>)
+              .value
+              .length;
+
+      expect(await count(), 3);
+      expect(await count(ebookId: _id('a')), 2);
+      expect(await count(kind: AnnotationKind.note), 1);
+      expect(await count(ebookId: _id('b'), kind: AnnotationKind.note), 0);
+    });
+
+    test('leaves out the marks in a book the reader deleted', () async {
+      // A reader who deleted a book has said they are not reading it, and its
+      // highlights are not a second opinion.
+      await seedWork('a');
+
+      await annotations.highlight(ebookId: _id('a'), cfiRange: _range);
+
+      await (database.update(database.ebooks)
+            ..where(($EbooksTable row) => row.id.equals(_id('a'))))
+          .write(const EbooksCompanion(deleted: Value<bool>(true)));
+
+      expect(
+        ((await annotations.watchMarks().first) as Ok<List<MarkedPassage>>)
+            .value,
+        isEmpty,
+      );
+    });
+
+    test('reads the same list once, for an export', () async {
+      await seedWork('a');
+
+      await annotations.highlight(ebookId: _id('a'), cfiRange: _range);
+
+      final Result<List<MarkedPassage>> once = await annotations.readMarks();
+
+      expect((once as Ok<List<MarkedPassage>>).value, hasLength(1));
+    });
+  });
+
+  group('writing on a mark', () {
+    test('turns a highlight into a note', () async {
+      // A mark the reader has written on is what a note is. The passage the
+      // highlight had stored gives way to the words, because there is one text
+      // field and the contract says a note's belongs to the reader.
+      await seedWork('a');
+
+      final Annotation mark = ((await annotations.highlight(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        passage: 'A terra é ingrata.',
+      )) as Ok<Annotation>).value;
+
+      expect(
+        await annotations.reword(mark.id, 'A terra é ingrata. — e é sujeito'),
+        isA<Ok<void>>(),
+      );
+
+      final AnnotationRow row = (await database.annotationsDao.readMark(
+        mark.id,
+      ))!;
+
+      expect(row.kind, 'note');
+      expect(row.content, 'A terra é ingrata. — e é sujeito');
+    });
+
+    test('claims only what changed', () async {
+      // Reconciliation is per record and not per field (C17), so a delta
+      // restating a kind nobody touched would carry this device's claim to it
+      // and let a tie-break settle what nobody meant.
+      await seedWork('a');
+
+      final Annotation mark = ((await annotations.note(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        text: 'primeira',
+      )) as Ok<Annotation>).value;
+
+      await annotations.reword(mark.id, 'segunda');
+
+      final Operation last = (await database.syncDao.pending()).last;
+
+      expect(last.delta.keys, <String>[fieldText]);
+      expect(last.delta[fieldText], 'segunda');
+    });
+
+    test('with nothing in it is refused', () async {
+      await seedWork('a');
+
+      final Annotation mark = ((await annotations.note(
+        ebookId: _id('a'),
+        cfiRange: _range,
+        text: 'primeira',
+      )) as Ok<Annotation>).value;
+
+      expect(
+        codeOf(await annotations.reword(mark.id, '  ')),
+        codeNoteWithoutText,
+      );
+      expect((await database.syncDao.pending()), hasLength(1));
+    });
+
+    test('on a mark this device does not hold is refused', () async {
+      expect(
+        codeOf(await annotations.reword(_id('nothing'), 'algo')),
+        codeMarkNotFound,
+      );
     });
   });
 

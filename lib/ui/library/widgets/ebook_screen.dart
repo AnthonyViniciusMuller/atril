@@ -351,6 +351,21 @@ class _Work extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: <Widget>[
+            Expanded(child: _Section(title: l10n.ebookMarksSection)),
+            // The marks of one book are the annotations screen narrowed, and
+            // not a list of their own: the same question at two widths is one
+            // screen, and a second copy of it here would be a second place to
+            // fix the day a mark gains a field.
+            TextButton.icon(
+              onPressed: () => context.go(Routes.ebookMarks(work.id)),
+              icon: const Icon(Icons.brush_outlined),
+              label: Text(l10n.ebookMarksOpen),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: <Widget>[
             Expanded(child: _Section(title: l10n.ebookShelvesSection)),
             TextButton.icon(
               onPressed: model.file.running

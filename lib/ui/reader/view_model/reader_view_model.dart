@@ -72,6 +72,7 @@ final class ReaderViewModel extends ChangeNotifier {
     required this.hosts,
     required this.settings,
     required this.ebookId,
+    this.at,
     this.debounce = readingPositionDebounce,
   }) : host = hosts.create() {
     open = Command0<void>(_open);
@@ -119,6 +120,14 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// The work being read.
   final String ebookId;
+
+  /// Where in it to open, or `null` to let the host open where it opens.
+  ///
+  /// It is what a mark navigates back to, and it crosses this layer unchanged
+  /// like every other locator. A CFI that no longer resolves is not a failure:
+  /// the host opens at the beginning and reports that as the position, which
+  /// is a book that changed under a mark rather than an error to apologize for.
+  final String? at;
 
   /// How long a page is held before its position is recorded.
   ///
@@ -340,7 +349,7 @@ final class ReaderViewModel extends ChangeNotifier {
 
         try {
           await host.apply(_style);
-          await host.open(value);
+          await host.open(value, at: at);
         } on Exception catch (error) {
           return Result<void>.error(error);
         }

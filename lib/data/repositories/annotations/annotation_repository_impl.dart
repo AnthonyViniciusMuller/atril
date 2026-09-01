@@ -16,6 +16,7 @@ import '../../services/local/dao/library_dao.dart';
 import '../../services/local/database.dart';
 import '../../services/sync/author.dart';
 import '../../services/sync/delta.dart';
+import '../library/library_repository_impl.dart' show ebookOfRow;
 import 'annotation_repository.dart';
 
 final _log = loggerFor('data/annotations');
@@ -76,6 +77,42 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
           ],
         ),
   );
+
+  @override
+  Stream<Result<List<MarkedPassage>>> watchMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  }) => _guard(
+    marks.watchMarks(ebookId: ebookId, kind: kind?.wireName).map(_passagesOf),
+  );
+
+  @override
+  Future<Result<List<MarkedPassage>>> readMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  }) async {
+    try {
+      return Result<List<MarkedPassage>>.ok(
+        _passagesOf(
+          await marks.readMarks(ebookId: ebookId, kind: kind?.wireName),
+        ),
+      );
+    } on Object catch (error, stackTrace) {
+      _log.warning('the marks could not be read', error, stackTrace);
+
+      return Result<List<MarkedPassage>>.error(
+        failureFrom(error, op: opReadMarks),
+      );
+    }
+  }
+
+  List<MarkedPassage> _passagesOf(List<MarkRow> rows) => <MarkedPassage>[
+    for (final MarkRow row in rows)
+      MarkedPassage(
+        mark: annotationOfRow(row.mark),
+        work: ebookOfRow(row.work),
+      ),
+  ];
 
   @override
   Future<Result<Annotation>> highlight({
@@ -188,6 +225,60 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
       _log.warning('the mark in $ebookId was not made', error, stackTrace);
 
       return Result<Annotation>.error(failureFrom(error, op: opMark));
+    }
+  }
+
+  @override
+  Future<Result<void>> reword(String annotationId, String text) async {
+    final String? words = _blankIsNothing(text);
+
+    if (words == null) {
+      _log.warning('the mark $annotationId was reworded with nothing');
+
+      return Result<void>.error(
+        AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'a note with no text is an empty note',
+          code: codeNoteWithoutText,
+          op: opMark,
+        ),
+      );
+    }
+
+    try {
+      final AnnotationRow? row = await marks.readMark(annotationId);
+
+      if (row == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no mark called $annotationId',
+          code: codeMarkNotFound,
+          op: opMark,
+        );
+      }
+
+      final claims = DeltaWriter()
+        ..text(fieldText, words, current: row.content)
+        // A mark the reader has written on is a note, whatever it was before.
+        // The kind is claimed against the row's own, so a note being edited
+        // does not restate it — reconciliation is per record and not per field
+        // (C17), and a delta restating what nobody touched carries this
+        // device's claim to it.
+        ..text(fieldKind, AnnotationKind.note.wireName, current: row.kind);
+
+      if (claims.isEmpty) {
+        return const Result<void>.ok(null);
+      }
+
+      await author.write(
+        Change.update(TargetEntity.annotation, annotationId, claims.fields),
+      );
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning('$annotationId could not be reworded', error, stackTrace);
+
+      return Result<void>.error(failureFrom(error, op: opMark));
     }
   }
 

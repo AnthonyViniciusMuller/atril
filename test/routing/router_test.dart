@@ -278,6 +278,40 @@ void main() {
     );
   });
 
+  test('a mark\'s locator survives the URL it travels in', () {
+    // It is a query parameter and not a path segment because it is not part of
+    // the identity of the screen: the same reader, the same book, opened
+    // somewhere else. What this pins is the encoding — a CFI is full of
+    // slashes, brackets and commas, and one written into a location unescaped
+    // would come back as a different locator or as no route at all.
+    const String cfi = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+    const String id = 'aaaaaaaa-1111-4111-8111-111111111111';
+
+    final Uri location = Uri.parse(Routes.readEbook(id, at: cfi));
+
+    expect(location.path, Routes.readEbook(id));
+    expect(location.queryParameters[Routes.locatorParameter], cfi);
+  });
+
+  testWidgets('one work\'s marks are a location below the work', (
+    WidgetTester tester,
+  ) async {
+    final session = _holder();
+    await session.begin(_session());
+
+    final router = atrilRouter(session: session);
+
+    addTearDown(router.dispose);
+    addTearDown(session.dispose);
+
+    await _pump(tester, router);
+
+    router.go(Routes.ebookMarks('aaaaaaaa-1111-4111-8111-111111111111'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AnnotationsScreen), findsOneWidget);
+  });
+
   test('the shell destinations are the branches, in order', () {
     // The navigation surface indexes into this list and the router builds its
     // branches from the same order. One list is what keeps the two agreeing.

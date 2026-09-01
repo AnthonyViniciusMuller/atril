@@ -48,8 +48,11 @@ final class _FakeHost implements EpubHost {
   @override
   Widget view() => const Placeholder(key: Key('the page'));
 
+  /// Where the book was opened, or `null` where nothing said.
+  String? openedAt;
+
   @override
-  Future<void> open(EpubBook book, {String? at}) async {}
+  Future<void> open(EpubBook book, {String? at}) async => openedAt = at;
 
   @override
   Stream<EpubPosition> get positions => _positions.stream;
@@ -176,6 +179,7 @@ Widget _app(
   EpubHostFactory hosts, {
   ReaderSettingsStore? settings,
   AnnotationRepository? annotations,
+  String? at,
 }) => MultiProvider(
   providers: <SingleChildWidget>[
     Provider<ReadingRepository>.value(value: reading),
@@ -187,20 +191,20 @@ Widget _app(
       value: settings ?? MemoryReaderSettingsStore(),
     ),
   ],
-  child: const MaterialApp(
+  child: MaterialApp(
     // Pinned rather than left to resolution. The test host reports its own
     // locale and this app's first supported one is pt_BR, so a test that read
     // its expectations from one and the widget from the other would pass or
     // fail depending on the machine.
-    locale: Locale('pt', 'BR'),
-    localizationsDelegates: <LocalizationsDelegate<Object>>[
+    locale: const Locale('pt', 'BR'),
+    localizationsDelegates: const <LocalizationsDelegate<Object>>[
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: AppLocalizations.supportedLocales,
-    home: ReaderScreen(ebookId: _id),
+    home: ReaderScreen(ebookId: _id, at: at),
   ),
 );
 
@@ -964,6 +968,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byTooltip(_pt().readerBookmark), findsOneWidget);
+    });
+  });
+
+  group('opening at a passage', () {
+    testWidgets('hands the host the locator a mark led here with', (
+      WidgetTester tester,
+    ) async {
+      // The only place in this app that opens a book somewhere other than
+      // where the device stopped, and the locator crosses every layer of it
+      // unchanged.
+      const String cfi = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host), at: cfi));
+      await tester.pumpAndSettle();
+
+      expect(host.openedAt, cfi);
+    });
+
+    testWidgets('opens where the host opens when nothing said', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      expect(host.openedAt, isNull);
     });
   });
 

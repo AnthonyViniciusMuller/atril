@@ -1090,8 +1090,19 @@ and they are recorded here because none of them is visible from the package's RE
       cheaper rule costs is small and stated where it is made: a bookmark taken at one type size
       is not recognized as *this page* at another, so the control offers to make a new one, and
       the old mark is still in the list and still navigates to the right passage
-- [ ] `feat: add the annotations screen` — everything marked in one book and everything marked
-      across the library, each navigating back to its passage
+- [x] `feat: add the annotations screen` — everything marked in one book and everything marked
+      across the library, each navigating back to its passage. The two are **one screen with a
+      narrowing**, not two screens sharing a list: the same question at two widths, reached from
+      the shell for the whole library and from a book — or from the reader, pushed, so the way
+      back is the page — for one. Navigating back to a passage is what put a locator in the
+      reader's location: `?at=` is a query parameter and not a path segment, because it is not
+      part of the identity of the screen, and it is escaped because a CFI is full of slashes,
+      brackets and commas. Giving a highlight words promotes it to a note and the passage it had
+      stored gives way to them — one text field, and the contract says a note's belongs to the
+      reader — so the dialog opens with the passage already in it and what the reader is looking
+      at when they save is what is stored. One translation was corrected here rather than
+      shipped: the filter for notes reads *Notas*, since *Anotações* is the name of the whole
+      screen and a chip repeating it names two different things at once
 - [ ] `feat: add annotation export` — Markdown and JSON, to a file the reader chooses. It is
       their data, and a sovereignty argument that cannot get it out of the app is an argument
       with a hole in it

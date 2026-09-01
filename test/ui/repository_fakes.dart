@@ -600,12 +600,72 @@ final class FakeAnnotationRepository implements AnnotationRepository {
   void failMarks(Exception error) =>
       _marks.add(Result<List<Annotation>>.error(error));
 
-  /// Closes the stream, as a disposed repository would.
-  Future<void> close() => _marks.close();
+  /// Closes the streams, as a disposed repository would.
+  Future<void> close() async {
+    await _marks.close();
+    await _passages.close();
+  }
+
+  final StreamController<Result<List<MarkedPassage>>> _passages =
+      StreamController<Result<List<MarkedPassage>>>.broadcast();
+
+  /// Every reworded mark, as `(id, text)`.
+  final List<(String, String)> reworded = <(String, String)>[];
+
+  List<MarkedPassage> _current = const <MarkedPassage>[];
+
+  /// Emits [passages] to the annotations screen.
+  void emitPassages(List<MarkedPassage> passages) {
+    _current = passages;
+    _passages.add(Result<List<MarkedPassage>>.ok(passages));
+  }
+
+  /// Emits a failure to the annotations screen.
+  void failPassages(Exception error) =>
+      _passages.add(Result<List<MarkedPassage>>.error(error));
+
+  /// Every scope the screen asked for, as `(ebookId, kind)`.
+  final List<(String?, AnnotationKind?)> scopes =
+      <(String?, AnnotationKind?)>[];
 
   @override
   Stream<Result<List<Annotation>>> watchMarksIn(String ebookId) =>
       _marks.stream;
+
+  /// The marks a screen is watching, starting from what is held now.
+  ///
+  /// It opens with the current list rather than waiting, because that is what
+  /// the real repository does: drift answers a `watch` with the rows as they
+  /// stand and then with every change. A fake that said nothing until a test
+  /// pushed something would leave every screen on its spinner, which is a
+  /// difference between the fake and the thing rather than a state of the app.
+  @override
+  Stream<Result<List<MarkedPassage>>> watchMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  }) async* {
+    scopes.add((ebookId, kind));
+
+    yield Result<List<MarkedPassage>>.ok(_current);
+    yield* _passages.stream;
+  }
+
+  @override
+  Future<Result<List<MarkedPassage>>> readMarks({
+    String? ebookId,
+    AnnotationKind? kind,
+  }) async => Result<List<MarkedPassage>>.ok(const <MarkedPassage>[]);
+
+  @override
+  Future<Result<void>> reword(String annotationId, String text) async {
+    reworded.add((annotationId, text));
+
+    final Exception? refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
 
   @override
   Future<Result<Annotation>> highlight({

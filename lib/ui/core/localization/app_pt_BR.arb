@@ -1224,9 +1224,9 @@
     "description": "Ação que anota o trecho selecionado — grifa e guarda o que o leitor escreveu sobre ele. Aparece na barra que a seleção levanta."
   },
 
-  "readerNoteTitle": "Anotação",
+  "readerNoteTitle": "Nota",
   "@readerNoteTitle": {
-    "description": "Título da caixa em que o leitor escreve uma anotação sobre o trecho selecionado."
+    "description": "Título da caixa em que o leitor escreve uma nota sobre o trecho selecionado."
   },
 
   "readerNoteLabel": "O que você quer registrar",
@@ -1234,9 +1234,9 @@
     "description": "Rótulo do campo em que o leitor escreve a anotação. São as palavras dele, e não o trecho — o trecho está endereçado pelo localizador."
   },
 
-  "readerNoteRequired": "Uma anotação sem texto é uma anotação vazia.",
+  "readerNoteRequired": "Uma nota sem texto é uma nota vazia.",
   "@readerNoteRequired": {
-    "description": "Dito abaixo do campo da anotação. O contrato exige que uma anotação tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois."
+    "description": "Dito abaixo do campo da nota. O contrato exige que uma nota tenha texto, e o leitor deve saber disso pelo campo e não por uma recusa depois."
   },
 
   "readerNoteCancel": "Cancelar",
@@ -1249,9 +1249,9 @@
     "description": "Ação que guarda a anotação escrita. Fica desabilitada enquanto o campo estiver vazio."
   },
 
-  "readerNoted": "Anotação guardada.",
+  "readerNoted": "Nota guardada.",
   "@readerNoted": {
-    "description": "Aviso mostrado depois que uma anotação é guardada, acompanhado da ação de desfazer."
+    "description": "Aviso mostrado depois que uma nota é guardada, acompanhado da ação de desfazer."
   },
 
   "readerBookmark": "Marcar esta página",
@@ -1272,5 +1272,153 @@
   "readerBookmarkRemoved": "Marcação da página removida.",
   "@readerBookmarkRemoved": {
     "description": "Aviso mostrado depois que a marcação da página é removida."
+  },
+
+  "annotationsInThisBook": "Marcações deste livro",
+  "@annotationsInThisBook": {
+    "description": "Título da tela de marcações quando ela está restrita a um livro. A mesma tela sem restrição usa o rótulo da navegação."
+  },
+
+  "annotationsAll": "Todas",
+  "@annotationsAll": {
+    "description": "Filtro que mostra todas as marcações, de qualquer tipo. É o estado inicial da tela."
+  },
+
+  "annotationsHighlights": "Grifos",
+  "@annotationsHighlights": {
+    "description": "Filtro que mostra só os grifos — trechos marcados sem nada escrito sobre eles."
+  },
+
+  "annotationsNotes": "Notas",
+  "@annotationsNotes": {
+    "description": "Filtro que mostra só as notas — trechos sobre os quais o leitor escreveu algo. É *notas* e não *anotações* porque *Anotações* é o nome da tela inteira, que reúne os três tipos."
+  },
+
+  "annotationsBookmarks": "Marcadores",
+  "@annotationsBookmarks": {
+    "description": "Filtro que mostra só os marcadores de página — posições, sem trecho e sem texto."
+  },
+
+  "annotationsHighlight": "Grifo",
+  "@annotationsHighlight": {
+    "description": "Nome de um grifo, usado no cartão quando não há texto guardado para mostrar no lugar."
+  },
+
+  "annotationsNote": "Nota",
+  "@annotationsNote": {
+    "description": "Nome de uma nota, usado no cartão quando não há texto para mostrar."
+  },
+
+  "annotationsBookmark": "Marcador de página",
+  "@annotationsBookmark": {
+    "description": "Nome de um marcador de página no cartão. Um marcador não tem texto: ele é um lugar."
+  },
+
+  "annotationsUnknownKind": "Marcação",
+  "@annotationsUnknownKind": {
+    "description": "Nome de uma marcação de um tipo que esta versão do aplicativo não sabe nomear — feita por uma versão mais nova e ainda assim do leitor."
+  },
+
+  "annotationsFromBook": "{title} · {date}",
+  "@annotationsFromBook": {
+    "description": "Rodapé do cartão na listagem de toda a biblioteca: o livro de onde a marcação veio e a data em que foi feita.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "annotationsEmptyTitle": "Nada marcado ainda",
+  "@annotationsEmptyTitle": {
+    "description": "Título do estado vazio da tela de marcações, quando o leitor ainda não marcou nada."
+  },
+
+  "annotationsEmptyMessage": "Grifos, anotações e marcadores feitos durante a leitura aparecem aqui, e acompanham você para os seus outros aparelhos.",
+  "@annotationsEmptyMessage": {
+    "description": "Explicação do estado vazio: diz para que servem as marcações e que elas acompanham o leitor entre aparelhos, que é o que a federação promete."
+  },
+
+  "annotationsNoneOfThisKindTitle": "Nenhuma marcação desse tipo",
+  "@annotationsNoneOfThisKindTitle": {
+    "description": "Título mostrado quando existem marcações mas nenhuma do tipo escolhido no filtro. É frase diferente do vazio de verdade."
+  },
+
+  "annotationsNoneOfThisKindMessage": "Você tem marcações, mas nenhuma do tipo escolhido.",
+  "@annotationsNoneOfThisKindMessage": {
+    "description": "Explicação de que o vazio é do filtro e não do acervo, acompanhada da ação que devolve todas as marcações."
+  },
+
+  "annotationsShowAll": "Mostrar todas",
+  "@annotationsShowAll": {
+    "description": "Ação que limpa o filtro por tipo e mostra todas as marcações de novo."
+  },
+
+  "annotationsFailedTitle": "Não foi possível ler as marcações",
+  "@annotationsFailedTitle": {
+    "description": "Título mostrado quando a consulta às marcações falha. Elas estão neste aparelho, então não é falha de rede."
+  },
+
+  "annotationsFailedMessage": "As marcações estão guardadas neste aparelho e a consulta a elas falhou. Nada foi perdido.",
+  "@annotationsFailedMessage": {
+    "description": "Explicação da falha de leitura das marcações, dizendo o que importa: nada foi perdido, só não pôde ser lido agora."
+  },
+
+  "annotationsActions": "O que fazer com esta marcação",
+  "@annotationsActions": {
+    "description": "Dica do botão que abre o menu de ações de uma marcação — anotar, editar, remover."
+  },
+
+  "annotationsEdit": "Editar a nota",
+  "@annotationsEdit": {
+    "description": "Ação que abre a caixa para mudar o texto de uma nota existente."
+  },
+
+  "annotationsAddNote": "Anotar",
+  "@annotationsAddNote": {
+    "description": "Ação que escreve algo sobre um grifo, o que o transforma em anotação. O campo já vem com o trecho guardado, para que nada suma sem o leitor ver."
+  },
+
+  "annotationsRemove": "Remover",
+  "@annotationsRemove": {
+    "description": "Ação que remove uma marcação. Vem acompanhada de desfazer, porque a remoção é uma lápide e desfazê-la custa uma operação."
+  },
+
+  "annotationsRemoved": "Marcação removida.",
+  "@annotationsRemoved": {
+    "description": "Aviso mostrado depois que uma marcação é removida, acompanhado da ação de desfazer."
+  },
+
+  "annotationsUndo": "Desfazer",
+  "@annotationsUndo": {
+    "description": "Ação que traz de volta a marcação recém-removida, no aviso que a anuncia."
+  },
+
+  "annotationsSaved": "Nota guardada.",
+  "@annotationsSaved": {
+    "description": "Aviso mostrado depois que o texto de uma marcação é guardado."
+  },
+
+  "annotationsNoteTitle": "Nota",
+  "@annotationsNoteTitle": {
+    "description": "Título da caixa em que o texto de uma marcação é escrito ou alterado, na tela de marcações."
+  },
+
+  "annotationsPassageGivesWay": "O que ficar aqui substitui o trecho guardado: o registro tem um só campo de texto, e numa anotação ele é seu.",
+  "@annotationsPassageGivesWay": {
+    "description": "Dito abaixo do campo quando um grifo está virando anotação. O registro tem um único campo de texto e numa anotação ele é do leitor, então o trecho guardado dá lugar ao que ele escrever — e ele vê isso antes de guardar."
+  },
+
+  "ebookMarksSection": "Marcações",
+  "@ebookMarksSection": {
+    "description": "Título da seção da tela do livro que leva às marcações feitas nele."
+  },
+
+  "ebookMarksOpen": "Ver as marcações",
+  "@ebookMarksOpen": {
+    "description": "Ação, na tela de um livro, que abre a lista das marcações feitas nele."
   }
 }

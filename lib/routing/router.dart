@@ -177,6 +177,23 @@ GoRouter atrilRouter({
                               ebookId:
                                   state.pathParameters[Routes.ebookParameter] ??
                                   '',
+                              // Where a mark sends the reader back to. The
+                              // book opens at the beginning without it, and at
+                              // the beginning too when the locator no longer
+                              // resolves — a book edited between two versions
+                              // can legitimately have lost the passage.
+                              at: state
+                                  .uri
+                                  .queryParameters[Routes.locatorParameter],
+                            ),
+                      ),
+                      GoRoute(
+                        path: Routes.marksSegment,
+                        builder: (BuildContext context, GoRouterState state) =>
+                            AnnotationsScreen(
+                              ebookId:
+                                  state.pathParameters[Routes.ebookParameter] ??
+                                  '',
                             ),
                       ),
                     ],
