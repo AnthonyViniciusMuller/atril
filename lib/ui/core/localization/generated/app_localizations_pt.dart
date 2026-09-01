@@ -866,6 +866,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get ebookMarksOpen => 'Ver as marcações';
+
+  @override
+  String get annotationsExport => 'Exportar as marcações';
+
+  @override
+  String get annotationsExportMarkdown => 'Exportar em Markdown';
+
+  @override
+  String get annotationsExportJson => 'Exportar em JSON';
+
+  @override
+  String annotationsExportedAt(String date) {
+    return 'Exportado do Atril em $date';
+  }
+
+  @override
+  String get annotationsExported => 'Marcações exportadas.';
+
+  @override
+  String get annotationsNothingToExport => 'Não há nada marcado para exportar.';
+
+  @override
+  String get annotationsExportFailed => 'Não foi possível escrever o arquivo.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1729,4 +1752,27 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get ebookMarksOpen => 'Ver as marcações';
+
+  @override
+  String get annotationsExport => 'Exportar as marcações';
+
+  @override
+  String get annotationsExportMarkdown => 'Exportar em Markdown';
+
+  @override
+  String get annotationsExportJson => 'Exportar em JSON';
+
+  @override
+  String annotationsExportedAt(String date) {
+    return 'Exportado do Atril em $date';
+  }
+
+  @override
+  String get annotationsExported => 'Marcações exportadas.';
+
+  @override
+  String get annotationsNothingToExport => 'Não há nada marcado para exportar.';
+
+  @override
+  String get annotationsExportFailed => 'Não foi possível escrever o arquivo.';
 }

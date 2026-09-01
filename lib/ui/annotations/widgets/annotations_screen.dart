@@ -21,7 +21,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/annotations/annotation_repository.dart';
+import '../../../data/services/annotations/annotation_export.dart';
+import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/annotation.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/result.dart';
 import '../../../routing/routes.dart';
 import '../../core/localization/localization.dart';
 import '../../core/themes/colors.dart';
@@ -42,6 +46,7 @@ class AnnotationsScreen extends StatefulWidget {
 class _AnnotationsScreenState extends State<AnnotationsScreen> {
   late final AnnotationsViewModel _model = AnnotationsViewModel(
     annotations: context.read<AnnotationRepository>(),
+    files: context.read<FileSaver>(),
     ebookId: widget.ebookId,
   );
 
@@ -64,6 +69,7 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
                 ? l10n.navigationAnnotations
                 : l10n.annotationsInThisBook,
           ),
+          actions: <Widget>[_ExportMenu(model: _model)],
         ),
         body: Column(
           children: <Widget>[
@@ -73,6 +79,94 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
         ),
       ),
     );
+  }
+}
+
+/// The two files a reader can take their marks away in.
+///
+/// It is an action on the bar and not a button in an empty corner, because it
+/// is the one control here that is about *all* of this rather than about one
+/// row — and it is two menu items rather than a dialog asking which format,
+/// since the choice is the whole of the question.
+class _ExportMenu extends StatelessWidget {
+  const _ExportMenu({required this.model});
+
+  final AnnotationsViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context);
+
+    return MenuAnchor(
+      menuChildren: <Widget>[
+        MenuItemButton(
+          onPressed: () => _export(context, model, ExportFormat.markdown),
+          child: Text(l10n.annotationsExportMarkdown),
+        ),
+        MenuItemButton(
+          onPressed: () => _export(context, model, ExportFormat.json),
+          child: Text(l10n.annotationsExportJson),
+        ),
+      ],
+      builder: (BuildContext context, MenuController menu, Widget? _) =>
+          IconButton(
+            onPressed: () => menu.isOpen ? menu.close() : menu.open(),
+            icon: const Icon(Icons.ios_share),
+            tooltip: l10n.annotationsExport,
+          ),
+    );
+  }
+}
+
+/// Writes the marks to a file the reader chooses.
+///
+/// The words the Markdown carries are read out of the ARB here, which is the
+/// layer that has a `BuildContext`: an export is something a reader opens, so
+/// *Grifo* in it is as user-visible as a button, and `data/services` has no
+/// business holding either.
+Future<void> _export(
+  BuildContext context,
+  AnnotationsViewModel model,
+  ExportFormat format,
+) async {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  final MaterialLocalizations dates = MaterialLocalizations.of(context);
+  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+
+  await model.export.execute((
+    format: format,
+    words: ExportWords(
+      title: l10n.navigationAnnotations,
+      exportedAt: l10n.annotationsExportedAt(
+        dates.formatFullDate(DateTime.now()),
+      ),
+      highlight: l10n.annotationsHighlight,
+      note: l10n.annotationsNote,
+      bookmark: l10n.annotationsBookmark,
+      unknownKind: l10n.annotationsUnknownKind,
+      dateOf: dates.formatFullDate,
+    ),
+  ));
+
+  switch (model.export.result) {
+    // A reader who opened the dialog and closed it has done nothing wrong, and
+    // a screen that apologized would be apologizing for their decision.
+    case Ok<String?>(value: null):
+      break;
+    case Ok<String?>():
+      messenger.showSnackBar(SnackBar(content: Text(l10n.annotationsExported)));
+    case Error<String?>(:final Exception error):
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error is AppException && error.code == codeNothingToExport
+                ? l10n.annotationsNothingToExport
+                : l10n.annotationsExportFailed,
+          ),
+        ),
+      );
+    case null:
+      break;
   }
 }
 

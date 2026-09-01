@@ -414,5 +414,26 @@
   "@ebookMarksSection": {},
 
   "ebookMarksOpen": "See the marks",
-  "@ebookMarksOpen": {}
+  "@ebookMarksOpen": {},
+
+  "annotationsExport": "Export the marks",
+  "@annotationsExport": {},
+
+  "annotationsExportMarkdown": "Export as Markdown",
+  "@annotationsExportMarkdown": {},
+
+  "annotationsExportJson": "Export as JSON",
+  "@annotationsExportJson": {},
+
+  "annotationsExportedAt": "Exported from Atril on {date}",
+  "@annotationsExportedAt": {},
+
+  "annotationsExported": "Marks exported.",
+  "@annotationsExported": {},
+
+  "annotationsNothingToExport": "There is nothing marked to export.",
+  "@annotationsNothingToExport": {},
+
+  "annotationsExportFailed": "The file could not be written.",
+  "@annotationsExportFailed": {}
 }

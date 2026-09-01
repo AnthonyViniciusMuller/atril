@@ -34,6 +34,37 @@ abstract interface class FileSource {
   Stream<List<int>> openRead();
 }
 
+/// Where a reader puts a file this app produced.
+///
+/// It is the other half of [FilePicker] and it is a port for the same reason,
+/// with one of its own on top: **the platforms do not agree on what saving a
+/// file is.** The three desktops and the browser have a save dialog; Android
+/// and iOS have a share sheet, which is where *save to Files* and *save to
+/// Drive* live on those systems. Two implementations behind one interface is
+/// what keeps that a fact about `data/services/files` instead of a condition
+/// inside the screen that exports something.
+///
+/// It takes the bytes whole, unlike [FileSource], and the asymmetry is real
+/// rather than an oversight: what this app hands out is a document it has just
+/// composed in memory — a few kilobytes of Markdown or JSON — and not a book.
+/// The day something large is exported, this grows a streaming shape and the
+/// import's argument applies to it too.
+abstract interface class FileSaver {
+  /// Asks the reader where [bytes] should go, and puts them there.
+  ///
+  /// [suggestedName] carries the extension, which is the only thing that tells
+  /// a system what the file is; [mimeType] is what a share sheet routes on.
+  ///
+  /// It answers with what the file was saved as, or `null` where the reader
+  /// backed out. Backing out is not a failure and is not reported as one — the
+  /// same rule [FilePicker.pickEbook] follows, for the same reason.
+  Future<String?> save({
+    required String suggestedName,
+    required String mimeType,
+    required List<int> bytes,
+  });
+}
+
 /// Where a reader names one.
 abstract interface class FilePicker {
   /// Asks the reader for a file to import, or answers `null` if they did not

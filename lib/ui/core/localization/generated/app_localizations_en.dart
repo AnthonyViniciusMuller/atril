@@ -865,4 +865,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ebookMarksOpen => 'See the marks';
+
+  @override
+  String get annotationsExport => 'Export the marks';
+
+  @override
+  String get annotationsExportMarkdown => 'Export as Markdown';
+
+  @override
+  String get annotationsExportJson => 'Export as JSON';
+
+  @override
+  String annotationsExportedAt(String date) {
+    return 'Exported from Atril on $date';
+  }
+
+  @override
+  String get annotationsExported => 'Marks exported.';
+
+  @override
+  String get annotationsNothingToExport => 'There is nothing marked to export.';
+
+  @override
+  String get annotationsExportFailed => 'The file could not be written.';
 }

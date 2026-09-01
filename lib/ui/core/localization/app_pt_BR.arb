@@ -1420,5 +1420,45 @@
   "ebookMarksOpen": "Ver as marcações",
   "@ebookMarksOpen": {
     "description": "Ação, na tela de um livro, que abre a lista das marcações feitas nele."
+  },
+
+  "annotationsExport": "Exportar as marcações",
+  "@annotationsExport": {
+    "description": "Dica do botão que abre a escolha do formato de exportação. É a única ação da tela que trata de todas as marcações e não de uma."
+  },
+
+  "annotationsExportMarkdown": "Exportar em Markdown",
+  "@annotationsExportMarkdown": {
+    "description": "Opção de exportação num arquivo para ler: títulos, citações e as palavras na ordem em que foram marcadas."
+  },
+
+  "annotationsExportJson": "Exportar em JSON",
+  "@annotationsExportJson": {
+    "description": "Opção de exportação num arquivo para um programa ler: o registro inteiro, com os nomes de campo do próprio contrato."
+  },
+
+  "annotationsExportedAt": "Exportado do Atril em {date}",
+  "@annotationsExportedAt": {
+    "description": "Linha escrita dentro do arquivo Markdown, logo abaixo do título, dizendo de onde e quando ele saiu.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "annotationsExported": "Marcações exportadas.",
+  "@annotationsExported": {
+    "description": "Aviso mostrado depois que o arquivo de marcações é gravado onde o leitor escolheu."
+  },
+
+  "annotationsNothingToExport": "Não há nada marcado para exportar.",
+  "@annotationsNothingToExport": {
+    "description": "Aviso mostrado quando o leitor pede a exportação sem ter marcado nada. Um arquivo com um título e nada embaixo não são os dados dele: é um arquivo para apagar depois."
+  },
+
+  "annotationsExportFailed": "Não foi possível escrever o arquivo.",
+  "@annotationsExportFailed": {
+    "description": "Erro mostrado quando o arquivo de marcações não pôde ser escrito no lugar escolhido."
   }
 }

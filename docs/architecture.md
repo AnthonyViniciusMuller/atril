@@ -87,12 +87,13 @@ lib/
 ├── data/
 │   ├── repositories/<feature>/   the interface, and the implementation over local + remote
 │   ├── services/
+│   │   ├── annotations/          what the reader marked, as a file they can take away
 │   │   ├── api/                  one client per gRPC service, over the generated stubs
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
 │   │   ├── content/              the chunked upload and the download of a work's bytes
 │   │   ├── discovery/            the `.well-known` lookup — the one call that is not gRPC
 │   │   ├── epub/                 the OPF, read for the metadata an import claims
-│   │   ├── files/                the file a reader named: the picker port, and what a name says
+│   │   ├── files/                the file a reader named and the file they save: two ports
 │   │   ├── local/                the drift database, its tables and its DAOs
 │   │   ├── sync/                 the reconciler, the operation author, the sync loop
 │   │   └── storage/              the session store, the e-book blob store, the window's size
@@ -231,6 +232,17 @@ nothing of this project's own on either side of it: it is the same constraint me
 dependency, and it is named here so that a future reader counts five and not a rule that was
 broken.
 
+A second one of that kind arrived with the export, and it is worth naming because it is the first
+platform split in this project that is not about a *technology* being absent. `FileSaver` has two
+implementations — `file_selector`'s save dialog on the three desktops and the browser, and the
+share sheet through `share_plus` on Android and iOS — and it is chosen on `defaultTargetPlatform`
+where the graph is composed. `file_selector` does not implement `getSaveLocation` on those two
+targets, and that is not a gap in the package: those systems have no save dialog, and saving a
+file there *is* the share sheet, which is where **Save to Files** and **Save to Drive** live. The
+alternative was an export on four targets of six, or writing into the application's own documents
+directory and telling the reader where it went — which is not *the reader chooses where their
+data goes*, and that is the claim the export exists to make good on.
+
 Everything else that merely behaves differently per platform (the secure store, the storage
 budget's units, the reader's host) differs behind an interface with two implementations, because
 a `dart:io` import inside a repository is a repository that cannot be tested on web. The session
@@ -244,6 +256,35 @@ where it is said to the reader.
 The guide's sample has three flavours. This app has two nodes it ever points at: a production one
 and the local federation `make dev-up` starts. A third entry point would be a third
 configuration nobody maintains.
+
+## What a mark is, and what it cannot be
+
+### One text field carries two different things
+
+An annotation in the contract has one nullable `text`, and UC05 needs it to do two jobs. A
+**highlight** spends it on the passage it covers, captured from the selection that made it: the
+engine had the words at that moment and no other layer ever will — the annotations screen lists
+marks from books that are not open, and an export runs with no engine at all — so a highlight that
+stored nothing could only ever be shown as a CFI. A **note** spends it on the reader's own words,
+which the contract requires a note to carry. A **bookmark** spends it on nothing.
+
+The consequence is that giving a highlight words makes it a note *and* takes the passage away,
+because the two cannot both be in one field. That is not hidden: the dialog that offers it opens
+with the passage already in the field, so what is stored is what the reader was looking at when
+they pressed save.
+
+### Nothing in Dart ever compares two CFIs
+
+The rule about one engine has a second half that only became visible when the marks needed
+ordering. A list of highlights in *reading order* is what a reader expects, and reaching it means
+comparing two CFIs, which means parsing them — a partial CFI implementation in Dart, which is the
+thing this project forbids outright. So the marks come back most recent first, everywhere, which
+is an integer comparison that means the same thing on every target.
+
+The same rule decides how the reader's screen knows whether the page it is on carries a bookmark:
+by comparing the locator as *text*. What that costs is small and is stated where it is made — a
+bookmark taken at one type size is not recognized as *this page* at another, so the control offers
+to make a new one, and the old mark is still in the list and still navigates to the right passage.
 
 ## The shell
 

@@ -287,6 +287,27 @@ dependencies:
   # `flutter_inappwebview` like the other three native targets.
   webview_cef: ^0.6.2
 
+  # How a file this app produced leaves it on Android and iOS, and the reason
+  # this is a dependency rather than one more call to `file_selector`.
+  #
+  # `file_selector` has no save dialog on those two targets — its Android and
+  # iOS implementations do not implement `getSaveLocation` at all — and that is
+  # not a gap in the package. Those systems have no save dialog: saving a file
+  # there *is* the share sheet, which is where **Save to Files** and **Save to
+  # Drive** live beside sending the thing to somebody. So the export of phase 10
+  # reaches four targets through `file_selector` and two through this, behind
+  # one `FileSaver` port, chosen on `defaultTargetPlatform` exactly as the
+  # reader's host is.
+  #
+  # The alternative was an export that works on four targets of six, which this
+  # project's rule refuses, or writing into the application's own documents
+  # directory and telling the reader where it went — which needs a plist entry
+  # on iOS to be reachable at all and lands somewhere scoped storage makes
+  # awkward to find on Android. Neither is *the reader chooses where their data
+  # goes*, which is what the sovereignty argument this export exists for
+  # actually claims.
+  share_plus: ^13.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

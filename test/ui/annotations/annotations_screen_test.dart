@@ -10,6 +10,7 @@ library;
 import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/models/annotation.dart';
+import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 
 import '../repository_fakes.dart';
 
@@ -54,7 +56,11 @@ MarkedPassage _passage({
 );
 
 /// The screen, under a router that records where a tap sends it.
-Widget _app(FakeAnnotationRepository marks, {String? ebookId}) {
+Widget _app(
+  FakeAnnotationRepository marks, {
+  String? ebookId,
+  FileSaver? saver,
+}) {
   final GoRouter router = GoRouter(
     initialLocation: '/marks',
     routes: <RouteBase>[
@@ -75,8 +81,11 @@ Widget _app(FakeAnnotationRepository marks, {String? ebookId}) {
     ],
   );
 
-  return Provider<AnnotationRepository>.value(
-    value: marks,
+  return MultiProvider(
+    providers: <SingleChildWidget>[
+      Provider<AnnotationRepository>.value(value: marks),
+      Provider<FileSaver>.value(value: saver ?? FakeFileSaver()),
+    ],
     child: MaterialApp.router(
       routerConfig: router,
       // Pinned rather than left to resolution, as every screen test here does:
@@ -318,6 +327,146 @@ void main() {
       expect(find.text(_pt().annotationsAddNote), findsNothing);
       expect(find.text(_pt().annotationsEdit), findsNothing);
       expect(find.text(_pt().annotationsRemove), findsOneWidget);
+    });
+  });
+
+  group('taking the marks away', () {
+    testWidgets('writes what the reader asked for, in the format they chose', (
+      WidgetTester tester,
+    ) async {
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver();
+      addTearDown(marks.close);
+
+      marks.exportable = <MarkedPassage>[
+        _passage(id: 'one', text: 'A terra é ingrata.'),
+      ];
+
+      await tester.pumpWidget(_app(marks, saver: files));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportMarkdown));
+      await tester.pumpAndSettle();
+
+      expect(files.saved, hasLength(1));
+      expect(files.saved.single.name, 'atril-marks.md');
+      expect(files.saved.single.mimeType, 'text/markdown');
+      // The words come from the ARB, through the layer that has a context.
+      expect(files.text, contains(_pt().navigationAnnotations));
+      expect(files.text, contains('> A terra é ingrata.'));
+      expect(find.text(_pt().annotationsExported), findsOneWidget);
+    });
+
+    testWidgets('reads the marks again rather than taking the filtered list', (
+      WidgetTester tester,
+    ) async {
+      // A reader looking at their bookmarks who asks for an export means their
+      // marks, and not the four rows in front of them.
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver();
+      addTearDown(marks.close);
+
+      marks.exportable = <MarkedPassage>[
+        _passage(id: 'one', text: 'A terra é ingrata.'),
+      ];
+
+      await tester.pumpWidget(_app(marks, saver: files));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_pt().annotationsBookmarks));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportJson));
+      await tester.pumpAndSettle();
+
+      expect(files.text, contains('A terra é ingrata.'));
+      // The scope is honoured, because a scope is a place and not a lens.
+      expect(marks.exported, <String?>[null]);
+    });
+
+    testWidgets('with nothing marked writes no file at all', (
+      WidgetTester tester,
+    ) async {
+      // A file with a heading and nothing under it is not the reader's data;
+      // it is a file they now have to delete.
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(_app(marks, saver: files));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportJson));
+      await tester.pumpAndSettle();
+
+      expect(files.saved, isEmpty);
+      expect(find.text(_pt().annotationsNothingToExport), findsOneWidget);
+    });
+
+    testWidgets('backed out of, it says nothing', (WidgetTester tester) async {
+      // A reader who opened the dialog and closed it has done nothing wrong.
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver()..cancels = true;
+      addTearDown(marks.close);
+
+      marks.exportable = <MarkedPassage>[_passage(id: 'one', text: 'x')];
+
+      await tester.pumpWidget(_app(marks, saver: files));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportMarkdown));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().annotationsExported), findsNothing);
+      expect(find.text(_pt().annotationsExportFailed), findsNothing);
+    });
+
+    testWidgets('a file that will not be written says so', (
+      WidgetTester tester,
+    ) async {
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver()
+        ..failure = Exception('the disc is full');
+      addTearDown(marks.close);
+
+      marks.exportable = <MarkedPassage>[_passage(id: 'one', text: 'x')];
+
+      await tester.pumpWidget(_app(marks, saver: files));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportMarkdown));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().annotationsExportFailed), findsOneWidget);
+    });
+
+    testWidgets('from one book\'s screen is that book\'s', (
+      WidgetTester tester,
+    ) async {
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      final FakeFileSaver files = FakeFileSaver();
+      addTearDown(marks.close);
+
+      marks.exportable = <MarkedPassage>[_passage(id: 'one', text: 'x')];
+
+      await tester.pumpWidget(_app(marks, saver: files, ebookId: _bookId));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().annotationsExport));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().annotationsExportJson));
+      await tester.pumpAndSettle();
+
+      expect(marks.exported, <String?>[_bookId]);
     });
   });
 

@@ -9,6 +9,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:atril/config/environment.dart';
@@ -650,11 +651,21 @@ final class FakeAnnotationRepository implements AnnotationRepository {
     yield* _passages.stream;
   }
 
+  /// What a one-off read answers with, which is what an export is built from.
+  List<MarkedPassage> exportable = const <MarkedPassage>[];
+
+  /// Every scope a one-off read was asked for, in order.
+  final List<String?> exported = <String?>[];
+
   @override
   Future<Result<List<MarkedPassage>>> readMarks({
     String? ebookId,
     AnnotationKind? kind,
-  }) async => Result<List<MarkedPassage>>.ok(const <MarkedPassage>[]);
+  }) async {
+    exported.add(ebookId);
+
+    return Result<List<MarkedPassage>>.ok(exportable);
+  }
 
   @override
   Future<Result<void>> reword(String annotationId, String text) async {
@@ -790,6 +801,46 @@ final class FakeFilePicker implements FilePicker {
   }
 }
 
+/// A [FileSaver] that keeps whatever it was handed.
+///
+/// The default is a reader who chose a place, because the interesting refusal
+/// — backing out of the dialog — is the one a test has to ask for.
+final class FakeFileSaver implements FileSaver {
+  /// Every file it was asked to write, in order.
+  final List<({String name, String mimeType, List<int> bytes})> saved =
+      <({String name, String mimeType, List<int> bytes})>[];
+
+  /// Whether the reader backs out of the dialog.
+  bool cancels = false;
+
+  /// What the next save throws, or `null` to let it succeed.
+  Object? failure;
+
+  /// What the last file written says.
+  String get text => utf8.decode(saved.last.bytes);
+
+  @override
+  Future<String?> save({
+    required String suggestedName,
+    required String mimeType,
+    required List<int> bytes,
+  }) async {
+    final Object? thrown = failure;
+
+    if (thrown != null) {
+      throw thrown;
+    }
+
+    if (cancels) {
+      return null;
+    }
+
+    saved.add((name: suggestedName, mimeType: mimeType, bytes: bytes));
+
+    return '/tmp/$suggestedName';
+  }
+}
+
 /// A file with a name and no bytes worth speaking of.
 final class NamedFile implements FileSource {
   /// The file called [name].
@@ -818,6 +869,7 @@ List<SingleChildWidget> repositoryProviders({
   ReadingRepository? reading,
   AnnotationRepository? annotations,
   FilePicker? picker,
+  FileSaver? saver,
   Environment? environment,
 }) => <SingleChildWidget>[
   Provider<Environment>.value(value: environment ?? Environment.production()),
@@ -829,4 +881,5 @@ List<SingleChildWidget> repositoryProviders({
     value: annotations ?? FakeAnnotationRepository(),
   ),
   Provider<FilePicker>.value(value: picker ?? FakeFilePicker()),
+  Provider<FileSaver>.value(value: saver ?? FakeFileSaver()),
 ];

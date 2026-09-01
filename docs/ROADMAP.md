@@ -1103,9 +1103,21 @@ and they are recorded here because none of them is visible from the package's RE
       at when they save is what is stored. One translation was corrected here rather than
       shipped: the filter for notes reads *Notas*, since *Anotações* is the name of the whole
       screen and a chip repeating it names two different things at once
-- [ ] `feat: add annotation export` — Markdown and JSON, to a file the reader chooses. It is
+- [x] `feat: add annotation export` — Markdown and JSON, to a file the reader chooses. It is
       their data, and a sovereignty argument that cannot get it out of the app is an argument
-      with a hole in it
+      with a hole in it. The two formats are spelled for their two readers: the Markdown carries
+      the words in the order they were marked, quoting a passage and not quoting what somebody
+      wrote about it, with its own words taken from the ARB because a file a reader opens is
+      user-visible text; the JSON carries the record under the **contract's own field names** —
+      `ebook_id`, `kind`, `locator`, spelled exactly as `delta.dart` and both schemas spell them
+      — because that is the delta vocabulary's argument one hop further out, and an export that
+      invented `bookId` would be one nothing in this project could read back. Every mark carries
+      its locator, which is what makes the file resolvable and not merely readable. **`share_plus`
+      was added, and the roadmap did not foresee it**: `file_selector` has no save dialog on
+      Android or iOS, and that is not a gap in the package — those systems have no save dialog,
+      and saving a file there *is* the share sheet, which is where *Save to Files* lives. So
+      `FileSaver` is a port with two implementations picked on `defaultTargetPlatform`, exactly as
+      the reader's host is. The alternative was an export on four targets of six
 
 ## Phase 11 — Synchronization (UC09, UC10, UC11)
 

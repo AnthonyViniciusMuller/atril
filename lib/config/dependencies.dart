@@ -56,6 +56,7 @@ import '../data/services/epub/epub_host.dart';
 import '../data/services/epub/host/host_factory.dart';
 import '../data/services/files/file_source.dart';
 import '../data/services/files/system_file_picker.dart';
+import '../data/services/files/system_file_saver.dart';
 import '../data/services/local/database.dart';
 import '../data/services/local/hybrid_clock_store.dart';
 import '../data/services/sync/author.dart';
@@ -306,6 +307,14 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // is the type group — which is spelled once, out of the formats UC02
     // admits, rather than in the screen that opens it.
     Provider<FilePicker>(create: (_) => const SystemFilePicker()),
+
+    // Where a file this app produced goes. It is *two* implementations behind
+    // one port and not one, because the platforms do not agree on what saving
+    // a file is: the three desktops and the browser have a save dialog, and on
+    // Android and iOS saving is the share sheet — which is where *Save to
+    // Files* lives. The choice is made on `defaultTargetPlatform`, as the
+    // reader's host split is, because both branches compile everywhere.
+    Provider<FileSaver>(create: (_) => systemFileSaver()),
 
     Provider<AuthRepository>(
       create: (BuildContext context) => AuthRepositoryImpl(

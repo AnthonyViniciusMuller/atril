@@ -1580,6 +1580,48 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Ver as marcações'**
   String get ebookMarksOpen;
+
+  /// Dica do botão que abre a escolha do formato de exportação. É a única ação da tela que trata de todas as marcações e não de uma.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Exportar as marcações'**
+  String get annotationsExport;
+
+  /// Opção de exportação num arquivo para ler: títulos, citações e as palavras na ordem em que foram marcadas.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Exportar em Markdown'**
+  String get annotationsExportMarkdown;
+
+  /// Opção de exportação num arquivo para um programa ler: o registro inteiro, com os nomes de campo do próprio contrato.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Exportar em JSON'**
+  String get annotationsExportJson;
+
+  /// Linha escrita dentro do arquivo Markdown, logo abaixo do título, dizendo de onde e quando ele saiu.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Exportado do Atril em {date}'**
+  String annotationsExportedAt(String date);
+
+  /// Aviso mostrado depois que o arquivo de marcações é gravado onde o leitor escolheu.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcações exportadas.'**
+  String get annotationsExported;
+
+  /// Aviso mostrado quando o leitor pede a exportação sem ter marcado nada. Um arquivo com um título e nada embaixo não são os dados dele: é um arquivo para apagar depois.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não há nada marcado para exportar.'**
+  String get annotationsNothingToExport;
+
+  /// Erro mostrado quando o arquivo de marcações não pôde ser escrito no lugar escolhido.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível escrever o arquivo.'**
+  String get annotationsExportFailed;
 }
 
 class _AppLocalizationsDelegate
