@@ -1436,8 +1436,44 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       was not run here**: `flatpak-builder` is not installed on this machine and the two Apple
       steps need a macOS host, so the Linux *bundle* was built and measured and the manifest that
       wraps it was not; the release workflow is where all three are first executed
-- [ ] `build: add the web build` — the manifest, the icons, the offline service worker, and the
-      renderer choice argued for in a comment
+- [x] `build: add the web build` — the manifest, the icons, the offline service worker, and the
+      renderer choice argued for in a comment. **The offline service worker this line asks for
+      does not exist any more, and that is the finding of the phase.** Flutter's is deprecated
+      (`flutter/flutter#156910`) and in 3.47.1 the file the tool generates is *thirty-one lines
+      that call `registration.unregister()` and reload every client* — a tombstone. So the target
+      whose whole promise is that the network is an optimization had nothing caching its own
+      application, and taking the default `flutter_bootstrap.js` would have been worse than
+      nothing: it registers that file, at the same scope Atril's worker wants, so the tombstone
+      would have removed Atril's along with itself. `web/atril_service_worker.js` is this
+      project's own, and it is reviewed in `web/` rather than generated whole:
+      `tool/make_service_worker.dart` rewrites exactly two of its lines after a build, because
+      which files a build produced and a version that changes when any of them does are the only
+      parts that cannot be written by hand. Four decisions in it are places the obvious answer is
+      wrong. It **caches the shell and never a book** — the books are phase 8's per-book opt-in
+      in the origin-private file system, against a budget the reader can see, and a worker
+      quietly caching them as they streamed is the one thing that decision forbids. It calls
+      **neither `skipWaiting` nor `clients.claim`**, and the cost is stated where it is paid: the
+      *first* visit is not offline-capable, and from the second load it is. The alternative is
+      serving a running page the JavaScript of one build and the assets of another for the rest
+      of the session. It **lets every non-GET and every cross-origin request past untouched**,
+      which is not defensive — a cached `POST` response would be one device replaying another's
+      answer to a synchronization request. And the version is a **digest over the sorted file
+      list and each file's own digest**, so a moved asset and a changed one both produce a new
+      cache, which a build number would not. Two flags carry the rest. `--no-web-resources-cdn`,
+      because the default fetches CanvasKit from gstatic — a cold load on a train with nothing to
+      render with. And `--pwa-strategy=none`, which does not omit Flutter's worker but *empties*
+      it, so the tool deletes the zero-byte file rather than deploy a name somebody might
+      register. **The renderer argument came out smaller than expected, and the measurement is in
+      the comment rather than the belief.** `--wasm` does not replace the JavaScript build, it
+      adds one and keeps the other as the fallback: 49.5 MB against 45.4 MB, nine percent, not
+      the doubling it sounds like. CanvasKit stays because it is what every browser Flutter
+      supports runs and what this project has been built against for twelve phases, and the note
+      says to revisit it with a profile rather than an argument. The size actually worth knowing
+      is not the renderer's: `--no-web-resources-cdn` copies the whole renderer directory out of
+      the web SDK, **36.1 MB of the 45.4**, including variants a JavaScript build never loads and
+      8.2 MB of `.symbols` files. Four fifths of the offline shell is renderers and one of them
+      runs. The manifest loses the template's `portrait-primary` — this app runs on a desktop —
+      and gains the ink the icon is drawn on, so the splash is the app's colour and not white
 - [ ] `ci: add the release workflow` — tagged builds for all six, with the artifacts attached
 - [ ] `docs: update the readme` — the status section stops saying *not started*, and the
       getting-started section says how to reach `make dev-up` from each target, which differs on

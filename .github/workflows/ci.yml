@@ -173,7 +173,11 @@ jobs:
             command: flutter build apk --debug
           - target: web
             os: ubuntu-latest
-            command: flutter build web
+            # Through the make target rather than `flutter build web`, because
+            # the web build is three flags and a step afterwards — see the
+            # comment on `build-web` in the Makefile — and this is the only
+            # place `tool/make_service_worker.dart` ever runs.
+            command: make build-web
           - target: linux
             os: ubuntu-latest
             command: flutter build linux --debug

@@ -300,8 +300,43 @@ build-all: $(addprefix build-,$(HOST_TARGETS))
 	@echo "built: $(HOST_TARGETS) — the rest are on CI"
 
 .PHONY: build-web build-android build-linux build-macos build-ios build-windows
+# Three flags, and each of them is a decision rather than a default.
+#
+# `--no-web-resources-cdn` serves CanvasKit from this app's own origin. The
+# default is to fetch it from gstatic, which is a build that cannot start
+# without the network on the one target whose whole promise is that the network
+# is an optimization. It is also the only one of the three that a reader would
+# notice immediately: a cold load on a train, with nothing to render with.
+#
+# `--pwa-strategy=none` empties `flutter_service_worker.js`. Flutter's service
+# worker is deprecated (flutter/flutter#156910) and in 3.47.1 the file it
+# generates by default is thirty-one lines that unregister the worker and
+# reload every client. Atril registers its own from `web/flutter_bootstrap.js`
+# instead. The flag writes a zero-byte file rather than no file, so
+# `tool/make_service_worker.dart` deletes it: two workers claiming one scope is
+# a deployment where the last one registered wins.
+#
+# The renderer stays CanvasKit, which is what a JavaScript build defaults to,
+# and the argument is smaller than the one this roadmap expected. `--wasm` does
+# not replace the JavaScript build: it adds a WasmGC one and keeps the other as
+# the fallback for browsers without it. Measured here, that is 49.5 MB against
+# 45.4 MB — 4.1 MB, or nine percent, and not the doubling it sounds like.
+#
+# So it is a judgement and not a constraint: CanvasKit is the path every browser
+# Flutter supports runs, it is the one this project has been developed against
+# for twelve phases, and what the reader is looking at is text. The nine percent
+# buys a faster renderer on the browsers that have WasmGC and a second
+# compilation to keep working on all six targets. Revisit it with a profile
+# rather than with an argument.
+#
+# The size that *is* worth knowing about is not the renderer's.
+# `--no-web-resources-cdn` copies the whole renderer directory out of the web
+# SDK — 36.1 MB of 45.4, including variants a JavaScript build never loads and
+# 8.2 MB of `.symbols` files, which are symbol maps for the profiler. Four
+# fifths of the offline shell is renderers, and only one of them runs.
 build-web:
-	$(FLUTTER) build web
+	$(FLUTTER) build web --no-web-resources-cdn --pwa-strategy=none
+	$(DART) run tool/make_service_worker.dart
 build-android:
 	$(FLUTTER) build apk --debug
 build-linux:

@@ -1,12 +1,16 @@
 {
-    "name": "atril",
-    "short_name": "atril",
+    "id": "dev.quire.atril",
+    "name": "Atril",
+    "short_name": "Atril",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Cliente Flutter para Quire — biblioteca de e-books federada e offline-first.",
-    "orientation": "portrait-primary",
+    "lang": "pt-BR",
+    "dir": "ltr",
+    "background_color": "#1B2430",
+    "theme_color": "#1B2430",
+    "description": "Leia e sincronize uma biblioteca de e-books federada. A biblioteca, as posições de leitura e as anotações ficam no dispositivo.",
+    "categories": ["books", "education", "productivity"],
     "prefer_related_applications": false,
     "icons": [
         {
