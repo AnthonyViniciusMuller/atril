@@ -6,6 +6,7 @@ import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/ebook.dart';
+import 'package:atril/domain/models/sync_state.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
@@ -30,10 +31,11 @@ Future<void> pump(
   WidgetTester tester,
   FakeAuthRepository auth, {
   FakeLibraryRepository? library,
+  FakeSyncRepository? sync,
 }) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(auth: auth, library: library),
+      providers: repositoryProviders(auth: auth, library: library, sync: sync),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -46,6 +48,25 @@ Future<void> pump(
 
 void main() {
   _storage();
+
+  testWidgets('gives the synchronization one line, and the way to more', (
+    WidgetTester tester,
+  ) async {
+    // One line, because what a reader needs at a glance is the count:
+    // everything else is a question they only ask once it has told them there
+    // is something to ask about.
+    final sync = FakeSyncRepository()..emit(const SyncState(pending: 2));
+
+    addTearDown(sync.dispose);
+
+    await pump(tester, FakeAuthRepository(), sync: sync);
+
+    expect(find.text('2 changes waiting'), findsOneWidget);
+    expect(
+      find.text('See the state of the synchronization'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('names the reader by the whole federated identifier', (
     WidgetTester tester,

@@ -23,12 +23,24 @@
 /// It measures the space it was given rather than the window. On a phone those
 /// are the same number; in a desktop window with something else beside it they
 /// are not, and the one that decides whether a rail fits is this one.
+///
+/// **One destination carries a badge, and it is the only state this surface
+/// shows.** How much this device has authored and not handed over is the one
+/// fact a reader is entitled to have in front of them at all times — a reader
+/// who cannot tell whether their notes are only on this phone has not been
+/// given the guarantee the app makes — and it is a number on *Settings* rather
+/// than a fourth destination, because synchronization is a property of the app
+/// and not a place to visit. It is absent at zero, which is the ordinary state
+/// and not news.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../data/repositories/sync/sync_repository.dart';
 import '../../../routing/routes.dart';
+import '../../sync/view_model/sync_view_model.dart';
 import '../localization/localization.dart';
 
 /// The width below which the navigation goes under the content.
@@ -52,6 +64,7 @@ final class Destination {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.badgesPendingChanges = false,
   });
 
   /// The icon of the destination.
@@ -66,6 +79,9 @@ final class Destination {
   /// translation is not: the label depends on the locale, which depends on the
   /// context, which does not exist where this list is written.
   final String Function(AppLocalizations l10n) label;
+
+  /// Whether this destination shows the count of what has not been handed over.
+  final bool badgesPendingChanges;
 }
 
 /// The destinations, in the order the branches of the router are declared.
@@ -90,6 +106,7 @@ const List<Destination> destinations = <Destination>[
     icon: Icons.settings_outlined,
     selectedIcon: Icons.settings,
     label: _settings,
+    badgesPendingChanges: true,
   ),
 ];
 
@@ -100,7 +117,7 @@ String _annotations(AppLocalizations l10n) => l10n.navigationAnnotations;
 String _settings(AppLocalizations l10n) => l10n.navigationSettings;
 
 /// The shell around the destination the reader is looking at.
-class AdaptiveScaffold extends StatelessWidget {
+class AdaptiveScaffold extends StatefulWidget {
   /// The shell around [navigation], which is the branch currently shown and
   /// the thing that knows how to switch to another.
   const AdaptiveScaffold({required this.navigation, super.key});
@@ -109,15 +126,49 @@ class AdaptiveScaffold extends StatelessWidget {
   final StatefulNavigationShell navigation;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (BuildContext context, BoxConstraints constraints) {
-      if (constraints.maxWidth < compactWidth) {
-        return _bar(context);
-      }
+  State<AdaptiveScaffold> createState() => _AdaptiveScaffoldState();
+}
 
-      return _rail(context, extended: constraints.maxWidth >= expandedWidth);
-    },
+class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
+  late final SyncViewModel _sync = SyncViewModel(
+    sync: context.read<SyncRepository>(),
   );
+
+  StatefulNavigationShell get navigation => widget.navigation;
+
+  @override
+  void dispose() {
+    _sync.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _sync,
+    builder: (BuildContext context, Widget? _) => LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < compactWidth) {
+          return _bar(context);
+        }
+
+        return _rail(context, extended: constraints.maxWidth >= expandedWidth);
+      },
+    ),
+  );
+
+  /// [icon], with the count of what has not left this device on it where
+  /// [destination] is the one that carries it.
+  ///
+  /// Nothing is drawn at zero. A badge showing a nought would be a permanent
+  /// mark reporting that everything is fine, which is the state a reader
+  /// already assumes and the one thing a badge must not be spent on.
+  Widget _badged(Destination destination, Widget icon) {
+    if (!destination.badgesPendingChanges || _sync.state.isHandedOver) {
+      return icon;
+    }
+
+    return Badge.count(count: _sync.state.pending, child: icon);
+  }
 
   /// Goes to the destination at [index].
   ///
@@ -141,8 +192,11 @@ class AdaptiveScaffold extends StatelessWidget {
         destinations: <Widget>[
           for (final destination in destinations)
             NavigationDestination(
-              icon: Icon(destination.icon),
-              selectedIcon: Icon(destination.selectedIcon),
+              icon: _badged(destination, Icon(destination.icon)),
+              selectedIcon: _badged(
+                destination,
+                Icon(destination.selectedIcon),
+              ),
               label: destination.label(l10n),
             ),
         ],
@@ -171,8 +225,11 @@ class AdaptiveScaffold extends StatelessWidget {
               destinations: <NavigationRailDestination>[
                 for (final destination in destinations)
                   NavigationRailDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
+                    icon: _badged(destination, Icon(destination.icon)),
+                    selectedIcon: _badged(
+                      destination,
+                      Icon(destination.selectedIcon),
+                    ),
                     label: Text(destination.label(l10n)),
                   ),
               ],

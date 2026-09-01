@@ -166,6 +166,19 @@ abstract final class Routes {
   /// The account, the devices, the known servers and the state of the sync.
   static const String settings = '/settings';
 
+  /// The path segment the state of the synchronization is shown under,
+  /// relative to [settings].
+  static const String syncSegment = 'sync';
+
+  /// Where the state of the synchronization is shown.
+  ///
+  /// It is below the settings and not a fourth destination of the shell, and
+  /// the difference is a claim about what synchronization *is*: a property of
+  /// the app rather than a place a reader visits. What belongs in front of them
+  /// at all times is one number — how much has not left this device — and the
+  /// navigation surface carries that as a badge.
+  static const String sync = '$settings/$syncSegment';
+
   /// The destinations that share the shell, in the order the navigation
   /// surface shows them.
   ///

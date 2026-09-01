@@ -889,6 +889,72 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get annotationsExportFailed => 'Não foi possível escrever o arquivo.';
+
+  @override
+  String get syncTitle => 'Sincronização';
+
+  @override
+  String get syncOpen => 'Ver o estado da sincronização';
+
+  @override
+  String syncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alterações esperando',
+      one: '1 alteração esperando',
+      zero: 'Nada esperando',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncPendingExplanation =>
+      'Elas estão guardadas aqui e vão embora assim que este aparelho alcançar o nó. Nada se perde enquanto isso.';
+
+  @override
+  String get syncNothingPending => 'Tudo o que você fez já saiu daqui.';
+
+  @override
+  String get syncNever => 'Este aparelho ainda não alcançou o nó.';
+
+  @override
+  String syncLastReached(String date, String time) {
+    return 'Falou com o nó em $date, às $time';
+  }
+
+  @override
+  String get syncActivityIdle => 'Parado';
+
+  @override
+  String get syncActivityConnecting => 'Conectando…';
+
+  @override
+  String get syncActivityLive => 'Conectado ao nó';
+
+  @override
+  String get syncActivityWaiting => 'Vai tentar de novo';
+
+  @override
+  String get syncNow => 'Sincronizar agora';
+
+  @override
+  String get syncFailedNow => 'Não foi possível sincronizar agora.';
+
+  @override
+  String get syncWaitingOnNode =>
+      'O nó não respondeu. Este aparelho tenta de novo sozinho.';
+
+  @override
+  String syncSomethingWrong(String reason) {
+    return 'Algo deu errado da última vez: $reason';
+  }
+
+  @override
+  String get syncStateSection => 'Agora';
+
+  @override
+  String get syncChangesSection => 'O que ainda não saiu';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1775,4 +1841,70 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get annotationsExportFailed => 'Não foi possível escrever o arquivo.';
+
+  @override
+  String get syncTitle => 'Sincronização';
+
+  @override
+  String get syncOpen => 'Ver o estado da sincronização';
+
+  @override
+  String syncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alterações esperando',
+      one: '1 alteração esperando',
+      zero: 'Nada esperando',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncPendingExplanation =>
+      'Elas estão guardadas aqui e vão embora assim que este aparelho alcançar o nó. Nada se perde enquanto isso.';
+
+  @override
+  String get syncNothingPending => 'Tudo o que você fez já saiu daqui.';
+
+  @override
+  String get syncNever => 'Este aparelho ainda não alcançou o nó.';
+
+  @override
+  String syncLastReached(String date, String time) {
+    return 'Falou com o nó em $date, às $time';
+  }
+
+  @override
+  String get syncActivityIdle => 'Parado';
+
+  @override
+  String get syncActivityConnecting => 'Conectando…';
+
+  @override
+  String get syncActivityLive => 'Conectado ao nó';
+
+  @override
+  String get syncActivityWaiting => 'Vai tentar de novo';
+
+  @override
+  String get syncNow => 'Sincronizar agora';
+
+  @override
+  String get syncFailedNow => 'Não foi possível sincronizar agora.';
+
+  @override
+  String get syncWaitingOnNode =>
+      'O nó não respondeu. Este aparelho tenta de novo sozinho.';
+
+  @override
+  String syncSomethingWrong(String reason) {
+    return 'Algo deu errado da última vez: $reason';
+  }
+
+  @override
+  String get syncStateSection => 'Agora';
+
+  @override
+  String get syncChangesSection => 'O que ainda não saiu';
 }

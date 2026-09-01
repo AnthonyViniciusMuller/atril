@@ -18,6 +18,7 @@ import 'package:atril/data/services/sync/scheduler.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/operation.dart';
 import 'package:atril/domain/models/session.dart';
+import 'package:atril/domain/models/sync_state.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';

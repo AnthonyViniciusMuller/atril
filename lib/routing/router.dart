@@ -45,6 +45,7 @@ import '../ui/onboarding/widgets/server_selection_screen.dart';
 import '../ui/reader/widgets/reader_screen.dart';
 import '../ui/onboarding/widgets/sign_in_screen.dart';
 import '../ui/settings/widgets/settings_screen.dart';
+import '../ui/sync/widgets/sync_screen.dart';
 import '../utils/logging.dart';
 import 'routes.dart';
 
@@ -217,6 +218,16 @@ GoRouter atrilRouter({
                 path: Routes.settings,
                 builder: (BuildContext context, GoRouterState state) =>
                     const SettingsScreen(),
+                // Below the settings, so that closing it lands on the screen
+                // that led there — and so that a browser's back button does,
+                // which is the same thing said twice on one target.
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: Routes.syncSegment,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const SyncScreen(),
+                  ),
+                ],
               ),
             ],
           ),

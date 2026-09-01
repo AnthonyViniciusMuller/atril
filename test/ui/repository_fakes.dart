@@ -19,6 +19,7 @@ import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
+import 'package:atril/data/repositories/sync/sync_repository.dart';
 import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/data/services/storage/blob_storage.dart';
@@ -30,6 +31,7 @@ import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/domain/models/server.dart';
+import 'package:atril/domain/models/sync_state.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/cancellation.dart';
 import 'package:atril/utils/result.dart';
@@ -781,6 +783,55 @@ final class FakeAnnotationRepository implements AnnotationRepository {
   }
 }
 
+/// A [SyncRepository] that answers with whatever a test put in it.
+///
+/// The state is a broadcast controller for the reason the works are: what the
+/// badge and the sync screen are written against is a *stream*, and a
+/// repository that answered once would be a repository this app does not have.
+/// The current value is replayed to each listener, as the real one's is —
+/// the shell's badge subscribes long after the loop started.
+final class FakeSyncRepository implements SyncRepository {
+  final StreamController<SyncState> _states =
+      StreamController<SyncState>.broadcast();
+
+  SyncState _state = const SyncState();
+
+  /// How many times a reader asked for a synchronization.
+  int asked = 0;
+
+  /// What [syncNow] answers with.
+  Result<void> answers = const Result<void>.ok(null);
+
+  /// Announces [state].
+  void emit(SyncState state) {
+    _state = state;
+    _states.add(state);
+  }
+
+  @override
+  Stream<SyncState> watchState() =>
+      Stream<SyncState>.multi((MultiStreamController<SyncState> listener) {
+        listener.add(_state);
+
+        final subscription = _states.stream.listen(
+          listener.add,
+          onDone: listener.close,
+        );
+
+        listener.onCancel = subscription.cancel;
+      });
+
+  @override
+  Future<Result<void>> syncNow() async {
+    asked++;
+
+    return answers;
+  }
+
+  /// Closes the stream, as a test tearing down its tree would want.
+  Future<void> dispose() => _states.close();
+}
+
 /// A [FilePicker] that answers with whatever a test put in it.
 ///
 /// The default is `null`, which is a reader who opened the dialog and closed
@@ -868,6 +919,7 @@ List<SingleChildWidget> repositoryProviders({
   LibraryRepository? library,
   ReadingRepository? reading,
   AnnotationRepository? annotations,
+  SyncRepository? sync,
   FilePicker? picker,
   FileSaver? saver,
   Environment? environment,
@@ -880,6 +932,7 @@ List<SingleChildWidget> repositoryProviders({
   Provider<AnnotationRepository>.value(
     value: annotations ?? FakeAnnotationRepository(),
   ),
+  Provider<SyncRepository>.value(value: sync ?? FakeSyncRepository()),
   Provider<FilePicker>.value(value: picker ?? FakeFilePicker()),
   Provider<FileSaver>.value(value: saver ?? FakeFileSaver()),
 ];

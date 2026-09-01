@@ -7,6 +7,9 @@
 /// the web, and a reader whose refresh credential is in `localStorage` is
 /// entitled to be told so rather than to assume otherwise.
 ///
+/// What phase 11 puts here is one line: how much this device has authored and
+/// not handed over, and the way to the screen that explains it.
+///
 /// What phase 6 puts here is the account and the way out of it. Signing out
 /// navigates nowhere: ending the session is what the shell's guard watches, and
 /// the redirect that already exists is what sends the device back to
@@ -18,6 +21,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../core/localization/localization.dart';
+import '../../sync/widgets/sync_section.dart';
 import '../view_model/settings_view_model.dart';
 import 'storage_section.dart';
 
@@ -85,6 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 enabled: !_model.signOut.running,
                 onTap: _model.signOut.execute,
               ),
+              const SyncSection(),
               const StorageSection(),
             ],
           );

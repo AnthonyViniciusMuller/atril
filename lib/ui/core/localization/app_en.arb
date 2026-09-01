@@ -435,5 +435,77 @@
   "@annotationsNothingToExport": {},
 
   "annotationsExportFailed": "The file could not be written.",
-  "@annotationsExportFailed": {}
+  "@annotationsExportFailed": {},
+
+  "syncTitle": "Synchronization",
+  "@syncTitle": {},
+
+  "syncOpen": "See the state of the synchronization",
+  "@syncOpen": {},
+
+  "syncPending": "{count, plural, =0{Nothing waiting} =1{1 change waiting} other{{count} changes waiting}}",
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "syncPendingExplanation": "They are held here and leave as soon as this device reaches the node. Nothing is lost in the meantime.",
+  "@syncPendingExplanation": {},
+
+  "syncNothingPending": "Everything you have done has left this device.",
+  "@syncNothingPending": {},
+
+  "syncNever": "This device has not reached the node yet.",
+  "@syncNever": {},
+
+  "syncLastReached": "Reached the node on {date}, at {time}",
+  "@syncLastReached": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "syncActivityIdle": "Stopped",
+  "@syncActivityIdle": {},
+
+  "syncActivityConnecting": "Connecting\u2026",
+  "@syncActivityConnecting": {},
+
+  "syncActivityLive": "Connected to the node",
+  "@syncActivityLive": {},
+
+  "syncActivityWaiting": "Will try again",
+  "@syncActivityWaiting": {},
+
+  "syncNow": "Synchronize now",
+  "@syncNow": {},
+
+  "syncFailedNow": "It was not possible to synchronize now.",
+  "@syncFailedNow": {},
+
+  "syncWaitingOnNode": "The node did not answer. This device tries again on its own.",
+  "@syncWaitingOnNode": {},
+
+  "syncSomethingWrong": "Something went wrong last time: {reason}",
+  "@syncSomethingWrong": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+
+  "syncStateSection": "Now",
+  "@syncStateSection": {},
+
+  "syncChangesSection": "What has not left yet",
+  "@syncChangesSection": {}
 }

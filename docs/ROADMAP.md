@@ -1170,9 +1170,19 @@ and they are recorded here because none of them is visible from the package's RE
       `upload_queue.dart` had already said was its job, and it learns about a locally authored
       change by watching `pending_operations` grow rather than by being called: a caller that had
       to remember to announce a write is a caller that eventually does not
-- [ ] `feat: add the sync status surface` — what is pending and when the last sync completed.
+- [x] `feat: add the sync status surface` — what is pending and when the last sync completed.
       One line in the shell, one screen behind it. A reader who cannot tell whether their notes
-      are only on this phone has not been given the guarantee the app claims
+      are only on this phone has not been given the guarantee the app claims. The line is a
+      **badge on the settings destination** and the screen is `/settings/sync` below it, which is
+      a claim about what synchronization is: a property of the app rather than a fourth place to
+      visit. The badge is absent at zero — a nought is a permanent mark saying everything is fine,
+      which is the state a reader already assumes. Two things the plan did not name. *When the
+      last sync completed* could not be `node_cursors.pulled_at` as it stood, because a device
+      that is up to date pulls nothing and the column would have reported whenever somebody last
+      wrote something; it now also moves when a channel opens, and the column's comment says so.
+      And **waiting is not failing**: the screen distinguishes a node that did not answer, which
+      it calls a wait, from a refusal no retry fixes, which it names — an offline-first app whose
+      ordinary state looks like a fault has taught its reader to ignore the one time it is not
 - [ ] `feat: quarantine a refused change` — the case the local-first write path makes possible:
       the reader has seen the change land and the node will not take it, so the device is showing
       something that will reach nobody. The record carries a refused flag and the node's reason,

@@ -42,6 +42,8 @@ import '../data/repositories/reading/reading_repository.dart';
 import '../data/repositories/reading/reading_repository_impl.dart';
 import '../data/repositories/server/server_repository.dart';
 import '../data/repositories/server/server_repository_impl.dart';
+import '../data/repositories/sync/sync_repository.dart';
+import '../data/repositories/sync/sync_repository_impl.dart';
 import '../data/services/api/auth_api.dart';
 import '../data/services/api/federation_api.dart';
 import '../data/services/api/library_api.dart';
@@ -316,6 +318,17 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         return scheduler;
       },
       dispose: (_, SyncScheduler scheduler) => scheduler.dispose(),
+    ),
+
+    // What the shell's badge and the sync screen read. It joins the loop's own
+    // state to the two durable facts a reader's question is actually about:
+    // what this device owes, and when it last reached its node.
+    Provider<SyncRepository>(
+      create: (BuildContext context) => SyncRepositoryImpl(
+        sync: database.syncDao,
+        identity: database.identityDao,
+        scheduler: context.read<SyncScheduler>(),
+      ),
     ),
 
     Provider<LibraryRepository>(

@@ -65,6 +65,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import '../../../domain/models/sync_state.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../api/reachability.dart';
@@ -104,33 +105,12 @@ Stream<bool> appForeground() {
   return lifecycle.stream;
 }
 
-/// What the loop is doing.
-enum SyncActivity {
-  /// Not trying, and not waiting to: signed out, in the background, or
-  /// stopped.
-  idle('idle'),
-
-  /// Opening a channel.
-  connecting('connecting'),
-
-  /// A channel is open. It is not a promise that the node has answered — see
-  /// the note on the backoff — but it is the state in which anything authored
-  /// here goes out at once.
-  live('live'),
-
-  /// A channel ended and the next attempt is waiting out its backoff.
-  waiting('waiting');
-
-  const SyncActivity(this.label);
-
-  /// The name of the state, for a log line and a failing test.
-  final String label;
-
-  @override
-  String toString() => label;
-}
-
 /// Where the loop stands.
+///
+/// It is the loop's own state and is not what a screen is given: [SyncState] is
+/// that, and the repository is what joins this to the two durable facts — what
+/// is owed, and when this device last reached its node — that a reader's
+/// question is actually about.
 final class SyncStatus {
   /// The state, with what ended the last attempt and how long until the next.
   const SyncStatus({
@@ -311,6 +291,23 @@ final class SyncScheduler {
     if (grew) {
       unawaited(nudge());
     }
+  }
+
+  /// Synchronizes now, at a reader's asking.
+  ///
+  /// It differs from [nudge] in exactly one way and it is the right one: it
+  /// clears a backoff that is already running. A reader who taps *synchronize
+  /// now* is telling this device something it could not have known — that the
+  /// network is back, that the node was restarted — and making them watch out
+  /// the five minutes anyway would be the app disbelieving them.
+  Future<void> syncNow() async {
+    if (channel.isOpen) {
+      await channel.offer();
+
+      return;
+    }
+
+    _retryNow();
   }
 
   /// Hands over a change that has just been authored here.

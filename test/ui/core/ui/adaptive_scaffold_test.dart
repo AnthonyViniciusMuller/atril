@@ -16,6 +16,7 @@ library;
 import 'package:atril/data/services/api/session.dart';
 import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/session.dart';
+import 'package:atril/domain/models/sync_state.dart';
 import 'package:atril/routing/router.dart';
 import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
@@ -47,6 +48,7 @@ Future<GoRouter> _pumpAt(
   WidgetTester tester,
   double width, {
   Locale? locale,
+  FakeSyncRepository? sync,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 900);
@@ -77,7 +79,7 @@ Future<GoRouter> _pumpAt(
       // The settings destination reads its repository out of the tree. Nothing
       // here asserts anything about it: what is under test is which branch a
       // tap moves to.
-      providers: repositoryProviders(),
+      providers: repositoryProviders(sync: sync),
       child: MaterialApp.router(
         routerConfig: router,
         locale: locale,
@@ -105,6 +107,79 @@ void main() {
       for (final destination in destinations) {
         expect(destination.selectedIcon, isNot(destination.icon));
       }
+    });
+
+    test('exactly one carries the count of what has not been handed over', () {
+      // One number, on the destination that leads to the screen explaining it.
+      // Two badges would be two claims about the same fact, and a badge on the
+      // library would be a claim about the wrong one.
+      expect(
+        destinations.where(
+          (Destination destination) => destination.badgesPendingChanges,
+        ),
+        hasLength(1),
+      );
+    });
+  });
+
+  group('the badge', () {
+    testWidgets('counts what has not left this device, in the bar', (
+      WidgetTester tester,
+    ) async {
+      final sync = FakeSyncRepository()
+        ..emit(const SyncState(pending: 3));
+
+      addTearDown(sync.dispose);
+
+      await _pumpAt(tester, compactWidth - 1, sync: sync);
+
+      expect(find.byType(Badge), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+    });
+
+    testWidgets('counts it in the rail too', (WidgetTester tester) async {
+      // The badge is on the destination and not on one of the three layouts:
+      // a reader who widened the window has not stopped being entitled to
+      // know.
+      final sync = FakeSyncRepository()..emit(const SyncState(pending: 2));
+
+      addTearDown(sync.dispose);
+
+      await _pumpAt(tester, compactWidth, sync: sync);
+
+      expect(find.byType(Badge), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+    });
+
+    testWidgets('is absent while everything has been handed over', (
+      WidgetTester tester,
+    ) async {
+      // A badge showing a nought is a permanent mark reporting that everything
+      // is fine, which is the state a reader already assumes.
+      final sync = FakeSyncRepository()..emit(const SyncState());
+
+      addTearDown(sync.dispose);
+
+      await _pumpAt(tester, compactWidth - 1, sync: sync);
+
+      expect(find.byType(Badge), findsNothing);
+    });
+
+    testWidgets('appears when a change is authored', (
+      WidgetTester tester,
+    ) async {
+      final sync = FakeSyncRepository();
+
+      addTearDown(sync.dispose);
+
+      await _pumpAt(tester, compactWidth - 1, sync: sync);
+
+      expect(find.byType(Badge), findsNothing);
+
+      sync.emit(const SyncState(pending: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Badge), findsOneWidget);
     });
   });
 

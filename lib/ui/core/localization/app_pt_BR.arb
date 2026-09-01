@@ -1460,5 +1460,108 @@
   "annotationsExportFailed": "Não foi possível escrever o arquivo.",
   "@annotationsExportFailed": {
     "description": "Erro mostrado quando o arquivo de marcações não pôde ser escrito no lugar escolhido."
+  },
+
+  "syncTitle": "Sincronização",
+  "@syncTitle": {
+    "description": "Título da tela que mostra o estado da sincronização, e da seção das configurações que leva até ela."
+  },
+
+  "syncOpen": "Ver o estado da sincronização",
+  "@syncOpen": {
+    "description": "Ação, nas configurações, que abre a tela da sincronização."
+  },
+
+  "syncPending": "{count, plural, =0{Nada esperando} =1{1 alteração esperando} other{{count} alterações esperando}}",
+  "@syncPending": {
+    "description": "Quantas alterações feitas aqui ainda não chegaram ao nó. É a resposta curta para a pergunta que a tela existe para responder: as minhas anotações estão só neste aparelho?",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "syncPendingExplanation": "Elas estão guardadas aqui e vão embora assim que este aparelho alcançar o nó. Nada se perde enquanto isso.",
+  "@syncPendingExplanation": {
+    "description": "Dito abaixo da contagem de alterações esperando. O leitor precisa saber que esperar não é perder."
+  },
+
+  "syncNothingPending": "Tudo o que você fez já saiu daqui.",
+  "@syncNothingPending": {
+    "description": "Dito no lugar da explicação acima quando não há nada esperando."
+  },
+
+  "syncNever": "Este aparelho ainda não alcançou o nó.",
+  "@syncNever": {
+    "description": "Dito no lugar da data quando o aparelho nunca conseguiu falar com o nó — logo depois de entrar, ou depois de nunca ter havido rede."
+  },
+
+  "syncLastReached": "Falou com o nó em {date}, às {time}",
+  "@syncLastReached": {
+    "description": "Quando este aparelho alcançou o nó pela última vez. É uma data guardada, e não algo que se perde ao fechar o aplicativo.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "syncActivityIdle": "Parado",
+  "@syncActivityIdle": {
+    "description": "Estado do laço de sincronização quando ele não está tentando nem esperando para tentar: sem sessão, ou com o aplicativo em segundo plano."
+  },
+
+  "syncActivityConnecting": "Conectando…",
+  "@syncActivityConnecting": {
+    "description": "Estado do laço de sincronização enquanto ele abre um canal."
+  },
+
+  "syncActivityLive": "Conectado ao nó",
+  "@syncActivityLive": {
+    "description": "Estado do laço de sincronização com um canal aberto, que é quando o que se faz aqui sai na hora."
+  },
+
+  "syncActivityWaiting": "Vai tentar de novo",
+  "@syncActivityWaiting": {
+    "description": "Estado do laço de sincronização depois que um canal caiu, enquanto ele espera para tentar outra vez."
+  },
+
+  "syncNow": "Sincronizar agora",
+  "@syncNow": {
+    "description": "Ação que manda o aparelho tentar imediatamente, sem esperar o intervalo que ele mesmo tinha marcado. O leitor sabe algo que o aparelho não sabe — que a rede voltou."
+  },
+
+  "syncFailedNow": "Não foi possível sincronizar agora.",
+  "@syncFailedNow": {
+    "description": "Aviso mostrado quando o pedido de sincronizar agora não pôde ser feito."
+  },
+
+  "syncWaitingOnNode": "O nó não respondeu. Este aparelho tenta de novo sozinho.",
+  "@syncWaitingOnNode": {
+    "description": "Dito quando a última falha foi de rede. É uma espera e não um problema para o leitor resolver."
+  },
+
+  "syncSomethingWrong": "Algo deu errado da última vez: {reason}",
+  "@syncSomethingWrong": {
+    "description": "Dito quando a última falha não foi de rede, com o motivo que o nó deu. É escrito para quem der suporte, e não para o leitor.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+
+  "syncStateSection": "Agora",
+  "@syncStateSection": {
+    "description": "Título da seção da tela de sincronização que mostra o que está acontecendo neste instante."
+  },
+
+  "syncChangesSection": "O que ainda não saiu",
+  "@syncChangesSection": {
+    "description": "Título da seção da tela de sincronização que conta as alterações feitas aqui e ainda não entregues."
   }
 }

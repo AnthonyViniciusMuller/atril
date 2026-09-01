@@ -1622,6 +1622,108 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível escrever o arquivo.'**
   String get annotationsExportFailed;
+
+  /// Título da tela que mostra o estado da sincronização, e da seção das configurações que leva até ela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sincronização'**
+  String get syncTitle;
+
+  /// Ação, nas configurações, que abre a tela da sincronização.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ver o estado da sincronização'**
+  String get syncOpen;
+
+  /// Quantas alterações feitas aqui ainda não chegaram ao nó. É a resposta curta para a pergunta que a tela existe para responder: as minhas anotações estão só neste aparelho?
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{count, plural, =0{Nada esperando} =1{1 alteração esperando} other{{count} alterações esperando}}'**
+  String syncPending(int count);
+
+  /// Dito abaixo da contagem de alterações esperando. O leitor precisa saber que esperar não é perder.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Elas estão guardadas aqui e vão embora assim que este aparelho alcançar o nó. Nada se perde enquanto isso.'**
+  String get syncPendingExplanation;
+
+  /// Dito no lugar da explicação acima quando não há nada esperando.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tudo o que você fez já saiu daqui.'**
+  String get syncNothingPending;
+
+  /// Dito no lugar da data quando o aparelho nunca conseguiu falar com o nó — logo depois de entrar, ou depois de nunca ter havido rede.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este aparelho ainda não alcançou o nó.'**
+  String get syncNever;
+
+  /// Quando este aparelho alcançou o nó pela última vez. É uma data guardada, e não algo que se perde ao fechar o aplicativo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Falou com o nó em {date}, às {time}'**
+  String syncLastReached(String date, String time);
+
+  /// Estado do laço de sincronização quando ele não está tentando nem esperando para tentar: sem sessão, ou com o aplicativo em segundo plano.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Parado'**
+  String get syncActivityIdle;
+
+  /// Estado do laço de sincronização enquanto ele abre um canal.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Conectando…'**
+  String get syncActivityConnecting;
+
+  /// Estado do laço de sincronização com um canal aberto, que é quando o que se faz aqui sai na hora.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Conectado ao nó'**
+  String get syncActivityLive;
+
+  /// Estado do laço de sincronização depois que um canal caiu, enquanto ele espera para tentar outra vez.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Vai tentar de novo'**
+  String get syncActivityWaiting;
+
+  /// Ação que manda o aparelho tentar imediatamente, sem esperar o intervalo que ele mesmo tinha marcado. O leitor sabe algo que o aparelho não sabe — que a rede voltou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sincronizar agora'**
+  String get syncNow;
+
+  /// Aviso mostrado quando o pedido de sincronizar agora não pôde ser feito.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível sincronizar agora.'**
+  String get syncFailedNow;
+
+  /// Dito quando a última falha foi de rede. É uma espera e não um problema para o leitor resolver.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O nó não respondeu. Este aparelho tenta de novo sozinho.'**
+  String get syncWaitingOnNode;
+
+  /// Dito quando a última falha não foi de rede, com o motivo que o nó deu. É escrito para quem der suporte, e não para o leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Algo deu errado da última vez: {reason}'**
+  String syncSomethingWrong(String reason);
+
+  /// Título da seção da tela de sincronização que mostra o que está acontecendo neste instante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Agora'**
+  String get syncStateSection;
+
+  /// Título da seção da tela de sincronização que conta as alterações feitas aqui e ainda não entregues.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que ainda não saiu'**
+  String get syncChangesSection;
 }
 
 class _AppLocalizationsDelegate

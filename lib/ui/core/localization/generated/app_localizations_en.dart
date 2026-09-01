@@ -888,4 +888,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get annotationsExportFailed => 'The file could not be written.';
+
+  @override
+  String get syncTitle => 'Synchronization';
+
+  @override
+  String get syncOpen => 'See the state of the synchronization';
+
+  @override
+  String syncPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes waiting',
+      one: '1 change waiting',
+      zero: 'Nothing waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncPendingExplanation =>
+      'They are held here and leave as soon as this device reaches the node. Nothing is lost in the meantime.';
+
+  @override
+  String get syncNothingPending =>
+      'Everything you have done has left this device.';
+
+  @override
+  String get syncNever => 'This device has not reached the node yet.';
+
+  @override
+  String syncLastReached(String date, String time) {
+    return 'Reached the node on $date, at $time';
+  }
+
+  @override
+  String get syncActivityIdle => 'Stopped';
+
+  @override
+  String get syncActivityConnecting => 'Connecting…';
+
+  @override
+  String get syncActivityLive => 'Connected to the node';
+
+  @override
+  String get syncActivityWaiting => 'Will try again';
+
+  @override
+  String get syncNow => 'Synchronize now';
+
+  @override
+  String get syncFailedNow => 'It was not possible to synchronize now.';
+
+  @override
+  String get syncWaitingOnNode =>
+      'The node did not answer. This device tries again on its own.';
+
+  @override
+  String syncSomethingWrong(String reason) {
+    return 'Something went wrong last time: $reason';
+  }
+
+  @override
+  String get syncStateSection => 'Now';
+
+  @override
+  String get syncChangesSection => 'What has not left yet';
 }
