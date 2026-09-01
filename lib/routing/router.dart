@@ -34,6 +34,7 @@ import '../data/services/api/session.dart';
 import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
+import '../ui/library/widgets/ebook_edit_screen.dart';
 import '../ui/library/widgets/ebook_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
 import '../ui/onboarding/widgets/password_reset_screen.dart';
@@ -149,6 +150,17 @@ GoRouter atrilRouter({
                           ebookId:
                               state.pathParameters[Routes.ebookParameter] ?? '',
                         ),
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: Routes.ebookEditSegment,
+                        builder: (BuildContext context, GoRouterState state) =>
+                            EbookEditScreen(
+                              ebookId:
+                                  state.pathParameters[Routes.ebookParameter] ??
+                                  '',
+                            ),
+                      ),
+                    ],
                   ),
                 ],
               ),

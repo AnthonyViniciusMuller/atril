@@ -17,6 +17,8 @@ import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
+
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:atril/data/services/epub/epub_metadata.dart';
@@ -477,9 +479,7 @@ void main() {
       final database = _open();
       final repository = await _repository(database);
 
-      final result = await repository.importEbook(
-        _File('livro.epub', _epub),
-      );
+      final result = await repository.importEbook(_File('livro.epub', _epub));
 
       final cover = await repository.cover((result as Ok<Ebook>).value.id);
 
@@ -494,9 +494,7 @@ void main() {
       final database = _open();
       final repository = await _repository(database);
 
-      final result = await repository.importEbook(
-        _File('livro.epub', _epub),
-      );
+      final result = await repository.importEbook(_File('livro.epub', _epub));
       final id = (result as Ok<Ebook>).value.id;
 
       await (database.delete(
@@ -506,16 +504,19 @@ void main() {
       expect(((await repository.cover(id)) as Ok<EpubCover?>).value, isNull);
     });
 
-    test('is imported anyway when its package document is unreadable', () async {
-      final database = _open();
-      final repository = await _repository(database);
+    test(
+      'is imported anyway when its package document is unreadable',
+      () async {
+        final database = _open();
+        final repository = await _repository(database);
 
-      final result = await repository.importEbook(
-        _File('Vidas Secas.epub', <int>[1, 2, 3, 4]),
-      );
+        final result = await repository.importEbook(
+          _File('Vidas Secas.epub', <int>[1, 2, 3, 4]),
+        );
 
-      expect((result as Ok<Ebook>).value.title, 'Vidas Secas');
-    });
+        expect((result as Ok<Ebook>).value.title, 'Vidas Secas');
+      },
+    );
 
     test('is not read at all when it is another format', () async {
       // A PDF's metadata is a different specification and a CBZ has none.
@@ -526,6 +527,210 @@ void main() {
       final result = await repository.importEbook(_File('livro.pdf', _epub));
 
       expect((result as Ok<Ebook>).value.title, 'livro');
+    });
+  });
+
+  group('an edit', () {
+    /// A work in the replica, and the repository that will change it.
+    Future<(LibraryRepository, AtrilDatabase, String)> imported({
+      Map<String, Object?> extra = const <String, Object?>{},
+    }) async {
+      final database = _open();
+      final repository = await _repository(database);
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final id = (result as Ok<Ebook>).value.id;
+
+      if (extra.isNotEmpty) {
+        await (database.update(
+          database.ebooks,
+        )..where((row) => row.id.equals(id))).write(
+          EbooksCompanion(extraMetadata: Value<String?>(json.encode(extra))),
+        );
+      }
+
+      return (repository, database, id);
+    }
+
+    /// The delta of the last change this device authored.
+    Future<Map<String, Object?>> lastDelta(AtrilDatabase database) async =>
+        (await database.syncDao.pending()).last.delta;
+
+    test('claims the field the reader changed', () async {
+      final (repository, database, id) = await imported();
+
+      await repository.editEbook(
+        id,
+        const EbookEdits(title: 'Vidas Secas', author: 'Graciliano Ramos'),
+      );
+
+      expect(await lastDelta(database), <String, Object?>{
+        fieldAuthor: 'Graciliano Ramos',
+      });
+    });
+
+    test('claims nothing the reader did not change', () async {
+      // C17 in one assertion. Reconciliation is per record, so a delta
+      // restating a title carries this device's claim to it — and the next
+      // merge against a device that really did change the title is decided by
+      // a tie-break rather than by what anybody meant.
+      final (repository, database, id) = await imported();
+
+      await repository.editEbook(
+        id,
+        const EbookEdits(title: 'Vidas Secas', author: 'Graciliano Ramos'),
+      );
+
+      final delta = await lastDelta(database);
+
+      expect(delta.containsKey(fieldTitle), isFalse);
+      expect(delta.containsKey(fieldPublisher), isFalse);
+      expect(delta.containsKey(fieldLanguage), isFalse);
+    });
+
+    test('is not an operation at all when nothing changed', () async {
+      // Authoring it would tick a clock and stamp an instant to tell every
+      // replica that nothing happened, and leave the record reflecting this
+      // device for a write it did not make.
+      final (repository, database, id) = await imported();
+      final before = (await database.syncDao.pending()).length;
+
+      final result = await repository.editEbook(
+        id,
+        const EbookEdits(title: 'Vidas Secas'),
+      );
+
+      expect(result, isA<Ok<void>>());
+      expect(await database.syncDao.pending(), hasLength(before));
+    });
+
+    test('clears a field the reader emptied, and says so', () async {
+      // A form has no other way to say *there is no author*, and clearing is a
+      // claim rather than a silence: a field named as null is one the change
+      // cleared, and every replica takes it.
+      final (repository, database, id) = await imported();
+
+      await repository.editEbook(
+        id,
+        const EbookEdits(title: 'Vidas Secas', author: 'Graciliano Ramos'),
+      );
+      await repository.editEbook(
+        id,
+        const EbookEdits(title: 'Vidas Secas', author: '  '),
+      );
+
+      final delta = await lastDelta(database);
+
+      expect(delta.containsKey(fieldAuthor), isTrue);
+      expect(delta[fieldAuthor], isNull);
+      expect(
+        ((await repository.ebook(id)) as Ok<Ebook?>).value?.author,
+        isNull,
+      );
+    });
+
+    test(
+      'changes what the reader sees, before any node hears about it',
+      () async {
+        final (repository, _, id) = await imported();
+
+        await repository.editEbook(
+          id,
+          const EbookEdits(title: 'Vidas Secas', publisher: 'Record'),
+        );
+
+        final work = ((await repository.ebook(id)) as Ok<Ebook?>).value;
+
+        expect(work?.publisher, 'Record');
+      },
+    );
+
+    test('never touches the file the record describes', () async {
+      // The format, the digest and the length are fixed at import. A record
+      // that described a file it is not would be a book that will not open,
+      // and the reconciler refuses to move them anyway.
+      final (repository, database, id) = await imported();
+
+      await repository.editEbook(id, const EbookEdits(title: 'Outro título'));
+
+      final delta = await lastDelta(database);
+
+      expect(delta.containsKey(fieldFormat), isFalse);
+      expect(delta.containsKey(fieldContentHash), isFalse);
+      expect(delta.containsKey(fieldSizeBytes), isFalse);
+    });
+
+    test('keeps the extra metadata as an object', () async {
+      // The column it lands in is `jsonb` and constrained to an object, on the
+      // node and on this device.
+      final (repository, database, id) = await imported();
+
+      await repository.editEbook(
+        id,
+        const EbookEdits(
+          title: 'Vidas Secas',
+          extraMetadata: <String, Object?>{'series': 'Clássicos'},
+        ),
+      );
+
+      expect((await lastDelta(database))[fieldExtraMetadata], <String, Object?>{
+        'series': 'Clássicos',
+      });
+      expect(
+        ((await repository.ebook(id)) as Ok<Ebook?>).value?.extraMetadata,
+        <String, Object?>{'series': 'Clássicos'},
+      );
+    });
+
+    test('does not claim extra metadata that only changed key order', () async {
+      // The comparison is structural. A map rebuilt by a form in a different
+      // order is the same metadata, and claiming it would be this device
+      // taking ownership of a field nobody edited.
+      final (repository, database, id) = await imported(
+        extra: const <String, Object?>{'series': 'Clássicos', 'isbn': '123'},
+      );
+      final before = (await database.syncDao.pending()).length;
+
+      await repository.editEbook(
+        id,
+        const EbookEdits(
+          title: 'Vidas Secas',
+          extraMetadata: <String, Object?>{
+            'isbn': '123',
+            'series': 'Clássicos',
+          },
+        ),
+      );
+
+      expect(await database.syncDao.pending(), hasLength(before));
+    });
+
+    test('clears the extra metadata when every entry was removed', () async {
+      final (repository, database, id) = await imported(
+        extra: const <String, Object?>{'series': 'Clássicos'},
+      );
+
+      await repository.editEbook(id, const EbookEdits(title: 'Vidas Secas'));
+
+      final delta = await lastDelta(database);
+
+      expect(delta.containsKey(fieldExtraMetadata), isTrue);
+      expect(delta[fieldExtraMetadata], isNull);
+    });
+
+    test('refuses a work this device does not hold', () async {
+      final (repository, _, _) = await imported();
+
+      final result = await repository.editEbook(
+        'ffffffff-1111-4111-8111-111111111111',
+        const EbookEdits(title: 'Nada'),
+      );
+
+      expect(
+        ((result as Error<void>).error as AppException).kind,
+        ErrorKind.notFound,
+      );
     });
   });
 
@@ -540,7 +745,9 @@ void main() {
       final id = (result as Ok<Ebook>).value.id;
 
       expect(
-        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
+        ((await repository.watchContent(id).first) as Ok<ContentState>)
+            .value
+            .kept,
         isTrue,
       );
     });
@@ -558,7 +765,9 @@ void main() {
       final id = (result as Ok<Ebook>).value.id;
 
       expect(
-        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
+        ((await repository.watchContent(id).first) as Ok<ContentState>)
+            .value
+            .kept,
         isFalse,
       );
     });
@@ -579,7 +788,9 @@ void main() {
       await repository.keepEbook(id);
 
       expect(
-        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
+        ((await repository.watchContent(id).first) as Ok<ContentState>)
+            .value
+            .kept,
         isTrue,
       );
     });
@@ -619,7 +830,9 @@ void main() {
       expect(await repository.releaseEbook(work.id), isA<Ok<void>>());
       expect(await blobs.contains(work.contentHash), isFalse);
       expect(
-        ((await repository.watchContent(work.id).first) as Ok<ContentState>).value.kept,
+        ((await repository.watchContent(work.id).first) as Ok<ContentState>)
+            .value
+            .kept,
         isFalse,
       );
     });
@@ -643,32 +856,44 @@ void main() {
       ]);
     });
 
-    test('lists what it is holding and not what it merely has a row for', () async {
-      final database = _open();
-      final repository = await _repository(database);
+    test(
+      'lists what it is holding and not what it merely has a row for',
+      () async {
+        final database = _open();
+        final repository = await _repository(database);
 
-      final result = await repository.importEbook(
-        _File('Vidas Secas.epub', <int>[1, 2, 3]),
-      );
-      final work = (result as Ok<Ebook>).value;
+        final result = await repository.importEbook(
+          _File('Vidas Secas.epub', <int>[1, 2, 3]),
+        );
+        final work = (result as Ok<Ebook>).value;
 
-      // A work that arrived by synchronization, whose file is on the node.
-      await _work(database, id: _id('dddd', 1), title: 'Não baixado', seed: 9);
+        // A work that arrived by synchronization, whose file is on the node.
+        await _work(
+          database,
+          id: _id('dddd', 1),
+          title: 'Não baixado',
+          seed: 9,
+        );
 
-      final held = await repository.watchKeptEbooks().first;
+        final held = await repository.watchKeptEbooks().first;
 
-      expect(
-        <String>[for (final book in (held as Ok<List<Ebook>>).value) book.title],
-        <String>['Vidas Secas'],
-      );
-      expect(work.title, 'Vidas Secas');
-    });
+        expect(
+          <String>[
+            for (final book in (held as Ok<List<Ebook>>).value) book.title,
+          ],
+          <String>['Vidas Secas'],
+        );
+        expect(work.title, 'Vidas Secas');
+      },
+    );
 
     test('reports what the store holds', () async {
       final database = _open();
       final repository = await _repository(database, quota: 1000);
 
-      await repository.importEbook(_File('livro.epub', List<int>.filled(300, 7)));
+      await repository.importEbook(
+        _File('livro.epub', List<int>.filled(300, 7)),
+      );
 
       final budget = await repository.storage();
 
@@ -768,12 +993,7 @@ void main() {
     test('sorts a work whose author the file did not say last', () async {
       final database = _open();
 
-      await _work(
-        database,
-        id: _id('aaaa', 1),
-        title: 'Anonymous',
-        seed: 1,
-      );
+      await _work(database, id: _id('aaaa', 1), title: 'Anonymous', seed: 1);
       await _work(
         database,
         id: _id('aaaa', 2),
@@ -851,14 +1071,15 @@ void main() {
         collectionId: _id('bbbb', 1),
       );
 
-      final counts = await (await _repository(database)).watchFilingCounts().first;
+      final counts = await (await _repository(database))
+          .watchFilingCounts()
+          .first;
 
       // A grouping nothing is filed under is absent rather than zero, which is
       // what one query over two tables can answer and what `?? 0` reads.
-      expect(
-        (counts as Ok<Map<String, int>>).value,
-        <String, int>{_id('bbbb', 1): 2},
-      );
+      expect((counts as Ok<Map<String, int>>).value, <String, int>{
+        _id('bbbb', 1): 2,
+      });
     });
 
     test('lists the groupings one work is filed under, by name', () async {
@@ -880,9 +1101,9 @@ void main() {
         collectionId: _id('bbbb', 2),
       );
 
-      final result = await (await _repository(
-        database,
-      )).watchCollectionsOf(_id('aaaa', 1)).first;
+      final result = await (await _repository(database))
+          .watchCollectionsOf(_id('aaaa', 1))
+          .first;
 
       expect(
         <String>[
@@ -903,9 +1124,7 @@ void main() {
       final answers = (await _repository(database)).watchEbook(_id('aaaa', 1));
 
       expect(
-        answers.map(
-          (result) => (result as Ok<Ebook?>).value?.title,
-        ),
+        answers.map((result) => (result as Ok<Ebook?>).value?.title),
         emitsInOrder(<Object?>['Doomed', null]),
       );
 

@@ -818,6 +818,90 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'O que o arquivo trazia'**
   String get ebookExtraSection;
+
+  /// Ação que abre o formulário de edição dos metadados de um livro. Rótulo curto, na barra da tela do livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Editar'**
+  String get ebookEdit;
+
+  /// Título da tela que edita os metadados de um livro. "Ficha" é o termo de biblioteca para o registro de uma obra.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Editar ficha'**
+  String get ebookEditTitle;
+
+  /// Rótulo do campo do título, no formulário de edição. É o único campo obrigatório: uma obra sem título é recusada pelo contrato e pelo banco.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Título'**
+  String get ebookTitleLabel;
+
+  /// Rótulo do campo do autor, no formulário de edição. Deixar em branco apaga o autor, o que é diferente de não mexer no campo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autor'**
+  String get ebookAuthorLabel;
+
+  /// Erro do campo do título quando o leitor o apaga. Uma obra sem título é recusada pelo contrato e pela restrição da coluna, então o formulário recusa antes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O título não pode ficar em branco.'**
+  String get ebookTitleRequired;
+
+  /// Botão que grava as alterações da ficha. Grava neste dispositivo; o servidor fica sabendo na próxima sincronização.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Salvar'**
+  String get ebookEditSave;
+
+  /// Confirmação depois de salvar. Diz onde a alteração foi gravada, porque é a promessa central do aplicativo: a alteração vale aqui agora e chega ao servidor depois.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ficha salva neste dispositivo.'**
+  String get ebookEditSaved;
+
+  /// Erro geral ao salvar a ficha de um livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível salvar a ficha.'**
+  String get ebookEditFailed;
+
+  /// Explicação da seção de metadados extras no formulário. Diz o que costuma aparecer ali, já que o conteúdo varia de arquivo para arquivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que o arquivo trazia além da ficha — série, ISBN, assuntos. Cada linha é um nome e um valor.'**
+  String get ebookEditExtraExplanation;
+
+  /// Rótulo do campo com o nome de um metadado extra — a chave, como "series" ou "isbn".
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome'**
+  String get ebookEditExtraName;
+
+  /// Rótulo do campo com o valor de um metadado extra.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Valor'**
+  String get ebookEditExtraValue;
+
+  /// Ação que acrescenta uma linha vazia à lista de metadados extras.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Adicionar'**
+  String get ebookEditExtraAdd;
+
+  /// Ação que apaga uma linha da lista de metadados extras.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Remover'**
+  String get ebookEditExtraRemove;
+
+  /// Mostrado no lugar do campo quando o valor de um metadado extra é uma lista ou um número — por exemplo os assuntos, que o EPUB traz como lista. O formulário edita texto; o resto é preservado sem ser tocado, em vez de ser transformado em texto e perder o que era.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este valor não é texto e foi mantido como estava.'**
+  String get ebookEditExtraNotText;
 }
 
 class _AppLocalizationsDelegate

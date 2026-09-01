@@ -62,24 +62,21 @@ class TransfersDao extends DatabaseAccessor<AtrilDatabase>
 
   /// [pending], as it changes.
   Stream<List<ContentUploadRow>> watchPending() =>
-      (select(contentUploads)..orderBy(
-            <OrderClauseGenerator<$ContentUploadsTable>>[
+      (select(contentUploads)
+            ..orderBy(<OrderClauseGenerator<$ContentUploadsTable>>[
               (row) => OrderingTerm(expression: row.queuedAt),
-            ],
-          ))
+            ]))
           .watch();
 
   /// One transfer, or `null` if the file is not owed.
-  Future<ContentUploadRow?> transfer(String contentHash) =>
-      (select(contentUploads)
-            ..where((row) => row.contentHash.equals(contentHash)))
-          .getSingleOrNull();
+  Future<ContentUploadRow?> transfer(String contentHash) => (select(
+    contentUploads,
+  )..where((row) => row.contentHash.equals(contentHash))).getSingleOrNull();
 
   /// [transfer], as it changes.
-  Stream<ContentUploadRow?> watchTransfer(String contentHash) =>
-      (select(contentUploads)
-            ..where((row) => row.contentHash.equals(contentHash)))
-          .watchSingleOrNull();
+  Stream<ContentUploadRow?> watchTransfer(String contentHash) => (select(
+    contentUploads,
+  )..where((row) => row.contentHash.equals(contentHash))).watchSingleOrNull();
 
   /// Records how far the node says the transfer of [contentHash] has got.
   ///
@@ -91,14 +88,15 @@ class TransfersDao extends DatabaseAccessor<AtrilDatabase>
     required String contentHash,
     required String uploadId,
     required int sentBytes,
-  }) => (update(
-    contentUploads,
-  )..where((row) => row.contentHash.equals(contentHash))).write(
-    ContentUploadsCompanion(
-      uploadId: Value<String?>(uploadId),
-      sentBytes: Value<int>(sentBytes),
-    ),
-  );
+  }) =>
+      (update(
+        contentUploads,
+      )..where((row) => row.contentHash.equals(contentHash))).write(
+        ContentUploadsCompanion(
+          uploadId: Value<String?>(uploadId),
+          sentBytes: Value<int>(sentBytes),
+        ),
+      );
 
   /// Records that an attempt was made and did not finish.
   ///
@@ -155,16 +153,13 @@ class TransfersDao extends DatabaseAccessor<AtrilDatabase>
 
   /// [decision], as it changes.
   Stream<bool?> watchDecision(String contentHash) =>
-      (select(contentPins)
-            ..where((row) => row.contentHash.equals(contentHash)))
+      (select(contentPins)..where((row) => row.contentHash.equals(contentHash)))
           .watchSingleOrNull()
           .map((row) => row?.kept);
 
   /// Every decision the reader has taken, by digest.
   Stream<Map<String, bool>> watchDecisions() => select(contentPins).watch().map(
-    (rows) => <String, bool>{
-      for (final row in rows) row.contentHash: row.kept,
-    },
+    (rows) => <String, bool>{for (final row in rows) row.contentHash: row.kept},
   );
 
   /// Records that this device does or does not keep [contentHash].

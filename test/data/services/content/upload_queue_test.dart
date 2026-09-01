@@ -108,19 +108,22 @@ void main() {
     expect(await database.transfersDao.pending(), hasLength(1));
   });
 
-  test('waits rather than failing while the work has not been pushed', () async {
-    // C16, and it is not an edge case: this app never calls CreateEbook, so
-    // the *first* attempt of every freshly imported book answers this. An
-    // import that lost its file because it happened on a train would be the
-    // alternative.
-    await owe(<int>[1, 2, 3]);
+  test(
+    'waits rather than failing while the work has not been pushed',
+    () async {
+      // C16, and it is not an edge case: this app never calls CreateEbook, so
+      // the *first* attempt of every freshly imported book answers this. An
+      // import that lost its file because it happened on a train would be the
+      // alternative.
+      await owe(<int>[1, 2, 3]);
 
-    final run = await queue.run();
+      final run = await queue.run();
 
-    expect(run.waiting, 1);
-    expect(run.failed, 0);
-    expect(await database.transfersDao.pending(), hasLength(1));
-  });
+      expect(run.waiting, 1);
+      expect(run.failed, 0);
+      expect(await database.transfersDao.pending(), hasLength(1));
+    },
+  );
 
   test('sends it on the next pass once the work has been pushed', () async {
     final digest = await owe(<int>[1, 2, 3]);

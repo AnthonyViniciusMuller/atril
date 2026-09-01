@@ -753,5 +753,75 @@
   "ebookExtraSection": "O que o arquivo trazia",
   "@ebookExtraSection": {
     "description": "Título da seção com os metadados que o formato carregava e o contrato não nomeia — série, ISBN, assuntos. Fica separada da ficha porque o conteúdo varia de arquivo para arquivo."
+  },
+
+  "ebookEdit": "Editar",
+  "@ebookEdit": {
+    "description": "Ação que abre o formulário de edição dos metadados de um livro. Rótulo curto, na barra da tela do livro."
+  },
+
+  "ebookEditTitle": "Editar ficha",
+  "@ebookEditTitle": {
+    "description": "Título da tela que edita os metadados de um livro. \"Ficha\" é o termo de biblioteca para o registro de uma obra."
+  },
+
+  "ebookTitleLabel": "Título",
+  "@ebookTitleLabel": {
+    "description": "Rótulo do campo do título, no formulário de edição. É o único campo obrigatório: uma obra sem título é recusada pelo contrato e pelo banco."
+  },
+
+  "ebookAuthorLabel": "Autor",
+  "@ebookAuthorLabel": {
+    "description": "Rótulo do campo do autor, no formulário de edição. Deixar em branco apaga o autor, o que é diferente de não mexer no campo."
+  },
+
+  "ebookTitleRequired": "O título não pode ficar em branco.",
+  "@ebookTitleRequired": {
+    "description": "Erro do campo do título quando o leitor o apaga. Uma obra sem título é recusada pelo contrato e pela restrição da coluna, então o formulário recusa antes."
+  },
+
+  "ebookEditSave": "Salvar",
+  "@ebookEditSave": {
+    "description": "Botão que grava as alterações da ficha. Grava neste dispositivo; o servidor fica sabendo na próxima sincronização."
+  },
+
+  "ebookEditSaved": "Ficha salva neste dispositivo.",
+  "@ebookEditSaved": {
+    "description": "Confirmação depois de salvar. Diz onde a alteração foi gravada, porque é a promessa central do aplicativo: a alteração vale aqui agora e chega ao servidor depois."
+  },
+
+  "ebookEditFailed": "Não foi possível salvar a ficha.",
+  "@ebookEditFailed": {
+    "description": "Erro geral ao salvar a ficha de um livro."
+  },
+
+  "ebookEditExtraExplanation": "O que o arquivo trazia além da ficha — série, ISBN, assuntos. Cada linha é um nome e um valor.",
+  "@ebookEditExtraExplanation": {
+    "description": "Explicação da seção de metadados extras no formulário. Diz o que costuma aparecer ali, já que o conteúdo varia de arquivo para arquivo."
+  },
+
+  "ebookEditExtraName": "Nome",
+  "@ebookEditExtraName": {
+    "description": "Rótulo do campo com o nome de um metadado extra — a chave, como \"series\" ou \"isbn\"."
+  },
+
+  "ebookEditExtraValue": "Valor",
+  "@ebookEditExtraValue": {
+    "description": "Rótulo do campo com o valor de um metadado extra."
+  },
+
+  "ebookEditExtraAdd": "Adicionar",
+  "@ebookEditExtraAdd": {
+    "description": "Ação que acrescenta uma linha vazia à lista de metadados extras."
+  },
+
+  "ebookEditExtraRemove": "Remover",
+  "@ebookEditExtraRemove": {
+    "description": "Ação que apaga uma linha da lista de metadados extras."
+  },
+
+  "ebookEditExtraNotText": "Este valor não é texto e foi mantido como estava.",
+  "@ebookEditExtraNotText": {
+    "description": "Mostrado no lugar do campo quando o valor de um metadado extra é uma lista ou um número — por exemplo os assuntos, que o EPUB traz como lista. O formulário edita texto; o resto é preservado sem ser tocado, em vez de ser transformado em texto e perder o que era."
   }
 }

@@ -226,16 +226,12 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // file waits for that push — C16 refuses an upload for a digest no work of
     // the reader's names, and this app never calls `CreateEbook`.
     Provider<ContentUploader>(
-      create: (BuildContext context) => ContentUploader(
-        api: context.read<LibraryApi>(),
-        blobs: blobs,
-      ),
+      create: (BuildContext context) =>
+          ContentUploader(api: context.read<LibraryApi>(), blobs: blobs),
     ),
     Provider<ContentDownloader>(
-      create: (BuildContext context) => ContentDownloader(
-        api: context.read<LibraryApi>(),
-        blobs: blobs,
-      ),
+      create: (BuildContext context) =>
+          ContentDownloader(api: context.read<LibraryApi>(), blobs: blobs),
     ),
     Provider<UploadQueue>(
       create: (BuildContext context) => UploadQueue(

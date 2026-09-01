@@ -52,9 +52,7 @@ FileKind? describeFile(String fileName) {
     return null;
   }
 
-  final format = EbookFormat.parse(
-    fileName.substring(dot + 1).toLowerCase(),
-  );
+  final format = EbookFormat.parse(fileName.substring(dot + 1).toLowerCase());
 
   return format == null
       ? null

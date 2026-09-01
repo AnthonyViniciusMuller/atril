@@ -200,11 +200,7 @@ void main() {
           },
         ),
         throwsA(
-          isA<AppException>().having(
-            (e) => e.kind,
-            'kind',
-            ErrorKind.canceled,
-          ),
+          isA<AppException>().having((e) => e.kind, 'kind', ErrorKind.canceled),
         ),
       );
 

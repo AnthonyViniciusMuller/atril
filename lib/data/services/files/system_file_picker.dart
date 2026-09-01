@@ -40,9 +40,9 @@ final class SystemFilePicker implements FilePicker {
 
   @override
   Future<FileSource?> pickEbook() async {
-    final file = await openFile(acceptedTypeGroups: <XTypeGroup>[
-      ebookTypeGroup,
-    ]);
+    final file = await openFile(
+      acceptedTypeGroups: <XTypeGroup>[ebookTypeGroup],
+    );
 
     return file == null ? null : XFileSource(file);
   }

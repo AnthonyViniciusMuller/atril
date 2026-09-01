@@ -158,9 +158,9 @@ String? _packagePath(Archive archive) {
     return null;
   }
 
-  final root = XmlDocument.parse(
-    container,
-  ).findAllElements('rootfile').firstOrNull;
+  final root = XmlDocument.parse(container)
+      .findAllElements('rootfile')
+      .firstOrNull;
   final path = root?.getAttribute('full-path');
 
   return path == null || path.isEmpty ? null : path;
@@ -171,10 +171,7 @@ EpubMetadata _metadataOf(XmlDocument opf, Archive archive, String opfPath) {
   final creators = _all(opf, 'creator');
   final subjects = _all(opf, 'subject');
   final identifiers = _all(opf, 'identifier');
-  final isbn = identifiers
-      .map(_isbnOf)
-      .whereType<String>()
-      .firstOrNull;
+  final isbn = identifiers.map(_isbnOf).whereType<String>().firstOrNull;
 
   if (subjects.isNotEmpty) {
     extra['subjects'] = subjects;
@@ -229,10 +226,9 @@ EpubCover? _cover(XmlDocument opf, Archive archive, String opfPath) {
   final items = opf.findAllElements('item').toList();
 
   var item = items.firstWhereOrNull(
-    (element) =>
-        (element.getAttribute('properties') ?? '')
-            .split(RegExp(r'\s+'))
-            .contains('cover-image'),
+    (element) => (element.getAttribute('properties') ?? '')
+        .split(RegExp(r'\s+'))
+        .contains('cover-image'),
   );
 
   if (item == null) {
@@ -262,7 +258,8 @@ EpubCover? _cover(XmlDocument opf, Archive archive, String opfPath) {
   return bytes == null
       ? null
       : EpubCover(
-          mediaType: item.getAttribute('media-type') ?? 'application/octet-stream',
+          mediaType:
+              item.getAttribute('media-type') ?? 'application/octet-stream',
           bytes: bytes,
         );
 }
@@ -303,7 +300,10 @@ String? _meta(XmlDocument opf, String name) {
 /// else is left alone rather than filed under a name it does not have.
 String? _isbnOf(String identifier) {
   final value = identifier.trim();
-  final urn = RegExp(r'^urn:isbn:(.+)$', caseSensitive: false).firstMatch(value);
+  final urn = RegExp(
+    r'^urn:isbn:(.+)$',
+    caseSensitive: false,
+  ).firstMatch(value);
 
   if (urn != null) {
     return urn.group(1)!.trim();

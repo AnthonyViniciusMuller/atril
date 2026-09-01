@@ -739,9 +739,19 @@ that reason.
       before the query has run is a lie one frame long. And the location carries the identifier
       rather than the work: it is nested under the shelf, so the way back is where the reader
       came from, and it survives a reload in a browser and a link somebody pasted
-- [ ] `feat: add metadata editing` — RF05, including the extra metadata the format carried and
+- [x] `feat: add metadata editing` — RF05, including the extra metadata the format carried and
       the contract does not name. It is an object and never a scalar, because the column it lands
-      in is `jsonb` and constrained to one
+      in is `jsonb` and constrained to one. The form hands over **every** field and the
+      repository works out what changed, which is C17 deciding a layering question: a screen with
+      its own dirty flags would be a second answer to *what did the reader touch*, and the two
+      would disagree the first time a field was edited back to what it was — while a delta
+      restating a title nobody touched carries this device's claim to it and loses the next merge
+      by a tie-break rather than by intent. An edit that claims nothing is not an operation at
+      all. Two smaller things fell out. An empty field is a field the reader **cleared**, because
+      a form has no other way to say *there is no author*, and clearing is a claim rather than a
+      silence. And the extra-metadata editor edits text and hands everything else back untouched:
+      `subjects` is a list and `series_index` is a number, so a form that rendered them into text
+      boxes would turn a list into a string the moment the reader saved anything
 - [ ] `feat: add deletion` — a tombstone, never a removal, with the undo that a tombstone makes
       cheap
 - [ ] `feat: add collections` — UC03. Create, rename, describe, delete, and the two kinds the

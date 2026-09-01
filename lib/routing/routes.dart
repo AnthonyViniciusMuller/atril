@@ -100,6 +100,18 @@ abstract final class Routes {
   /// Where one work is shown.
   static String ebook(String id) => '$library/$id';
 
+  /// The path segment the form that edits a work is declared under, relative
+  /// to [ebookSegment].
+  ///
+  /// It is a location and not a dialog, for the reason every other screen here
+  /// is one: a reader who was editing a book and switched away comes back to
+  /// the form, and a browser's back button leaves the form rather than the
+  /// app.
+  static const String ebookEditSegment = 'edit';
+
+  /// Where one work is edited.
+  static String editEbook(String id) => '${ebook(id)}/$ebookEditSegment';
+
   /// Everything the reader has marked, across every book.
   static const String annotations = '/annotations';
 

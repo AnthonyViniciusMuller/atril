@@ -448,6 +448,50 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get ebookExtraSection => 'O que o arquivo trazia';
+
+  @override
+  String get ebookEdit => 'Editar';
+
+  @override
+  String get ebookEditTitle => 'Editar ficha';
+
+  @override
+  String get ebookTitleLabel => 'Título';
+
+  @override
+  String get ebookAuthorLabel => 'Autor';
+
+  @override
+  String get ebookTitleRequired => 'O título não pode ficar em branco.';
+
+  @override
+  String get ebookEditSave => 'Salvar';
+
+  @override
+  String get ebookEditSaved => 'Ficha salva neste dispositivo.';
+
+  @override
+  String get ebookEditFailed => 'Não foi possível salvar a ficha.';
+
+  @override
+  String get ebookEditExtraExplanation =>
+      'O que o arquivo trazia além da ficha — série, ISBN, assuntos. Cada linha é um nome e um valor.';
+
+  @override
+  String get ebookEditExtraName => 'Nome';
+
+  @override
+  String get ebookEditExtraValue => 'Valor';
+
+  @override
+  String get ebookEditExtraAdd => 'Adicionar';
+
+  @override
+  String get ebookEditExtraRemove => 'Remover';
+
+  @override
+  String get ebookEditExtraNotText =>
+      'Este valor não é texto e foi mantido como estava.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -893,4 +937,48 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get ebookExtraSection => 'O que o arquivo trazia';
+
+  @override
+  String get ebookEdit => 'Editar';
+
+  @override
+  String get ebookEditTitle => 'Editar ficha';
+
+  @override
+  String get ebookTitleLabel => 'Título';
+
+  @override
+  String get ebookAuthorLabel => 'Autor';
+
+  @override
+  String get ebookTitleRequired => 'O título não pode ficar em branco.';
+
+  @override
+  String get ebookEditSave => 'Salvar';
+
+  @override
+  String get ebookEditSaved => 'Ficha salva neste dispositivo.';
+
+  @override
+  String get ebookEditFailed => 'Não foi possível salvar a ficha.';
+
+  @override
+  String get ebookEditExtraExplanation =>
+      'O que o arquivo trazia além da ficha — série, ISBN, assuntos. Cada linha é um nome e um valor.';
+
+  @override
+  String get ebookEditExtraName => 'Nome';
+
+  @override
+  String get ebookEditExtraValue => 'Valor';
+
+  @override
+  String get ebookEditExtraAdd => 'Adicionar';
+
+  @override
+  String get ebookEditExtraRemove => 'Remover';
+
+  @override
+  String get ebookEditExtraNotText =>
+      'Este valor não é texto e foi mantido como estava.';
 }

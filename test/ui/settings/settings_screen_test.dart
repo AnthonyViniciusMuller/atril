@@ -95,7 +95,6 @@ void main() {
   });
 }
 
-
 /// The storage section, whose two sentences are one mechanism.
 void _storage() {
   testWidgets('says what it holds and nothing it cannot know', (

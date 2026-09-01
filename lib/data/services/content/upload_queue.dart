@@ -37,11 +37,7 @@ final _log = loggerFor('data/content');
 /// What one pass over the queue did.
 final class UploadRun {
   /// A pass that delivered [sent] files and left [waiting] and [failed].
-  const UploadRun({
-    this.sent = 0,
-    this.waiting = 0,
-    this.failed = 0,
-  });
+  const UploadRun({this.sent = 0, this.waiting = 0, this.failed = 0});
 
   /// How many files the node now holds because of this pass.
   final int sent;
@@ -57,7 +53,8 @@ final class UploadRun {
   bool get isEmpty => sent == 0 && waiting == 0 && failed == 0;
 
   @override
-  String toString() => 'UploadRun(sent $sent, waiting $waiting, failed $failed)';
+  String toString() =>
+      'UploadRun(sent $sent, waiting $waiting, failed $failed)';
 }
 
 /// The files owed, and the pass that delivers them.

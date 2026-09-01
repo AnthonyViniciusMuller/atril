@@ -76,8 +76,7 @@ final class DownloadProgress {
       totalBytes == 0 ? 0 : (receivedBytes / totalBytes).clamp(0, 1);
 
   @override
-  String toString() =>
-      'DownloadProgress($ebookId, $receivedBytes/$totalBytes)';
+  String toString() => 'DownloadProgress($ebookId, $receivedBytes/$totalBytes)';
 }
 
 /// Brings a work's bytes onto this device.

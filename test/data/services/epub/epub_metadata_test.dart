@@ -209,8 +209,7 @@ void main() {
         containerPath: containerFor('content.opf'),
         'content.opf': opfWith(
           '<dc:title>Um</dc:title><meta name="cover" content="capa"/>',
-          manifest:
-              '<item id="capa" href="capa.jpg" media-type="image/jpeg"/>',
+          manifest: '<item id="capa" href="capa.jpg" media-type="image/jpeg"/>',
         ),
         'capa.jpg': _image,
       });
@@ -262,9 +261,7 @@ void main() {
         isNull,
       );
       expect(
-        readEpubMetadata(
-          epubOf(<String, Object>{containerPath: '<not xml'}),
-        ),
+        readEpubMetadata(epubOf(<String, Object>{containerPath: '<not xml'})),
         isNull,
       );
       expect(

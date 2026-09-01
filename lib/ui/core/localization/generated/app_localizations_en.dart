@@ -448,4 +448,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ebookExtraSection => 'What the file carried';
+
+  @override
+  String get ebookEdit => 'Edit';
+
+  @override
+  String get ebookEditTitle => 'Edit details';
+
+  @override
+  String get ebookTitleLabel => 'Title';
+
+  @override
+  String get ebookAuthorLabel => 'Author';
+
+  @override
+  String get ebookTitleRequired => 'The title cannot be blank.';
+
+  @override
+  String get ebookEditSave => 'Save';
+
+  @override
+  String get ebookEditSaved => 'Details saved on this device.';
+
+  @override
+  String get ebookEditFailed => 'The details could not be saved.';
+
+  @override
+  String get ebookEditExtraExplanation =>
+      'What the file carried beyond the details — series, ISBN, subjects. Each row is a name and a value.';
+
+  @override
+  String get ebookEditExtraName => 'Name';
+
+  @override
+  String get ebookEditExtraValue => 'Value';
+
+  @override
+  String get ebookEditExtraAdd => 'Add';
+
+  @override
+  String get ebookEditExtraRemove => 'Remove';
+
+  @override
+  String get ebookEditExtraNotText =>
+      'This value is not text and was kept as it was.';
 }

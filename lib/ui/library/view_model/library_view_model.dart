@@ -105,7 +105,8 @@ final class LibraryViewModel extends ChangeNotifier {
   void sortBy(LibrarySort sort) => _ask(_query.orderedBy(sort));
 
   /// Narrows the collection to [collectionId], or widens it to all of it.
-  void showCollection(String? collectionId) => _ask(_query.within(collectionId));
+  void showCollection(String? collectionId) =>
+      _ask(_query.within(collectionId));
 
   @override
   void dispose() {

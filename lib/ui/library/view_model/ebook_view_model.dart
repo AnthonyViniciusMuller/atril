@@ -33,6 +33,9 @@ final _log = loggerFor('ui/library');
 final class EbookViewModel extends ChangeNotifier {
   /// The view model over [library], about the work [ebookId] names.
   EbookViewModel({required this.library, required this.ebookId}) {
+    save = Command1<void, EbookEdits>(
+      (EbookEdits edits) => library.editEbook(ebookId, edits),
+    );
     keep = Command0<void>(_keep);
     release = Command0<void>(library.releaseEbook.of(ebookId));
     download = Command0<void>(_download);
@@ -49,6 +52,14 @@ final class EbookViewModel extends ChangeNotifier {
 
   /// The work this screen is about.
   final String ebookId;
+
+  /// RF05. Records what the reader changed about the work.
+  ///
+  /// It is a `Command1` and not a method for the reason every action in this
+  /// app is one: the button that runs it has to know whether it is running,
+  /// and a screen that tracked that itself would be tracking it in one of
+  /// several places.
+  late final Command1<void, EbookEdits> save;
 
   /// Brings the file onto this device and keeps it.
   late final Command0<void> keep;
@@ -111,8 +122,10 @@ final class EbookViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<Result<void>> _keep() =>
-      _fetching((Cancellation cancel) => library.keepEbook(ebookId, cancel: cancel, onProgress: _onProgress));
+  Future<Result<void>> _keep() => _fetching(
+    (Cancellation cancel) =>
+        library.keepEbook(ebookId, cancel: cancel, onProgress: _onProgress),
+  );
 
   Future<Result<void>> _download() async {
     final result = await _fetching(
@@ -206,5 +219,6 @@ final class EbookViewModel extends ChangeNotifier {
 
 extension on Future<Result<void>> Function(String) {
   /// The call, bound to one work, so that a `Command0` can be built from it.
-  Future<Result<void>> Function() of(String ebookId) => () => this(ebookId);
+  Future<Result<void>> Function() of(String ebookId) =>
+      () => this(ebookId);
 }

@@ -15,11 +15,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
 import '../../../data/services/content/content_downloader.dart';
 import '../../../domain/models/ebook.dart';
+import '../../../routing/routes.dart';
 import '../../../utils/cancellation.dart';
 import '../../../utils/command.dart';
 import '../../../utils/errors.dart';
@@ -103,9 +105,8 @@ class _EbookScreenState extends State<EbookScreen> {
         _ => l10n.ebookDownloadFailed,
       };
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
       return;
     }
@@ -124,15 +125,23 @@ class _EbookScreenState extends State<EbookScreen> {
       final work = _model.ebook;
 
       return Scaffold(
-        appBar: AppBar(title: Text(work?.title ?? '')),
+        appBar: AppBar(
+          title: Text(work?.title ?? ''),
+          actions: <Widget>[
+            if (work != null)
+              IconButton(
+                onPressed: () => context.go(Routes.editEbook(widget.ebookId)),
+                tooltip: l10n.ebookEdit,
+                icon: const Icon(Icons.edit_outlined),
+              ),
+          ],
+        ),
         body: work == null
             // Nothing at all until the first answer: a screen opened at a
             // location the reader typed has neither the book nor its absence
             // yet, and saying it was deleted before the query ran is a lie one
             // frame long.
-            ? (!_model.isLoaded
-                  ? const SizedBox.shrink()
-                  : _Gone(l10n: l10n))
+            ? (!_model.isLoaded ? const SizedBox.shrink() : _Gone(l10n: l10n))
             : _Work(model: _model, work: work),
       );
     },
@@ -260,9 +269,8 @@ class _Work extends StatelessWidget {
           _Fact(label: l10n.ebookSize, value: formatBytes(l10n, size)),
         _Fact(
           label: l10n.ebookImportedAt,
-          value: MaterialLocalizations.of(
-            context,
-          ).formatFullDate(work.importedAt.toLocal()),
+          value: MaterialLocalizations.of(context)
+              .formatFullDate(work.importedAt.toLocal()),
         ),
         const SizedBox(height: 16),
         _Section(title: l10n.ebookShelvesSection),

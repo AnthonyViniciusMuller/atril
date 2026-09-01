@@ -138,7 +138,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.ebookFileOnServer), findsOneWidget);
-      expect(find.widgetWithText(FilledButton, l10n.ebookDownload), findsOneWidget);
+      expect(
+        find.widgetWithText(FilledButton, l10n.ebookDownload),
+        findsOneWidget,
+      );
     });
 
     testWidgets('is here and kept, for a book on a native install', (
@@ -156,19 +159,20 @@ void main() {
       expect(find.text(l10n.storageRelease), findsOneWidget);
     });
 
-    testWidgets('is here but not kept, which is a browser downloading to read', (
-      WidgetTester tester,
-    ) async {
-      final library = await pump(tester);
+    testWidgets(
+      'is here but not kept, which is a browser downloading to read',
+      (WidgetTester tester) async {
+        final library = await pump(tester);
 
-      library
-        ..downloaded.add(_work)
-        ..works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
-      await tester.pumpAndSettle();
+        library
+          ..downloaded.add(_work)
+          ..works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+        await tester.pumpAndSettle();
 
-      expect(find.text(l10n.ebookFileHereNotKept), findsOneWidget);
-      expect(find.text(l10n.storageKeep), findsOneWidget);
-    });
+        expect(find.text(l10n.ebookFileHereNotKept), findsOneWidget);
+        expect(find.text(l10n.storageKeep), findsOneWidget);
+      },
+    );
 
     testWidgets('is only here, while the node has not received it', (
       WidgetTester tester,

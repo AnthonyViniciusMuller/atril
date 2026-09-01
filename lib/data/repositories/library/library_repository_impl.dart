@@ -15,6 +15,7 @@ import '../../../utils/errors.dart';
 import '../../../utils/identifiers.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
+
 import 'dart:typed_data';
 
 import '../../services/api/errors.dart';
@@ -44,6 +45,29 @@ const String opDownload = 'library/content: download';
 
 /// The operation keeping and releasing report under.
 const String opKeep = 'library/content: keep';
+
+/// The operation an edit reports under.
+const String opEdit = 'library/collection: edit';
+
+/// [value], or `null` where it holds nothing.
+///
+/// An object with no entries and no object at all are the same claim about a
+/// work — there is nothing the format carried — and the column stores `NULL`
+/// for both. Normalizing them here is what lets the two sides of a comparison
+/// be compared at all.
+Map<String, Object?>? _emptyIsCleared(Map<String, Object?> value) =>
+    value.isEmpty ? null : value;
+
+/// [value] trimmed, or `null` where the reader left the field empty.
+///
+/// A form has no way to express *absent* other than an empty field, so an
+/// empty one is read as the reader clearing it — which is a claim and not a
+/// silence, and is exactly the difference `optional` spells in the contract.
+String? _blankIsCleared(String? value) {
+  final trimmed = value?.trim();
+
+  return trimmed == null || trimmed.isEmpty ? null : trimmed;
+}
 
 /// The reader's collection, read out of drift.
 final class LibraryRepositoryImpl implements LibraryRepository {
@@ -160,9 +184,7 @@ final class LibraryRepositoryImpl implements LibraryRepository {
         claims.object(fieldExtraMetadata, described.extra);
       }
 
-      await author.write(
-        Change.insert(TargetEntity.ebook, id, claims.fields),
-      );
+      await author.write(Change.insert(TargetEntity.ebook, id, claims.fields));
 
       // After the work exists, because the row references it and is deleted
       // with it. A cover saved first would be a row pointing at nothing, and
@@ -459,6 +481,70 @@ final class LibraryRepositoryImpl implements LibraryRepository {
   }
 
   @override
+  Future<Result<void>> editEbook(String ebookId, EbookEdits edits) async {
+    try {
+      final work = await library.readEbook(ebookId);
+
+      if (work == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opEdit,
+        );
+      }
+
+      // Every claim carries the value the record already holds, and one that
+      // matches it is not made. C17 is why it is worth the parameters: a delta
+      // restating a title the reader never touched carries this device's claim
+      // to it, and the next merge against a device that *did* change it is
+      // decided by a tie-break rather than by what anybody meant.
+      final claims = DeltaWriter()
+        ..text(fieldTitle, edits.title.trim(), current: work.title)
+        ..text(fieldAuthor, _blankIsCleared(edits.author), current: work.author)
+        ..text(
+          fieldPublisher,
+          _blankIsCleared(edits.publisher),
+          current: work.publisher,
+        )
+        ..text(
+          fieldLanguage,
+          _blankIsCleared(edits.language),
+          current: work.language,
+        )
+        ..object(
+          fieldExtraMetadata,
+          _emptyIsCleared(edits.extraMetadata),
+          // Both sides are normalized the same way, and that is what stops an
+          // edit from claiming a field nobody touched: a record with no extra
+          // metadata reads back as an empty map, and comparing that against a
+          // form which produced one would make *no metadata* and *no metadata*
+          // look like a change on every save.
+          current: _emptyIsCleared(_metadataOf(work.extraMetadata)),
+        );
+
+      if (claims.isEmpty) {
+        // Nothing changed. It is not a failure and there is nothing to report:
+        // a reader who opened a form and closed it has done nothing wrong, and
+        // authoring an empty change would be this device telling every replica
+        // that nothing happened.
+        _log.fine('the edit to $ebookId claims nothing');
+
+        return const Result<void>.ok(null);
+      }
+
+      await author.write(
+        Change.update(TargetEntity.ebook, ebookId, claims.fields),
+      );
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning('$ebookId could not be edited', error, stackTrace);
+
+      return Result<void>.error(failureFrom(error, op: opEdit));
+    }
+  }
+
+  @override
   Stream<Result<List<Ebook>>> watchEbooks([
     LibraryQuery query = const LibraryQuery(),
   ]) => _guard(
@@ -495,9 +581,9 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
   @override
   Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId) => _guard(
-    library.watchCollectionsOf(ebookId).map(
-      (rows) => rows.map(collectionOfRow).toList()..sort(_byName),
-    ),
+    library
+        .watchCollectionsOf(ebookId)
+        .map((rows) => rows.map(collectionOfRow).toList()..sort(_byName)),
   );
 
   /// [source] with every value wrapped and every failure reported as one.
@@ -654,22 +740,16 @@ abstract final class Rx {
 
     controller = StreamController<(A?, B?)>(
       onListen: () {
-        left = first.listen(
-          (A? value) {
-            a = value;
-            hasA = true;
-            emit();
-          },
-          onError: controller.addError,
-        );
-        right = second.listen(
-          (B? value) {
-            b = value;
-            hasB = true;
-            emit();
-          },
-          onError: controller.addError,
-        );
+        left = first.listen((A? value) {
+          a = value;
+          hasA = true;
+          emit();
+        }, onError: controller.addError);
+        right = second.listen((B? value) {
+          b = value;
+          hasB = true;
+          emit();
+        }, onError: controller.addError);
       },
       onCancel: () async {
         await left?.cancel();

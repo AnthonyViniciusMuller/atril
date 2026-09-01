@@ -29,8 +29,7 @@ final class MemoryBlobStore implements BlobStore {
       objects.containsKey(contentHash);
 
   @override
-  Future<int?> sizeOf(String contentHash) async =>
-      objects[contentHash]?.length;
+  Future<int?> sizeOf(String contentHash) async => objects[contentHash]?.length;
 
   @override
   Stream<Uint8List> read(String contentHash, {int from = 0}) async* {

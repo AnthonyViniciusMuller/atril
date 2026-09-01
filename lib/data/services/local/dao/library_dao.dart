@@ -24,8 +24,11 @@ import '../tables/library.dart';
 part 'library_dao.g.dart';
 
 /// The reader's collection, as this device holds it.
-@DriftAccessor(tables: <Type>[Ebooks, Collections, EbookCollections, EbookCovers])
-class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin {
+@DriftAccessor(
+  tables: <Type>[Ebooks, Collections, EbookCollections, EbookCovers],
+)
+class LibraryDao extends DatabaseAccessor<AtrilDatabase>
+    with _$LibraryDaoMixin {
   /// The accessor over [database].
   LibraryDao(super.database);
 
@@ -59,9 +62,9 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin 
   /// looking at a work another device has just deleted is looking at a screen
   /// about nothing, and that is what the detail screen has to be told so that
   /// it can say so.
-  Stream<EbookRow?> watchEbook(String id) =>
-      (select(ebooks)..where((row) => row.id.equals(id) & row.deleted.not()))
-          .watchSingleOrNull();
+  Stream<EbookRow?> watchEbook(String id) => (select(
+    ebooks,
+  )..where((row) => row.id.equals(id) & row.deleted.not())).watchSingleOrNull();
 
   /// One work, once, tombstone and all.
   ///
@@ -86,22 +89,20 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin 
 
   /// One grouping, once, tombstone and all, for the reason [readEbook] reads
   /// one.
-  Future<CollectionRow?> readCollection(String id) =>
-      (select(collections)..where((row) => row.id.equals(id)))
-          .getSingleOrNull();
+  Future<CollectionRow?> readCollection(String id) => (select(
+    collections,
+  )..where((row) => row.id.equals(id))).getSingleOrNull();
 
   /// The groupings one work is filed under, as they change.
   Stream<List<CollectionRow>> watchCollectionsOf(String ebookId) {
-    final query =
-        select(collections).join(<Join<HasResultSet, dynamic>>[
-            innerJoin(
-              ebookCollections,
-              ebookCollections.collectionId.equalsExp(collections.id) &
-                  ebookCollections.ebookId.equals(ebookId) &
-                  ebookCollections.deleted.not(),
-            ),
-          ])
-          ..where(collections.deleted.not());
+    final query = select(collections).join(<Join<HasResultSet, dynamic>>[
+      innerJoin(
+        ebookCollections,
+        ebookCollections.collectionId.equalsExp(collections.id) &
+            ebookCollections.ebookId.equals(ebookId) &
+            ebookCollections.deleted.not(),
+      ),
+    ])..where(collections.deleted.not());
 
     return query.watch().map(
       (rows) => <CollectionRow>[
@@ -180,9 +181,9 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin 
           .get();
 
   /// The cover this device extracted for [ebookId], or `null`.
-  Future<EbookCoverRow?> readCover(String ebookId) =>
-      (select(ebookCovers)..where((row) => row.ebookId.equals(ebookId)))
-          .getSingleOrNull();
+  Future<EbookCoverRow?> readCover(String ebookId) => (select(
+    ebookCovers,
+  )..where((row) => row.ebookId.equals(ebookId))).getSingleOrNull();
 
   /// Keeps [bytes] as the cover of [ebookId].
   ///
@@ -213,17 +214,16 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin 
 
   JoinedSelectStatement<HasResultSet, dynamic> _filedUnder(
     String collectionId,
-  ) =>
-      select(ebooks).join(<Join<HasResultSet, dynamic>>[
-          innerJoin(
-            ebookCollections,
-            ebookCollections.ebookId.equalsExp(ebooks.id) &
-                ebookCollections.collectionId.equals(collectionId) &
-                ebookCollections.deleted.not(),
-          ),
-        ])
-        ..where(ebooks.deleted.not());
+  ) => select(ebooks).join(<Join<HasResultSet, dynamic>>[
+    innerJoin(
+      ebookCollections,
+      ebookCollections.ebookId.equalsExp(ebooks.id) &
+          ebookCollections.collectionId.equals(collectionId) &
+          ebookCollections.deleted.not(),
+    ),
+  ])..where(ebooks.deleted.not());
 
-  List<EbookRow> _worksOf(List<TypedResult> rows) =>
-      <EbookRow>[for (final row in rows) row.readTable(ebooks)];
+  List<EbookRow> _worksOf(List<TypedResult> rows) => <EbookRow>[
+    for (final row in rows) row.readTable(ebooks),
+  ];
 }

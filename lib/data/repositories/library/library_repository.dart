@@ -42,8 +42,73 @@ const String codeUnsupportedFormat = 'unsupported_format';
 /// app that destroys something.
 const String codeNotYetSent = 'content_not_yet_sent';
 
+/// What a reader changed about a work (RF05).
+///
+/// Every field is present, because the form that fills this in knows them all
+/// — and *what changed* is worked out against the record rather than tracked
+/// by the screen. That is not a convenience: reconciliation is per record and
+/// not per field (C17), so a delta restating a title the reader never touched
+/// carries this device's claim to it, and the next merge against a device that
+/// *did* change it is settled by a tie-break rather than by what anybody meant.
+/// A change that claims only what changed cannot lose an edit it did not make.
+///
+/// A `null` is a field the reader **cleared**, which is a claim and not a
+/// silence: a work whose author is unknown and one whose author is the empty
+/// string are different things, and the contract spells the difference with
+/// `optional`.
+///
+/// The format, the digest and the length are not here. They are fixed at
+/// import and the reconciler refuses to move them, because a row that
+/// described a file it is not would be a book that will not open.
+final class EbookEdits {
+  /// The work as the reader left it.
+  const EbookEdits({
+    required this.title,
+    this.author,
+    this.publisher,
+    this.language,
+    this.extraMetadata = const <String, Object?>{},
+  });
+
+  /// What the work is called. A work cannot be without one.
+  final String title;
+
+  /// Its author, or `null` where the reader cleared it.
+  final String? author;
+
+  /// Its publisher, or `null` where the reader cleared it.
+  final String? publisher;
+
+  /// Its language, or `null` where the reader cleared it.
+  final String? language;
+
+  /// The metadata the format carried and the contract does not name.
+  ///
+  /// An object and never a scalar, because the column it lands in is `jsonb`
+  /// and constrained to one — on the node and on this device. An empty map is
+  /// a reader who removed every entry, which clears the field.
+  final Map<String, Object?> extraMetadata;
+
+  @override
+  String toString() => 'EbookEdits($title)';
+}
+
 /// The reader's collection.
 abstract interface class LibraryRepository {
+  /// RF05. Records what the reader changed about one work.
+  ///
+  /// It claims exactly the fields that differ from the record, and nothing
+  /// else. The change is authored as an operation and applied by the
+  /// reconciler like any other, so a device with no network edits a book and
+  /// every replica hears about it when the log is pushed — which is the whole
+  /// of C21 and the reason `UpdateEbook` is never called.
+  ///
+  /// An edit that changes nothing is not an operation at all: authoring one
+  /// would tick a clock and stamp an instant to tell every replica that
+  /// nothing happened, and leave the record reflecting this device for a write
+  /// it did not make.
+  Future<Result<void>> editEbook(String ebookId, EbookEdits edits);
+
   /// UC02. Takes [file] into the collection.
   ///
   /// The bytes are copied into the blob store under the digest computed while

@@ -112,9 +112,7 @@ void main() {
   testWidgets('is a list on a narrow window', (WidgetTester tester) async {
     final (:library, :picker) = await pump(tester, width: gridWidth - 1);
 
-    library.works.add(
-      Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
-    );
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
     await tester.pumpAndSettle();
 
     expect(find.byType(ListView), findsWidgets);
@@ -125,9 +123,7 @@ void main() {
   testWidgets('is a grid on a wide one', (WidgetTester tester) async {
     final (:library, :picker) = await pump(tester, width: gridWidth + 200);
 
-    library.works.add(
-      Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
-    );
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
     await tester.pumpAndSettle();
 
     expect(find.byType(GridView), findsOneWidget);
@@ -141,9 +137,7 @@ void main() {
     // rather than showing a blank line the reader would read as a bug.
     final (:library, :picker) = await pump(tester);
 
-    library.works.add(
-      Result<List<Ebook>>.ok(<Ebook>[_work('Anônimo')]),
-    );
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Anônimo')]));
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.libraryUnknownAuthor), findsOneWidget);
@@ -171,9 +165,7 @@ void main() {
   ) async {
     final (:library, :picker) = await pump(tester);
 
-    library.works.add(
-      Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
-    );
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
     library.groupings.add(
       Result<List<Collection>>.ok(<Collection>[_grouping('Para reler')]),
     );
@@ -272,10 +264,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(library.imports, hasLength(1));
-    expect(
-      find.text(l10n.libraryImported('Vidas Secas.epub')),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.libraryImported('Vidas Secas.epub')), findsOneWidget);
   });
 
   testWidgets('names the formats it takes when it cannot place a file', (
@@ -321,10 +310,7 @@ void main() {
     library.works.add(Result<List<Ebook>>.error(Exception('no such table')));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(l10n.libraryReadFailed),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.libraryReadFailed), findsOneWidget);
     // The exception's own words are developer prose in one language, and are
     // logged rather than shown.
     expect(find.textContaining('no such table'), findsNothing);

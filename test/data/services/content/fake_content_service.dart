@@ -239,9 +239,7 @@ final class FakeContentService extends FakeLibraryService {
       throw GrpcError.custom(
         StatusCode.notFound,
         'this node does not hold that file',
-        <ErrorInfo>[
-          ErrorInfo(reason: 'content_not_found', domain: 'quire.v1'),
-        ],
+        <ErrorInfo>[ErrorInfo(reason: 'content_not_found', domain: 'quire.v1')],
       );
     }
 

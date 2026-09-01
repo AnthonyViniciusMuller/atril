@@ -179,7 +179,6 @@ final class FakeAuthRepository implements AuthRepository {
   );
 }
 
-
 /// A [LibraryRepository] that answers from memory.
 ///
 /// The works and the groupings are broadcast controllers rather than fields,
@@ -292,7 +291,8 @@ final class FakeLibraryRepository implements LibraryRepository {
 
     return Result<EbookContent>.ok(
       const EbookContent(
-        contentHash: '0000000000000000000000000000000000000000000000000000000000000000',
+        contentHash:
+            '0000000000000000000000000000000000000000000000000000000000000000',
         sizeBytes: 3,
         mediaType: 'application/epub+zip',
       ),
@@ -303,16 +303,29 @@ final class FakeLibraryRepository implements LibraryRepository {
   final Map<String, int> owed = <String, int>{};
 
   @override
-  Stream<Result<ContentState>> watchContent(String ebookId) =>
-      works.stream.map(
-        (_) => Result<ContentState>.ok(
-          ContentState(
-            onThisDevice: downloaded.contains(ebookId),
-            kept: kept.contains(ebookId),
-            owedBytes: owed[ebookId],
-          ),
-        ),
-      );
+  Stream<Result<ContentState>> watchContent(String ebookId) => works.stream.map(
+    (_) => Result<ContentState>.ok(
+      ContentState(
+        onThisDevice: downloaded.contains(ebookId),
+        kept: kept.contains(ebookId),
+        owedBytes: owed[ebookId],
+      ),
+    ),
+  );
+
+  /// Every edit it was handed, as `(ebookId, edits)`.
+  final List<(String, EbookEdits)> edits = <(String, EbookEdits)>[];
+
+  @override
+  Future<Result<void>> editEbook(String ebookId, EbookEdits changes) async {
+    edits.add((ebookId, changes));
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
 
   /// The works this device keeps, which starts as every one it holds.
   final Set<String> kept = <String>{};

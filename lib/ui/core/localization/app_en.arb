@@ -130,5 +130,20 @@
   "ebookCancelDownload": "Cancel",
   "ebookDownloadFailed": "This book could not be downloaded.",
   "ebookNotOnServer": "The server does not have this book's file.",
-  "ebookExtraSection": "What the file carried"
+  "ebookExtraSection": "What the file carried",
+
+  "ebookEdit": "Edit",
+  "ebookEditTitle": "Edit details",
+  "ebookTitleLabel": "Title",
+  "ebookAuthorLabel": "Author",
+  "ebookTitleRequired": "The title cannot be blank.",
+  "ebookEditSave": "Save",
+  "ebookEditSaved": "Details saved on this device.",
+  "ebookEditFailed": "The details could not be saved.",
+  "ebookEditExtraExplanation": "What the file carried beyond the details \u2014 series, ISBN, subjects. Each row is a name and a value.",
+  "ebookEditExtraName": "Name",
+  "ebookEditExtraValue": "Value",
+  "ebookEditExtraAdd": "Add",
+  "ebookEditExtraRemove": "Remove",
+  "ebookEditExtraNotText": "This value is not text and was kept as it was."
 }

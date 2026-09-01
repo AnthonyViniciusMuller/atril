@@ -396,8 +396,7 @@ final class ContentUploader {
         if (++stalled > maxUploadRestarts) {
           throw AppException(
             kind: ErrorKind.failedPrecondition,
-            message:
-                'the upload of $contentHash made no progress past $offset',
+            message: 'the upload of $contentHash made no progress past $offset',
             code: codeUploadOutOfStep,
             op: opUploadContent,
           );
@@ -407,7 +406,9 @@ final class ContentUploader {
       }
 
       if (reached < offset) {
-        _log.fine('the node holds $reached of $contentHash; sending from there');
+        _log.fine(
+          'the node holds $reached of $contentHash; sending from there',
+        );
       }
 
       offset = reached;
