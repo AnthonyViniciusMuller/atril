@@ -584,4 +584,16 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get ebookShelvesEdit => 'Choose shelves';
+
+  @override
+  String get ebookShelvesDialogTitle => 'File under';
+
+  @override
+  String get ebookShelvesNone => 'You have not made any shelves yet.';
+
+  @override
+  String get ebookShelvesFailed => 'This book\'s shelves could not be changed.';
 }

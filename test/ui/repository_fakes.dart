@@ -398,6 +398,24 @@ final class FakeLibraryRepository implements LibraryRepository {
     return const Result<void>.ok(null);
   }
 
+  /// Every filing it was asked for, as `(ebookId, collectionId, filed)`.
+  final List<(String, String, bool)> filings = <(String, String, bool)>[];
+
+  @override
+  Future<Result<void>> fileEbook({
+    required String ebookId,
+    required String collectionId,
+    required bool filed,
+  }) async {
+    filings.add((ebookId, collectionId, filed));
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
   /// Every work it was asked to tombstone, in order.
   final List<String> deleted = <String>[];
 

@@ -55,6 +55,9 @@ const String opDelete = 'library/collection: delete';
 /// The operation a change to a grouping reports under.
 const String opGrouping = 'library/groupings: write';
 
+/// The operation filing and unfiling report under.
+const String opFiling = 'library/filings: write';
+
 /// [value], or `null` where it holds nothing.
 ///
 /// An object with no entries and no object at all are the same claim about a
@@ -645,6 +648,55 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       _log.warning('$change on $collectionId did not apply', error, stackTrace);
 
       return Result<void>.error(failureFrom(error, op: opGrouping));
+    }
+  }
+
+  @override
+  Future<Result<void>> fileEbook({
+    required String ebookId,
+    required String collectionId,
+    required bool filed,
+  }) async {
+    try {
+      // Both halves, checked here so that the refusal names the book or the
+      // shelf. The reconciler refuses the same thing one layer down and would
+      // report it as a record it does not hold, which is true and is not what
+      // a reader needs to be told.
+      if (await library.readEbook(ebookId) == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opFiling,
+        );
+      }
+
+      if (await library.readCollection(collectionId) == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no grouping called $collectionId',
+          op: opFiling,
+        );
+      }
+
+      // Two directions and no update between them, because membership is a
+      // register per pair and not a row that is appended. Filing a work that
+      // is already filed is the same request as filing it, which is what makes
+      // the operation safe to replay and safe to send twice.
+      await author.write(
+        filed
+            ? Change.filing(ebookId: ebookId, collectionId: collectionId)
+            : Change.unfiling(ebookId: ebookId, collectionId: collectionId),
+      );
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning(
+        '$ebookId could not be filed under $collectionId',
+        error,
+        stackTrace,
+      );
+
+      return Result<void>.error(failureFrom(error, op: opFiling));
     }
   }
 

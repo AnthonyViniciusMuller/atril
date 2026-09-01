@@ -972,5 +972,25 @@
         "type": "int"
       }
     }
+  },
+
+  "ebookShelvesEdit": "Escolher estantes",
+  "@ebookShelvesEdit": {
+    "description": "Ação que abre a lista de estantes e categorias para marcar em quais o livro fica arquivado."
+  },
+
+  "ebookShelvesDialogTitle": "Arquivar em",
+  "@ebookShelvesDialogTitle": {
+    "description": "Título da caixa que marca e desmarca as estantes de um livro. Cada marca vale imediatamente neste dispositivo."
+  },
+
+  "ebookShelvesNone": "Você ainda não criou nenhuma estante.",
+  "@ebookShelvesNone": {
+    "description": "Mostrado na caixa de estantes quando o leitor não tem nenhum agrupamento para escolher."
+  },
+
+  "ebookShelvesFailed": "Não foi possível mudar as estantes deste livro.",
+  "@ebookShelvesFailed": {
+    "description": "Erro geral ao arquivar ou desarquivar um livro em uma estante."
   }
 }

@@ -147,6 +147,24 @@ abstract interface class LibraryRepository {
   /// Brings back a grouping this device tombstoned.
   Future<Result<void>> restoreCollection(String collectionId);
 
+  /// UC03. Files a work under a grouping, or takes it out of one.
+  ///
+  /// **The pair is the record and the row is a handle on it** (C06, C18).
+  /// Filing a work and filing it again are one request, and so are their
+  /// opposites: what the kind of the change decides is which way the register
+  /// goes, and there is no update between the two. That is what makes two
+  /// devices which add and remove the same book from the same shelf while
+  /// offline reach the same answer — the later write wins a register, where
+  /// two rows appended would be two filings nobody asked for.
+  ///
+  /// A filing whose pair this device does not hold is refused here rather than
+  /// by a foreign key, so the failure names the book or the shelf.
+  Future<Result<void>> fileEbook({
+    required String ebookId,
+    required String collectionId,
+    required bool filed,
+  });
+
   /// RF05. Records what the reader changed about one work.
   ///
   /// It claims exactly the fields that differ from the record, and nothing

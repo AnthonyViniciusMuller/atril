@@ -781,9 +781,18 @@ that reason.
       translator's decision. The route is `/library/shelves`, declared *before* `/library/:ebookId`
       because `go_router` matches in declaration order and a parameter would otherwise swallow a
       literal and try to show a book called *shelves*
-- [ ] `feat: add filing a work under a collection` — UC02, and the reason C06 exists: two devices
-      that add and remove the same book from the same shelf while offline reach the same answer,
-      because membership is a register per pair and not a row
+- [x] `feat: add filing a work under a collection` — ~~UC02~~ **UC03**, and the reason C06 exists:
+      two devices that add and remove the same book from the same shelf while offline reach the
+      same answer, because membership is a register per pair and not a row. The use case was
+      misnumbered here: `AddEbookToCollection` is declared under UC03 in the contract, which is
+      where organizing the collection lives; UC02 is the import. What the commit shows is the
+      register: filing and unfiling are the two directions, the row is reused and its tombstone
+      flipped rather than a second one appended, and the surrogate identifier this device minted
+      is reused so the log does not fill with new names for one record. Both are pinned as tests.
+      The chooser applies each mark as it is made rather than collecting them until a dialog
+      closes, which is what a register makes natural — filing a work and filing it again are one
+      request, so there is nothing to batch and nothing to undo if the reader walks away half way
+      through
 - [ ] `feat: add search and filtering` — over the local replica, by title, author, collection and
       format. No RPC: the collection is here
 

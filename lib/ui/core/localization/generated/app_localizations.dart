@@ -1052,6 +1052,30 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{count, plural, =0{Nenhum livro} =1{1 livro} other{{count} livros}}'**
   String shelvesCount(int count);
+
+  /// Ação que abre a lista de estantes e categorias para marcar em quais o livro fica arquivado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Escolher estantes'**
+  String get ebookShelvesEdit;
+
+  /// Título da caixa que marca e desmarca as estantes de um livro. Cada marca vale imediatamente neste dispositivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Arquivar em'**
+  String get ebookShelvesDialogTitle;
+
+  /// Mostrado na caixa de estantes quando o leitor não tem nenhum agrupamento para escolher.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você ainda não criou nenhuma estante.'**
+  String get ebookShelvesNone;
+
+  /// Erro geral ao arquivar ou desarquivar um livro em uma estante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível mudar as estantes deste livro.'**
+  String get ebookShelvesFailed;
 }
 
 class _AppLocalizationsDelegate

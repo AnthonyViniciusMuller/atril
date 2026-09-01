@@ -377,6 +377,87 @@ void main() {
     expect(find.widgetWithText(Chip, 'Para reler'), findsOneWidget);
   });
 
+  group('choosing shelves', () {
+    testWidgets('offers every shelf, and marks the ones it is on', (
+      WidgetTester tester,
+    ) async {
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      library.groupings.add(
+        Result<List<Collection>>.ok(<Collection>[
+          Collection(
+            id: 'b',
+            name: 'Para reler',
+            kind: CollectionKind.collection,
+            createdAt: DateTime.utc(2026),
+            revision: _revision,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.ebookShelvesEdit));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.ebookShelvesDialogTitle), findsOneWidget);
+      expect(
+        tester
+            .widget<CheckboxListTile>(find.byType(CheckboxListTile))
+            .value,
+        // The fake answers the same list for *every* shelf and for the ones
+        // this work is on, which is a book already filed there.
+        isTrue,
+      );
+    });
+
+    testWidgets('files and unfiles as each mark is made', (
+      WidgetTester tester,
+    ) async {
+      // Each mark is its own change and takes effect as it is made. A register
+      // per pair is what makes that natural: filing a work and filing it again
+      // are one request, so there is nothing to batch and nothing to undo if
+      // the reader walks away half way through.
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      library.groupings.add(
+        Result<List<Collection>>.ok(<Collection>[
+          Collection(
+            id: 'b',
+            name: 'Para reler',
+            kind: CollectionKind.collection,
+            createdAt: DateTime.utc(2026),
+            revision: _revision,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.ebookShelvesEdit));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+
+      expect(library.filings, <(String, String, bool)>[(_work, 'b', false)]);
+    });
+
+    testWidgets('says so when the reader has no shelves to choose from', (
+      WidgetTester tester,
+    ) async {
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      library.groupings.add(const Result<List<Collection>>.ok(<Collection>[]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.ebookShelvesEdit));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.ebookShelvesNone), findsOneWidget);
+    });
+  });
+
   testWidgets('shows what the file carried that the contract does not name', (
     WidgetTester tester,
   ) async {

@@ -37,6 +37,14 @@ final class EbookViewModel extends ChangeNotifier {
       (EbookEdits edits) => library.editEbook(ebookId, edits),
     );
     delete = Command0<void>(library.deleteEbook.of(ebookId));
+    file = Command1<void, ({String collectionId, bool filed})>(
+      (({String collectionId, bool filed}) change) => library.fileEbook(
+        ebookId: ebookId,
+        collectionId: change.collectionId,
+        filed: change.filed,
+      ),
+    );
+    _allShelves = library.watchCollections().listen(_onAllShelves);
     keep = Command0<void>(_keep);
     release = Command0<void>(library.releaseEbook.of(ebookId));
     download = Command0<void>(_download);
@@ -68,6 +76,13 @@ final class EbookViewModel extends ChangeNotifier {
   /// operation carrying nothing rather than a record to rebuild.
   late final Command0<void> delete;
 
+  /// UC03. Files the work under a grouping, or takes it out of one.
+  ///
+  /// One command and two directions, because membership is a register per pair
+  /// and not a row that is appended: what the change decides is which way the
+  /// register goes, and there is nothing between the two (C06).
+  late final Command1<void, ({String collectionId, bool filed})> file;
+
   /// Brings the file onto this device and keeps it.
   late final Command0<void> keep;
 
@@ -83,11 +98,13 @@ final class EbookViewModel extends ChangeNotifier {
   late final StreamSubscription<Result<Ebook?>> _work;
   late final StreamSubscription<Result<ContentState>> _content;
   late final StreamSubscription<Result<List<Collection>>> _shelves;
+  late final StreamSubscription<Result<List<Collection>>> _allShelves;
 
   Ebook? _ebook;
   bool _loaded = false;
   ContentState _state = const ContentState(onThisDevice: false, kept: false);
   List<Collection> _collections = const <Collection>[];
+  List<Collection> _all = const <Collection>[];
   EpubCover? _cover;
   DownloadProgress? _progress;
   Cancellation? _cancellation;
@@ -108,6 +125,18 @@ final class EbookViewModel extends ChangeNotifier {
   /// The shelves this work is filed under.
   List<Collection> get collections => _collections;
 
+  /// Every shelf the reader has, which is what the chooser offers.
+  ///
+  /// It is a second stream over the same table and not a filter of the first:
+  /// the first answers *where is this book*, and a chooser needs *where could
+  /// it go*. Deriving one from the other would need the whole collection and a
+  /// join this screen has no reason to run.
+  List<Collection> get allCollections => _all;
+
+  /// Whether this work is filed under [collectionId].
+  bool isFiledUnder(String collectionId) =>
+      _collections.any((Collection shelf) => shelf.id == collectionId);
+
   /// The cover this device extracted, or `null`.
   EpubCover? get cover => _cover;
 
@@ -126,6 +155,7 @@ final class EbookViewModel extends ChangeNotifier {
     unawaited(_work.cancel());
     unawaited(_content.cancel());
     unawaited(_shelves.cancel());
+    unawaited(_allShelves.cancel());
     super.dispose();
   }
 
@@ -212,6 +242,13 @@ final class EbookViewModel extends ChangeNotifier {
         unawaited(_loadCover());
       }
 
+      notifyListeners();
+    }
+  }
+
+  void _onAllShelves(Result<List<Collection>> result) {
+    if (result case Ok<List<Collection>>(:final value)) {
+      _all = value;
       notifyListeners();
     }
   }

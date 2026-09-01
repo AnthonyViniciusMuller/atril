@@ -188,6 +188,7 @@ class _EbookScreenState extends State<EbookScreen> {
       _model.keep,
       _model.release,
       _model.delete,
+      _model.file,
     ]),
     builder: (BuildContext context, Widget? _) {
       final l10n = AppLocalizations.of(context);
@@ -350,7 +351,18 @@ class _Work extends StatelessWidget {
               .formatFullDate(work.importedAt.toLocal()),
         ),
         const SizedBox(height: 16),
-        _Section(title: l10n.ebookShelvesSection),
+        Row(
+          children: <Widget>[
+            Expanded(child: _Section(title: l10n.ebookShelvesSection)),
+            TextButton.icon(
+              onPressed: model.file.running
+                  ? null
+                  : () => _chooseShelves(context, model),
+              icon: const Icon(Icons.playlist_add),
+              label: Text(l10n.ebookShelvesEdit),
+            ),
+          ],
+        ),
         if (model.collections.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -466,6 +478,61 @@ class _FileSection extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Opens the chooser, and files or unfiles as the reader marks each shelf.
+///
+/// Each mark is its own change and takes effect as it is made, rather than
+/// being collected and applied when a dialog closes. That is what a register
+/// per pair (C06) makes natural: filing a work and filing it again are one
+/// request, so there is nothing to batch and nothing to undo if the reader
+/// walks away half way through.
+Future<void> _chooseShelves(BuildContext context, EbookViewModel model) async {
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+
+  await showDialog<void>(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      title: Text(l10n.ebookShelvesDialogTitle),
+      content: ListenableBuilder(
+        listenable: Listenable.merge(<Listenable>[model, model.file]),
+        builder: (BuildContext context, Widget? _) => SizedBox(
+          width: 320,
+          child: model.allCollections.isEmpty
+              ? Text(l10n.ebookShelvesNone)
+              : ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    for (final shelf in model.allCollections)
+                      CheckboxListTile(
+                        value: model.isFiledUnder(shelf.id),
+                        title: Text(shelf.name),
+                        onChanged: model.file.running
+                            ? null
+                            : (bool? filed) => model.file.execute((
+                                collectionId: shelf.id,
+                                filed: filed ?? false,
+                              )),
+                      ),
+                  ],
+                ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+        ),
+      ],
+    ),
+  );
+
+  if (model.file.result is Error<void>) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.ebookShelvesFailed)),
     );
   }
 }

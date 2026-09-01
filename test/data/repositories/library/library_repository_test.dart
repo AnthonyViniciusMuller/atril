@@ -943,6 +943,173 @@ void main() {
     });
   });
 
+  group('filing a work', () {
+    /// A work and a shelf, both on this device.
+    Future<(LibraryRepository, AtrilDatabase, String, String)> shelf() async {
+      final database = _open();
+      final repository = await _repository(database);
+      final work = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final grouping = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler'),
+      );
+
+      return (
+        repository,
+        database,
+        (work as Ok<Ebook>).value.id,
+        (grouping as Ok<Collection>).value.id,
+      );
+    }
+
+    test('puts the work on the shelf', () async {
+      final (repository, _, work, grouping) = await shelf();
+
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+
+      final result = await repository
+          .watchEbooks(LibraryQuery(collectionId: grouping))
+          .first;
+
+      expect(result.titles, <String>['Vidas Secas']);
+    });
+
+    test('carries the pair, because the pair is the record', () async {
+      // C18. Every replica mints its own identifier for the row, so what
+      // resolves the record across the federation is the natural key the delta
+      // carries and not the name the operation gives it.
+      final (repository, database, work, grouping) = await shelf();
+
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+
+      final owed = (await database.syncDao.pending()).last;
+
+      expect(owed.entity, TargetEntity.ebookCollection);
+      expect(owed.delta[fieldEbookId], work);
+      expect(owed.delta[fieldCollectionId], grouping);
+    });
+
+    test('is a register, so the two directions are the only two', () async {
+      // C06. Filing and unfiling are the two directions and there is no update
+      // between them: the row is reused and its tombstone flipped, never
+      // inserted a second time.
+      final (repository, database, work, grouping) = await shelf();
+
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: false,
+      );
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+
+      final filings = await database.select(database.ebookCollections).get();
+
+      expect(filings, hasLength(1));
+      expect(filings.single.deleted, isFalse);
+
+      final kinds = (await database.syncDao.pending())
+          .where((op) => op.entity == TargetEntity.ebookCollection)
+          .map((op) => op.kind)
+          .toList();
+
+      expect(kinds, <OperationKind>[
+        OperationKind.insert,
+        OperationKind.delete,
+        OperationKind.insert,
+      ]);
+    });
+
+    test('names one record however often it is written', () async {
+      // The other half of C18: the surrogate identifier this device minted is
+      // remembered and reused, so the log does not fill with new names for one
+      // record while every replica resolves all of them to the same row.
+      final (repository, database, work, grouping) = await shelf();
+
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: false,
+      );
+
+      final named = (await database.syncDao.pending())
+          .where((op) => op.entity == TargetEntity.ebookCollection)
+          .map((op) => op.targetId)
+          .toSet();
+
+      expect(named, hasLength(1));
+    });
+
+    test('takes the work off the shelf without deleting either', () async {
+      final (repository, _, work, grouping) = await shelf();
+
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: true,
+      );
+      await repository.fileEbook(
+        ebookId: work,
+        collectionId: grouping,
+        filed: false,
+      );
+
+      expect((await repository.watchEbooks().first).titles, <String>[
+        'Vidas Secas',
+      ]);
+      expect(
+        ((await repository.watchCollections().first) as Ok<List<Collection>>)
+            .value,
+        hasLength(1),
+      );
+    });
+
+    test('refuses a pair whose halves this device does not hold', () async {
+      // Refused here rather than by a foreign key, so the failure names the
+      // book or the shelf instead of a table.
+      final (repository, _, work, grouping) = await shelf();
+
+      expect(
+        await repository.fileEbook(
+          ebookId: 'ffffffff-1111-4111-8111-111111111111',
+          collectionId: grouping,
+          filed: true,
+        ),
+        isA<Error<void>>(),
+      );
+      expect(
+        await repository.fileEbook(
+          ebookId: work,
+          collectionId: 'ffffffff-1111-4111-8111-111111111111',
+          filed: true,
+        ),
+        isA<Error<void>>(),
+      );
+    });
+  });
+
   group('what this device keeps', () {
     test('is every book, on a target that keeps everything', () async {
       final database = _open();

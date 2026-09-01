@@ -172,5 +172,10 @@
   "shelvesDelete": "Delete",
   "shelvesDeleted": "{name} was deleted. The books stay in your library.",
   "shelvesDeleteFailed": "This shelf could not be deleted.",
-  "shelvesCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}"
+  "shelvesCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}",
+
+  "ebookShelvesEdit": "Choose shelves",
+  "ebookShelvesDialogTitle": "File under",
+  "ebookShelvesNone": "You have not made any shelves yet.",
+  "ebookShelvesFailed": "This book's shelves could not be changed."
 }

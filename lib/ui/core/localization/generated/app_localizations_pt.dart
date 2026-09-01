@@ -584,6 +584,19 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get ebookShelvesEdit => 'Escolher estantes';
+
+  @override
+  String get ebookShelvesDialogTitle => 'Arquivar em';
+
+  @override
+  String get ebookShelvesNone => 'Você ainda não criou nenhuma estante.';
+
+  @override
+  String get ebookShelvesFailed =>
+      'Não foi possível mudar as estantes deste livro.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1165,4 +1178,17 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
     );
     return '$_temp0';
   }
+
+  @override
+  String get ebookShelvesEdit => 'Escolher estantes';
+
+  @override
+  String get ebookShelvesDialogTitle => 'Arquivar em';
+
+  @override
+  String get ebookShelvesNone => 'Você ainda não criou nenhuma estante.';
+
+  @override
+  String get ebookShelvesFailed =>
+      'Não foi possível mudar as estantes deste livro.';
 }
