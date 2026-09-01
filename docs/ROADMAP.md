@@ -1355,8 +1355,21 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       foreground layer on the sixth, from one description. And Android gets **both** icons: the
       adaptive pair from API 26 and the legacy bitmap, because this app's `minSdk` is 24 and two
       of the versions it admits predate the adaptive format
-- [ ] `build: add the android release configuration` — signing, the application id, and the
-      minimum SDK
+- [x] `build: add the android release configuration` — signing, the application id, and the
+      minimum SDK. The application id was already `dev.quire.atril` and carried the template's
+      *specify your own* TODO; what this commit adds is the reason it is that string, which is
+      the same one the iOS bundle identifier, the macOS one and the GTK application id are.
+      **Signing is a keystore this repository does not have and a fallback that announces
+      itself.** `android/key.properties` is gitignored, `key.properties.example` is committed and
+      says what belongs in it, and its absence is not an error: the release build falls back to
+      the debug key so that `flutter run --release` works on a machine with no keystore. The
+      fallback logs a line, because an APK signed with the debug key that *looked* like a release
+      is the single mistake this file exists to prevent. The minimum SDK is **pinned at 24 rather
+      than tracking `flutter.minSdkVersion`**, which is 24 in this release. The floor the
+      dependencies actually need is lower — `flutter_secure_storage` asks 23, `connectivity_plus`
+      21, `flutter_inappwebview` 19 — so the pin is not about them: it is that a Flutter upgrade
+      must not be able to silently drop the devices this app runs on. Raising the floor is a
+      decision, and a decision belongs in a diff
 - [ ] `build: add the ios release configuration` — the bundle identifier, the capabilities, and
       the deployment target
 - [ ] `build: add desktop packaging` — an AppImage or a Flatpak on Linux, a signed `.app` on

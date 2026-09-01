@@ -49,3 +49,12 @@ app.*.map.json
 
 # `flutter build apk` writes here as well as to the root build directory.
 /android/build/
+
+# The Kotlin Gradle plugin's own session directory, written beside the build.
+/android/.kotlin/
+
+# The release signing material. `key.properties.example` is committed and says
+# what belongs here; the keystore and the passwords never are.
+/android/key.properties
+*.jks
+*.keystore

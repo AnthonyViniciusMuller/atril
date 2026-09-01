@@ -1,0 +1,15 @@
+# A copy of this file named `key.properties`, beside it and gitignored, is what
+# `android/app/build.gradle.kts` signs a release with. Its absence is not an
+# error: the release build falls back to the debug key and says so.
+#
+# The keystore itself is generated once and kept out of this repository:
+#
+#   keytool -genkey -v -keystore ~/atril-release.jks -storetype JKS \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias atril
+#
+# Losing it means no further update can be published under this application id,
+# so it is backed up somewhere that is not a laptop.
+storeFile=/absolute/path/to/atril-release.jks
+storePassword=
+keyAlias=atril
+keyPassword=
