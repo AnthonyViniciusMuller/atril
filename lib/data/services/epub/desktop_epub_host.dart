@@ -89,6 +89,80 @@ const String epubBridgeShim =
 })();
 ''';
 
+/// Every function this host calls inside the pinned glue.
+///
+/// They are named here rather than written at the call sites because this is
+/// the one place in the application that spells the glue's own vocabulary. The
+/// webview host does not: it goes through the package's Dart controller, which
+/// spells these same names on its side. So a name that is wrong *here* is a
+/// call into nothing on Linux and a working call on the other five — a
+/// divergence between hosts that no compiler and no other test would catch.
+///
+/// `locator_round_trip_test.dart` checks every one of them against the glue the
+/// bundle actually holds, which is a file pinned by digest. A renamed function
+/// upstream is therefore a red build rather than a target that silently stops
+/// turning pages.
+abstract final class EpubGlue {
+  /// Hands the engine a book and the options it is displayed under.
+  static const String loadBook = 'loadBook';
+
+  /// Moves to a CFI or a chapter href — the engine tells them apart.
+  static const String goTo = 'toCfi';
+
+  /// The next page, and the previous one.
+  static const String next = 'next';
+
+  /// As [next], backwards. It is `previous` and not `prev`: the package's
+  /// controller method is `prev` and the function it calls is this, which is
+  /// exactly the kind of near-miss the check exists for.
+  static const String previous = 'previous';
+
+  /// Draws a filled mark over a range, and an underline under one.
+  static const String addHighlight = 'addHighlight';
+
+  /// As [addHighlight], underlined. The capital L is the glue's.
+  static const String addUnderline = 'addUnderLine';
+
+  /// Removes what the two above draw.
+  static const String removeHighlight = 'removeHighlight';
+
+  /// As [removeHighlight], for an underline.
+  static const String removeUnderline = 'removeUnderLine';
+
+  /// Sets the root type size, in CSS pixels.
+  static const String setFontSize = 'setFontSize';
+
+  /// One page or two.
+  static const String setSpread = 'setSpread';
+
+  /// The colours and the custom rules the page is styled with.
+  static const String updateTheme = 'updateTheme';
+
+  /// The text a CFI range covers.
+  ///
+  /// It is the glue's internal helper and not its public `getTextFromCfi`,
+  /// which takes two end CFIs and builds the range itself. What an annotation
+  /// stores is the range, already built, and splitting one back into its ends
+  /// would be parsing a CFI in Dart.
+  static const String extractText = '_extractText';
+
+  /// All of them, for the check that they exist.
+  static const Set<String> all = <String>{
+    loadBook,
+    goTo,
+    next,
+    previous,
+    addHighlight,
+    addUnderline,
+    removeHighlight,
+    removeUnderline,
+    setFontSize,
+    setSpread,
+    updateTheme,
+    extractText,
+  };
+}
+
 /// The engine, hosted by CEF and rendered to a Flutter texture.
 final class DesktopEpubHost implements EpubHost {
   /// A host for one book on one screen.
@@ -180,18 +254,18 @@ final class DesktopEpubHost implements EpubHost {
   }
 
   @override
-  Future<void> goTo(String locator) => _call('toCfi', <Object?>[locator]);
+  Future<void> goTo(String locator) => _call(EpubGlue.goTo, <Object?>[locator]);
 
   @override
-  Future<void> nextPage() => _call('next');
+  Future<void> nextPage() => _call(EpubGlue.next);
 
   @override
-  Future<void> previousPage() => _call('previous');
+  Future<void> previousPage() => _call(EpubGlue.previous);
 
   @override
   Future<void> draw(EpubMark mark) => mark.underline
-      ? _call('addUnderLine', <Object?>[mark.cfiRange])
-      : _call('addHighlight', <Object?>[
+      ? _call(EpubGlue.addUnderline, <Object?>[mark.cfiRange])
+      : _call(EpubGlue.addHighlight, <Object?>[
           mark.cfiRange,
           cssColor(mark.color),
           '${mark.opacity}',
@@ -199,7 +273,7 @@ final class DesktopEpubHost implements EpubHost {
 
   @override
   Future<void> erase(String cfiRange, {bool underline = false}) => _call(
-    underline ? 'removeUnderLine' : 'removeHighlight',
+    underline ? EpubGlue.removeUnderline : EpubGlue.removeHighlight,
     <Object?>[cfiRange],
   );
 
@@ -208,7 +282,9 @@ final class DesktopEpubHost implements EpubHost {
     // The same glue function the webview host reaches, for the same reason: it
     // takes a range, and splitting a range into its two ends would be parsing a
     // CFI in Dart.
-    final Object? result = await _request('_extractText', <Object?>[cfiRange]);
+    final Object? result = await _request(EpubGlue.extractText, <Object?>[
+      cfiRange,
+    ]);
 
     if (result is Map && result['text'] is String) {
       return result['text'] as String;
@@ -276,7 +352,7 @@ final class DesktopEpubHost implements EpubHost {
 
     final EpubPalette palette = epubPaletteOf(_style.theme, _brightness);
 
-    await _call('loadBook', <Object?>[
+    await _call(EpubGlue.loadBook, <Object?>[
       base64.encode(book.bytes),
       <String, Object?>{
         'cfi': _initialCfi ?? '',
@@ -305,13 +381,13 @@ final class DesktopEpubHost implements EpubHost {
   }
 
   Future<void> _applyToEngine() async {
-    await _call('setFontSize', <Object?>[
+    await _call(EpubGlue.setFontSize, <Object?>[
       epubBaseFontSizePx * _style.fontSize / 100,
     ]);
-    await _call('setSpread', <Object?>[
+    await _call(EpubGlue.setSpread, <Object?>[
       _style.spread == EpubSpread.none ? 'none' : 'auto',
     ]);
-    await _call('updateTheme', <Object?>[
+    await _call(EpubGlue.updateTheme, <Object?>[
       '',
       '',
       _css(epubPaletteOf(_style.theme, _brightness)),

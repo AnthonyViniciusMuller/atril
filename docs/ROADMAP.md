@@ -942,8 +942,28 @@ and they are recorded here because none of them is visible from the package's RE
       Choosing between the two *native* hosts is deliberately not one — both compile, so it is a
       question about the machine and `defaultTargetPlatform` answers it where the graph is
       composed
-- [ ] `test: prove a locator round-trips between hosts` — the correctness claim the whole split
-      rests on
+- [x] `test: prove a locator round-trips between hosts` — the correctness claim the whole split
+      rests on, and the commit where what *can* be proved had to be worked out rather than
+      assumed. A literal round trip opens a book under two hosts and compares what each resolves;
+      a host is a webview, and no webview exists in `flutter test` on any platform. So the claim
+      is decomposed into the three things it is actually made of, each checkable, and together
+      leaving nowhere for two hosts to disagree: **there is one implementation** of where a
+      passage is — no Dart in `lib/` takes a locator apart, and every host loads the same pinned
+      keys; **a locator crosses each port unchanged** — checked against a corpus of the shapes
+      epub.js really emits, ranges and assertions and offsets included, through the mapping and
+      through the JSON both bridges carry it in; and **both hosts drive that one implementation
+      through the same names** — every function the Linux host spells is checked against the glue
+      the bundle holds, which is the single asymmetry this phase introduced, since the other five
+      targets get their names from a compiled API and Linux writes them out.
+
+      Two of the checks are the kind that fail by matching nothing and passing forever, which
+      `architecture.md` warns about in the write-path test, and both are answered rather than
+      noted. The detector for Dart that dissects a locator is a named function shown four shapes
+      of violation and four things that are not violations, so a clean tree and a broken detector
+      stop looking alike. The glue is asserted to have been read at all before it is asserted to
+      define anything. And `previous` versus `prev`, and the capital L in `addUnderLine`, are
+      pinned by name: they are what a careful person gets wrong once, and getting them wrong is a
+      target that quietly stops turning pages
 - [ ] `feat: add the reader chrome` — the page, the progress, the table of contents, and the
       controls that get out of the way. Flutter widgets over the host, not inside it
 - [ ] `feat: add reader settings` — font, size, line height, margins and the reading theme,
