@@ -83,6 +83,13 @@ final class FakeContentService extends FakeLibraryService {
   /// shape has and the stream did not.
   int dropAfter = -1;
 
+  /// How many bytes to accept before refusing the rest as too large.
+  ///
+  /// It is the node's ceiling met part way through a transfer, which is a
+  /// refusal and not an interruption: no amount of waiting makes the file
+  /// smaller, so the caller has no business finishing and says so.
+  int refuseAfter = -1;
+
   var _next = 0;
 
   @override
@@ -136,6 +143,13 @@ final class FakeContentService extends FakeLibraryService {
     }
 
     chunks.add((request.offset.toInt(), request.chunk.length));
+
+    if (refuseAfter >= 0 &&
+        upload.offset + request.chunk.length > refuseAfter) {
+      throw GrpcError.resourceExhausted(
+        'the file is larger than this node accepts',
+      );
+    }
 
     // Nothing is written at an offset the node is not expecting, and the reply
     // carries the truth. That is what lets a caller that lost a connection

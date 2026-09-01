@@ -64,6 +64,49 @@ const String codeUploadOutOfStep = 'upload_out_of_step';
 /// node under the same limit.
 const int uploadChunkBytes = 256 * 1024;
 
+/// How many times an upload may be told to continue from somewhere else
+/// without getting anywhere.
+///
+/// A node answering an offset this device then sends from, twice, and the same
+/// offset again, is not a transfer that is being resumed: it is one that is
+/// looping. The bound is what turns that into a failure a caller sees instead
+/// of a call that never returns.
+const int maxUploadRestarts = 3;
+
+/// The node's code for an upload it is not holding.
+///
+/// It is a session that was never begun here, or one that has been finished,
+/// abandoned or expired — and, because D11 stages the bytes in a file held in
+/// the process, it is also what a node restart looks like to a device still
+/// holding the identifier. So it is not a failure of the transfer: it is a
+/// beginning, and every call is written to fall back to `BeginEbookUpload`.
+const String codeNoSuchUpload = 'no_such_upload';
+
+/// Where an upload has got to.
+final class UploadProgress {
+  /// [sentBytes] of [totalBytes] delivered into the upload [uploadId] names.
+  const UploadProgress({
+    required this.uploadId,
+    required this.sentBytes,
+    required this.totalBytes,
+  });
+
+  /// The session the node opened, which is what a resumed transfer names.
+  final String uploadId;
+
+  /// How many bytes the node holds, by its own account and not this device's.
+  final int sentBytes;
+
+  /// How many there are in all.
+  final int totalBytes;
+
+  /// How far through, between zero and one.
+  double get fraction => totalBytes == 0 ? 0 : sentBytes / totalBytes;
+
+  @override
+  String toString() => 'UploadProgress($uploadId, $sentBytes/$totalBytes)';
+}
+
 /// How an upload ended.
 enum UploadOutcome {
   /// This device sent the bytes and the node now holds them.
@@ -112,6 +155,8 @@ final class ContentUploader {
   Future<UploadOutcome> upload(
     String contentHash, {
     required String mediaType,
+    String? resuming,
+    void Function(UploadProgress progress)? onProgress,
   }) async {
     final size = await blobs.sizeOf(contentHash);
 
@@ -122,6 +167,24 @@ final class ContentUploader {
         code: codeBlobMissing,
         op: opUploadContent,
       );
+    }
+
+    // A session this device was part way through, continued. What it is worth
+    // is a large book on a mobile network: the node keeps what arrived, so the
+    // transfer picks up at nine tenths instead of at nothing.
+    if (resuming != null) {
+      final outcome = await _resume(
+        resuming,
+        contentHash,
+        size,
+        onProgress: onProgress,
+      );
+
+      if (outcome != null) {
+        return outcome;
+      }
+
+      _log.fine('the node is not holding $resuming; beginning again');
     }
 
     // The whole declaration is checked here, before a byte travels: the
@@ -141,57 +204,241 @@ final class ContentUploader {
       return UploadOutcome.alreadyHeld;
     }
 
-    await _send(started.uploadId, contentHash, size);
-
-    final finished = await api.finishUpload(started.uploadId);
-
-    _log.fine('sent $contentHash: ${finished.content}');
-
-    return finished.alreadyHeld ? UploadOutcome.alreadyHeld : UploadOutcome.sent;
+    return _deliver(
+      started.uploadId,
+      contentHash,
+      size,
+      onProgress: onProgress,
+    );
   }
 
-  /// Puts every chunk of [contentHash] into the upload [uploadId] names.
-  Future<void> _send(String uploadId, String contentHash, int size) async {
-    var offset = 0;
+  /// Continues [uploadId], or answers `null` if the node is not holding it.
+  ///
+  /// `null` and not a failure: an expired session, a finished one and a node
+  /// that has been restarted are all the same answer, and what the caller does
+  /// about it is begin again. D11 stages the bytes in a temporary file held in
+  /// the process, so a node restart really does invalidate a session this
+  /// device is still holding — which is why an identifier remembered across a
+  /// launch is a hint and never an assumption.
+  Future<UploadOutcome?> _resume(
+    String uploadId,
+    String contentHash,
+    int size, {
+    void Function(UploadProgress progress)? onProgress,
+  }) async {
+    try {
+      // Where the node is, asked with a chunk of no bytes. A chunk at an
+      // offset the node is not expecting is not written and the reply carries
+      // the offset it *is* expecting, so this costs one call and no transfer —
+      // where sending the first real chunk and being told it landed nowhere
+      // would cost a quarter of a megabyte on the network this whole shape
+      // exists for.
+      final at = await api.putChunk(
+        uploadId: uploadId,
+        offset: 0,
+        chunk: const <int>[],
+      );
 
-    await for (final chunk in _chunked(blobs.read(contentHash))) {
+      _log.fine('the node holds $at bytes of $contentHash');
+
+      return await _deliver(
+        uploadId,
+        contentHash,
+        size,
+        from: at,
+        onProgress: onProgress,
+      );
+    } on AppException catch (error) {
+      if (error.kind == ErrorKind.notFound) {
+        return null;
+      }
+
+      rethrow;
+    }
+  }
+
+  Future<UploadOutcome> _deliver(
+    String uploadId,
+    String contentHash,
+    int size, {
+    int from = 0,
+    void Function(UploadProgress progress)? onProgress,
+  }) async {
+    try {
+      await _send(
+        uploadId,
+        contentHash,
+        size,
+        from: from,
+        onProgress: onProgress,
+      );
+
+      final finished = await api.finishUpload(uploadId);
+
+      _log.fine('sent $contentHash: ${finished.content}');
+
+      // Another upload of the same file finished while this one was arriving.
+      // The bytes are identical by construction, since the digest is the key,
+      // so it is the answer this caller wanted reached by somebody else.
+      return finished.alreadyHeld
+          ? UploadOutcome.alreadyHeld
+          : UploadOutcome.sent;
+    } on Object catch (error) {
+      await _abandon(uploadId, error);
+
+      rethrow;
+    }
+  }
+
+  /// Tells the node to release an upload this device has given up on.
+  ///
+  /// A caller that never says so is not a leak — the node ends an upload
+  /// nobody has sent to for long enough — but a client that has given up
+  /// should say so rather than leave a partial file on somebody else's disk
+  /// until it expires.
+  ///
+  /// It never throws. The upload is already being abandoned; a failure to say
+  /// so is not a second thing for the caller to handle, and reporting it would
+  /// replace the reason the transfer stopped with the reason the courtesy did.
+  Future<void> discard(String uploadId) async {
+    try {
+      await api.discardUpload(uploadId);
+    } on Object catch (error) {
+      _log.fine('the upload $uploadId could not be discarded', error);
+    }
+  }
+
+  /// Discards [uploadId] unless [error] is worth resuming from.
+  ///
+  /// The distinction is the whole point of the chunked shape. A connection
+  /// that dropped is a transfer to continue — the node keeps what arrived and
+  /// this device asks again — so the session is *left standing*. Anything else
+  /// is this call having no business finishing: the store contradicted itself,
+  /// the node refused the declaration, the reader cancelled. Those release the
+  /// bytes.
+  Future<void> _abandon(String uploadId, Object error) async {
+    final kind = error is AppException ? error.kind : ErrorKind.unknown;
+
+    const resumable = <ErrorKind>{
+      ErrorKind.unavailable,
+      ErrorKind.deadlineExceeded,
+      ErrorKind.canceled,
+      ErrorKind.unknown,
+    };
+
+    if (resumable.contains(kind)) {
+      _log.fine('the upload $uploadId stopped and is left standing');
+
+      return;
+    }
+
+    await discard(uploadId);
+  }
+
+  /// Puts every chunk of [contentHash] into the upload [uploadId] names,
+  /// continuing from wherever the node says it is.
+  ///
+  /// This is the property the client stream did not have. A `PutEbookChunk`
+  /// reply carries `received_bytes`, which is how many bytes the node holds
+  /// and therefore the offset the next chunk must carry — so a caller that
+  /// finds it somewhere other than where it thought reads the file again from
+  /// *there*, and one that lost a reply and repeated a chunk is told the node
+  /// did not write it twice rather than corrupting the file.
+  Future<void> _send(
+    String uploadId,
+    String contentHash,
+    int size, {
+    int from = 0,
+    void Function(UploadProgress progress)? onProgress,
+  }) async {
+    var offset = from;
+    var stalled = 0;
+
+    while (offset < size) {
+      final reached = await _sendFrom(
+        uploadId,
+        contentHash,
+        offset,
+        onProgress: onProgress,
+        size: size,
+      );
+
+      if (reached > size) {
+        throw AppException(
+          kind: ErrorKind.internal,
+          message:
+              'the node holds $reached bytes of $contentHash, which is more '
+              'than the $size this device declared',
+          code: codeUploadOutOfStep,
+          op: opUploadContent,
+        );
+      }
+
+      if (reached == offset) {
+        // A pass that moved nothing. Once is the node telling this device
+        // where it really is; three times is a loop, and a caller stuck in one
+        // is worse off than a caller told the transfer failed.
+        if (++stalled > maxUploadRestarts) {
+          throw AppException(
+            kind: ErrorKind.failedPrecondition,
+            message:
+                'the upload of $contentHash made no progress past $offset',
+            code: codeUploadOutOfStep,
+            op: opUploadContent,
+          );
+        }
+      } else {
+        stalled = 0;
+      }
+
+      if (reached < offset) {
+        _log.fine('the node holds $reached of $contentHash; sending from there');
+      }
+
+      offset = reached;
+    }
+  }
+
+  /// Sends [contentHash] from [from], and answers where the node ended up.
+  ///
+  /// It stops at the first chunk the node did not write, because from that
+  /// point on every offset this device would send is wrong: the reply is the
+  /// truth and the caller reads the file again from it.
+  Future<int> _sendFrom(
+    String uploadId,
+    String contentHash,
+    int from, {
+    required int size,
+    void Function(UploadProgress progress)? onProgress,
+  }) async {
+    var offset = from;
+
+    await for (final chunk in _chunked(blobs.read(contentHash, from: from))) {
       final received = await api.putChunk(
         uploadId: uploadId,
         offset: offset,
         chunk: chunk,
       );
 
-      // A chunk that did not land is not an error on the wire: the node
-      // answers with the offset it *is* expecting, and a caller that ignored
-      // that would finish an upload the node holds a prefix of and be told at
-      // the end that the digest does not match. Continuing from what arrived
-      // is the commit below this one; refusing to go on is what makes the
-      // difference visible until then.
+      // Reported from the node's own count and never from this device's. It is
+      // the number a restart continues from, and a device that recorded what
+      // it *sent* would resume past bytes that never landed.
+      onProgress?.call(
+        UploadProgress(
+          uploadId: uploadId,
+          sentBytes: received,
+          totalBytes: size,
+        ),
+      );
+
       if (received != offset + chunk.length) {
-        throw AppException(
-          kind: ErrorKind.failedPrecondition,
-          message:
-              'the node holds $received bytes of $contentHash and this '
-              'device sent the chunk at $offset',
-          code: codeUploadOutOfStep,
-          op: opUploadContent,
-        );
+        return received;
       }
 
       offset = received;
     }
 
-    if (offset != size) {
-      // The stored object is shorter or longer than `sizeOf` said. It is this
-      // device's own store disagreeing with itself, and finishing would have
-      // the node refuse the digest with no useful explanation.
-      throw AppException(
-        kind: ErrorKind.internal,
-        message: 'the store answered $offset bytes for $contentHash, not $size',
-        code: codeBlobCorrupt,
-        op: opUploadContent,
-      );
-    }
+    return offset;
   }
 
   /// [source], regrouped into pieces of at most [chunkBytes].

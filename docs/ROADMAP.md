@@ -659,13 +659,22 @@ that reason.
       KiB, which is `internal/client`'s own number rather than a coincidence — gRPC refuses a
       message over four megabytes and a client that sized its chunks by the file would work on
       every book it was tested with and fail on the atlas
-- [ ] `feat: resume an interrupted upload` — the property the client stream did not have. A
+- [x] `feat: resume an interrupted upload` — the property the client stream did not have. A
       `PutEbookChunk` reply carries `received_bytes`, which is the offset the next chunk must
       carry, so a caller whose connection died continues from what arrived and one that lost a
       reply and repeated a chunk is told so rather than corrupting the file. `already_held` is
       handled at both ends: another device of the same reader may have sent the file in between,
       and then there is nothing to send. `DiscardEbookUpload` on abandonment, because a client
-      that has given up should say so
+      that has given up should say so. Two things came out of building it. A resumed session is
+      asked where it is with **a chunk of no bytes** — the node does not write a chunk at an
+      offset it is not expecting and answers with the offset it *is*, so the question costs one
+      call and no transfer, where sending the first real chunk to be told it landed nowhere would
+      cost a quarter of a megabyte on exactly the network this shape exists for. And a discard is
+      not what every failure deserves: a connection that dropped leaves the session **standing**,
+      because the node is holding what arrived and that is the whole point, while a refusal
+      nothing can improve — the node's ceiling, a store contradicting itself — releases it. A
+      failure to discard is never reported, because it would replace the reason the transfer
+      stopped with the reason the courtesy did
 - [ ] `feat: carry an upload across a restart` — the `upload_id` and the offset in the local
       database, so closing the app does not start a large book over. The node's `received_bytes`
       is the authority and this device's opinion is a hint: D11 stages the bytes in a temporary

@@ -161,6 +161,164 @@ void main() {
     );
   });
 
+  group('an interrupted upload', () {
+    test('continues from what the node kept', () async {
+      // The property the client stream did not have. The node holds what
+      // arrived, so a transfer that died at nine tenths picks up there instead
+      // of at nothing.
+      final digest = await store(blobs, List<int>.filled(200, 7));
+
+      node.claimed.add(digest);
+      node.dropAfter = 64;
+
+      await expectLater(
+        uploader.upload(digest, mediaType: 'application/epub+zip'),
+        throwsA(isA<AppException>()),
+      );
+
+      // The session was left standing, because a connection that dropped is a
+      // transfer to continue rather than one to release.
+      final open = node.uploads.keys.single;
+
+      expect(node.uploads[open]?.offset, 64);
+      expect(node.discarded, isEmpty);
+
+      node.chunks.clear();
+
+      final outcome = await uploader.upload(
+        digest,
+        mediaType: 'application/epub+zip',
+        resuming: open,
+      );
+
+      expect(outcome, UploadOutcome.sent);
+      expect(node.held[digest]?.length, 200);
+      // A chunk of no bytes to ask where the node is, and then the rest of the
+      // file from there. Nothing already delivered travels twice.
+      expect(node.chunks.first, (0, 0));
+      expect(node.chunks.skip(1), <(int, int)>[(64, 64), (128, 64), (192, 8)]);
+    });
+
+    test('begins again when the node is not holding the session', () async {
+      // An expired session, a finished one, and a node that has been restarted
+      // are the same answer. D11 stages the bytes in a file held in the
+      // process, so a restart really does invalidate an identifier this device
+      // is still holding — which is why one remembered across a launch is a
+      // hint and never an assumption.
+      final digest = await store(blobs, List<int>.filled(100, 7));
+
+      node.claimed.add(digest);
+
+      final outcome = await uploader.upload(
+        digest,
+        mediaType: 'application/epub+zip',
+        resuming: 'upload-that-is-gone',
+      );
+
+      expect(outcome, UploadOutcome.sent);
+      expect(node.held[digest]?.length, 100);
+    });
+
+    test('sends nothing more when the node already has all of it', () async {
+      final digest = await store(blobs, List<int>.filled(100, 7));
+
+      node.claimed.add(digest);
+      node.dropAfter = 100;
+
+      await expectLater(
+        uploader.upload(digest, mediaType: 'application/epub+zip'),
+        throwsA(isA<AppException>()),
+      );
+
+      final open = node.uploads.keys.single;
+
+      node.chunks.clear();
+
+      expect(
+        await uploader.upload(
+          digest,
+          mediaType: 'application/epub+zip',
+          resuming: open,
+        ),
+        UploadOutcome.sent,
+      );
+      // The probe, and not one byte after it.
+      expect(node.chunks, <(int, int)>[(0, 0)]);
+    });
+
+    test('reports where the node is, and not where this device thinks', () async {
+      final digest = await store(blobs, List<int>.filled(200, 7));
+      final seen = <int>[];
+
+      node.claimed.add(digest);
+
+      await uploader.upload(
+        digest,
+        mediaType: 'application/epub+zip',
+        onProgress: (UploadProgress progress) => seen.add(progress.sentBytes),
+      );
+
+      expect(seen, <int>[64, 128, 192, 200]);
+    });
+  });
+
+  group('an abandoned upload', () {
+    test('is released when this device has no business finishing it', () async {
+      // The node's ceiling, met part way through. No amount of waiting makes
+      // the file smaller, so this call has no business finishing and the node
+      // is told rather than left holding a partial file until it expires.
+      final digest = await store(blobs, List<int>.filled(200, 7));
+
+      node.claimed.add(digest);
+      node.refuseAfter = 64;
+
+      await expectLater(
+        uploader.upload(digest, mediaType: 'application/epub+zip'),
+        throwsA(isA<AppException>()),
+      );
+
+      expect(node.discarded, hasLength(1));
+      expect(node.uploads, isEmpty);
+    });
+
+    test('is left standing when the connection is what failed', () async {
+      final digest = await store(blobs, List<int>.filled(200, 7));
+
+      node.claimed.add(digest);
+      node.dropAfter = 64;
+
+      await expectLater(
+        uploader.upload(digest, mediaType: 'application/epub+zip'),
+        throwsA(isA<AppException>()),
+      );
+
+      expect(node.discarded, isEmpty);
+      expect(node.uploads, hasLength(1));
+    });
+
+    test('can be released on purpose', () async {
+      final digest = await store(blobs, List<int>.filled(200, 7));
+
+      node.claimed.add(digest);
+      node.dropAfter = 64;
+
+      await expectLater(
+        uploader.upload(digest, mediaType: 'application/epub+zip'),
+        throwsA(isA<AppException>()),
+      );
+
+      await uploader.discard(node.uploads.keys.single);
+
+      expect(node.uploads, isEmpty);
+    });
+
+    test('does not replace the reason it stopped with a second one', () async {
+      // Discarding is a courtesy. A failure to be courteous is not a second
+      // thing for the caller to handle.
+      await uploader.discard('never-existed');
+    });
+  });
+
   test('refuses a digest this device does not hold', () async {
     await expectLater(
       uploader.upload('0' * 64, mediaType: 'application/epub+zip'),
