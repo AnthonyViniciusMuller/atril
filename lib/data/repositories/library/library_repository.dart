@@ -25,6 +25,8 @@ import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
 import '../../../utils/result.dart';
+import '../../../utils/cancellation.dart';
+import '../../services/content/content_downloader.dart';
 import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_source.dart';
 
@@ -85,6 +87,31 @@ abstract interface class LibraryRepository {
 
   /// The groupings one work is filed under, as they change.
   Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId);
+
+  /// Brings the file of one work onto this device.
+  ///
+  /// It is the other half of what makes a book readable offline, and it is
+  /// separate from the record on purpose: a device holding the row and not the
+  /// bytes is the ordinary state of a book that has not been downloaded, and
+  /// on the web it is the ordinary state of every book the reader has not
+  /// asked to keep.
+  ///
+  /// A node that replicates this reader without their files answers that it
+  /// does not hold them, which is a legitimate state (D02) and reaches the
+  /// caller as [codeContentNotFound] rather than as something to retry.
+  ///
+  /// It is **not resumable**, and that is the contract's shape rather than a
+  /// shortcut: `DownloadEbookContentRequest` carries an e-book identifier and
+  /// no offset, so an interrupted transfer starts again. Nothing partial is
+  /// kept, so starting again is all it costs.
+  Future<Result<EbookContent>> downloadEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  });
+
+  /// Whether this device holds the bytes of one work.
+  Stream<Result<bool>> watchIsDownloaded(String ebookId);
 
   /// The cover this device extracted for one work, or `null`.
   ///

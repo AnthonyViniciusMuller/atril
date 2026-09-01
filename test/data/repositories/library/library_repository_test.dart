@@ -3,6 +3,7 @@ import 'package:atril/data/repositories/library/library_repository_impl.dart';
 import 'package:atril/data/services/api/library_api.dart';
 import 'package:atril/data/services/api/session.dart';
 import 'package:atril/data/services/channel/channel.dart';
+import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/content/content_uploader.dart';
 import 'package:atril/data/services/content/upload_queue.dart';
 import 'package:atril/data/services/files/file_source.dart';
@@ -49,6 +50,20 @@ AtrilDatabase _open() {
 /// The store the repository writes a book's bytes into.
 late MemoryBlobStore blobs;
 
+/// A client pointed at a node nothing is listening on.
+///
+/// These tests are about what an import writes to this device, and nothing in
+/// them reaches a node: a transfer is a row in a queue here, and the queue is
+/// never run. A client dialling nowhere is what makes that visible — a test
+/// that started talking to a node would fail rather than quietly pass.
+LibraryApi _api() => LibraryApi(
+  connection: NodeConnection(NodeEndpoint(authority: 'nowhere.example:9090')),
+  session: SessionHolder(
+    store: MemorySessionStore(),
+    refresher: () => throw StateError('an import dials nothing'),
+  ),
+);
+
 int _minted = 0;
 
 String _nextId() =>
@@ -85,22 +100,12 @@ Future<LibraryRepository> _repository(
       mint: _nextId,
     ),
     blobs: blobs,
+    downloads: ContentDownloader(api: _api(), blobs: blobs),
     uploads: UploadQueue(
       database: database,
       // The queue is never run in these tests. What is being checked is that
       // an import leaves the node owed a file, which is a row and not a call.
-      uploader: ContentUploader(
-        api: LibraryApi(
-          connection: NodeConnection(
-            NodeEndpoint(authority: 'nowhere.example:9090'),
-          ),
-          session: SessionHolder(
-            store: MemorySessionStore(),
-            refresher: () => throw StateError('an import dials nothing'),
-          ),
-        ),
-        blobs: blobs,
-      ),
+      uploader: ContentUploader(api: _api(), blobs: blobs),
       now: () => _at,
     ),
     mint: _nextId,

@@ -367,6 +367,14 @@ Recorded here because each one shapes a screen rather than a line of code.
   it lands.
 - **D10**: the browser is a client the specification never described, and 4.2.4 has to record
   that its transport is gRPC-Web translated by the gateway, not by the node.
+- **The download is not resumable, and there is nothing to make it so with.**
+  `DownloadEbookContentRequest` carries an e-book identifier and no offset and no range, so a
+  node cannot be asked for the second half of a file — the upload's whole property, read the
+  other way, is simply absent. What the stream does give is the description before the bytes, so
+  a client knows the digest and the length in advance: `data/services/content` hashes what
+  arrives and checks it before committing, since `BlobWrite.commit` names an object rather than
+  checking one. Nothing partial is stored, which is what makes starting again all an
+  interruption costs.
 - **D11**: UC02 is served by two shapes that differ in how the bytes arrive and in nothing else.
   The chunked one makes the node stateful between calls, which is the second reason its
   deployment runs a single replica.

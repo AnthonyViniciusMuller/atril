@@ -9,6 +9,7 @@ import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
 import '../../../domain/models/operation.dart';
+import '../../../utils/cancellation.dart';
 import '../../../utils/collation.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/identifiers.dart';
@@ -17,6 +18,7 @@ import '../../../utils/result.dart';
 import 'dart:typed_data';
 
 import '../../services/api/errors.dart';
+import '../../services/content/content_downloader.dart';
 import '../../services/content/upload_queue.dart';
 import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_kind.dart';
@@ -36,6 +38,9 @@ const String opReadLibrary = 'library/collection: read';
 /// The operation an import reports under.
 const String opImport = 'library/collection: import';
 
+/// The operation a download reports under.
+const String opDownload = 'library/content: download';
+
 /// The reader's collection, read out of drift.
 final class LibraryRepositoryImpl implements LibraryRepository {
   /// The repository over [library], writing through [author] and keeping the
@@ -49,6 +54,7 @@ final class LibraryRepositoryImpl implements LibraryRepository {
     required this.author,
     required this.blobs,
     required this.uploads,
+    required this.downloads,
     String Function()? mint,
     DateTime Function()? now,
   }) : _mint = mint ?? mintIdentifier,
@@ -66,6 +72,9 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
   /// What the node is owed, and what eventually pays it.
   final UploadQueue uploads;
+
+  /// What brings a file the other way.
+  final ContentDownloader downloads;
 
   final String Function() _mint;
   final DateTime Function() _now;
@@ -165,6 +174,86 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       _log.warning('${file.name} could not be imported', error, stackTrace);
 
       return Result<Ebook>.error(failureFrom(error, op: opImport));
+    }
+  }
+
+  @override
+  Future<Result<EbookContent>> downloadEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  }) async {
+    try {
+      final work = await library.readEbook(ebookId);
+
+      if (work == null || work.deleted) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opDownload,
+        );
+      }
+
+      final content = await downloads.download(
+        ebookId: ebookId,
+        // The digest the *work* names, and not whatever arrives. It is what
+        // the transfer is checked against, so that a node sending something
+        // else is caught here rather than by a reader opening gibberish.
+        expectedHash: work.contentHash,
+        cancel: cancel,
+        onProgress: onProgress,
+      );
+
+      // The file is here now, so a cover can be read out of it — which is the
+      // whole reason a cover is derived per device rather than replicated. A
+      // work downloaded on a second device gets its own.
+      await _keepCoverOf(work);
+
+      return Result<EbookContent>.ok(content);
+    } on Object catch (error, stackTrace) {
+      _log.warning('the file of $ebookId did not arrive', error, stackTrace);
+
+      return Result<EbookContent>.error(failureFrom(error, op: opDownload));
+    }
+  }
+
+  @override
+  Stream<Result<bool>> watchIsDownloaded(String ebookId) => _guard(
+    // It follows the *work* and not the digest, because a work whose row
+    // arrives by synchronization before its file is the ordinary case and the
+    // screen has to stop saying *not here* the moment the bytes land.
+    library.watchEbook(ebookId).asyncMap(
+      (row) async =>
+          row != null && await blobs.contains(row.contentHash),
+    ),
+  );
+
+  /// Extracts and keeps the cover of [work], if this device can read one.
+  ///
+  /// It never throws: the file is on the device either way, and failing a
+  /// download over a picture would throw away the thing the reader asked for.
+  Future<void> _keepCoverOf(EbookRow work) async {
+    if (await library.readCover(work.id) != null) {
+      return;
+    }
+
+    final format = EbookFormat.parse(work.format);
+    final described = format == null
+        ? null
+        : await _describe(
+            format,
+            StoredBlob(
+              contentHash: work.contentHash,
+              sizeBytes: work.sizeBytes ?? 0,
+            ),
+          );
+
+    if (described?.cover case final EpubCover cover) {
+      await library.saveCover(
+        ebookId: work.id,
+        mediaType: cover.mediaType,
+        bytes: cover.bytes,
+      );
     }
   }
 

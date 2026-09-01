@@ -692,9 +692,23 @@ that reason.
       the row saying nought while the node holds sixty-four bytes, and the resume asks the node
       rather than believing the row. A device that wrote down what it sent would resume past
       bytes that never landed and find out at the digest, after the whole file had travelled
-- [ ] `feat: add content download` — `DownloadEbookContent` into the blob store, resumable,
-      cancellable, and reported per book. A node that replicates this reader without their files
-      answers that it does not hold them, and that is a legitimate state and not an error
+- [x] `feat: add content download` — `DownloadEbookContent` into the blob store, ~~resumable~~
+      **not resumable, and it cannot be**, cancellable, and reported per book. A node that
+      replicates this reader without their files answers that it does not hold them, and that is
+      a legitimate state and not an error (D02). The correction is the contract's shape rather
+      than a shortcut: `DownloadEbookContentRequest` carries an e-book identifier and *no offset
+      and no range*, so there is no way to ask a node for the second half of a file, and an
+      interrupted transfer starts again. What the contract does give is the description **first**,
+      before any bytes — so the digest and the length are known in advance, and that is what this
+      commit spends. The bytes are hashed as they arrive and checked against the digest the
+      *work* names before anything is committed, because `BlobWrite.commit` names an object
+      rather than checking one: a truncated or altered transfer stored under a name that promises
+      otherwise is exactly what the digest exists to prevent, and the only place to notice is
+      here. Nothing partial is ever kept, which is also what makes starting again all an
+      interruption costs, and cancelling discards for the same reason — a reader who stopped a
+      download has stopped wanting the book on this device. Cancelling **breaks out of** the
+      stream rather than throwing out of it, which is what ends the call rather than abandoning a
+      stream the transport is still holding open
 - [ ] `feat: add offline pinning` — which books this device keeps. On the five native targets
       every book is kept and the control is there to release one; on the web nothing is kept
       until the reader says so, and the screen shows what is held against the budget phase 3

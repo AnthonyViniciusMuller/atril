@@ -201,6 +201,78 @@ final class FakeContentService extends FakeLibraryService {
     );
   }
 
+  /// Which digest each work names, so a download can be asked for by work.
+  final Map<String, String> works = <String, String>{};
+
+  /// How many bytes to send before the stream fails, or `-1` to send it all.
+  int cutAfter = -1;
+
+  /// What the node claims the file is, overriding the digest it sends under.
+  ///
+  /// It is how a test reaches the one case the digest exists to catch: a node
+  /// answering with bytes that are not what it says they are.
+  String? misdescribe;
+
+  /// How many bytes travel in one message, as the node's own controller does.
+  int downloadChunk = 64;
+
+  /// How long the node waits between messages.
+  ///
+  /// Nought by default, which delivers a small file in one flight. A test
+  /// about cancelling needs a transfer that is actually still going when the
+  /// reader changes their mind, and a pause is what a node reading a file off
+  /// an object store has anyway.
+  Duration downloadPause = Duration.zero;
+
+  @override
+  Stream<lib.DownloadEbookContentResponse> downloadEbookContent(
+    ServiceCall call,
+    lib.DownloadEbookContentRequest request,
+  ) async* {
+    final digest = works[request.ebookId];
+    final bytes = digest == null ? null : held[digest];
+
+    if (bytes == null) {
+      // A node may replicate this reader's records without their files, which
+      // is the cheap copy a reader is most likely to want on a node they do
+      // not own (D02). It is a state and not a failure.
+      throw GrpcError.custom(
+        StatusCode.notFound,
+        'this node does not hold that file',
+        <ErrorInfo>[
+          ErrorInfo(reason: 'content_not_found', domain: 'quire.v1'),
+        ],
+      );
+    }
+
+    yield lib.DownloadEbookContentResponse(
+      content: lib.EbookContent(
+        contentHash: misdescribe ?? digest,
+        sizeBytes: Int64(bytes.length),
+        mediaType: 'application/epub+zip',
+      ),
+    );
+
+    var sent = 0;
+
+    for (var at = 0; at < bytes.length; at += downloadChunk) {
+      final to = (at + downloadChunk).clamp(0, bytes.length);
+
+      if (cutAfter >= 0 && sent >= cutAfter) {
+        throw GrpcError.unavailable('the connection dropped');
+      }
+
+      if (downloadPause > Duration.zero) {
+        await Future<void>.delayed(downloadPause);
+      }
+
+      yield lib.DownloadEbookContentResponse(
+        chunk: Uint8List.sublistView(bytes, at, to),
+      );
+      sent = to;
+    }
+  }
+
   @override
   Future<lib.DiscardEbookUploadResponse> discardEbookUpload(
     ServiceCall call,

@@ -14,6 +14,7 @@ import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
+import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/domain/crdt/revision.dart';
@@ -23,6 +24,7 @@ import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/domain/models/server.dart';
 import 'package:atril/domain/models/user.dart';
+import 'package:atril/utils/cancellation.dart';
 import 'package:atril/utils/result.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -264,6 +266,41 @@ final class FakeLibraryRepository implements LibraryRepository {
   @override
   Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId) =>
       groupings.stream;
+
+  /// The works whose bytes this device holds.
+  final Set<String> downloaded = <String>{};
+
+  /// Every work a download was asked for, in order.
+  final List<String> fetches = <String>[];
+
+  @override
+  Future<Result<EbookContent>> downloadEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  }) async {
+    fetches.add(ebookId);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<EbookContent>.error(refused);
+    }
+
+    downloaded.add(ebookId);
+
+    return Result<EbookContent>.ok(
+      const EbookContent(
+        contentHash: '0000000000000000000000000000000000000000000000000000000000000000',
+        sizeBytes: 3,
+        mediaType: 'application/epub+zip',
+      ),
+    );
+  }
+
+  @override
+  Stream<Result<bool>> watchIsDownloaded(String ebookId) =>
+      works.stream.map((_) => Result<bool>.ok(downloaded.contains(ebookId)));
 
   /// The covers this device has, by work.
   final Map<String, EpubCover> covers = <String, EpubCover>{};

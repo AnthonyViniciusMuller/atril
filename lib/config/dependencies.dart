@@ -44,6 +44,7 @@ import '../data/services/api/reading_api.dart';
 import '../data/services/api/session.dart';
 import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
+import '../data/services/content/content_downloader.dart';
 import '../data/services/content/content_uploader.dart';
 import '../data/services/content/upload_queue.dart';
 import '../data/services/discovery/well_known.dart';
@@ -230,6 +231,12 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         blobs: blobs,
       ),
     ),
+    Provider<ContentDownloader>(
+      create: (BuildContext context) => ContentDownloader(
+        api: context.read<LibraryApi>(),
+        blobs: blobs,
+      ),
+    ),
     Provider<UploadQueue>(
       create: (BuildContext context) => UploadQueue(
         database: database,
@@ -243,6 +250,7 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         author: context.read<OperationAuthor>(),
         blobs: blobs,
         uploads: context.read<UploadQueue>(),
+        downloads: context.read<ContentDownloader>(),
       ),
     ),
 
