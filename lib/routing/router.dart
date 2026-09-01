@@ -35,6 +35,7 @@ import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/federation/widgets/known_servers_screen.dart';
+import '../ui/federation/widgets/replicas_screen.dart';
 import '../ui/library/widgets/ebook_edit_screen.dart';
 import '../ui/library/widgets/ebook_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
@@ -232,6 +233,11 @@ GoRouter atrilRouter({
                     path: Routes.serversSegment,
                     builder: (BuildContext context, GoRouterState state) =>
                         const KnownServersScreen(),
+                  ),
+                  GoRoute(
+                    path: Routes.replicasSegment,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ReplicasScreen(),
                   ),
                 ],
               ),

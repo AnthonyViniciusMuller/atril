@@ -191,6 +191,13 @@ abstract final class Routes {
   /// three is what a reader navigates *between*.
   static const String servers = '$settings/$serversSegment';
 
+  /// The path segment the replica permissions are shown under, relative to
+  /// [settings].
+  static const String replicasSegment = 'replicas';
+
+  /// Where the reader says which nodes may hold a copy of their data (UC15).
+  static const String replicas = '$settings/$replicasSegment';
+
   /// The destinations that share the shell, in the order the navigation
   /// surface shows them.
   ///

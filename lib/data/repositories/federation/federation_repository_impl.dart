@@ -24,6 +24,15 @@ const String opRefreshServer = 'federation/servers: refresh';
 /// The operation forgetting a node reports under.
 const String opForgetServer = 'federation/servers: forget';
 
+/// The operation reading the replica permissions reports under.
+const String opReplicas = 'federation/replicas: list';
+
+/// The operation granting one reports under.
+const String opAuthorizeReplica = 'federation/replicas: authorize';
+
+/// The operation withdrawing one reports under.
+const String opRevokeReplica = 'federation/replicas: revoke';
+
 /// The stable code of a domain that is not one a lookup can be addressed to.
 const String codeInvalidDomain = 'invalid_server_domain';
 
@@ -155,6 +164,57 @@ final class FederationRepositoryImpl implements FederationRepository {
       return const Result<void>.ok(null);
     } on Exception catch (error) {
       return Result<void>.error(failureFrom(error, op: opForgetServer));
+    }
+  }
+
+  @override
+  Future<Result<List<ReplicaAuthorization>>> replicas() async {
+    try {
+      return Result<List<ReplicaAuthorization>>.ok(
+        // The revoked ones included: they are what explains a peer that still
+        // holds data, and a sovereignty screen that showed only the live
+        // grants would answer *nobody* about a node that has a copy.
+        await federation.listReplicaAuthorizations(includeInactive: true),
+      );
+    } on Exception catch (error) {
+      return Result<List<ReplicaAuthorization>>.error(
+        failureFrom(error, op: opReplicas),
+      );
+    }
+  }
+
+  @override
+  Future<Result<ReplicaAuthorization>> authorizeReplica({
+    required String serverId,
+    required bool replicatesFiles,
+  }) async {
+    try {
+      final granted = await federation.authorizeReplica(
+        serverId: serverId,
+        replicatesFiles: replicatesFiles,
+      );
+
+      _log.info(
+        '${granted.serverDomain} may hold a copy'
+        '${replicatesFiles ? ', files included' : ', metadata only'}',
+      );
+
+      return Result<ReplicaAuthorization>.ok(granted);
+    } on Exception catch (error) {
+      return Result<ReplicaAuthorization>.error(
+        failureFrom(error, op: opAuthorizeReplica),
+      );
+    }
+  }
+
+  @override
+  Future<Result<void>> revokeReplica(String serverId) async {
+    try {
+      await federation.revokeReplica(serverId);
+
+      return const Result<void>.ok(null);
+    } on Exception catch (error) {
+      return Result<void>.error(failureFrom(error, op: opRevokeReplica));
     }
   }
 

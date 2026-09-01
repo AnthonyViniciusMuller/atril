@@ -61,6 +61,35 @@ abstract interface class FederationRepository {
   /// tells — a rotation and an interception look identical from here.
   Future<Result<ServerRefresh>> refreshServer(String serverId);
 
+  /// UC15, read. Which nodes hold a copy, which of them hold the files, and
+  /// which used to.
+  ///
+  /// The revoked ones are included, and they are the half a sovereignty screen
+  /// cannot leave out: revoking stops the replication and does not reach into
+  /// another operator's database, so a permission that once existed is the
+  /// only thing that explains a peer still holding data.
+  Future<Result<List<ReplicaAuthorization>>> replicas();
+
+  /// UC15, RF16. Allows the node [serverId] to hold a copy, with the files or
+  /// without them.
+  ///
+  /// **It grants a permission it cannot complete.** C22: nothing in the
+  /// contract can tell a node that it is a replica, so what this writes is the
+  /// record on the reader's own node and the federation itself is arranged out
+  /// of band between the two operators. The screen says so rather than
+  /// appearing to have worked.
+  Future<Result<ReplicaAuthorization>> authorizeReplica({
+    required String serverId,
+    required bool replicatesFiles,
+  });
+
+  /// UC15, RF16. Withdraws that permission.
+  ///
+  /// It stops the replication. It does not reach into another operator's
+  /// database, and the record is deactivated rather than removed for exactly
+  /// that reason.
+  Future<Result<void>> revokeReplica(String serverId);
+
   /// UC12, delete. Takes [server] out of the catalogue.
   ///
   /// The node refuses while an active authorization names it, and that refusal

@@ -46,6 +46,13 @@ class FederationSection extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.go(Routes.servers),
         ),
+        ListTile(
+          leading: const Icon(Icons.copy_all_outlined),
+          title: Text(l10n.settingsReplicas),
+          subtitle: Text(l10n.settingsReplicasExplanation),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.replicas),
+        ),
       ],
     );
   }

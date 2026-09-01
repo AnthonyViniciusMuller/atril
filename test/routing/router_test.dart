@@ -15,6 +15,7 @@ import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
 import 'package:atril/ui/federation/widgets/known_servers_screen.dart';
+import 'package:atril/ui/federation/widgets/replicas_screen.dart';
 import 'package:atril/ui/library/widgets/ebook_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
 import 'package:atril/ui/onboarding/widgets/register_screen.dart';
@@ -313,7 +314,7 @@ void main() {
     expect(find.byType(AnnotationsScreen), findsOneWidget);
   });
 
-  testWidgets('the catalogue of nodes is a location below the settings', (
+  testWidgets('the federation screens are locations below the settings', (
     WidgetTester tester,
   ) async {
     // Below and not beside: the shell has three destinations because three is
@@ -333,6 +334,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(KnownServersScreen), findsOneWidget);
+
+    router.go(Routes.replicas);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ReplicasScreen), findsOneWidget);
   });
 
   test('the shell destinations are the branches, in order', () {

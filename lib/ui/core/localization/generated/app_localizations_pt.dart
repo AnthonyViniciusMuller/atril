@@ -1154,6 +1154,109 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get federationCancel => 'Cancelar';
+
+  @override
+  String get settingsReplicas => 'Réplicas autorizadas';
+
+  @override
+  String get settingsReplicasExplanation =>
+      'Quem pode guardar uma cópia dos seus dados.';
+
+  @override
+  String get replicasExplanation =>
+      'Autorizar um servidor é dizer que ele pode guardar uma cópia da sua biblioteca. Só os servidores nomeados aqui recebem alguma coisa.';
+
+  @override
+  String get replicasOutOfBand =>
+      'A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.';
+
+  @override
+  String get replicasNone => 'Nenhum servidor guarda uma cópia dos seus dados.';
+
+  @override
+  String get replicasFailed =>
+      'Não foi possível ler as autorizações. O servidor não respondeu.';
+
+  @override
+  String get replicasGrantedSection => 'Guardam uma cópia';
+
+  @override
+  String get replicasRevokedSection => 'Guardaram uma cópia';
+
+  @override
+  String get replicasRevokedExplanation =>
+      'A replicação parou. O que estes servidores já receberam continua com eles: revogar não alcança o banco de outro operador.';
+
+  @override
+  String get replicasWithFiles => 'Metadados e arquivos';
+
+  @override
+  String get replicasWithoutFiles => 'Só metadados';
+
+  @override
+  String get replicasWithFilesExplanation =>
+      'Tudo, inclusive os arquivos dos livros. Ocupa neste servidor o mesmo espaço que a sua biblioteca ocupa.';
+
+  @override
+  String get replicasWithoutFilesExplanation =>
+      'Os seus livros, estantes e marcações — sem os arquivos. É a réplica barata, e costuma ser a que se quer num servidor que não é seu.';
+
+  @override
+  String replicasGrantedAt(String date) {
+    return 'Autorizado em $date';
+  }
+
+  @override
+  String get replicasAuthorize => 'Autorizar um servidor';
+
+  @override
+  String get replicasChooseServer => 'Qual servidor';
+
+  @override
+  String get replicasNoCandidates =>
+      'Todos os servidores do seu catálogo já estão autorizados. Adicione outro em Servidores conhecidos.';
+
+  @override
+  String get replicasCandidateUndialable =>
+      'Não publica endereço gRPC — nada replica para ele.';
+
+  @override
+  String replicasChooseWhat(String domain) {
+    return 'O que $domain vai guardar';
+  }
+
+  @override
+  String get replicasConfirm => 'Autorizar';
+
+  @override
+  String replicasAuthorized(String domain) {
+    return '$domain pode guardar uma cópia.';
+  }
+
+  @override
+  String get replicasAuthorizeFailed =>
+      'Não foi possível autorizar este servidor.';
+
+  @override
+  String get replicasRevoke => 'Revogar';
+
+  @override
+  String replicasRevokeTitle(String domain) {
+    return 'Revogar $domain?';
+  }
+
+  @override
+  String get replicasRevokeExplanation =>
+      'A replicação para. O que este servidor já recebeu continua com ele — revogar não apaga nada do banco de outro operador, e é por isso que a autorização revogada continua na lista.';
+
+  @override
+  String replicasRevoked(String domain) {
+    return '$domain não recebe mais nada.';
+  }
+
+  @override
+  String get replicasRevokeFailed =>
+      'Não foi possível revogar esta autorização.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -2305,4 +2408,107 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get federationCancel => 'Cancelar';
+
+  @override
+  String get settingsReplicas => 'Réplicas autorizadas';
+
+  @override
+  String get settingsReplicasExplanation =>
+      'Quem pode guardar uma cópia dos seus dados.';
+
+  @override
+  String get replicasExplanation =>
+      'Autorizar um servidor é dizer que ele pode guardar uma cópia da sua biblioteca. Só os servidores nomeados aqui recebem alguma coisa.';
+
+  @override
+  String get replicasOutOfBand =>
+      'A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.';
+
+  @override
+  String get replicasNone => 'Nenhum servidor guarda uma cópia dos seus dados.';
+
+  @override
+  String get replicasFailed =>
+      'Não foi possível ler as autorizações. O servidor não respondeu.';
+
+  @override
+  String get replicasGrantedSection => 'Guardam uma cópia';
+
+  @override
+  String get replicasRevokedSection => 'Guardaram uma cópia';
+
+  @override
+  String get replicasRevokedExplanation =>
+      'A replicação parou. O que estes servidores já receberam continua com eles: revogar não alcança o banco de outro operador.';
+
+  @override
+  String get replicasWithFiles => 'Metadados e arquivos';
+
+  @override
+  String get replicasWithoutFiles => 'Só metadados';
+
+  @override
+  String get replicasWithFilesExplanation =>
+      'Tudo, inclusive os arquivos dos livros. Ocupa neste servidor o mesmo espaço que a sua biblioteca ocupa.';
+
+  @override
+  String get replicasWithoutFilesExplanation =>
+      'Os seus livros, estantes e marcações — sem os arquivos. É a réplica barata, e costuma ser a que se quer num servidor que não é seu.';
+
+  @override
+  String replicasGrantedAt(String date) {
+    return 'Autorizado em $date';
+  }
+
+  @override
+  String get replicasAuthorize => 'Autorizar um servidor';
+
+  @override
+  String get replicasChooseServer => 'Qual servidor';
+
+  @override
+  String get replicasNoCandidates =>
+      'Todos os servidores do seu catálogo já estão autorizados. Adicione outro em Servidores conhecidos.';
+
+  @override
+  String get replicasCandidateUndialable =>
+      'Não publica endereço gRPC — nada replica para ele.';
+
+  @override
+  String replicasChooseWhat(String domain) {
+    return 'O que $domain vai guardar';
+  }
+
+  @override
+  String get replicasConfirm => 'Autorizar';
+
+  @override
+  String replicasAuthorized(String domain) {
+    return '$domain pode guardar uma cópia.';
+  }
+
+  @override
+  String get replicasAuthorizeFailed =>
+      'Não foi possível autorizar este servidor.';
+
+  @override
+  String get replicasRevoke => 'Revogar';
+
+  @override
+  String replicasRevokeTitle(String domain) {
+    return 'Revogar $domain?';
+  }
+
+  @override
+  String get replicasRevokeExplanation =>
+      'A replicação para. O que este servidor já recebeu continua com ele — revogar não apaga nada do banco de outro operador, e é por isso que a autorização revogada continua na lista.';
+
+  @override
+  String replicasRevoked(String domain) {
+    return '$domain não recebe mais nada.';
+  }
+
+  @override
+  String get replicasRevokeFailed =>
+      'Não foi possível revogar esta autorização.';
 }

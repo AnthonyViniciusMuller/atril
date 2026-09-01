@@ -2042,6 +2042,168 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Cancelar'**
   String get federationCancel;
+
+  /// Item da tela de configurações que leva à tela onde o leitor autoriza um servidor a guardar uma cópia dos seus dados. Também é o título dessa tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Réplicas autorizadas'**
+  String get settingsReplicas;
+
+  /// Subtítulo do item das configurações que leva às réplicas autorizadas. Uma frase dizendo o que o leitor vai encontrar lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Quem pode guardar uma cópia dos seus dados.'**
+  String get settingsReplicasExplanation;
+
+  /// Parágrafo de abertura da tela de réplicas autorizadas, dizendo o que uma autorização significa. RN03 e RF16.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autorizar um servidor é dizer que ele pode guardar uma cópia da sua biblioteca. Só os servidores nomeados aqui recebem alguma coisa.'**
+  String get replicasExplanation;
+
+  /// Nota permanente na tela de réplicas, dizendo o que a autorização alcança e o que não alcança. É a correção C22: nada no contrato informa um nó de que ele é réplica, e a tela diz isso em vez de parecer ter funcionado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.'**
+  String get replicasOutOfBand;
+
+  /// Mensagem mostrada quando não há nenhuma autorização em vigor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhum servidor guarda uma cópia dos seus dados.'**
+  String get replicasNone;
+
+  /// Mensagem mostrada quando a leitura das autorizações falhou. A tela lê direto do servidor, então não há uma lista antiga para mostrar no lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler as autorizações. O servidor não respondeu.'**
+  String get replicasFailed;
+
+  /// Cabeçalho da seção que lista as autorizações em vigor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Guardam uma cópia'**
+  String get replicasGrantedSection;
+
+  /// Cabeçalho da seção que lista as autorizações revogadas. Elas continuam visíveis porque são o que explica um servidor que ainda tem dados seus.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Guardaram uma cópia'**
+  String get replicasRevokedSection;
+
+  /// Parágrafo abaixo do cabeçalho das autorizações revogadas, dizendo por que elas continuam listadas e o que a revogação de fato faz.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A replicação parou. O que estes servidores já receberam continua com eles: revogar não alcança o banco de outro operador.'**
+  String get replicasRevokedExplanation;
+
+  /// Rótulo da autorização que cobre também os arquivos dos livros, na lista e na escolha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Metadados e arquivos'**
+  String get replicasWithFiles;
+
+  /// Rótulo da autorização que cobre apenas os registros — livros, estantes, marcações — e não os arquivos.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Só metadados'**
+  String get replicasWithoutFiles;
+
+  /// Frase que explica a opção de replicar também os arquivos, na escolha do que a réplica cobre.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tudo, inclusive os arquivos dos livros. Ocupa neste servidor o mesmo espaço que a sua biblioteca ocupa.'**
+  String get replicasWithFilesExplanation;
+
+  /// Frase que explica a opção de replicar só os metadados. Diz por que ela costuma ser a escolha certa num servidor de outro operador.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Os seus livros, estantes e marcações — sem os arquivos. É a réplica barata, e costuma ser a que se quer num servidor que não é seu.'**
+  String get replicasWithoutFilesExplanation;
+
+  /// Linha que diz quando uma autorização foi concedida. O parâmetro vem da localização do sistema.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autorizado em {date}'**
+  String replicasGrantedAt(String date);
+
+  /// Rótulo da ação que abre a escolha de qual servidor conhecido passará a guardar uma cópia.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autorizar um servidor'**
+  String get replicasAuthorize;
+
+  /// Título do diálogo em que o leitor escolhe, entre os servidores do catálogo, qual vai guardar uma cópia.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Qual servidor'**
+  String get replicasChooseServer;
+
+  /// Mensagem mostrada no lugar da lista de candidatos quando não sobrou nenhum servidor para autorizar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todos os servidores do seu catálogo já estão autorizados. Adicione outro em Servidores conhecidos.'**
+  String get replicasNoCandidates;
+
+  /// Aviso na linha de um servidor candidato que não publica endereço gRPC. A autorização é aceita e nenhum dado chega lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não publica endereço gRPC — nada replica para ele.'**
+  String get replicasCandidateUndialable;
+
+  /// Título do diálogo em que o leitor escolhe se a réplica cobre os arquivos além dos metadados. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que {domain} vai guardar'**
+  String replicasChooseWhat(String domain);
+
+  /// Rótulo do botão que conclui a autorização de um servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Autorizar'**
+  String get replicasConfirm;
+
+  /// Confirmação mostrada depois que uma autorização é concedida. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} pode guardar uma cópia.'**
+  String replicasAuthorized(String domain);
+
+  /// Erro mostrado quando a concessão de uma autorização falha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível autorizar este servidor.'**
+  String get replicasAuthorizeFailed;
+
+  /// Rótulo da ação que retira de um servidor a permissão de guardar uma cópia.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Revogar'**
+  String get replicasRevoke;
+
+  /// Título da confirmação de revogação de uma autorização. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Revogar {domain}?'**
+  String replicasRevokeTitle(String domain);
+
+  /// Corpo da confirmação de revogação. Diz exatamente o que a revogação faz e o que ela não pode fazer, para que o leitor não a tome por um apagamento remoto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A replicação para. O que este servidor já recebeu continua com ele — revogar não apaga nada do banco de outro operador, e é por isso que a autorização revogada continua na lista.'**
+  String get replicasRevokeExplanation;
+
+  /// Confirmação mostrada depois que uma autorização é revogada. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} não recebe mais nada.'**
+  String replicasRevoked(String domain);
+
+  /// Erro mostrado quando a revogação de uma autorização falha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível revogar esta autorização.'**
+  String get replicasRevokeFailed;
 }
 
 class _AppLocalizationsDelegate

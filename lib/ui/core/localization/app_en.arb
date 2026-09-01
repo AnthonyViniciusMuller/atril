@@ -672,5 +672,86 @@
   "@federationActiveFailed": {},
 
   "federationCancel": "Cancel",
-  "@federationCancel": {}
+  "@federationCancel": {},
+
+  "settingsReplicas": "Authorized replicas",
+  "@settingsReplicas": {},
+
+  "settingsReplicasExplanation": "Who may hold a copy of your data.",
+  "@settingsReplicasExplanation": {},
+
+  "replicasExplanation": "Authorizing a server says it may keep a copy of your library. Only the servers named here receive anything.",
+  "@replicasExplanation": {},
+
+  "replicasOutOfBand": "The permission is recorded on your own server. The protocol has no way to tell the other server that it is now a replica — that is arranged between whoever runs the two.",
+  "@replicasOutOfBand": {},
+
+  "replicasNone": "No server holds a copy of your data.",
+  "@replicasNone": {},
+
+  "replicasFailed": "The authorizations could not be read. The node did not answer.",
+  "@replicasFailed": {},
+
+  "replicasGrantedSection": "Holding a copy",
+  "@replicasGrantedSection": {},
+
+  "replicasRevokedSection": "Used to hold a copy",
+  "@replicasRevokedSection": {},
+
+  "replicasRevokedExplanation": "Replication stopped. Whatever these servers already received is still with them: revoking does not reach into another operator’s database.",
+  "@replicasRevokedExplanation": {},
+
+  "replicasWithFiles": "Metadata and files",
+  "@replicasWithFiles": {},
+
+  "replicasWithoutFiles": "Metadata only",
+  "@replicasWithoutFiles": {},
+
+  "replicasWithFilesExplanation": "Everything, the e-book files included. It costs that server the space your library takes.",
+  "@replicasWithFilesExplanation": {},
+
+  "replicasWithoutFilesExplanation": "Your books, shelves and marks — without the files. It is the cheap replica, and usually the one worth having on a server that is not yours.",
+  "@replicasWithoutFilesExplanation": {},
+
+  "replicasGrantedAt": "Authorized on {date}",
+  "@replicasGrantedAt": {},
+
+  "replicasAuthorize": "Authorize a server",
+  "@replicasAuthorize": {},
+
+  "replicasChooseServer": "Which server",
+  "@replicasChooseServer": {},
+
+  "replicasNoCandidates": "Every server in your catalogue is already authorized. Add another under Known servers.",
+  "@replicasNoCandidates": {},
+
+  "replicasCandidateUndialable": "Publishes no gRPC address — nothing replicates to it.",
+  "@replicasCandidateUndialable": {},
+
+  "replicasChooseWhat": "What {domain} will hold",
+  "@replicasChooseWhat": {},
+
+  "replicasConfirm": "Authorize",
+  "@replicasConfirm": {},
+
+  "replicasAuthorized": "{domain} may hold a copy.",
+  "@replicasAuthorized": {},
+
+  "replicasAuthorizeFailed": "That server could not be authorized.",
+  "@replicasAuthorizeFailed": {},
+
+  "replicasRevoke": "Revoke",
+  "@replicasRevoke": {},
+
+  "replicasRevokeTitle": "Revoke {domain}?",
+  "@replicasRevokeTitle": {},
+
+  "replicasRevokeExplanation": "Replication stops. Whatever that server already received stays with it — revoking erases nothing from another operator’s database, which is why the withdrawn permission stays in the list.",
+  "@replicasRevokeExplanation": {},
+
+  "replicasRevoked": "{domain} receives nothing more.",
+  "@replicasRevoked": {},
+
+  "replicasRevokeFailed": "That authorization could not be revoked.",
+  "@replicasRevokeFailed": {}
 }

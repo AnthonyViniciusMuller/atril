@@ -1152,4 +1152,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get federationCancel => 'Cancel';
+
+  @override
+  String get settingsReplicas => 'Authorized replicas';
+
+  @override
+  String get settingsReplicasExplanation => 'Who may hold a copy of your data.';
+
+  @override
+  String get replicasExplanation =>
+      'Authorizing a server says it may keep a copy of your library. Only the servers named here receive anything.';
+
+  @override
+  String get replicasOutOfBand =>
+      'The permission is recorded on your own server. The protocol has no way to tell the other server that it is now a replica — that is arranged between whoever runs the two.';
+
+  @override
+  String get replicasNone => 'No server holds a copy of your data.';
+
+  @override
+  String get replicasFailed =>
+      'The authorizations could not be read. The node did not answer.';
+
+  @override
+  String get replicasGrantedSection => 'Holding a copy';
+
+  @override
+  String get replicasRevokedSection => 'Used to hold a copy';
+
+  @override
+  String get replicasRevokedExplanation =>
+      'Replication stopped. Whatever these servers already received is still with them: revoking does not reach into another operator’s database.';
+
+  @override
+  String get replicasWithFiles => 'Metadata and files';
+
+  @override
+  String get replicasWithoutFiles => 'Metadata only';
+
+  @override
+  String get replicasWithFilesExplanation =>
+      'Everything, the e-book files included. It costs that server the space your library takes.';
+
+  @override
+  String get replicasWithoutFilesExplanation =>
+      'Your books, shelves and marks — without the files. It is the cheap replica, and usually the one worth having on a server that is not yours.';
+
+  @override
+  String replicasGrantedAt(String date) {
+    return 'Authorized on $date';
+  }
+
+  @override
+  String get replicasAuthorize => 'Authorize a server';
+
+  @override
+  String get replicasChooseServer => 'Which server';
+
+  @override
+  String get replicasNoCandidates =>
+      'Every server in your catalogue is already authorized. Add another under Known servers.';
+
+  @override
+  String get replicasCandidateUndialable =>
+      'Publishes no gRPC address — nothing replicates to it.';
+
+  @override
+  String replicasChooseWhat(String domain) {
+    return 'What $domain will hold';
+  }
+
+  @override
+  String get replicasConfirm => 'Authorize';
+
+  @override
+  String replicasAuthorized(String domain) {
+    return '$domain may hold a copy.';
+  }
+
+  @override
+  String get replicasAuthorizeFailed => 'That server could not be authorized.';
+
+  @override
+  String get replicasRevoke => 'Revoke';
+
+  @override
+  String replicasRevokeTitle(String domain) {
+    return 'Revoke $domain?';
+  }
+
+  @override
+  String get replicasRevokeExplanation =>
+      'Replication stops. Whatever that server already received stays with it — revoking erases nothing from another operator’s database, which is why the withdrawn permission stays in the list.';
+
+  @override
+  String replicasRevoked(String domain) {
+    return '$domain receives nothing more.';
+  }
+
+  @override
+  String get replicasRevokeFailed => 'That authorization could not be revoked.';
 }

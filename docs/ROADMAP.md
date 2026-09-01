@@ -1232,12 +1232,26 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       revoked peer that still holds a copy is something they should keep being able to see. And
       the reader's own node carries neither the switch nor the removal, because it is not a peer
       they chose and neither control has anything coherent to do to it
-- [ ] `feat: add replica authorization` — UC15. Granting a node the right to hold a copy, with
+- [x] `feat: add replica authorization` — UC15. Granting a node the right to hold a copy, with
       and without the files, and revoking it. Metadata without the files is the cheap replica a
       reader is most likely to want on a node they do not own, and the screen makes the choice
       legible rather than a checkbox. C22 is stated where it lands: nothing in the contract can
       tell a node that it is a replica, so the grant is recorded and the federation is completed
-      out of band, and the screen says so instead of appearing to have worked
+      out of band, and the screen says so instead of appearing to have worked. What that came to
+      in practice is a **permanent note beside the grants rather than a message after one**: a
+      snackbar saying the other node has not been told is a sentence that scrolls away, and the
+      claim it corrects — that the copy is now flowing — is on the screen for as long as the
+      permission is. The choice of what travels is two options with a sentence each, in a dialog
+      of its own, because *whom do you trust with this* and *how much* are different questions;
+      the cheap replica is the one selected when the dialog opens, so a reader who reads neither
+      sentence gets the answer that costs the other operator least. Three things the plan did not
+      name. The revoked permissions are **asked for** — `ListReplicaAuthorizations` hides them by
+      default, and they are the only thing that explains a peer that still holds data, so a
+      sovereignty screen without them answers *nobody* to the question it exists for. The
+      candidates offered exclude the reader's own node and every node a live permission already
+      names, which is the screen's arithmetic and not the node's. And a candidate publishing no
+      gRPC authority is **listed and flagged** rather than hidden: the node accepts the grant,
+      nothing will ever replicate there, and saying so costs less than a reader wondering why
 - [ ] `feat: add home server migration` — UC16, and the demonstration this project exists for. A
       reader moves to a node they had no account on, carrying their devices, and everything each
       one was holding and had not handed over is pushed to the new node under the identifiers it

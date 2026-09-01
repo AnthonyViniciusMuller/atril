@@ -201,23 +201,71 @@ final class FakeFederationService extends FederationServiceBase {
     return RemoveKnownServerResponse();
   }
 
+  /// The replica permissions this node holds, by the server they name.
+  final Map<String, ReplicaAuthorization> grants =
+      <String, ReplicaAuthorization>{};
+
+  /// Whether each listing of the permissions asked for the revoked ones.
+  final List<bool> listedGrants = <bool>[];
+
+  /// Every grant, as `(serverId, replicatesFiles)`.
+  final List<(String, bool)> authorized = <(String, bool)>[];
+
+  /// Every server a withdrawal was asked for, in order.
+  final List<String> revoked = <String>[];
+
   @override
   Future<AuthorizeReplicaResponse> authorizeReplica(
     ServiceCall call,
     AuthorizeReplicaRequest request,
-  ) async => throw GrpcError.unimplemented('not this test');
+  ) async {
+    authorized.add((request.serverId, request.replicatesFiles));
+    _check();
+
+    final grant = ReplicaAuthorization(
+      id: _nextId(),
+      serverId: request.serverId,
+      serverDomain: _byId(request.serverId).descriptor.domain,
+      authorizedAt: Timestamp.fromDateTime(DateTime.utc(2026, 9)),
+      replicatesFiles: request.replicatesFiles,
+      active: true,
+    );
+
+    grants[request.serverId] = grant;
+
+    return AuthorizeReplicaResponse(authorization: grant);
+  }
 
   @override
   Future<RevokeReplicaResponse> revokeReplica(
     ServiceCall call,
     RevokeReplicaRequest request,
-  ) async => throw GrpcError.unimplemented('not this test');
+  ) async {
+    revoked.add(request.serverId);
+    _check();
+
+    // Deactivated and kept, as the node does it: the record that a permission
+    // once existed is what explains a peer that still holds data.
+    grants[request.serverId]?.active = false;
+
+    return RevokeReplicaResponse();
+  }
 
   @override
   Future<ListReplicaAuthorizationsResponse> listReplicaAuthorizations(
     ServiceCall call,
     ListReplicaAuthorizationsRequest request,
-  ) async => throw GrpcError.unimplemented('not this test');
+  ) async {
+    listedGrants.add(request.includeInactive);
+    _check();
+
+    return ListReplicaAuthorizationsResponse(
+      authorizations: <ReplicaAuthorization>[
+        for (final grant in grants.values)
+          if (request.includeInactive || grant.active) grant,
+      ],
+    );
+  }
 
   @override
   Future<MigrateHomeServerResponse> migrateHomeServer(

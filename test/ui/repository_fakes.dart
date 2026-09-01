@@ -308,6 +308,79 @@ final class FakeFederationRepository implements FederationRepository {
     return const Result<void>.ok(null);
   }
 
+  /// The permissions this node reports, which a test sets.
+  List<ReplicaAuthorization> grants = <ReplicaAuthorization>[];
+
+  /// Every grant it was asked for, as `(serverId, replicatesFiles)`.
+  final List<(String, bool)> authorized = <(String, bool)>[];
+
+  /// Every permission a withdrawal was asked for, in order.
+  final List<String> revoked = <String>[];
+
+  @override
+  Future<Result<List<ReplicaAuthorization>>> replicas() async {
+    final refused = refusal;
+
+    return refused == null
+        ? Result<List<ReplicaAuthorization>>.ok(grants)
+        : Result<List<ReplicaAuthorization>>.error(refused);
+  }
+
+  @override
+  Future<Result<ReplicaAuthorization>> authorizeReplica({
+    required String serverId,
+    required bool replicatesFiles,
+  }) async {
+    authorized.add((serverId, replicatesFiles));
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<ReplicaAuthorization>.error(refused);
+    }
+
+    final granted = ReplicaAuthorization(
+      id: 'grant-${grants.length + 1}',
+      serverId: serverId,
+      serverDomain: _byId(serverId).descriptor.domain,
+      authorizedAt: DateTime.utc(2026, 9),
+      replicatesFiles: replicatesFiles,
+      active: true,
+    );
+
+    grants = <ReplicaAuthorization>[...grants, granted];
+
+    return Result<ReplicaAuthorization>.ok(granted);
+  }
+
+  @override
+  Future<Result<void>> revokeReplica(String serverId) async {
+    revoked.add(serverId);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<void>.error(refused);
+    }
+
+    grants = <ReplicaAuthorization>[
+      for (final grant in grants)
+        if (grant.serverId == serverId)
+          ReplicaAuthorization(
+            id: grant.id,
+            serverId: grant.serverId,
+            serverDomain: grant.serverDomain,
+            authorizedAt: grant.authorizedAt,
+            replicatesFiles: grant.replicatesFiles,
+            active: false,
+          )
+        else
+          grant,
+    ];
+
+    return const Result<void>.ok(null);
+  }
+
   KnownServer _byId(String id) =>
       catalogue.firstWhere((KnownServer server) => server.id == id);
 }

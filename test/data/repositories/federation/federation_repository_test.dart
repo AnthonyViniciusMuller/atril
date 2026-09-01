@@ -202,6 +202,66 @@ void main() {
     });
   });
 
+  group('the replica permissions', () {
+    test('asks for the revoked ones too', () async {
+      await federation.replicas();
+
+      // A permission that was withdrawn is what explains a peer that still
+      // holds data, and a screen that hid them would answer *nobody* to a
+      // reader asking who has their library.
+      expect(node.listedGrants, <bool>[true]);
+    });
+
+    test('grants what the reader chose, files or not', () async {
+      await federation.addServer('quire-b.example');
+      final peer = await database.identityDao.server('quire-b.example');
+
+      final granted = await federation.authorizeReplica(
+        serverId: peer!.remoteId!,
+        replicatesFiles: false,
+      );
+
+      expect(granted, isA<Ok<ReplicaAuthorization>>());
+      expect(node.authorized, <(String, bool)>[(peer.remoteId!, false)]);
+      expect(
+        (granted as Ok<ReplicaAuthorization>).value.replicatesFiles,
+        isFalse,
+      );
+      expect(granted.value.serverDomain, 'quire-b.example');
+    });
+
+    test('a withdrawn permission is deactivated and kept', () async {
+      await federation.addServer('quire-b.example');
+      final peer = await database.identityDao.server('quire-b.example');
+
+      await federation.authorizeReplica(
+        serverId: peer!.remoteId!,
+        replicatesFiles: true,
+      );
+      await federation.revokeReplica(peer.remoteId!);
+
+      final grants = await federation.replicas();
+
+      expect(node.revoked, <String>[peer.remoteId!]);
+      expect(
+        (grants as Ok<List<ReplicaAuthorization>>).value.single.active,
+        isFalse,
+      );
+    });
+
+    test(
+      'a node that did not answer is a failure and not an empty list',
+      () async {
+        node.refusal = GrpcError.unavailable('the node is down');
+
+        expect(
+          await federation.replicas(),
+          isA<Error<List<ReplicaAuthorization>>>(),
+        );
+      },
+    );
+  });
+
   group('forgetting a node', () {
     test('leaves the row and marks it inactive', () async {
       await federation.addServer('quire-b.example');

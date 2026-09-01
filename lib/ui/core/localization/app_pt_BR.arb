@@ -1881,5 +1881,165 @@
   "federationCancel": "Cancelar",
   "@federationCancel": {
     "description": "Rótulo do botão que fecha uma confirmação da tela de federação sem fazer nada."
+  },
+
+  "settingsReplicas": "Réplicas autorizadas",
+  "@settingsReplicas": {
+    "description": "Item da tela de configurações que leva à tela onde o leitor autoriza um servidor a guardar uma cópia dos seus dados. Também é o título dessa tela."
+  },
+
+  "settingsReplicasExplanation": "Quem pode guardar uma cópia dos seus dados.",
+  "@settingsReplicasExplanation": {
+    "description": "Subtítulo do item das configurações que leva às réplicas autorizadas. Uma frase dizendo o que o leitor vai encontrar lá."
+  },
+
+  "replicasExplanation": "Autorizar um servidor é dizer que ele pode guardar uma cópia da sua biblioteca. Só os servidores nomeados aqui recebem alguma coisa.",
+  "@replicasExplanation": {
+    "description": "Parágrafo de abertura da tela de réplicas autorizadas, dizendo o que uma autorização significa. RN03 e RF16."
+  },
+
+  "replicasOutOfBand": "A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.",
+  "@replicasOutOfBand": {
+    "description": "Nota permanente na tela de réplicas, dizendo o que a autorização alcança e o que não alcança. É a correção C22: nada no contrato informa um nó de que ele é réplica, e a tela diz isso em vez de parecer ter funcionado."
+  },
+
+  "replicasNone": "Nenhum servidor guarda uma cópia dos seus dados.",
+  "@replicasNone": {
+    "description": "Mensagem mostrada quando não há nenhuma autorização em vigor."
+  },
+
+  "replicasFailed": "Não foi possível ler as autorizações. O servidor não respondeu.",
+  "@replicasFailed": {
+    "description": "Mensagem mostrada quando a leitura das autorizações falhou. A tela lê direto do servidor, então não há uma lista antiga para mostrar no lugar."
+  },
+
+  "replicasGrantedSection": "Guardam uma cópia",
+  "@replicasGrantedSection": {
+    "description": "Cabeçalho da seção que lista as autorizações em vigor."
+  },
+
+  "replicasRevokedSection": "Guardaram uma cópia",
+  "@replicasRevokedSection": {
+    "description": "Cabeçalho da seção que lista as autorizações revogadas. Elas continuam visíveis porque são o que explica um servidor que ainda tem dados seus."
+  },
+
+  "replicasRevokedExplanation": "A replicação parou. O que estes servidores já receberam continua com eles: revogar não alcança o banco de outro operador.",
+  "@replicasRevokedExplanation": {
+    "description": "Parágrafo abaixo do cabeçalho das autorizações revogadas, dizendo por que elas continuam listadas e o que a revogação de fato faz."
+  },
+
+  "replicasWithFiles": "Metadados e arquivos",
+  "@replicasWithFiles": {
+    "description": "Rótulo da autorização que cobre também os arquivos dos livros, na lista e na escolha."
+  },
+
+  "replicasWithoutFiles": "Só metadados",
+  "@replicasWithoutFiles": {
+    "description": "Rótulo da autorização que cobre apenas os registros — livros, estantes, marcações — e não os arquivos."
+  },
+
+  "replicasWithFilesExplanation": "Tudo, inclusive os arquivos dos livros. Ocupa neste servidor o mesmo espaço que a sua biblioteca ocupa.",
+  "@replicasWithFilesExplanation": {
+    "description": "Frase que explica a opção de replicar também os arquivos, na escolha do que a réplica cobre."
+  },
+
+  "replicasWithoutFilesExplanation": "Os seus livros, estantes e marcações — sem os arquivos. É a réplica barata, e costuma ser a que se quer num servidor que não é seu.",
+  "@replicasWithoutFilesExplanation": {
+    "description": "Frase que explica a opção de replicar só os metadados. Diz por que ela costuma ser a escolha certa num servidor de outro operador."
+  },
+
+  "replicasGrantedAt": "Autorizado em {date}",
+  "@replicasGrantedAt": {
+    "description": "Linha que diz quando uma autorização foi concedida. O parâmetro vem da localização do sistema.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "replicasAuthorize": "Autorizar um servidor",
+  "@replicasAuthorize": {
+    "description": "Rótulo da ação que abre a escolha de qual servidor conhecido passará a guardar uma cópia."
+  },
+
+  "replicasChooseServer": "Qual servidor",
+  "@replicasChooseServer": {
+    "description": "Título do diálogo em que o leitor escolhe, entre os servidores do catálogo, qual vai guardar uma cópia."
+  },
+
+  "replicasNoCandidates": "Todos os servidores do seu catálogo já estão autorizados. Adicione outro em Servidores conhecidos.",
+  "@replicasNoCandidates": {
+    "description": "Mensagem mostrada no lugar da lista de candidatos quando não sobrou nenhum servidor para autorizar."
+  },
+
+  "replicasCandidateUndialable": "Não publica endereço gRPC — nada replica para ele.",
+  "@replicasCandidateUndialable": {
+    "description": "Aviso na linha de um servidor candidato que não publica endereço gRPC. A autorização é aceita e nenhum dado chega lá."
+  },
+
+  "replicasChooseWhat": "O que {domain} vai guardar",
+  "@replicasChooseWhat": {
+    "description": "Título do diálogo em que o leitor escolhe se a réplica cobre os arquivos além dos metadados. O parâmetro é o domínio.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "replicasConfirm": "Autorizar",
+  "@replicasConfirm": {
+    "description": "Rótulo do botão que conclui a autorização de um servidor."
+  },
+
+  "replicasAuthorized": "{domain} pode guardar uma cópia.",
+  "@replicasAuthorized": {
+    "description": "Confirmação mostrada depois que uma autorização é concedida. O parâmetro é o domínio.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "replicasAuthorizeFailed": "Não foi possível autorizar este servidor.",
+  "@replicasAuthorizeFailed": {
+    "description": "Erro mostrado quando a concessão de uma autorização falha."
+  },
+
+  "replicasRevoke": "Revogar",
+  "@replicasRevoke": {
+    "description": "Rótulo da ação que retira de um servidor a permissão de guardar uma cópia."
+  },
+
+  "replicasRevokeTitle": "Revogar {domain}?",
+  "@replicasRevokeTitle": {
+    "description": "Título da confirmação de revogação de uma autorização. O parâmetro é o domínio.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "replicasRevokeExplanation": "A replicação para. O que este servidor já recebeu continua com ele — revogar não apaga nada do banco de outro operador, e é por isso que a autorização revogada continua na lista.",
+  "@replicasRevokeExplanation": {
+    "description": "Corpo da confirmação de revogação. Diz exatamente o que a revogação faz e o que ela não pode fazer, para que o leitor não a tome por um apagamento remoto."
+  },
+
+  "replicasRevoked": "{domain} não recebe mais nada.",
+  "@replicasRevoked": {
+    "description": "Confirmação mostrada depois que uma autorização é revogada. O parâmetro é o domínio.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "replicasRevokeFailed": "Não foi possível revogar esta autorização.",
+  "@replicasRevokeFailed": {
+    "description": "Erro mostrado quando a revogação de uma autorização falha."
   }
 }
