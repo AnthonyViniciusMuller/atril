@@ -26,9 +26,9 @@ import 'package:atril/domain/models/operation.dart';
 import 'package:atril/data/services/sync/delta.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
-// drift publishes an `isNull` of its own — the SQL predicate — which is not
-// the matcher this file wants and is ambiguous with it.
-import 'package:drift/drift.dart' hide isNull;
+// drift publishes `isNull` and `isNotNull` of its own — the SQL predicates —
+// which are not the matchers this file wants and are ambiguous with them.
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -725,6 +725,85 @@ void main() {
       final result = await repository.editEbook(
         'ffffffff-1111-4111-8111-111111111111',
         const EbookEdits(title: 'Nada'),
+      );
+
+      expect(
+        ((result as Error<void>).error as AppException).kind,
+        ErrorKind.notFound,
+      );
+    });
+  });
+
+  group('a deletion', () {
+    Future<(LibraryRepository, AtrilDatabase, String)> imported() async {
+      final database = _open();
+      final repository = await _repository(database);
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+
+      return (repository, database, (result as Ok<Ebook>).value.id);
+    }
+
+    test('is a tombstone and never a removal', () async {
+      // A record removed outright is resurrected by the next replica that had
+      // not yet heard about the removal, so the deletion has to travel as a
+      // write and reconcile like one.
+      final (repository, database, id) = await imported();
+
+      await repository.deleteEbook(id);
+
+      final row = await database.libraryDao.readEbook(id);
+
+      expect(row, isNotNull);
+      expect(row?.deleted, isTrue);
+      expect((await database.syncDao.pending()).last.kind, OperationKind.delete);
+    });
+
+    test('takes the work off the shelf', () async {
+      final (repository, _, id) = await imported();
+
+      await repository.deleteEbook(id);
+
+      expect((await repository.watchEbooks().first).titles, isEmpty);
+    });
+
+    test('is undone by one operation carrying nothing', () async {
+      // The whole reason a deletion is a tombstone. The `deleted` flag travels
+      // on the revision rather than in the delta, so bringing a book back is
+      // an update with no fields — and not a record to rebuild from somewhere.
+      final (repository, database, id) = await imported();
+
+      await repository.deleteEbook(id);
+      await repository.restoreEbook(id);
+
+      final undo = (await database.syncDao.pending()).last;
+
+      expect(undo.kind, OperationKind.update);
+      expect(undo.delta, isEmpty);
+      expect((await repository.watchEbooks().first).titles, <String>[
+        'Vidas Secas',
+      ]);
+    });
+
+    test('leaves the file where it is, and the transfer queued', () async {
+      // A tombstoned work still counts for the node's C16 check, so a book
+      // deleted while its bytes were going up finishes going up — and an undo
+      // finds the file here rather than having to fetch it back.
+      final (repository, database, id) = await imported();
+      final work = ((await repository.ebook(id)) as Ok<Ebook?>).value!;
+
+      await repository.deleteEbook(id);
+
+      expect(await blobs.contains(work.contentHash), isTrue);
+      expect(await database.transfersDao.pending(), hasLength(1));
+    });
+
+    test('refuses a work this device does not hold', () async {
+      final (repository, _, _) = await imported();
+
+      final result = await repository.deleteEbook(
+        'ffffffff-1111-4111-8111-111111111111',
       );
 
       expect(

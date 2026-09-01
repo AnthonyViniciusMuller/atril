@@ -9,11 +9,14 @@ import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/ui/core/localization/localization.dart';
+import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/library/widgets/ebook_screen.dart';
+import 'package:atril/ui/library/widgets/library_screen.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../repository_fakes.dart';
@@ -61,13 +64,36 @@ Future<FakeLibraryRepository> pump(WidgetTester tester) async {
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
+  // A router and not a bare `home`, because deleting goes back to the shelf
+  // and the undo runs after this route has been left. A screen tested without
+  // one would be a screen whose one navigation is the part nothing exercises.
+  final router = GoRouter(
+    initialLocation: Routes.ebook(_work),
+    routes: <RouteBase>[
+      GoRoute(
+        path: Routes.library,
+        builder: (BuildContext context, GoRouterState state) =>
+            const LibraryScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: Routes.ebookSegment,
+            builder: (BuildContext context, GoRouterState state) =>
+                const EbookScreen(ebookId: _work),
+          ),
+        ],
+      ),
+    ],
+  );
+
+  addTearDown(router.dispose);
+
   await tester.pumpWidget(
     MultiProvider(
       providers: repositoryProviders(library: library),
-      child: const MaterialApp(
+      child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: EbookScreen(ebookId: _work),
+        routerConfig: router,
       ),
     ),
   );
@@ -247,6 +273,86 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.storageNotYetSent), findsOneWidget);
+  });
+
+  group('deleting', () {
+    testWidgets('asks first, because the answer is not local', (
+      WidgetTester tester,
+    ) async {
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.ebookDeleteConfirmTitle), findsOneWidget);
+      expect(library.deleted, isEmpty);
+    });
+
+    testWidgets('does nothing when the reader says no', (
+      WidgetTester tester,
+    ) async {
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.text(
+          MaterialLocalizations.of(
+            tester.element(find.byType(EbookScreen)),
+          ).cancelButtonLabel,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(library.deleted, isEmpty);
+    });
+
+    testWidgets('tombstones the work and offers the undo', (
+      WidgetTester tester,
+    ) async {
+      // The undo is offered because it costs one operation carrying nothing: a
+      // tombstone is a flag on a record that is still there.
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, l10n.ebookDelete));
+      await tester.pumpAndSettle();
+
+      expect(library.deleted, <String>[_work]);
+      expect(
+        find.text(l10n.ebookDeleted('Grande Sertão: Veredas')),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.ebookDeleteUndo), findsOneWidget);
+    });
+
+    testWidgets('brings the work back when the reader undoes it', (
+      WidgetTester tester,
+    ) async {
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, l10n.ebookDelete));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.ebookDeleteUndo));
+      await tester.pumpAndSettle();
+
+      expect(library.restored, <String>[_work]);
+    });
   });
 
   testWidgets('lists the shelves the work is filed under', (

@@ -145,5 +145,13 @@
   "ebookEditExtraValue": "Value",
   "ebookEditExtraAdd": "Add",
   "ebookEditExtraRemove": "Remove",
-  "ebookEditExtraNotText": "This value is not text and was kept as it was."
+  "ebookEditExtraNotText": "This value is not text and was kept as it was.",
+
+  "ebookDelete": "Delete",
+  "ebookDeleteConfirmTitle": "Delete this book?",
+  "ebookDeleteConfirmMessage": "It leaves your library on every one of your devices. You can undo this straight afterwards.",
+  "ebookDeleted": "{title} was deleted.",
+  "ebookDeleteUndo": "Undo",
+  "ebookDeleteFailed": "This book could not be deleted.",
+  "ebookRestored": "{title} is back in your library."
 }

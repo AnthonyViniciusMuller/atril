@@ -35,10 +35,19 @@ Atril is that client, so this is not a preference:
 
 Those twelve — eight on `LibraryService`, four on `ReadingService` — stay in the generated stubs
 because the contract has them. Nothing in `lib/` calls them, and
-`test/architecture/write_path_test.dart` asserts it by walking the tree, so the day C21 closes
-the decision is revisited deliberately rather than discovered. The same test checks the twelve
-names against the vendored `.proto` files: a pinned list that the contract has renamed out from
-under it is a check that matches nothing and passes forever.
+`test/architecture/write_path_test.dart` asserts it, so the day C21 closes the decision is
+revisited deliberately rather than discovered. The same test checks the twelve names against the
+vendored `.proto` files: a pinned list that the contract has renamed out from under it is a check
+that matches nothing and passes forever.
+
+It walks the files that could be *making* a call — the ones under `data/services/api` and the
+ones that import a client, the generated stubs or `package:grpc` — and not the whole tree. Phase
+7 walked everything on the argument that a wrapper named `updateEbook` is a call by another name,
+and phase 8 is where that stopped holding: the reader's vocabulary for UC01 and UC03 is the
+contract's own, because they name the same operations, so `LibraryRepository.deleteEbook` spells
+`DeleteEbook` and authors an operation. The narrowing is pinned too — every `*_api.dart` under
+`data/services/api` is asserted to count as a client — so a sixth client is covered by this
+project's naming rather than by somebody remembering the test.
 
 The read calls (`ListEbooks`, `ListCollections`, `ListAnnotations`, `ListReadingProgress`) are
 used exactly once per record: to seed a freshly bound device before its first pull. After that

@@ -823,5 +823,52 @@
   "ebookEditExtraNotText": "Este valor não é texto e foi mantido como estava.",
   "@ebookEditExtraNotText": {
     "description": "Mostrado no lugar do campo quando o valor de um metadado extra é uma lista ou um número — por exemplo os assuntos, que o EPUB traz como lista. O formulário edita texto; o resto é preservado sem ser tocado, em vez de ser transformado em texto e perder o que era."
+  },
+
+  "ebookDelete": "Excluir",
+  "@ebookDelete": {
+    "description": "Ação que exclui um livro do acervo do leitor. Rótulo curto, no menu da tela do livro."
+  },
+
+  "ebookDeleteConfirmTitle": "Excluir este livro?",
+  "@ebookDeleteConfirmTitle": {
+    "description": "Título da confirmação de exclusão. Pergunta porque a exclusão vale em todos os dispositivos do leitor, não só neste."
+  },
+
+  "ebookDeleteConfirmMessage": "Ele sai do seu acervo em todos os seus dispositivos. Dá para desfazer logo em seguida.",
+  "@ebookDeleteConfirmMessage": {
+    "description": "Corpo da confirmação de exclusão. Diz as duas coisas que decidem se o leitor confirma: o alcance da exclusão e o fato de que desfazer é barato — internamente porque a exclusão é uma lápide e não uma remoção."
+  },
+
+  "ebookDeleted": "{title} foi excluído.",
+  "@ebookDeleted": {
+    "description": "Confirmação mostrada depois de excluir, junto com a ação de desfazer.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Vidas Secas"
+      }
+    }
+  },
+
+  "ebookDeleteUndo": "Desfazer",
+  "@ebookDeleteUndo": {
+    "description": "Ação que traz o livro de volta logo depois de excluí-lo. Rótulo curto, no aviso da exclusão."
+  },
+
+  "ebookDeleteFailed": "Não foi possível excluir este livro.",
+  "@ebookDeleteFailed": {
+    "description": "Erro geral ao excluir um livro."
+  },
+
+  "ebookRestored": "{title} voltou para o acervo.",
+  "@ebookRestored": {
+    "description": "Confirmação mostrada depois de desfazer uma exclusão.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Vidas Secas"
+      }
+    }
   }
 }

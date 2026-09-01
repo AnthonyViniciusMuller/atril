@@ -492,4 +492,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ebookEditExtraNotText =>
       'This value is not text and was kept as it was.';
+
+  @override
+  String get ebookDelete => 'Delete';
+
+  @override
+  String get ebookDeleteConfirmTitle => 'Delete this book?';
+
+  @override
+  String get ebookDeleteConfirmMessage =>
+      'It leaves your library on every one of your devices. You can undo this straight afterwards.';
+
+  @override
+  String ebookDeleted(String title) {
+    return '$title was deleted.';
+  }
+
+  @override
+  String get ebookDeleteUndo => 'Undo';
+
+  @override
+  String get ebookDeleteFailed => 'This book could not be deleted.';
+
+  @override
+  String ebookRestored(String title) {
+    return '$title is back in your library.';
+  }
 }

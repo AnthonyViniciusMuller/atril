@@ -127,6 +127,27 @@ abstract interface class LibraryRepository {
   /// It fails with [codeUnsupportedFormat] for a name this app cannot place.
   Future<Result<Ebook>> importEbook(FileSource file);
 
+  /// UC01, delete. Tombstones one work.
+  ///
+  /// A tombstone and never a removal, on this device as on every other: a
+  /// record removed outright is resurrected by the next replica that had not
+  /// yet heard about the removal, so the deletion travels as a write and
+  /// reconciles like one.
+  ///
+  /// The file is left alone and the transfer that owes it is left queued. A
+  /// tombstoned work still counts for C16's check on the node, so a book
+  /// deleted while its bytes were still going up finishes going up — and an
+  /// undo finds the file where it should be rather than having to fetch it
+  /// back.
+  Future<Result<void>> deleteEbook(String ebookId);
+
+  /// Brings back a work this device tombstoned.
+  ///
+  /// It is one operation carrying nothing, which is the whole reason a
+  /// deletion is a tombstone: there is no record to rebuild, only a flag that
+  /// travels on the revision.
+  Future<Result<void>> restoreEbook(String ebookId);
+
   /// The works [query] asks for, as they change.
   ///
   /// Sorted here rather than in SQL, because sqlite's collations are ASCII and

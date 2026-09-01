@@ -49,6 +49,9 @@ const String opKeep = 'library/content: keep';
 /// The operation an edit reports under.
 const String opEdit = 'library/collection: edit';
 
+/// The operation a deletion and its undo report under.
+const String opDelete = 'library/collection: delete';
+
 /// [value], or `null` where it holds nothing.
 ///
 /// An object with no entries and no object at all are the same claim about a
@@ -541,6 +544,39 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       _log.warning('$ebookId could not be edited', error, stackTrace);
 
       return Result<void>.error(failureFrom(error, op: opEdit));
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteEbook(String ebookId) =>
+      _tombstone(ebookId, Change.delete(TargetEntity.ebook, ebookId));
+
+  @override
+  Future<Result<void>> restoreEbook(String ebookId) =>
+      _tombstone(ebookId, Change.restore(TargetEntity.ebook, ebookId));
+
+  /// Authors [change] against the work [ebookId] names.
+  ///
+  /// The two directions are one path because they are one operation with one
+  /// bit different, and writing them apart would be two chances to get the
+  /// same thing wrong.
+  Future<Result<void>> _tombstone(String ebookId, Change change) async {
+    try {
+      if (await library.readEbook(ebookId) == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opDelete,
+        );
+      }
+
+      await author.write(change);
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning('$change on $ebookId did not apply', error, stackTrace);
+
+      return Result<void>.error(failureFrom(error, op: opDelete));
     }
   }
 

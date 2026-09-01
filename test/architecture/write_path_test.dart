@@ -16,13 +16,32 @@
 /// prose; a rule stated only in prose is a rule the next session breaks in an
 /// afternoon, honestly and for a good local reason.
 ///
-/// There are three checks and the second is the one worth explaining. A pinned
+/// **The check is narrowed to the files that could make a call.** Phase 7 walked
+/// the whole of `lib/` and reported the twelve names wherever they were spelled,
+/// on the argument that a wrapper *named* `updateEbook` is a call by another
+/// name. That argument was cheap while nothing else in the app spelled one, and
+/// phase 8 is where it stopped being: the reader's own vocabulary for UC01 and
+/// UC03 is *delete this book*, *create a collection*, *add a book to a shelf* —
+/// the same words, because they name the same operations. A repository method
+/// called `deleteEbook` does not call `DeleteEbook`; it authors an operation.
+///
+/// So a file is walked when it could be holding a client: it lives under
+/// `data/services/api`, or it imports a client from there, the generated stubs,
+/// or `package:grpc`. Nothing else can reach a node, and a name spelled in a
+/// file that cannot is a name. The rule is not weakened where it bites — every
+/// file that holds a stub is still walked, and a wrapper *there* is still
+/// reported.
+///
+/// There are five checks and the second is the one worth explaining. A pinned
 /// list of names silently stops matching the day the contract renames one, and
 /// a check that matches nothing passes forever — so the names are also asserted
 /// against the vendored `.proto` files, which is where a rename would show up.
-/// The third is the same argument the hardcoded-string checker makes about
-/// itself: a visitor that stopped matching would report nothing, and nothing is
-/// what a clean tree looks like.
+/// The narrowing is pinned the same way: every `*_api.dart` under
+/// `data/services/api` is asserted to count as a client, so a sixth client
+/// added later is covered by the naming this project already follows rather
+/// than by somebody remembering this file. The last two are the argument the
+/// hardcoded-string checker makes about itself: a visitor that stopped matching
+/// would report nothing, and nothing is what a clean tree looks like.
 library;
 
 import 'dart:io';
@@ -59,6 +78,46 @@ const List<String> writeRpcs = <String>[
 /// Where the generated contract lives, which is the one place the names are
 /// allowed to appear: it is the contract, not a call to it.
 const String generated = 'lib/data/services/api/generated';
+
+/// Where a client to the node can live at all.
+const String apiDirectory = 'lib/data/services/api/';
+
+/// Whether a file at [path] holding [source] could be calling the node.
+///
+/// It can if it *is* one of the clients — everything under `data/services/api`
+/// — or if it imports one: a `*_api.dart` from there, the generated stubs, or
+/// `package:grpc` itself. A stub cannot be reached any other way, so a file
+/// that imports none of them cannot be making a call however it spells its own
+/// methods.
+///
+/// It is deliberately about the import graph as *written*, one file at a time,
+/// and not about what a file transitively depends on. A repository that reaches
+/// a node does so through a client it names, and a check that followed the
+/// graph would eventually walk everything and be the whole-tree check again.
+bool canReachNode({required String path, required String source}) {
+  if (path.contains(apiDirectory)) {
+    return true;
+  }
+
+  final unit = parseString(
+    content: source,
+    path: path,
+    featureSet: FeatureSet.latestLanguageVersion(),
+    throwIfDiagnostics: false,
+  );
+
+  for (final directive in unit.unit.directives.whereType<UriBasedDirective>()) {
+    final uri = directive.uri.stringValue ?? '';
+
+    if (uri.startsWith('package:grpc') ||
+        uri.contains('/generated/') ||
+        (uri.contains('services/api/') && uri.endsWith('_api.dart'))) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /// The vendored contract the names are checked against.
 const List<String> contracts = <String>[
@@ -101,7 +160,13 @@ void main() {
         continue;
       }
 
-      final uses = usesIn(file.readAsStringSync(), path: path);
+      final source = file.readAsStringSync();
+
+      if (!canReachNode(path: path, source: source)) {
+        continue;
+      }
+
+      final uses = usesIn(source, path: path);
 
       if (uses.isNotEmpty) {
         offenders[path] = uses;
@@ -139,6 +204,69 @@ void main() {
     // that has quietly stopped guarding anything: it would match nothing in
     // `lib/` and pass for as long as nobody looked.
     expect(declared, containsAll(writeRpcs));
+  });
+
+  test('every client this project has counts as one', () {
+    // The narrowing rests on a naming convention, so the convention is asserted
+    // rather than assumed: a sixth client added under `data/services/api` is
+    // covered by being called `*_api.dart`, and one that is not would otherwise
+    // narrow this check out of existence quietly.
+    final clients = _dartFilesUnder(
+      apiDirectory,
+    ).where((File file) => file.path.endsWith('_api.dart'));
+
+    expect(clients, isNotEmpty, reason: 'the clients are where they were');
+
+    for (final client in clients) {
+      final imported = "import '../../${client.path.substring('lib/'.length)}';";
+
+      expect(
+        canReachNode(path: 'lib/pretend.dart', source: imported),
+        isTrue,
+        reason: '${client.path} does not count as a client',
+      );
+    }
+  });
+
+  test('a file that cannot reach a node is not walked', () {
+    // The reader's vocabulary for UC01 and UC03 is the contract's: *delete this
+    // book*, *create a collection*, *add a book to a shelf*. A repository
+    // method spelling one of them is not a call to one.
+    const String repository = '''
+import '../../services/local/database.dart';
+
+Future<void> remove(LibraryRepository library, String id) =>
+    library.deleteEbook(id);
+''';
+
+    expect(
+      canReachNode(
+        path: 'lib/data/repositories/library/library_repository.dart',
+        source: repository,
+      ),
+      isFalse,
+    );
+    // And it would have been reported, which is what makes the narrowing the
+    // thing doing the work here rather than the visitor having gone blind.
+    expect(usesIn(repository, path: 'lib/pretend.dart'), hasLength(1));
+  });
+
+  test('a file that holds a client is walked, wrapper or not', () {
+    const String client = '''
+import 'generated/quire/v1/library.pbgrpc.dart';
+
+Future<void> remove(LibraryServiceClient client, String id) =>
+    client.deleteEbook(DeleteEbookRequest(ebookId: id));
+''';
+
+    expect(
+      canReachNode(
+        path: 'lib/data/services/api/library_api.dart',
+        source: client,
+      ),
+      isTrue,
+    );
+    expect(usesIn(client, path: 'lib/pretend.dart'), isNotEmpty);
   });
 
   test('the check sees a call it should refuse', () {

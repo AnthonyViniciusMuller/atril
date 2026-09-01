@@ -36,6 +36,7 @@ final class EbookViewModel extends ChangeNotifier {
     save = Command1<void, EbookEdits>(
       (EbookEdits edits) => library.editEbook(ebookId, edits),
     );
+    delete = Command0<void>(library.deleteEbook.of(ebookId));
     keep = Command0<void>(_keep);
     release = Command0<void>(library.releaseEbook.of(ebookId));
     download = Command0<void>(_download);
@@ -60,6 +61,12 @@ final class EbookViewModel extends ChangeNotifier {
   /// and a screen that tracked that itself would be tracking it in one of
   /// several places.
   late final Command1<void, EbookEdits> save;
+
+  /// UC01, delete. Tombstones the work.
+  ///
+  /// It is a tombstone and never a removal, which is what makes the undo one
+  /// operation carrying nothing rather than a record to rebuild.
+  late final Command0<void> delete;
 
   /// Brings the file onto this device and keeps it.
   late final Command0<void> keep;

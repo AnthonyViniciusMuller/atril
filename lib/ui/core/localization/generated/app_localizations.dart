@@ -902,6 +902,48 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Este valor não é texto e foi mantido como estava.'**
   String get ebookEditExtraNotText;
+
+  /// Ação que exclui um livro do acervo do leitor. Rótulo curto, no menu da tela do livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Excluir'**
+  String get ebookDelete;
+
+  /// Título da confirmação de exclusão. Pergunta porque a exclusão vale em todos os dispositivos do leitor, não só neste.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Excluir este livro?'**
+  String get ebookDeleteConfirmTitle;
+
+  /// Corpo da confirmação de exclusão. Diz as duas coisas que decidem se o leitor confirma: o alcance da exclusão e o fato de que desfazer é barato — internamente porque a exclusão é uma lápide e não uma remoção.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ele sai do seu acervo em todos os seus dispositivos. Dá para desfazer logo em seguida.'**
+  String get ebookDeleteConfirmMessage;
+
+  /// Confirmação mostrada depois de excluir, junto com a ação de desfazer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{title} foi excluído.'**
+  String ebookDeleted(String title);
+
+  /// Ação que traz o livro de volta logo depois de excluí-lo. Rótulo curto, no aviso da exclusão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desfazer'**
+  String get ebookDeleteUndo;
+
+  /// Erro geral ao excluir um livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível excluir este livro.'**
+  String get ebookDeleteFailed;
+
+  /// Confirmação mostrada depois de desfazer uma exclusão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{title} voltou para o acervo.'**
+  String ebookRestored(String title);
 }
 
 class _AppLocalizationsDelegate

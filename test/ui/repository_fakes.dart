@@ -327,6 +327,30 @@ final class FakeLibraryRepository implements LibraryRepository {
         : Result<void>.error(refused);
   }
 
+  /// Every work it was asked to tombstone, in order.
+  final List<String> deleted = <String>[];
+
+  /// Every work it was asked to bring back, in order.
+  final List<String> restored = <String>[];
+
+  @override
+  Future<Result<void>> deleteEbook(String ebookId) async {
+    deleted.add(ebookId);
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  @override
+  Future<Result<void>> restoreEbook(String ebookId) async {
+    restored.add(ebookId);
+
+    return const Result<void>.ok(null);
+  }
+
   /// The works this device keeps, which starts as every one it holds.
   final Set<String> kept = <String>{};
 

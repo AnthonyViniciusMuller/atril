@@ -492,6 +492,32 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get ebookEditExtraNotText =>
       'Este valor não é texto e foi mantido como estava.';
+
+  @override
+  String get ebookDelete => 'Excluir';
+
+  @override
+  String get ebookDeleteConfirmTitle => 'Excluir este livro?';
+
+  @override
+  String get ebookDeleteConfirmMessage =>
+      'Ele sai do seu acervo em todos os seus dispositivos. Dá para desfazer logo em seguida.';
+
+  @override
+  String ebookDeleted(String title) {
+    return '$title foi excluído.';
+  }
+
+  @override
+  String get ebookDeleteUndo => 'Desfazer';
+
+  @override
+  String get ebookDeleteFailed => 'Não foi possível excluir este livro.';
+
+  @override
+  String ebookRestored(String title) {
+    return '$title voltou para o acervo.';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -981,4 +1007,30 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get ebookEditExtraNotText =>
       'Este valor não é texto e foi mantido como estava.';
+
+  @override
+  String get ebookDelete => 'Excluir';
+
+  @override
+  String get ebookDeleteConfirmTitle => 'Excluir este livro?';
+
+  @override
+  String get ebookDeleteConfirmMessage =>
+      'Ele sai do seu acervo em todos os seus dispositivos. Dá para desfazer logo em seguida.';
+
+  @override
+  String ebookDeleted(String title) {
+    return '$title foi excluído.';
+  }
+
+  @override
+  String get ebookDeleteUndo => 'Desfazer';
+
+  @override
+  String get ebookDeleteFailed => 'Não foi possível excluir este livro.';
+
+  @override
+  String ebookRestored(String title) {
+    return '$title voltou para o acervo.';
+  }
 }

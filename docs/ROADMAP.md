@@ -752,8 +752,23 @@ that reason.
       silence. And the extra-metadata editor edits text and hands everything else back untouched:
       `subjects` is a list and `series_index` is a number, so a form that rendered them into text
       boxes would turn a list into a string the moment the reader saved anything
-- [ ] `feat: add deletion` — a tombstone, never a removal, with the undo that a tombstone makes
-      cheap
+- [x] `feat: add deletion` — a tombstone, never a removal, with the undo that a tombstone makes
+      cheap. The undo is **one operation carrying nothing**: a record's `deleted` flag travels on
+      the revision and the revision is derived from the kind, so an update on a tombstoned record
+      lifts it — here and, by the same rule in `internal/sync/infra/service/records`, everywhere.
+      That needed a correction to phase 7's author, which refuses an update claiming no field: a
+      restore claims none and is still a change, so `Change.restore` says so and is exempt for the
+      reason `Change.delete` is — the kind *is* the claim. The file is left alone and its transfer
+      left queued, because a tombstoned work still counts for C16's check on the node, so a book
+      deleted mid-upload finishes uploading and an undo finds the file where it should be.
+      **And this is where phase 7's write-path check had to be narrowed.** It walked all of `lib/`
+      and reported the twelve RPC names wherever they were spelled, which was cheap while nothing
+      else spelled one; the reader's vocabulary for UC01 and UC03 is the contract's own — *delete
+      this book*, *create a collection*, *add a book to a shelf* — because they name the same
+      operations, so `LibraryRepository.deleteEbook` collided with `DeleteEbook`. It now walks the
+      files that could be *making* a call: the ones under `data/services/api` and the ones that
+      import a client, the stubs or `package:grpc`. The narrowing is itself pinned, by asserting
+      that every `*_api.dart` there counts as a client
 - [ ] `feat: add collections` — UC03. Create, rename, describe, delete, and the two kinds the
       contract admits. A collection is a grouping the reader defined and a category is not, and
       the screen does not blur them

@@ -112,6 +112,74 @@ class _EbookScreenState extends State<EbookScreen> {
     }
   }
 
+  /// Asks before deleting, and undoes it afterwards if the reader says so.
+  ///
+  /// The question is worth asking because the answer is not local: a deletion
+  /// leaves the reader's library on every device they have. The undo is worth
+  /// offering because it costs one operation carrying nothing — a tombstone is
+  /// a flag on a record that is still there, so bringing a book back is not a
+  /// restore from anywhere.
+  Future<void> _confirmDelete(Ebook work) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    // Read before the screen goes away. The undo runs after this route has
+    // been left, so a callback holding this `context` would be holding a dead
+    // one.
+    final library = context.read<LibraryRepository>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(l10n.ebookDeleteConfirmTitle),
+        content: Text(l10n.ebookDeleteConfirmMessage),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.ebookDelete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await _model.delete.execute();
+
+    if (_model.delete.result is Error<void>) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.ebookDeleteFailed)),
+      );
+
+      return;
+    }
+
+    // Back to the shelf, which is where a deleted book is no longer shown.
+    router.go(Routes.library);
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.ebookDeleted(work.title)),
+        action: SnackBarAction(
+          label: l10n.ebookDeleteUndo,
+          onPressed: () async {
+            await library.restoreEbook(work.id);
+
+            messenger.showSnackBar(
+              SnackBar(content: Text(l10n.ebookRestored(work.title))),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge(<Listenable>[
@@ -119,6 +187,7 @@ class _EbookScreenState extends State<EbookScreen> {
       _model.download,
       _model.keep,
       _model.release,
+      _model.delete,
     ]),
     builder: (BuildContext context, Widget? _) {
       final l10n = AppLocalizations.of(context);
@@ -128,12 +197,20 @@ class _EbookScreenState extends State<EbookScreen> {
         appBar: AppBar(
           title: Text(work?.title ?? ''),
           actions: <Widget>[
-            if (work != null)
+            if (work != null) ...<Widget>[
               IconButton(
                 onPressed: () => context.go(Routes.editEbook(widget.ebookId)),
                 tooltip: l10n.ebookEdit,
                 icon: const Icon(Icons.edit_outlined),
               ),
+              IconButton(
+                onPressed: _model.delete.running
+                    ? null
+                    : () => _confirmDelete(work),
+                tooltip: l10n.ebookDelete,
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
           ],
         ),
         body: work == null

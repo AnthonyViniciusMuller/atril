@@ -76,7 +76,7 @@ const String opAuthor = 'sync/author: write';
 /// keeps whatever device wrote it last and a field named as JSON null is a
 /// field the reader cleared. `delta.dart` is where that vocabulary is spelled.
 final class Change {
-  const Change._(this.key, this.kind, this.delta);
+  const Change._(this.key, this.kind, this.delta, {this.liftsTombstone = false});
 
   /// A record this device is creating: a work, a grouping or a mark.
   ///
@@ -104,6 +104,25 @@ final class Change {
   /// because there is nothing to claim — the removal is the kind of the change.
   factory Change.delete(TargetEntity entity, String id) =>
       Change._(RecordKey.record(entity, id), OperationKind.delete, const {});
+
+  /// A record this device is bringing back.
+  ///
+  /// It is an ordinary update carrying no fields, and that is not the same as
+  /// a change that claims nothing: the tombstone *is* the claim, exactly as it
+  /// is for [Change.delete] in the other direction. A record's `deleted` flag
+  /// travels on the revision and the revision is derived from the kind, so an
+  /// update on a tombstoned record lifts it — on this device and, by the same
+  /// rule in `internal/sync/infra/service/records`, on every other.
+  ///
+  /// It is what makes an undo cheap. A deletion that had removed the row would
+  /// need the record rebuilt from something; a tombstone needs one operation
+  /// with nothing in it.
+  factory Change.restore(TargetEntity entity, String id) => Change._(
+    RecordKey.record(entity, id),
+    OperationKind.update,
+    const <String, Object?>{},
+    liftsTombstone: true,
+  );
 
   /// A work this device is filing under a grouping (C06, C18).
   ///
@@ -174,6 +193,13 @@ final class Change {
   /// The fields it claims.
   final Map<String, Object?> delta;
 
+  /// Whether this change's whole content is that the record is not deleted.
+  ///
+  /// It is what tells an update claiming nothing apart from a restore, and the
+  /// difference is real: the first says nothing happened, and the second says
+  /// the record is back.
+  final bool liftsTombstone;
+
   @override
   String toString() => '${kind ?? 'a write'} $key';
 }
@@ -229,10 +255,17 @@ final class OperationAuthor {
       );
     }
 
-    if (change.kind == OperationKind.update && change.delta.isEmpty) {
+    if (change.kind == OperationKind.update &&
+        change.delta.isEmpty &&
+        !change.liftsTombstone) {
       // Authoring it would tick a clock, stamp an instant and queue a push, all
       // to tell every replica that nothing happened — and the record would come
       // out of the merge reflecting this device for a write it did not make.
+      //
+      // A restore is exempt, and is not an exception to the rule: the record's
+      // `deleted` flag travels on the revision rather than in the delta, so an
+      // update carrying no fields still says something. `Change.restore` is
+      // where that is argued.
       throw AppException(
         kind: ErrorKind.invalidArgument,
         message: 'the change to ${change.key} claims no field',
