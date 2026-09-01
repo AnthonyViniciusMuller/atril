@@ -1370,8 +1370,36 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       21, `flutter_inappwebview` 19 — so the pin is not about them: it is that a Flutter upgrade
       must not be able to silently drop the devices this app runs on. Raising the floor is a
       decision, and a decision belongs in a diff
-- [ ] `build: add the ios release configuration` — the bundle identifier, the capabilities, and
-      the deployment target
+- [x] `build: add the ios release configuration` — the bundle identifier, the capabilities, and
+      the deployment target. Two of the three were already right and the check is what this
+      commit is: the bundle identifier is `dev.quire.atril`, the same string as the Android
+      application id and the GTK one, and the deployment target is **15.0 because that is what
+      Flutter 3.47 itself asks for** — `packages/flutter_tools/bin/podhelper.rb` sets
+      `s.ios.deployment_target = '15.0'` on the Flutter pod, and no dependency in this project
+      asks for more. Reading it rather than accepting the template's number is the whole of that
+      line. **The capabilities are one that was missing and one that is deliberately not taken.**
+      `flutter_secure_storage` needs the keychain-access-group entitlement on iOS exactly as it
+      does on macOS — its README says so of both — and this target had neither entitlements file:
+      the store would have raised at its first write, which is the moment the reader signs in.
+      The macOS pair got theirs in phase 6 and the iOS pair is now beside them, naming the same
+      group. What is *not* there is a **background mode**, which is the capability a
+      synchronizing app is expected to take: the schedule is foreground only on all six targets,
+      and an entitlement for work this app does not do is a permission it cannot justify. Two
+      more findings, both of which change behaviour and neither of which is signing. **iOS
+      would never have offered this app in Portuguese.** The system decides an app's language
+      from the localizations the *bundle* declares, a Flutter app declares none — the ARB files
+      are compiled into Dart and the system never sees them — and the template leaves the
+      development region as the Xcode variable, which resolves to `en`. So `pt_BR` being this
+      project's default locale was true everywhere except the one place iOS reads. It is not
+      cosmetic either: `share_plus` documents `CFBundleDevelopmentRegion` and
+      `CFBundleAllowMixedLocalizations` as the fix for a share sheet that appears in the wrong
+      language, and the share sheet is how the export of phase 10 leaves this target.
+      And **`ITSAppUsesNonExemptEncryption` is deliberately absent**: the template's answer is
+      `false`, which claims the app uses only the operating system's encryption, and this one
+      does not — the native lane's TLS is BoringSSL inside the Dart runtime. Whether that is
+      still exempt is a declaration the publisher makes, not a fact a build file asserts for
+      them, so App Store Connect asks and a person answers. **None of this was built here**: the
+      Apple targets need a macOS host, and the two jobs in `ci.yml` are what compile them
 - [ ] `build: add desktop packaging` — an AppImage or a Flatpak on Linux, a signed `.app` on
       macOS, an MSIX on Windows
 - [ ] `build: add the web build` — the manifest, the icons, the offline service worker, and the

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The keychain is where the refresh credential goes on this target, and
+	     an app reaches it only through an access group it is entitled to.
+	     Without this the store raises at the first write, which is the moment
+	     the reader signs in.
+
+	     The group is this application's own — the team prefix and the bundle
+	     identifier — which is the default group and not a shared one. It is
+	     written out rather than left as an empty array so that it reads the
+	     same as the macOS entitlements next door, where the same store keeps
+	     the same credential.
+
+	     Nothing else is here on purpose. A background mode is the capability a
+	     synchronizing app is expected to take, and this one does not take it:
+	     the schedule is foreground only on all six targets, on launch, on
+	     resume and while the app is open, which is the decision the roadmap
+	     recorded before phase 0 and `docs/architecture.md` argues at the
+	     scheduler. An entitlement for work this app does not do is a
+	     permission prompt it cannot justify. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)dev.quire.atril</string>
+	</array>
+</dict>
+</plist>

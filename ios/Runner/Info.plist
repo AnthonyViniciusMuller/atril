@@ -4,8 +4,31 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Brazilian Portuguese, because that is this app's default locale and
+	     English is its second. The template leaves this as the Xcode variable,
+	     which resolves to `en`, and the consequence is not cosmetic: the share
+	     sheet the export of phase 10 goes through on this target is laid out
+	     by the system, in the language the *bundle* says it develops in, and
+	     `share_plus` documents this key and the one below as the fix for a
+	     sheet that appears in the wrong one. -->
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>pt-BR</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+	<!-- What this bundle is offered in. iOS decides an app's language from the
+	     localizations it declares, and a Flutter app declares none of its own —
+	     the ARB files are compiled into Dart and the system never sees them.
+	     Without this key a device set to Portuguese is served the development
+	     region and nothing else, which is the one language this app is
+	     *written* in being the one it cannot be asked for.
+
+	     Both entries are here rather than `pt` alone, in the order the app
+	     supports them. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>pt-BR</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Atril</string>
 	<key>CFBundleExecutable</key>
@@ -26,6 +49,14 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- `ITSAppUsesNonExemptEncryption` is deliberately absent, and its absence
+	     costs one question per upload rather than being an oversight. The
+	     template's answer is `false`, which claims the app uses only the
+	     encryption the operating system provides — and this one does not: the
+	     native lane's TLS is BoringSSL inside the Dart runtime, not Apple's.
+	     Whether that still falls under an exemption is a declaration the
+	     publisher makes, not a fact a build file can assert on their behalf,
+	     so App Store Connect asks and a person answers. -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
