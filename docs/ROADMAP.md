@@ -1497,9 +1497,22 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       here has been executed** — it needs a tag, three runners and secrets this repository does
       not have — so it is reviewed and not proven, which is the honest state of every release
       workflow before its first tag
-- [ ] `docs: update the readme` — the status section stops saying *not started*, and the
-      getting-started section says how to reach `make dev-up` from each target, which differs on
-      the web and should not be discovered
+- [x] `docs: update the readme` — the status section stops saying *not started*, and the
+      getting-started section says how to reach `make dev-up` from each target. **The difference
+      turned out to be in two places rather than one.** The web is the target the checkbox
+      predicted, and the difference there is the *transport*: a page cannot add to the browser's
+      trust store, the certificate flag is ignored, and none of that matters because the gRPC-Web
+      lane is plain HTTP on a loopback origin, which a browser treats as a secure context. The
+      one the checkbox did not predict is the *address*, and it is worse because it fails
+      silently: `Environment.development` names both nodes at `127.0.0.1`, which on an Android
+      emulator or a connected device is the device itself. So Android needs
+      `adb reverse tcp:$port tcp:$port` over all four ports before anything resolves, the iOS
+      Simulator needs nothing because it shares the host's network stack, and an iOS device over
+      a cable has no equivalent at all — reaching the federation from one is an edit to
+      `environment.dart` and not a command, which the README says rather than leaves to be
+      found. The status section also names the **two things it cannot claim**: the release
+      workflow has never run, and the three desktop packages have never been built, both for want
+      of a tag and of runners
 
 ## Open questions
 
