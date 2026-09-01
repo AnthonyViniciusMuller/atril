@@ -9,6 +9,8 @@ import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
 import '../../services/epub/epub_host.dart';
 import '../../services/local/dao/library_dao.dart';
+import '../../services/sync/author.dart';
+import '../../services/sync/delta.dart';
 import '../../services/storage/blob_store.dart';
 import '../library/library_repository_impl.dart' show ebookOfRow;
 import 'reading_repository.dart';
@@ -32,14 +34,25 @@ const int readableSizeLimit = 200 * 1024 * 1024;
 
 /// One book, opened from what this device holds.
 final class ReadingRepositoryImpl implements ReadingRepository {
-  /// The repository over [library], reading bytes from [blobs].
-  const ReadingRepositoryImpl({required this.library, required this.blobs});
+  /// The repository over [library], reading bytes from [blobs] and writing
+  /// through [author].
+  const ReadingRepositoryImpl({
+    required this.library,
+    required this.blobs,
+    required this.author,
+  });
 
   /// The rows.
   final LibraryDao library;
 
   /// Where the file is.
   final BlobStore blobs;
+
+  /// Where a change to a replicable record goes. There is no other way out of
+  /// this repository, and C21 is why: `UpdateReadingProgress` writes the node's
+  /// table and appends nothing to its log, so a position sent that way reaches
+  /// the reader's other devices never.
+  final OperationAuthor author;
 
   @override
   Future<Result<EpubBook>> openBook(String ebookId) async {
@@ -113,6 +126,38 @@ final class ReadingRepositoryImpl implements ReadingRepository {
       _log.warning('$ebookId could not be opened', error);
 
       return Result<EpubBook>.error(_failure(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> saveProgress({
+    required String ebookId,
+    required String locator,
+    double? percent,
+  }) async {
+    try {
+      await author.write(
+        Change.position(
+          ebookId: ebookId,
+          delta: <String, Object?>{
+            fieldLocator: locator,
+            // Claimed even when it is null, which clears a percentage a
+            // previous version of this app could compute and this one cannot.
+            // A field the delta does not name keeps whatever wrote it last,
+            // and a stale percentage beside a fresh locator is worse than none.
+            fieldPercent: percent,
+          },
+        ),
+      );
+
+      return const Result<void>.ok(null);
+    } on Object catch (error) {
+      // A position that could not be written is worth a line and is not worth
+      // interrupting a reader over: they are reading, the page is on screen,
+      // and the next turn will try again.
+      _log.warning('the position in $ebookId could not be written', error);
+
+      return Result<void>.error(_failure(error));
     }
   }
 

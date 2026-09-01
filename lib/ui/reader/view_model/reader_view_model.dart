@@ -33,6 +33,18 @@ import '../../../utils/result.dart';
 
 final _log = loggerFor('ui/reader');
 
+/// How long a reader stays on a page before it is worth recording.
+///
+/// A position written per page turn would be an operation per turn — a log
+/// nobody wants, pushed to a node nobody asked, and a vector clock ticking
+/// through a chapter. What a resumed book actually needs is the page somebody
+/// stopped on, and somebody who stopped has been still for longer than this.
+///
+/// Three seconds is short enough that a reader interrupted by a phone call
+/// keeps their place and long enough that flicking through a chapter writes
+/// once.
+const Duration readingPositionDebounce = Duration(seconds: 3);
+
 /// The state of the reader's screen.
 final class ReaderViewModel extends ChangeNotifier {
   /// The view model over [reading], showing the work [ebookId] names in a host
@@ -42,6 +54,7 @@ final class ReaderViewModel extends ChangeNotifier {
     required this.hosts,
     required this.settings,
     required this.ebookId,
+    this.debounce = readingPositionDebounce,
   }) : host = hosts.create() {
     open = Command0<void>(_open);
     turnForward = Command0<void>(() => _guard(host.nextPage));
@@ -73,6 +86,12 @@ final class ReaderViewModel extends ChangeNotifier {
   /// The work being read.
   final String ebookId;
 
+  /// How long a page is held before its position is recorded.
+  ///
+  /// A parameter so that a test can say what it expects rather than wait three
+  /// seconds for it.
+  final Duration debounce;
+
   /// The engine, and this platform's DOM for it.
   ///
   /// The screen places `host.view()` and asks this object for nothing else:
@@ -93,6 +112,8 @@ final class ReaderViewModel extends ChangeNotifier {
   late final Command1<void, String> goTo;
 
   StreamSubscription<EpubPosition>? _positions;
+  Timer? _pending;
+  EpubPosition? _unsaved;
 
   Ebook? _work;
   EpubStyle _style = const EpubStyle();
@@ -239,11 +260,55 @@ final class ReaderViewModel extends ChangeNotifier {
   void _onPosition(EpubPosition position) {
     _position = position;
     notifyListeners();
+
+    // The page the reader is on now, waiting to see whether they stay on it.
+    // Each turn replaces the last rather than queueing behind it, so a reader
+    // flicking through a chapter writes one operation and not thirty.
+    _unsaved = position;
+    _pending?.cancel();
+    _pending = Timer(debounce, () => unawaited(_savePosition()));
+  }
+
+  /// Records where the reader stopped, if they have moved since the last time.
+  ///
+  /// It is called by the debounce and again when the screen closes, and the
+  /// second is not redundant: a reader who opens a book, reads one page and
+  /// leaves within the debounce would otherwise lose the only thing this
+  /// screen was for.
+  Future<void> _savePosition() async {
+    final EpubPosition? position = _unsaved;
+
+    if (position == null) {
+      return;
+    }
+
+    // Cleared before the write and not after, so that a write still in flight
+    // when the screen closes is not repeated by the close.
+    _unsaved = null;
+    _pending?.cancel();
+    _pending = null;
+
+    final Result<void> written = await reading.saveProgress(
+      ebookId: ebookId,
+      locator: position.startCfi,
+      percent: position.percent,
+    );
+
+    if (written case Error<void>(:final Exception error)) {
+      // Not shown to the reader. They are reading, the page is on screen, and
+      // the next turn will try again — an error banner over a book because a
+      // bookmark did not save would be worse than the thing it reports.
+      _log.warning('the position in $ebookId was not recorded', error);
+    }
   }
 
   @override
   void dispose() {
     _disposed = true;
+    _pending?.cancel();
+    // The last page, written on the way out. A reader who read one page and
+    // closed the book within the debounce still comes back to it.
+    unawaited(_savePosition());
     unawaited(_positions?.cancel());
     unawaited(host.dispose());
     open.dispose();

@@ -1012,11 +1012,27 @@ and they are recorded here because none of them is visible from the package's RE
       a dialog that applied on dismissal would ask somebody to imagine a result they can look at.
       Restyling is a method rather than a `Command` — a control that greyed out while the size
       was applying would flicker under a reader stepping through sizes, which is how it is used
-- [ ] `feat: track reading position` — UC04. The CFI the host reports, and the percentage derived
+- [x] `feat: track reading position` — UC04. The CFI the host reports, and the percentage derived
       from it and stored anyway, so a device that cannot open a DjVu can still report that the
       reader is forty percent through it. Written through the operation author like every other
-      change, debounced, because a position that wrote an operation per page turn would be a log
-      nobody wants
+      change — never `UpdateReadingProgress`, which C21 makes useless — and the author decides
+      whether it is an insert, because C05 makes that answerable: a position has one writer, so a
+      record this device never stamped is a record that does not exist.
+
+      Debounced at three seconds, and each turn replaces the last rather than queueing behind it,
+      so flicking through a chapter writes one operation and not thirty. **It is written again on
+      the way out, and that is not redundant**: a reader who opens a book, reads a page and
+      closes it inside the debounce would otherwise lose the only thing the screen was for. A
+      page already written is not written twice, and a book nobody turned a page in writes
+      nothing at all — recording a position on *open* would move a bookmark set on another device
+      because somebody glanced at the first page here.
+
+      The percentage is claimed even when it is absent. A field the delta does not name keeps
+      whatever wrote it last, so a locator that moved beside a percentage that did not would be a
+      row disagreeing with itself. The debounce lives in the view model rather than the
+      repository, because what it is about is the rate of page turns and the view model is what
+      sees them; a failure to write is logged and never shown, since a banner over a book because
+      a bookmark did not save is worse than the thing it reports
 - [ ] `feat: add continue reading` — the shelf that reads the position rows back, including the
       ones this reader's other devices wrote. Where each device stopped in each book is a
       question with one answer per device, and showing all of them is the point

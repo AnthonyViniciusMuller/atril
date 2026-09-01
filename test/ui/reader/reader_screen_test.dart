@@ -15,6 +15,7 @@ import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/services/storage/reader_settings_store.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/ui/core/localization/localization.dart';
+import 'package:atril/ui/reader/view_model/reader_view_model.dart';
 import 'package:atril/ui/reader/widgets/reader_screen.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
@@ -112,6 +113,21 @@ final class _FakeReading implements ReadingRepository {
       : Result<EpubBook>.ok(
           EpubBook(ebookId: ebookId, bytes: Uint8List(4), title: 'Os Sertões'),
         );
+
+  /// Every position the screen recorded, in order.
+  final List<({String locator, double? percent})> saved =
+      <({String locator, double? percent})>[];
+
+  @override
+  Future<Result<void>> saveProgress({
+    required String ebookId,
+    required String locator,
+    double? percent,
+  }) async {
+    saved.add((locator: locator, percent: percent));
+
+    return const Result<void>.ok(null);
+  }
 
   @override
   Future<Result<Ebook?>> ebook(String ebookId) async => Result<Ebook?>.ok(null);
@@ -295,6 +311,134 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(host.disposed, isTrue);
+    });
+  });
+
+  group('where the reader stopped', () {
+    testWidgets('is not recorded on every page turn', (
+      WidgetTester tester,
+    ) async {
+      // A position written per turn would be an operation per turn — a log
+      // nobody wants, pushed to a node nobody asked, and a vector clock
+      // ticking through a chapter.
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(10);
+      host.moveTo(20);
+      host.moveTo(30);
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(reading.saved, isEmpty);
+    });
+
+    testWidgets('is recorded once, at the page they stayed on', (
+      WidgetTester tester,
+    ) async {
+      // Each turn replaces the last rather than queueing behind it, so a
+      // reader flicking through a chapter writes one operation and not thirty
+      // — and the one it writes is where they actually stopped.
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(10);
+      await tester.pump(const Duration(seconds: 1));
+      host.moveTo(20);
+      await tester.pump(const Duration(seconds: 1));
+      host.moveTo(30);
+
+      await tester.pump(readingPositionDebounce);
+      await tester.pumpAndSettle();
+
+      expect(reading.saved, hasLength(1));
+      expect(reading.saved.single.percent, 30);
+    });
+
+    testWidgets('carries the locator the engine gave, byte for byte', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(50);
+      await tester.pump(readingPositionDebounce);
+      await tester.pumpAndSettle();
+
+      // The start of the page and not its end, because a reader resuming wants
+      // the page they were on rather than the one after it.
+      expect(reading.saved.single.locator, 'epubcfi(/6/4!/4/2)');
+    });
+
+    testWidgets('is recorded on the way out, before the debounce fires', (
+      WidgetTester tester,
+    ) async {
+      // The case the debounce would otherwise lose entirely: a reader opens a
+      // book, reads one page and closes it. Without this the only thing the
+      // screen existed for is thrown away.
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(7);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(reading.saved, isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+
+      expect(reading.saved, hasLength(1));
+      expect(reading.saved.single.percent, 7);
+    });
+
+    testWidgets('a page already written is not written again on the way out', (
+      WidgetTester tester,
+    ) async {
+      // Closing after the debounce has already fired should not append a
+      // second identical operation to a log this device owes.
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(64);
+      await tester.pump(readingPositionDebounce);
+      await tester.pumpAndSettle();
+
+      expect(reading.saved, hasLength(1));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+
+      expect(reading.saved, hasLength(1));
+    });
+
+    testWidgets('a book nobody turned a page in writes nothing', (
+      WidgetTester tester,
+    ) async {
+      // Opening a book is not reading it. A position written on open would
+      // move a bookmark a reader set on another device, simply because they
+      // glanced at the first page here.
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(_FakeHost())));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+
+      expect(reading.saved, isEmpty);
     });
   });
 

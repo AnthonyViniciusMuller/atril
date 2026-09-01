@@ -12,6 +12,10 @@ import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository_impl.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/services/local/database.dart';
+import 'package:atril/data/services/sync/author.dart';
+import 'package:atril/data/services/sync/reconciler.dart';
+import 'package:atril/domain/crdt/hybrid_clock.dart';
+import 'package:atril/domain/models/operation.dart';
 import 'package:atril/data/services/storage/blob_store.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/utils/errors.dart';
@@ -36,6 +40,8 @@ String _id(String name) =>
 
 /// The device the seeded rows are attributed to.
 const String _device = '11111111-1111-4111-8111-111111111111';
+
+int _minted = 0;
 
 AtrilDatabase _open() {
   final AtrilDatabase database = AtrilDatabase(NativeDatabase.memory());
@@ -83,10 +89,35 @@ void main() {
   late MemoryBlobStore blobs;
   late ReadingRepository reading;
 
-  setUp(() {
+  late OperationAuthor author;
+
+  setUp(() async {
     database = _open();
     blobs = MemoryBlobStore();
-    reading = ReadingRepositoryImpl(library: database.libraryDao, blobs: blobs);
+
+    // Bound, because the author refuses to write on a device that has no
+    // identity: an operation carrying no author is a clock entry nothing could
+    // attribute.
+    await database.identityDao.bindDevice(
+      id: _device,
+      name: 'o telefone',
+      platform: 'android',
+      at: _at,
+    );
+
+    final HybridClock clock = HybridClock(wall: () => _at);
+
+    author = OperationAuthor(
+      database: database,
+      clock: clock,
+      reconciler: Reconciler(database, clock),
+      mint: () => _id('p${++_minted}'),
+    );
+    reading = ReadingRepositoryImpl(
+      library: database.libraryDao,
+      blobs: blobs,
+      author: author,
+    );
   });
 
   /// The code a refusal carries, or `null` where it succeeded.
@@ -186,9 +217,141 @@ void main() {
         final ReadingRepository small = ReadingRepositoryImpl(
           library: database.libraryDao,
           blobs: _CapaciousStore(blobs, reported: readableSizeLimit + 1),
+          author: author,
         );
 
         expect(codeOf(await small.openBook(_id('g'))), 'ebook_too_large');
+      },
+    );
+  });
+
+  group('recording where this device stopped', () {
+    test('authors an operation rather than calling the node', () async {
+      // C21. A position written through `UpdateReadingProgress` writes the
+      // node's table and appends nothing to its log, so it reaches the
+      // reader's other devices never. Every write in this application is an
+      // operation, and this checks the log rather than the row.
+      await _seed(database, blobs, id: 'a', bytes: <int>[1]);
+
+      await reading.saveProgress(
+        ebookId: _id('a'),
+        locator: 'epubcfi(/6/4[ch1]!/4/2/2/1:0)',
+        percent: 12.5,
+      );
+
+      // The log this device owes a node, which is where an authored change
+      // lands and where a change made through the API never would.
+      final List<Operation> owed = await database.syncDao.pending();
+
+      expect(owed, hasLength(1));
+      expect(owed.single.entity, TargetEntity.readingProgress);
+      expect(owed.single.deviceId, _device);
+    });
+
+    test('the row carries the locator byte for byte', () async {
+      // The invariant the whole phase rests on, at the point where a locator
+      // stops being a value in memory and becomes a row that replicates.
+      const String cfi =
+          'epubcfi(/6/14[chap05ref]!/4[body01]/10[para05],/2/1:1,/3:4)';
+
+      await _seed(database, blobs, id: 'b', bytes: <int>[1]);
+      await reading.saveProgress(ebookId: _id('b'), locator: cfi, percent: 40);
+
+      final ProgressRow row = await (database.select(
+        database.progress,
+      )..where((t) => t.ebookId.equals(_id('b')))).getSingle();
+
+      expect(row.locator, cfi);
+      expect(row.percent, 40);
+      expect(row.deviceId, _device);
+    });
+
+    test(
+      'writing again updates the one row rather than appending another',
+      () async {
+        // C05 and the grain Quadro 21 specifies: one row per work and device.
+        // A second row would be this device disagreeing with itself about where
+        // it stopped.
+        await _seed(database, blobs, id: 'c', bytes: <int>[1]);
+
+        await reading.saveProgress(
+          ebookId: _id('c'),
+          locator: 'epubcfi(/6/4!/4/2/2)',
+          percent: 10,
+        );
+        await reading.saveProgress(
+          ebookId: _id('c'),
+          locator: 'epubcfi(/6/8!/4/2/2)',
+          percent: 60,
+        );
+
+        final List<ProgressRow> rows = await database
+            .select(database.progress)
+            .get();
+
+        expect(rows, hasLength(1));
+        expect(rows.single.locator, 'epubcfi(/6/8!/4/2/2)');
+        expect(rows.single.percent, 60);
+      },
+    );
+
+    test('the second write supersedes the first rather than tying with it', () async {
+      // A position has exactly one writer, so its versions are totally ordered
+      // by that device's own counter and can never be concurrent (C05). The
+      // clock ticking is what makes the second write win on every replica and
+      // not only on this one.
+      await _seed(database, blobs, id: 'd', bytes: <int>[1]);
+
+      await reading.saveProgress(
+        ebookId: _id('d'),
+        locator: 'epubcfi(/6/4!/4/2/2)',
+      );
+
+      final ProgressRow first = await database
+          .select(database.progress)
+          .getSingle();
+
+      await reading.saveProgress(
+        ebookId: _id('d'),
+        locator: 'epubcfi(/6/8!/4/2/2)',
+      );
+
+      final ProgressRow second = await database
+          .select(database.progress)
+          .getSingle();
+
+      expect(
+        second.vectorClock[_device],
+        greaterThan(first.vectorClock[_device]),
+      );
+      // The same row, kept: the identifier this device minted is provenance
+      // and is reused, which is the half of C18 that matters on every write.
+      expect(second.id, first.id);
+    });
+
+    test(
+      'a percentage nothing could compute is cleared, not left stale',
+      () async {
+        // A field the delta does not name keeps whatever wrote it last, so an
+        // absent percentage has to be claimed as null — a stale percentage
+        // beside a fresh locator is worse than none.
+        await _seed(database, blobs, id: 'e', bytes: <int>[1]);
+
+        await reading.saveProgress(
+          ebookId: _id('e'),
+          locator: 'epubcfi(/6/4!/4/2/2)',
+          percent: 30,
+        );
+        await reading.saveProgress(
+          ebookId: _id('e'),
+          locator: 'epubcfi(/6/8!/4/2/2)',
+        );
+
+        final ProgressRow row = await database
+            .select(database.progress)
+            .getSingle();
+
+        expect(row.percent, isNull);
       },
     );
   });

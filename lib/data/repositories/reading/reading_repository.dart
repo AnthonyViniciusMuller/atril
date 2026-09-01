@@ -47,6 +47,28 @@ abstract interface class ReadingRepository {
   /// `EpubBook` carries the reasoning and the cost.
   Future<Result<EpubBook>> openBook(String ebookId);
 
+  /// UC04. Records where this device stopped in [ebookId].
+  ///
+  /// **It is authored as an operation like every other change** — never through
+  /// `UpdateReadingProgress`, which C21 makes useless: a position written
+  /// through the node's API reaches the reader's other devices never. The
+  /// author decides whether this is the first position this device has written,
+  /// because C05 makes that answerable: a position has exactly one writer, so a
+  /// record this device has never stamped is a record that does not exist.
+  ///
+  /// [percent] is stored even where the locator is one this build could not
+  /// resolve, because a device that cannot open a DjVu can still say the reader
+  /// is forty percent through it — which is what the column is for.
+  ///
+  /// **The caller debounces.** This writes an operation every time it is
+  /// called, and a page turn is a call: `ReaderViewModel` is where the rate is
+  /// decided, because it is what sees the turns.
+  Future<Result<void>> saveProgress({
+    required String ebookId,
+    required String locator,
+    double? percent,
+  });
+
   /// The record itself, for the chrome around the page.
   ///
   /// It is here rather than read through `LibraryRepository` so that the

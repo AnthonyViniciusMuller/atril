@@ -264,8 +264,11 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     ),
 
     Provider<ReadingRepository>(
-      create: (BuildContext context) =>
-          ReadingRepositoryImpl(library: database.libraryDao, blobs: blobs),
+      create: (BuildContext context) => ReadingRepositoryImpl(
+        library: database.libraryDao,
+        blobs: blobs,
+        author: context.read<OperationAuthor>(),
+      ),
     ),
 
     // What gives the engine a DOM on this platform. It is a *factory* and not a
