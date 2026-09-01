@@ -880,10 +880,18 @@ and they are recorded here because none of them is visible from the package's RE
       two commented-out CDN tags, and a *nothing is fetched at run time* assertion that read
       commented-out markup would be red on a page that fetches nothing, which is an assertion
       somebody deletes
-- [ ] `feat: add the epub host interface` — the port every platform implements: open a book from
+- [x] `feat: add the epub host interface` — the port every platform implements: open a book from
       the blob store, render it, navigate, report the current CFI, resolve one, and apply a
       highlight over a CFI range. It is the whole surface the reader feature knows, and it names
-      no webview
+      no webview. One invariant is stated as a rule rather than left to each implementation to
+      observe: **a locator crosses the port unchanged, in both directions** — no normalizing, no
+      trimming, no re-encoding — because two hosts that each tidied a CFI slightly differently
+      would be two CFI implementations wearing one interface, which is this phase's failure
+      arriving by the back door. The book crosses as bytes and not as a stream or a path: epub.js
+      reads a zip by seeking in it, the web target has no path, and on the native targets the file
+      lives in a blob store addressed by digest. Styling is in the port from the start even though
+      the settings screen is four commits away, because the port is meant to be the whole surface
+      and a port that grows a method per screen is a port nobody can implement against
 - [ ] `feat: add the webview epub host` — `flutter_epub_viewer` on the five targets it reaches:
       Android, iOS, macOS and Windows through `flutter_inappwebview`, and a browser through the
       same package's `<iframe>` and `dart:js_interop` path. It is **one** implementation of the
