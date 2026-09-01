@@ -80,6 +80,7 @@ lib/
 │   ├── services/
 │   │   ├── api/                  one client per gRPC service, over the generated stubs
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
+│   │   ├── content/              the chunked upload and the download of a work's bytes
 │   │   ├── discovery/            the `.well-known` lookup — the one call that is not gRPC
 │   │   ├── epub/                 the OPF, read for the metadata an import claims
 │   │   ├── files/                the file a reader named: the picker port, and what a name says
@@ -331,6 +332,15 @@ does too. Neither is a reason to relax the rule.
 Recorded here because each one shapes a screen rather than a line of code.
 
 - **C21**, above: the online write path replicates to nobody. Atril writes locally and pushes.
+- **C16**: an upload carries a digest and no work, so the node has nothing to check it against
+  but one thing — whether the calling reader already holds a work naming that digest. The flow
+  the contract describes is `CreateEbook`, read `content_missing`, then upload, and **Atril never
+  calls `CreateEbook`**: the work reaches the node when the log is pushed. So the bytes of a
+  freshly imported book are refused with `unclaimed_content` until that push has happened, and
+  that is a *not yet* rather than a failure — nothing about the file is wrong and the same call
+  succeeds afterwards. The record does not wait for the bytes; the bytes wait for the record.
+  `data/services/content/content_uploader.dart` states it where the call is made, and the queue
+  beside it is what leaves such a transfer waiting instead of giving up on it.
 - **C18**: `ebook_collection` and `reading_progress` are identified across the federation by
   their natural key — `(ebook_id, collection_id)` and `(ebook_id, device_id)` — carried in the
   delta. The surrogate id is a local handle. Atril mints its own and remembers it, exactly as

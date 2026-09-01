@@ -639,12 +639,26 @@ that reason.
       extracts its own. That is the first table this phase adds and therefore the app's first
       migration — every version so far only adds, so the whole of it is drift's `createAll`,
       whose statements are `CREATE TABLE IF NOT EXISTS`
-- [ ] `feat: add content upload` — the chunked shape D11 added, on all six targets:
+- [x] `feat: add content upload` — the chunked shape D11 added, on all six targets:
       `BeginEbookUpload` declares the size and the digest and is refused there if the node will
       not take it, `PutEbookChunk` carries each chunk at the offset it continues from, and
       `FinishEbookUpload` is where the node's hash is checked against what was declared. It is
-      independent of the record: the call names a digest and not an e-book, so an import queues
-      its operation and uploads its bytes without either waiting for the other
+      independent of the record: the call names a digest and not an e-book, so ~~an import queues
+      its operation and uploads its bytes without either waiting for the other~~ **the record
+      does not wait for the bytes — and the bytes do wait for the record.** That is C16, checked
+      against `internal/library/application/upload/rules.go` rather than assumed, and it is the
+      one assumption of this phase that turned out false. Because the call carries no work
+      identifier the node has nothing to check it against but one thing: whether the calling
+      reader already holds a work naming the digest. The flow the contract describes is
+      `CreateEbook`, read `content_missing`, then upload — and Atril never calls `CreateEbook`,
+      so the work reaches the node only when the log is pushed. Until then the upload is refused
+      `unclaimed_content`, which is a *not yet* and not a failure: nothing about the file is
+      wrong and the same call succeeds after the next push. The uploader therefore does not give
+      up on such a transfer, the queue two commits below is where one waits, and phase 11's loop
+      is what will drive it. Recorded in `architecture.md` beside C18 and C21. The chunk is 256
+      KiB, which is `internal/client`'s own number rather than a coincidence — gRPC refuses a
+      message over four megabytes and a client that sized its chunks by the file would work on
+      every book it was tested with and fail on the atlas
 - [ ] `feat: resume an interrupted upload` — the property the client stream did not have. A
       `PutEbookChunk` reply carries `received_bytes`, which is the offset the next chunk must
       carry, so a caller whose connection died continues from what arrived and one that lost a

@@ -13,7 +13,13 @@ import 'package:atril/data/services/api/generated/quire/v1/reading.pbgrpc.dart'
 import 'package:grpc/grpc.dart';
 
 /// The node's `LibraryService`, as far as a seed is concerned.
-final class FakeLibraryService extends lib.LibraryServiceBase {
+///
+/// It is `base` rather than `final` so that the content tests can extend it
+/// with the four calls of the chunked upload and the download. Extending it
+/// rather than writing a second fake is what keeps the refusals below in one
+/// place: a write RPC that stopped being refused would stop being refused
+/// everywhere at once, which is a change somebody has to make on purpose.
+base class FakeLibraryService extends lib.LibraryServiceBase {
   /// The reader's works.
   final List<lib.Ebook> ebooks = <lib.Ebook>[];
 
