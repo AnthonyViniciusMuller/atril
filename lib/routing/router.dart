@@ -34,6 +34,7 @@ import '../data/services/api/session.dart';
 import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
 import '../ui/core/ui/not_found_screen.dart';
+import '../ui/library/widgets/ebook_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
 import '../ui/onboarding/widgets/password_reset_screen.dart';
 import '../ui/onboarding/widgets/recovery_screen.dart';
@@ -136,6 +137,20 @@ GoRouter atrilRouter({
                 path: Routes.library,
                 builder: (BuildContext context, GoRouterState state) =>
                     const LibraryScreen(),
+                // One work, below the shelf it was opened from. The identifier
+                // is in the path and not in an object handed over, which is
+                // what makes the location survive a reload in a browser and a
+                // link somebody pasted.
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: Routes.ebookSegment,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        EbookScreen(
+                          ebookId:
+                              state.pathParameters[Routes.ebookParameter] ?? '',
+                        ),
+                  ),
+                ],
               ),
             ],
           ),

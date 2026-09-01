@@ -21,6 +21,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
@@ -29,6 +30,7 @@ import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
+import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -109,9 +111,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -135,9 +136,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
         // them is what keeps the body and the floating button from disagreeing
         // about whether one is in flight.
         listenable: Listenable.merge(<Listenable>[_model, _model.importBook]),
-        builder: (BuildContext context, Widget? _) => _LibraryBody(
-          model: _model,
-        ),
+        builder: (BuildContext context, Widget? _) =>
+            _LibraryBody(model: _model),
       ),
       floatingActionButton: ListenableBuilder(
         listenable: _model.importBook,
@@ -317,9 +317,7 @@ class _EmptyShelf extends StatelessWidget {
         title: l10n.libraryEmptyTitle,
         message: l10n.libraryEmptyMessage,
         action: FilledButton.icon(
-          onPressed: model.importBook.running
-              ? null
-              : model.importBook.execute,
+          onPressed: model.importBook.running ? null : model.importBook.execute,
           icon: const Icon(Icons.add),
           label: Text(l10n.libraryImport),
         ),
@@ -445,6 +443,11 @@ class _WorkTile extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     ),
+    // A location and not a pushed object. The work's screen is addressable, so
+    // it survives a reload in a browser and a link somebody pasted, and it is
+    // nested under the shelf so that the way back is where the reader came
+    // from.
+    onTap: () => context.go(Routes.ebook(work.id)),
   );
 }
 
@@ -458,31 +461,34 @@ class _WorkCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: AspectRatio(
-            aspectRatio: coverAspect,
-            child: _Cover(work: work),
+    return InkWell(
+      onTap: () => context.go(Routes.ebook(work.id)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: coverAspect,
+              child: _Cover(work: work),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          work.title,
-          style: theme.textTheme.bodyMedium,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        Text(
-          work.author ?? AppLocalizations.of(context).libraryUnknownAuthor,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(height: 8),
+          Text(
+            work.title,
+            style: theme.textTheme.bodyMedium,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+          Text(
+            work.author ?? AppLocalizations.of(context).libraryUnknownAuthor,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -529,10 +535,7 @@ class _CoverState extends State<_Cover> {
   Widget build(BuildContext context) => FutureBuilder<Result<EpubCover?>>(
     future: _cover,
     builder:
-        (
-          BuildContext context,
-          AsyncSnapshot<Result<EpubCover?>> snapshot,
-        ) {
+        (BuildContext context, AsyncSnapshot<Result<EpubCover?>> snapshot) {
           final cover = switch (snapshot.data) {
             Ok<EpubCover?>(:final value) => value,
             _ => null,
@@ -547,8 +550,11 @@ class _CoverState extends State<_Cover> {
                     fit: BoxFit.cover,
                     // A picture that will not decode is a picture, not a
                     // failure of the shelf.
-                    errorBuilder: (BuildContext context, Object _, StackTrace? _) =>
-                        _CoverPlaceholder(work: widget.work),
+                    errorBuilder: (
+                      BuildContext context,
+                      Object _,
+                      StackTrace? _,
+                    ) => _CoverPlaceholder(work: widget.work),
                   ),
                 );
         },

@@ -725,8 +725,20 @@ that reason.
       lands in the settings screen's storage section, which is where a reader looks for what is
       taking up room; the detail screen of the next commit offers the same decision about the
       book they are looking at
-- [ ] `feat: add the e-book detail screen` — the metadata, the cover, where the bytes are, and
-      the actions
+- [x] `feat: add the e-book detail screen` — the metadata, the cover, where the bytes are, and
+      the actions. *Where the bytes are* is not a nicety on this screen; it is D02 reaching a
+      reader, and it is one value rather than three booleans because the states are not
+      independent and the sentence depends on the combination — a book can be here and still owed
+      to the node, which every freshly imported one is, and a book that is neither here nor owed
+      is one whose file is on the node. `ContentState` is what carries that, and the four
+      sentences it selects are what makes the refusal to release the only copy make sense rather
+      than look arbitrary. Two other things are worth recording. A work another device deleted is
+      a **state** and not a failure — the tombstone arrived, the reconciler applied it, and the
+      screen says so with the reason instead of apologizing for working — and it is told apart
+      from *the first answer has not come back* by a flag, because saying a book was deleted
+      before the query has run is a lie one frame long. And the location carries the identifier
+      rather than the work: it is nested under the shelf, so the way back is where the reader
+      came from, and it survives a reload in a browser and a link somebody pasted
 - [ ] `feat: add metadata editing` — RF05, including the extra metadata the format carried and
       the contract does not name. It is an object and never a scalar, because the column it lands
       in is `jsonb` and constrained to one

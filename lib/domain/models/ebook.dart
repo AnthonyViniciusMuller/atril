@@ -135,6 +135,62 @@ final class EbookContent {
   String toString() => 'EbookContent($contentHash, $sizeBytes bytes)';
 }
 
+/// Where a work's bytes are, from this device's point of view.
+///
+/// It is one value and not three booleans scattered over a screen, because the
+/// states a reader can be in are not independent and the sentence to show them
+/// depends on the combination. A book can be here and still owed to the node —
+/// that is every freshly imported book — and one that is neither here nor owed
+/// is one whose file lives on the node and has not been fetched.
+///
+/// The reason it has to be said at all is D02: a device holding the row and not
+/// the bytes is the ordinary state of a book that has not been downloaded, and
+/// in a browser it is the ordinary state of every book the reader has not asked
+/// to keep. A screen that assumed the file was there would be a screen that
+/// opens a book which is not on this device.
+final class ContentState {
+  /// The bytes are [onThisDevice], [kept] by the reader's decision or the
+  /// platform's default, and — where the node has not received them —
+  /// [sentBytes] of [owedBytes] delivered.
+  const ContentState({
+    required this.onThisDevice,
+    required this.kept,
+    this.owedBytes,
+    this.sentBytes = 0,
+  });
+
+  /// Whether this device holds the file.
+  final bool onThisDevice;
+
+  /// Whether this device is keeping it when the network is not there.
+  final bool kept;
+
+  /// How many bytes the node has still to receive, or `null` when it has them.
+  final int? owedBytes;
+
+  /// How many of those the node has acknowledged.
+  final int sentBytes;
+
+  /// Whether the node has not received the file yet.
+  ///
+  /// While this holds, the file is on this device and nowhere else, which is
+  /// why releasing it is refused: it is the only copy there is.
+  bool get isOwed => owedBytes != null;
+
+  /// How far the transfer has got, between zero and one.
+  double get sentFraction {
+    final total = owedBytes;
+
+    return total == null || total == 0
+        ? 0
+        : (sentBytes / total).clamp(0, 1).toDouble();
+  }
+
+  @override
+  String toString() =>
+      'ContentState(here: $onThisDevice, kept: $kept, owed: $owedBytes)';
+}
+
 /// One message of a download.
 ///
 /// It is a sealed pair rather than a stream of bytes with the description

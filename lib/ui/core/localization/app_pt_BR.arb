@@ -626,5 +626,132 @@
         "example": "820"
       }
     }
+  },
+
+  "ebookNotFoundTitle": "Este livro não está mais aqui",
+  "@ebookNotFoundTitle": {
+    "description": "Título mostrado quando a tela de um livro é aberta e o livro não existe mais — outro dispositivo do leitor o apagou e a exclusão chegou aqui. É um estado e não um erro."
+  },
+
+  "ebookNotFoundMessage": "Ele foi apagado em outro dispositivo, e a exclusão chegou até aqui.",
+  "@ebookNotFoundMessage": {
+    "description": "Corpo da tela de um livro que não existe mais. Explica por que ele sumiu, para que o leitor não ache que o aplicativo perdeu alguma coisa."
+  },
+
+  "ebookMetadataSection": "Ficha",
+  "@ebookMetadataSection": {
+    "description": "Título da seção com os dados do livro — autor, editora, idioma, formato, tamanho e data de entrada no acervo. \"Ficha\" é o termo de biblioteca para o registro de uma obra."
+  },
+
+  "ebookPublisher": "Editora",
+  "@ebookPublisher": {
+    "description": "Rótulo do campo da editora, na ficha do livro."
+  },
+
+  "ebookLanguage": "Idioma",
+  "@ebookLanguage": {
+    "description": "Rótulo do campo do idioma, na ficha do livro. O valor é a etiqueta que o arquivo declarou, como pt-BR."
+  },
+
+  "ebookFormat": "Formato",
+  "@ebookFormat": {
+    "description": "Rótulo do campo do formato do arquivo, na ficha do livro."
+  },
+
+  "ebookSize": "Tamanho",
+  "@ebookSize": {
+    "description": "Rótulo do campo do tamanho do arquivo, na ficha do livro."
+  },
+
+  "ebookImportedAt": "Adicionado em",
+  "@ebookImportedAt": {
+    "description": "Rótulo da data em que o livro entrou no acervo do leitor."
+  },
+
+  "ebookUnknownFormat": "Formato desconhecido",
+  "@ebookUnknownFormat": {
+    "description": "Mostrado no lugar do formato quando o servidor conhece um formato que esta versão do aplicativo não sabe nomear. O livro continua listado e sincronizado; só não dá para dizer o que ele é."
+  },
+
+  "ebookShelvesSection": "Estantes",
+  "@ebookShelvesSection": {
+    "description": "Título da seção que mostra em quais estantes e categorias o livro está arquivado."
+  },
+
+  "ebookNoShelves": "Não está em nenhuma estante.",
+  "@ebookNoShelves": {
+    "description": "Mostrado na seção de estantes quando o livro não foi arquivado em nenhuma."
+  },
+
+  "ebookFileSection": "Arquivo",
+  "@ebookFileSection": {
+    "description": "Título da seção que diz onde estão os bytes do livro: neste dispositivo, no servidor, ou ainda esperando para ser enviado."
+  },
+
+  "ebookFileHere": "Guardado neste dispositivo. Abre sem rede.",
+  "@ebookFileHere": {
+    "description": "Estado do arquivo quando este dispositivo tem os bytes e vai mantê-los."
+  },
+
+  "ebookFileHereNotKept": "Está neste dispositivo, mas não foi marcado para ficar.",
+  "@ebookFileHereNotKept": {
+    "description": "Estado do arquivo quando os bytes estão aqui e o leitor não pediu para guardá-los — o caso do navegador, onde o arquivo foi baixado para leitura e não para ficar."
+  },
+
+  "ebookFileOnServer": "Está no servidor. Baixe para ler sem rede.",
+  "@ebookFileOnServer": {
+    "description": "Estado do arquivo quando este dispositivo tem o registro do livro e não os bytes. É o estado normal de um livro que chegou por sincronização."
+  },
+
+  "ebookFileWaiting": "Ainda não enviado ao servidor. Este dispositivo tem a única cópia.",
+  "@ebookFileWaiting": {
+    "description": "Estado do arquivo quando ele ainda está na fila de envio. Diz ao leitor por que não dá para liberar o espaço dele: a cópia daqui é a única que existe."
+  },
+
+  "ebookFileSending": "Enviando ao servidor: {percent}%",
+  "@ebookFileSending": {
+    "description": "Estado do arquivo enquanto o envio está em andamento, com a fração que o servidor já confirmou ter recebido.",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "42"
+      }
+    }
+  },
+
+  "ebookDownload": "Baixar",
+  "@ebookDownload": {
+    "description": "Ação que traz os bytes do livro do servidor para este dispositivo."
+  },
+
+  "ebookDownloading": "Baixando: {percent}%",
+  "@ebookDownloading": {
+    "description": "Rótulo do progresso enquanto o arquivo está sendo baixado.",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "42"
+      }
+    }
+  },
+
+  "ebookCancelDownload": "Cancelar",
+  "@ebookCancelDownload": {
+    "description": "Ação que desiste do download em andamento. O que já chegou é descartado, porque um pedaço de arquivo não tem nome em um repositório endereçado pelo conteúdo."
+  },
+
+  "ebookDownloadFailed": "Não foi possível baixar este livro.",
+  "@ebookDownloadFailed": {
+    "description": "Erro geral de download."
+  },
+
+  "ebookNotOnServer": "O servidor não tem o arquivo deste livro.",
+  "@ebookNotOnServer": {
+    "description": "Resposta do servidor quando ele replica os registros do leitor sem os arquivos. É um estado legítimo — a cópia barata que um leitor mais provavelmente quer em um servidor que não é dele — e não uma falha."
+  },
+
+  "ebookExtraSection": "O que o arquivo trazia",
+  "@ebookExtraSection": {
+    "description": "Título da seção com os metadados que o formato carregava e o contrato não nomeia — série, ISBN, assuntos. Fica separada da ficha porque o conteúdo varia de arquivo para arquivo."
   }
 }

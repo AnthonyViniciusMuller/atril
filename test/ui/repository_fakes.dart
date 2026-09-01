@@ -299,9 +299,20 @@ final class FakeLibraryRepository implements LibraryRepository {
     );
   }
 
+  /// The works whose files the node has not received yet, and how big they are.
+  final Map<String, int> owed = <String, int>{};
+
   @override
-  Stream<Result<bool>> watchIsDownloaded(String ebookId) =>
-      works.stream.map((_) => Result<bool>.ok(downloaded.contains(ebookId)));
+  Stream<Result<ContentState>> watchContent(String ebookId) =>
+      works.stream.map(
+        (_) => Result<ContentState>.ok(
+          ContentState(
+            onThisDevice: downloaded.contains(ebookId),
+            kept: kept.contains(ebookId),
+            owedBytes: owed[ebookId],
+          ),
+        ),
+      );
 
   /// The works this device keeps, which starts as every one it holds.
   final Set<String> kept = <String>{};
@@ -311,10 +322,6 @@ final class FakeLibraryRepository implements LibraryRepository {
 
   /// What the store reports.
   StorageBudget storageBudget = const StorageBudget(used: 0);
-
-  @override
-  Stream<Result<bool>> watchIsKept(String ebookId) =>
-      works.stream.map((_) => Result<bool>.ok(kept.contains(ebookId)));
 
   @override
   Future<Result<void>> keepEbook(

@@ -119,17 +119,20 @@ abstract interface class LibraryRepository {
     Future<void> Function(DownloadProgress progress)? onProgress,
   });
 
-  /// Whether this device holds the bytes of one work.
-  Stream<Result<bool>> watchIsDownloaded(String ebookId);
-
-  /// Whether this device keeps the file of one work when the network is not
-  /// there.
+  /// Where the bytes of one work are, as that changes.
   ///
-  /// One mechanism with two defaults. A book on a native install is kept
-  /// unless the reader released it; in a browser nothing is kept until they
-  /// ask, because the origin is lent a share of a disk the browser may take
-  /// back. What differs by platform is the honest answer, not the question.
-  Stream<Result<bool>> watchIsKept(String ebookId);
+  /// One stream and not three, because the states are not independent and the
+  /// sentence a screen shows depends on the combination: a book can be here
+  /// and still owed to the node — which every freshly imported one is — and a
+  /// book that is neither here nor owed is one whose file is on the node and
+  /// has not been fetched.
+  ///
+  /// Whether it is *kept* is one mechanism with two defaults. A book on a
+  /// native install is kept unless the reader released it; in a browser
+  /// nothing is kept until they ask, because the origin is lent a share of a
+  /// disk the browser may take back. What differs by platform is the honest
+  /// answer, not the question.
+  Stream<Result<ContentState>> watchContent(String ebookId);
 
   /// Keeps the file of one work on this device, downloading it if it is not
   /// here.

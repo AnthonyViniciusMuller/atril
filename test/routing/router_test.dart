@@ -14,6 +14,7 @@ import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
+import 'package:atril/ui/library/widgets/ebook_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
 import 'package:atril/ui/onboarding/widgets/register_screen.dart';
 import 'package:atril/ui/onboarding/widgets/server_selection_screen.dart';
@@ -248,6 +249,33 @@ void main() {
         reason: 'the library branch was disposed rather than kept',
       );
     });
+  });
+
+  testWidgets('one work is a location below the shelf it was opened from', (
+    WidgetTester tester,
+  ) async {
+    // Below and not beside: the way back from a book is the shelf, a browser's
+    // back button lands there whether or not this app accounts for it, and the
+    // identifier is in the path so the location survives a reload and a link
+    // somebody pasted.
+    final session = _holder();
+    await session.begin(_session());
+
+    final router = atrilRouter(session: session);
+
+    addTearDown(router.dispose);
+    addTearDown(session.dispose);
+
+    await _pump(tester, router);
+
+    router.go(Routes.ebook('aaaaaaaa-1111-4111-8111-111111111111'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EbookScreen), findsOneWidget);
+    expect(
+      router.state.pathParameters[Routes.ebookParameter],
+      'aaaaaaaa-1111-4111-8111-111111111111',
+    );
   });
 
   test('the shell destinations are the branches, in order', () {

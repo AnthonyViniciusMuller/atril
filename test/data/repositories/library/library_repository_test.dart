@@ -540,7 +540,7 @@ void main() {
       final id = (result as Ok<Ebook>).value.id;
 
       expect(
-        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
         isTrue,
       );
     });
@@ -558,7 +558,7 @@ void main() {
       final id = (result as Ok<Ebook>).value.id;
 
       expect(
-        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
         isFalse,
       );
     });
@@ -579,7 +579,7 @@ void main() {
       await repository.keepEbook(id);
 
       expect(
-        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        ((await repository.watchContent(id).first) as Ok<ContentState>).value.kept,
         isTrue,
       );
     });
@@ -619,7 +619,7 @@ void main() {
       expect(await repository.releaseEbook(work.id), isA<Ok<void>>());
       expect(await blobs.contains(work.contentHash), isFalse);
       expect(
-        ((await repository.watchIsKept(work.id).first) as Ok<bool>).value,
+        ((await repository.watchContent(work.id).first) as Ok<ContentState>).value.kept,
         isFalse,
       );
     });

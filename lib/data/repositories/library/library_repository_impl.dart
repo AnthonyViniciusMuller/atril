@@ -240,25 +240,31 @@ final class LibraryRepositoryImpl implements LibraryRepository {
   }
 
   @override
-  Stream<Result<bool>> watchIsDownloaded(String ebookId) => _guard(
+  Stream<Result<ContentState>> watchContent(String ebookId) => _guard(
     // It follows the *work* and not the digest, because a work whose row
     // arrives by synchronization before its file is the ordinary case and the
-    // screen has to stop saying *not here* the moment the bytes land.
-    library.watchEbook(ebookId).asyncMap(
-      (row) async =>
-          row != null && await blobs.contains(row.contentHash),
-    ),
-  );
+    // screen has to stop saying *not here* the moment the bytes land. The
+    // transfer is watched under it, so that a queue draining while the reader
+    // is looking at the book is something they see happen.
+    library.watchEbook(ebookId).asyncExpand((row) {
+      if (row == null) {
+        return Stream<ContentState>.value(
+          const ContentState(onThisDevice: false, kept: false),
+        );
+      }
 
-  @override
-  Stream<Result<bool>> watchIsKept(String ebookId) => _guard(
-    library.watchEbook(ebookId).asyncExpand(
-      (row) => row == null
-          ? Stream<bool>.value(false)
-          : transfers
-                .watchDecision(row.contentHash)
-                .map((decision) => decision ?? keepsByDefault),
-    ),
+      return Rx.combine(
+        transfers.watchTransfer(row.contentHash),
+        transfers.watchDecision(row.contentHash),
+      ).asyncMap(
+        (pair) async => ContentState(
+          onThisDevice: await blobs.contains(row.contentHash),
+          kept: pair.$2 ?? keepsByDefault,
+          owedBytes: pair.$1?.sizeBytes,
+          sentBytes: pair.$1?.sentBytes ?? 0,
+        ),
+      );
+    }),
   );
 
   @override
@@ -622,6 +628,59 @@ Map<String, Object?> _metadataOf(String? encoded) {
 /// It is here so that a nullable row maps to a nullable model without the
 /// call site restating the null check, and it is private because it is a
 /// convenience of this file rather than a utility of the app.
+/// Combining two streams into one that carries the latest of each.
+///
+/// It is four lines rather than a dependency because it is used once, and
+/// because the semantics that matter here are narrow: nothing is emitted until
+/// both have spoken, and after that every change on either side is a new pair.
+/// A screen fed by a combinator with any other rule would show a file's state
+/// and a decision taken about a different moment.
+abstract final class Rx {
+  /// [first] and [second], as pairs of their latest values.
+  static Stream<(A?, B?)> combine<A, B>(Stream<A?> first, Stream<B?> second) {
+    late StreamController<(A?, B?)> controller;
+    StreamSubscription<A?>? left;
+    StreamSubscription<B?>? right;
+    A? a;
+    B? b;
+    var hasA = false;
+    var hasB = false;
+
+    void emit() {
+      if (hasA && hasB) {
+        controller.add((a, b));
+      }
+    }
+
+    controller = StreamController<(A?, B?)>(
+      onListen: () {
+        left = first.listen(
+          (A? value) {
+            a = value;
+            hasA = true;
+            emit();
+          },
+          onError: controller.addError,
+        );
+        right = second.listen(
+          (B? value) {
+            b = value;
+            hasB = true;
+            emit();
+          },
+          onError: controller.addError,
+        );
+      },
+      onCancel: () async {
+        await left?.cancel();
+        await right?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
+}
+
 extension on EbookRow {
   T let<T>(T Function(EbookRow row) transform) => transform(this);
 }

@@ -680,6 +680,144 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{value} B'**
   String bytesExactly(String value);
+
+  /// Título mostrado quando a tela de um livro é aberta e o livro não existe mais — outro dispositivo do leitor o apagou e a exclusão chegou aqui. É um estado e não um erro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este livro não está mais aqui'**
+  String get ebookNotFoundTitle;
+
+  /// Corpo da tela de um livro que não existe mais. Explica por que ele sumiu, para que o leitor não ache que o aplicativo perdeu alguma coisa.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ele foi apagado em outro dispositivo, e a exclusão chegou até aqui.'**
+  String get ebookNotFoundMessage;
+
+  /// Título da seção com os dados do livro — autor, editora, idioma, formato, tamanho e data de entrada no acervo. "Ficha" é o termo de biblioteca para o registro de uma obra.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ficha'**
+  String get ebookMetadataSection;
+
+  /// Rótulo do campo da editora, na ficha do livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Editora'**
+  String get ebookPublisher;
+
+  /// Rótulo do campo do idioma, na ficha do livro. O valor é a etiqueta que o arquivo declarou, como pt-BR.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Idioma'**
+  String get ebookLanguage;
+
+  /// Rótulo do campo do formato do arquivo, na ficha do livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Formato'**
+  String get ebookFormat;
+
+  /// Rótulo do campo do tamanho do arquivo, na ficha do livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tamanho'**
+  String get ebookSize;
+
+  /// Rótulo da data em que o livro entrou no acervo do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Adicionado em'**
+  String get ebookImportedAt;
+
+  /// Mostrado no lugar do formato quando o servidor conhece um formato que esta versão do aplicativo não sabe nomear. O livro continua listado e sincronizado; só não dá para dizer o que ele é.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Formato desconhecido'**
+  String get ebookUnknownFormat;
+
+  /// Título da seção que mostra em quais estantes e categorias o livro está arquivado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Estantes'**
+  String get ebookShelvesSection;
+
+  /// Mostrado na seção de estantes quando o livro não foi arquivado em nenhuma.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não está em nenhuma estante.'**
+  String get ebookNoShelves;
+
+  /// Título da seção que diz onde estão os bytes do livro: neste dispositivo, no servidor, ou ainda esperando para ser enviado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Arquivo'**
+  String get ebookFileSection;
+
+  /// Estado do arquivo quando este dispositivo tem os bytes e vai mantê-los.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Guardado neste dispositivo. Abre sem rede.'**
+  String get ebookFileHere;
+
+  /// Estado do arquivo quando os bytes estão aqui e o leitor não pediu para guardá-los — o caso do navegador, onde o arquivo foi baixado para leitura e não para ficar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Está neste dispositivo, mas não foi marcado para ficar.'**
+  String get ebookFileHereNotKept;
+
+  /// Estado do arquivo quando este dispositivo tem o registro do livro e não os bytes. É o estado normal de um livro que chegou por sincronização.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Está no servidor. Baixe para ler sem rede.'**
+  String get ebookFileOnServer;
+
+  /// Estado do arquivo quando ele ainda está na fila de envio. Diz ao leitor por que não dá para liberar o espaço dele: a cópia daqui é a única que existe.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ainda não enviado ao servidor. Este dispositivo tem a única cópia.'**
+  String get ebookFileWaiting;
+
+  /// Estado do arquivo enquanto o envio está em andamento, com a fração que o servidor já confirmou ter recebido.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Enviando ao servidor: {percent}%'**
+  String ebookFileSending(String percent);
+
+  /// Ação que traz os bytes do livro do servidor para este dispositivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Baixar'**
+  String get ebookDownload;
+
+  /// Rótulo do progresso enquanto o arquivo está sendo baixado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Baixando: {percent}%'**
+  String ebookDownloading(String percent);
+
+  /// Ação que desiste do download em andamento. O que já chegou é descartado, porque um pedaço de arquivo não tem nome em um repositório endereçado pelo conteúdo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cancelar'**
+  String get ebookCancelDownload;
+
+  /// Erro geral de download.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível baixar este livro.'**
+  String get ebookDownloadFailed;
+
+  /// Resposta do servidor quando ele replica os registros do leitor sem os arquivos. É um estado legítimo — a cópia barata que um leitor mais provavelmente quer em um servidor que não é dele — e não uma falha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O servidor não tem o arquivo deste livro.'**
+  String get ebookNotOnServer;
+
+  /// Título da seção com os metadados que o formato carregava e o contrato não nomeia — série, ISBN, assuntos. Fica separada da ficha porque o conteúdo varia de arquivo para arquivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que o arquivo trazia'**
+  String get ebookExtraSection;
 }
 
 class _AppLocalizationsDelegate

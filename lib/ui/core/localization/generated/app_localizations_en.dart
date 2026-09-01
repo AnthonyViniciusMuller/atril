@@ -370,4 +370,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String bytesExactly(String value) {
     return '$value B';
   }
+
+  @override
+  String get ebookNotFoundTitle => 'This book is no longer here';
+
+  @override
+  String get ebookNotFoundMessage =>
+      'It was deleted on another device, and the deletion reached this one.';
+
+  @override
+  String get ebookMetadataSection => 'Details';
+
+  @override
+  String get ebookPublisher => 'Publisher';
+
+  @override
+  String get ebookLanguage => 'Language';
+
+  @override
+  String get ebookFormat => 'Format';
+
+  @override
+  String get ebookSize => 'Size';
+
+  @override
+  String get ebookImportedAt => 'Added on';
+
+  @override
+  String get ebookUnknownFormat => 'Unknown format';
+
+  @override
+  String get ebookShelvesSection => 'Shelves';
+
+  @override
+  String get ebookNoShelves => 'It is not on any shelf.';
+
+  @override
+  String get ebookFileSection => 'File';
+
+  @override
+  String get ebookFileHere =>
+      'Kept on this device. It opens without a network.';
+
+  @override
+  String get ebookFileHereNotKept =>
+      'It is on this device, but it is not marked to stay.';
+
+  @override
+  String get ebookFileOnServer =>
+      'It is on the server. Download it to read without a network.';
+
+  @override
+  String get ebookFileWaiting =>
+      'Not sent to the server yet. This device has the only copy.';
+
+  @override
+  String ebookFileSending(String percent) {
+    return 'Sending to the server: $percent%';
+  }
+
+  @override
+  String get ebookDownload => 'Download';
+
+  @override
+  String ebookDownloading(String percent) {
+    return 'Downloading: $percent%';
+  }
+
+  @override
+  String get ebookCancelDownload => 'Cancel';
+
+  @override
+  String get ebookDownloadFailed => 'This book could not be downloaded.';
+
+  @override
+  String get ebookNotOnServer => 'The server does not have this book\'s file.';
+
+  @override
+  String get ebookExtraSection => 'What the file carried';
 }

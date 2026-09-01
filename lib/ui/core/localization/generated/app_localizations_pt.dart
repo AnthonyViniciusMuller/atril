@@ -372,6 +372,82 @@ class AppLocalizationsPt extends AppLocalizations {
   String bytesExactly(String value) {
     return '$value B';
   }
+
+  @override
+  String get ebookNotFoundTitle => 'Este livro não está mais aqui';
+
+  @override
+  String get ebookNotFoundMessage =>
+      'Ele foi apagado em outro dispositivo, e a exclusão chegou até aqui.';
+
+  @override
+  String get ebookMetadataSection => 'Ficha';
+
+  @override
+  String get ebookPublisher => 'Editora';
+
+  @override
+  String get ebookLanguage => 'Idioma';
+
+  @override
+  String get ebookFormat => 'Formato';
+
+  @override
+  String get ebookSize => 'Tamanho';
+
+  @override
+  String get ebookImportedAt => 'Adicionado em';
+
+  @override
+  String get ebookUnknownFormat => 'Formato desconhecido';
+
+  @override
+  String get ebookShelvesSection => 'Estantes';
+
+  @override
+  String get ebookNoShelves => 'Não está em nenhuma estante.';
+
+  @override
+  String get ebookFileSection => 'Arquivo';
+
+  @override
+  String get ebookFileHere => 'Guardado neste dispositivo. Abre sem rede.';
+
+  @override
+  String get ebookFileHereNotKept =>
+      'Está neste dispositivo, mas não foi marcado para ficar.';
+
+  @override
+  String get ebookFileOnServer => 'Está no servidor. Baixe para ler sem rede.';
+
+  @override
+  String get ebookFileWaiting =>
+      'Ainda não enviado ao servidor. Este dispositivo tem a única cópia.';
+
+  @override
+  String ebookFileSending(String percent) {
+    return 'Enviando ao servidor: $percent%';
+  }
+
+  @override
+  String get ebookDownload => 'Baixar';
+
+  @override
+  String ebookDownloading(String percent) {
+    return 'Baixando: $percent%';
+  }
+
+  @override
+  String get ebookCancelDownload => 'Cancelar';
+
+  @override
+  String get ebookDownloadFailed => 'Não foi possível baixar este livro.';
+
+  @override
+  String get ebookNotOnServer => 'O servidor não tem o arquivo deste livro.';
+
+  @override
+  String get ebookExtraSection => 'O que o arquivo trazia';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -741,4 +817,80 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String bytesExactly(String value) {
     return '$value B';
   }
+
+  @override
+  String get ebookNotFoundTitle => 'Este livro não está mais aqui';
+
+  @override
+  String get ebookNotFoundMessage =>
+      'Ele foi apagado em outro dispositivo, e a exclusão chegou até aqui.';
+
+  @override
+  String get ebookMetadataSection => 'Ficha';
+
+  @override
+  String get ebookPublisher => 'Editora';
+
+  @override
+  String get ebookLanguage => 'Idioma';
+
+  @override
+  String get ebookFormat => 'Formato';
+
+  @override
+  String get ebookSize => 'Tamanho';
+
+  @override
+  String get ebookImportedAt => 'Adicionado em';
+
+  @override
+  String get ebookUnknownFormat => 'Formato desconhecido';
+
+  @override
+  String get ebookShelvesSection => 'Estantes';
+
+  @override
+  String get ebookNoShelves => 'Não está em nenhuma estante.';
+
+  @override
+  String get ebookFileSection => 'Arquivo';
+
+  @override
+  String get ebookFileHere => 'Guardado neste dispositivo. Abre sem rede.';
+
+  @override
+  String get ebookFileHereNotKept =>
+      'Está neste dispositivo, mas não foi marcado para ficar.';
+
+  @override
+  String get ebookFileOnServer => 'Está no servidor. Baixe para ler sem rede.';
+
+  @override
+  String get ebookFileWaiting =>
+      'Ainda não enviado ao servidor. Este dispositivo tem a única cópia.';
+
+  @override
+  String ebookFileSending(String percent) {
+    return 'Enviando ao servidor: $percent%';
+  }
+
+  @override
+  String get ebookDownload => 'Baixar';
+
+  @override
+  String ebookDownloading(String percent) {
+    return 'Baixando: $percent%';
+  }
+
+  @override
+  String get ebookCancelDownload => 'Cancelar';
+
+  @override
+  String get ebookDownloadFailed => 'Não foi possível baixar este livro.';
+
+  @override
+  String get ebookNotOnServer => 'O servidor não tem o arquivo deste livro.';
+
+  @override
+  String get ebookExtraSection => 'O que o arquivo trazia';
 }

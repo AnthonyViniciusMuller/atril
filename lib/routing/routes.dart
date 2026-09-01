@@ -87,6 +87,19 @@ abstract final class Routes {
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 
+  /// The path segment one work is shown under, relative to [library].
+  ///
+  /// It is nested rather than a location of its own, so that a reader who
+  /// opened a book from the shelf finds the shelf behind it — and a browser's
+  /// back button lands there whether or not this app accounts for it.
+  static const String ebookSegment = ':ebookId';
+
+  /// The path parameter [ebookSegment] carries the work's identifier in.
+  static const String ebookParameter = 'ebookId';
+
+  /// Where one work is shown.
+  static String ebook(String id) => '$library/$id';
+
   /// Everything the reader has marked, across every book.
   static const String annotations = '/annotations';
 
