@@ -398,6 +398,21 @@ class _ReaderBar extends StatelessWidget {
                 ),
               ),
               IconButton(
+                // Disabled until the engine has laid a page out and said where
+                // it starts. A bookmark with no position is a mark on nothing.
+                onPressed: model.canBookmark
+                    ? () => _toggleBookmark(context, model)
+                    : null,
+                icon: Icon(
+                  model.pageBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                ),
+                color: Colors.white,
+                disabledColor: Colors.white30,
+                tooltip: model.pageBookmarked
+                    ? l10n.readerBookmarkRemove
+                    : l10n.readerBookmark,
+              ),
+              IconButton(
                 onPressed: () => showReaderSettings(context, model),
                 icon: const Icon(Icons.text_fields),
                 color: Colors.white,
@@ -709,4 +724,29 @@ class _NoteDialogState extends State<_NoteDialog> {
       ],
     );
   }
+}
+
+/// Marks the page the reader is on, or takes the mark off it.
+///
+/// It says which of the two happened, because the control is one button whose
+/// icon has just changed under the reader's finger and a page that silently
+/// gained a bookmark looks exactly like one that silently lost it.
+Future<void> _toggleBookmark(
+  BuildContext context,
+  ReaderViewModel model,
+) async {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+  final bool wasMarked = model.pageBookmarked;
+
+  await model.toggleBookmark.execute();
+
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(switch (model.toggleBookmark.result) {
+        Error<void>() => l10n.readerMarkFailed,
+        _ => wasMarked ? l10n.readerBookmarkRemoved : l10n.readerBookmarked,
+      }),
+    ),
+  );
 }

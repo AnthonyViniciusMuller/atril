@@ -318,5 +318,17 @@
   "@readerNoteSave": {},
 
   "readerNoted": "Note saved.",
-  "@readerNoted": {}
+  "@readerNoted": {},
+
+  "readerBookmark": "Bookmark this page",
+  "@readerBookmark": {},
+
+  "readerBookmarkRemove": "Remove this bookmark",
+  "@readerBookmarkRemove": {},
+
+  "readerBookmarked": "Page bookmarked.",
+  "@readerBookmarked": {},
+
+  "readerBookmarkRemoved": "Bookmark removed.",
+  "@readerBookmarkRemoved": {}
 }

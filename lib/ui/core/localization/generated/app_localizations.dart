@@ -1388,6 +1388,30 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Anotação guardada.'**
   String get readerNoted;
+
+  /// Ação que marca a página aberta para o leitor voltar a ela depois. Dica do botão na barra do leitor, quando a página ainda não está marcada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcar esta página'**
+  String get readerBookmark;
+
+  /// Ação que tira a marcação da página aberta. Dica do mesmo botão, quando a página já está marcada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desmarcar esta página'**
+  String get readerBookmarkRemove;
+
+  /// Aviso mostrado depois que a página é marcada. É dito porque o ícone acabou de mudar sob o dedo do leitor e as duas mudanças se parecem.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Página marcada.'**
+  String get readerBookmarked;
+
+  /// Aviso mostrado depois que a marcação da página é removida.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Marcação da página removida.'**
+  String get readerBookmarkRemoved;
 }
 
 class _AppLocalizationsDelegate

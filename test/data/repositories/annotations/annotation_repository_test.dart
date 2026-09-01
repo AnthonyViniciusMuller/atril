@@ -250,6 +250,47 @@ void main() {
     });
   });
 
+  group('bookmarking a place', () {
+    test('carries a position and nothing else', () async {
+      await seedWork('a');
+
+      final Result<Annotation> made = await annotations.bookmark(
+        ebookId: _id('a'),
+        locator: 'epubcfi(/6/14!/4/10/2/1:0)',
+      );
+
+      final Annotation mark = (made as Ok<Annotation>).value;
+
+      expect(mark.kind, AnnotationKind.bookmark);
+      expect(mark.locator, 'epubcfi(/6/14!/4/10/2/1:0)');
+      // No text is asked for and none is stored. A place the reader had to
+      // name would be a note about a place.
+      expect(mark.text, isNull);
+    });
+
+    test('does not touch where the device stopped reading', () async {
+      // Two records that look alike and are not: a position is where a device
+      // stopped, has one writer per device (C05) and is overwritten on the
+      // next page; a bookmark is a place the reader chose and nothing
+      // overwrites it.
+      await seedWork('a');
+
+      await annotations.bookmark(
+        ebookId: _id('a'),
+        locator: 'epubcfi(/6/14!/4/10/2/1:0)',
+      );
+
+      expect(
+        await database.readingDao.placeOf(ebookId: _id('a'), deviceId: _device),
+        isNull,
+      );
+      expect(
+        (await database.syncDao.pending()).single.entity,
+        TargetEntity.annotation,
+      );
+    });
+  });
+
   group('the marks in a book', () {
     test('arrive most recent first and lose the removed ones', () async {
       // The order is when each mark was made, deliberately and not where it is

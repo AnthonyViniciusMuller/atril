@@ -80,6 +80,7 @@ final class ReaderViewModel extends ChangeNotifier {
     goTo = Command1<void, String>(_goTo);
     highlight = Command0<Annotation>(_highlight);
     note = Command1<Annotation, String>(_note);
+    toggleBookmark = Command0<void>(_toggleBookmark);
     removeMark = Command1<void, String>(_removeMark);
     restoreMark = Command1<void, String>(_restoreMark);
 
@@ -157,6 +158,12 @@ final class ReaderViewModel extends ChangeNotifier {
   /// to carry: a note with nothing in it is the highlight they already had.
   late final Command1<Annotation, String> note;
 
+  /// UC05. Marks the page the reader is on, or unmarks it.
+  ///
+  /// One command and not two, because it is one control: a reader looking at a
+  /// filled bookmark expects tapping it to empty it.
+  late final Command0<void> toggleBookmark;
+
   /// UC05. Removes a mark.
   late final Command1<void, String> removeMark;
 
@@ -202,6 +209,43 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// What the reader has marked in this book, most recent first.
   List<Annotation> get marks => _annotations;
+
+  /// The bookmark on the page the reader is looking at, or `null` where there
+  /// is none.
+  ///
+  /// **The page is matched by the locator, exactly.** A CFI is compared as text
+  /// and never parsed, because parsing one here would be the second CFI
+  /// implementation `architecture.md` forbids. What that costs is small and
+  /// worth saying: the engine reports the same start for the same page in the
+  /// same layout, so a bookmark made at one type size is not recognized as
+  /// *this page* at another — it is still in the list, still navigates to the
+  /// right passage, and the control simply offers to make a new one.
+  Annotation? get bookmarkHere {
+    final EpubPosition? here = _position;
+
+    if (here == null) {
+      return null;
+    }
+
+    for (final Annotation mark in _annotations) {
+      if (mark.kind == AnnotationKind.bookmark &&
+          mark.locator == here.startCfi) {
+        return mark;
+      }
+    }
+
+    return null;
+  }
+
+  /// Whether the page the reader is on has been bookmarked.
+  bool get pageBookmarked => bookmarkHere != null;
+
+  /// Whether there is a page to bookmark at all.
+  ///
+  /// There is not until the engine has laid one out and said where it starts,
+  /// which is what the control is disabled on: a bookmark with no position is
+  /// a mark on nothing.
+  bool get canBookmark => _position != null;
 
   /// Forgets the selection, which is what a reader who changed their mind did.
   ///
@@ -377,6 +421,41 @@ final class ReaderViewModel extends ChangeNotifier {
     return mark;
   }
 
+  /// Marks the page the reader is on, or takes the mark off it.
+  Future<Result<void>> _toggleBookmark() async {
+    final Annotation? here = bookmarkHere;
+
+    if (here != null) {
+      return annotations.removeMark(here.id);
+    }
+
+    final EpubPosition? position = _position;
+
+    if (position == null) {
+      return Result<void>.error(
+        AppException(
+          kind: ErrorKind.failedPrecondition,
+          // Diagnostic and never shown, as every message here is.
+          message: 'no page has been laid out in $ebookId', // l10n-ignore
+          op: 'ui/reader: bookmark',
+        ),
+      );
+    }
+
+    final Result<Annotation> made = await annotations.bookmark(
+      ebookId: ebookId,
+      // The start of the page and not its end, for the reason a reading
+      // position is written from the start: somebody coming back wants the page
+      // they marked rather than the one after it.
+      locator: position.startCfi,
+    );
+
+    return switch (made) {
+      Ok<Annotation>() => const Result<void>.ok(null),
+      Error<Annotation>(:final Exception error) => Result<void>.error(error),
+    };
+  }
+
   Future<Result<void>> _removeMark(String annotationId) =>
       annotations.removeMark(annotationId);
 
@@ -544,6 +623,7 @@ final class ReaderViewModel extends ChangeNotifier {
     goTo.dispose();
     highlight.dispose();
     note.dispose();
+    toggleBookmark.dispose();
     removeMark.dispose();
     restoreMark.dispose();
     super.dispose();

@@ -120,6 +120,18 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
     );
   }
 
+  @override
+  Future<Result<Annotation>> bookmark({
+    required String ebookId,
+    required String locator,
+  }) => _made(
+    ebookId: ebookId,
+    kind: AnnotationKind.bookmark,
+    locator: locator,
+    // No text, and none is asked for. A bookmark is a place, and a place the
+    // reader had to name would be a note about a place.
+  );
+
   /// Authors a new mark of [kind] over [locator], and answers with it as the
   /// replica now holds it.
   ///

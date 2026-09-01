@@ -87,6 +87,23 @@ abstract interface class AnnotationRepository {
     required String text,
   });
 
+  /// UC05. Marks a place the reader wants to come back to.
+  ///
+  /// A bookmark carries no text and covers no range: [locator] is a *position*
+  /// and not a selection, which is why nothing is painted over the page for it
+  /// and why it is the one kind of mark a reader can make without touching the
+  /// text first.
+  ///
+  /// It is deliberately not the same record as a reading position, and the
+  /// difference is who wrote it and what it means. A position is where a device
+  /// stopped, it has exactly one writer per device (C05), and it is overwritten
+  /// on the next page. A bookmark is a place the reader chose, it belongs to the
+  /// reader rather than to the device, and nothing overwrites it.
+  Future<Result<Annotation>> bookmark({
+    required String ebookId,
+    required String locator,
+  });
+
   /// UC05. Removes a mark.
   ///
   /// A tombstone and never a deletion, like every other removal here: a row

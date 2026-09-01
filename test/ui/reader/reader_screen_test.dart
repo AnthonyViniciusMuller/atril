@@ -206,6 +206,16 @@ Widget _app(
 
 AppLocalizations _pt() => lookupAppLocalizations(const Locale('pt', 'BR'));
 
+/// What the bookmark control does, or `null` while it is disabled.
+VoidCallback? _bookmarkAction(WidgetTester tester) => tester
+    .widget<IconButton>(
+      find.ancestor(
+        of: find.byTooltip(_pt().readerBookmark),
+        matching: find.byType(IconButton),
+      ),
+    )
+    .onPressed;
+
 /// How visible the chrome is.
 double _chromeOpacity(WidgetTester tester) =>
     tester.widget<AnimatedOpacity>(find.byKey(readerChromeKey)).opacity;
@@ -859,6 +869,101 @@ void main() {
       expect(marks.highlighted, isEmpty);
       // The selection survives: nothing was decided, so nothing was answered.
       expect(find.byKey(readerSelectionKey), findsOneWidget);
+    });
+  });
+
+  group('bookmarking a page', () {
+    testWidgets('waits for a page to have been laid out', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      expect(_bookmarkAction(tester), isNull);
+
+      host.moveTo(12);
+      await tester.pumpAndSettle();
+
+      expect(_bookmarkAction(tester), isNotNull);
+    });
+
+    testWidgets('marks where the page starts, not where it ends', (
+      WidgetTester tester,
+    ) async {
+      // Somebody coming back wants the page they marked and not the one after
+      // it, which is the same reason a reading position is written from the
+      // start.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.moveTo(12);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip(_pt().readerBookmark));
+      await tester.pumpAndSettle();
+
+      expect(marks.bookmarked, hasLength(1));
+      expect(marks.bookmarked.single.locator, 'epubcfi(/6/4!/4/2)');
+      expect(find.text(_pt().readerBookmarked), findsOneWidget);
+    });
+
+    testWidgets('a marked page offers to be unmarked, and is', (
+      WidgetTester tester,
+    ) async {
+      // One control and not two: a reader looking at a filled bookmark expects
+      // tapping it to empty it.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.moveTo(12);
+      marks.emitMarks(<Annotation>[
+        _mark('epubcfi(/6/4!/4/2)', kind: AnnotationKind.bookmark),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip(_pt().readerBookmarkRemove), findsOneWidget);
+
+      await tester.tap(find.byTooltip(_pt().readerBookmarkRemove));
+      await tester.pumpAndSettle();
+
+      expect(marks.removed, <String>['epubcfi(/6/4!/4/2)']);
+      expect(find.text(_pt().readerBookmarkRemoved), findsOneWidget);
+    });
+
+    testWidgets('a bookmark on another page is not this page\'s', (
+      WidgetTester tester,
+    ) async {
+      // The page is matched by its locator, exactly, because a CFI parsed here
+      // would be the second implementation architecture.md forbids.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.moveTo(12);
+      marks.emitMarks(<Annotation>[
+        _mark('epubcfi(/6/8!/4/2)', kind: AnnotationKind.bookmark),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip(_pt().readerBookmark), findsOneWidget);
     });
   });
 

@@ -1081,7 +1081,15 @@ and they are recorded here because none of them is visible from the package's RE
       without. It is a dialog and not a location, which is the one place this app departs from
       *every form is a screen*: a reader who switched away would come back to a **selection** the
       engine has not kept, so a route promising otherwise would be lying
-- [ ] `feat: add bookmarks` — a position, no text, no selection
+- [x] `feat: add bookmarks` — a position, no text, no selection. It is deliberately not the
+      same record as a reading position, and the two look alike enough to be worth separating in
+      writing: a position is where a *device* stopped, has exactly one writer (C05) and is
+      overwritten on the next page; a bookmark is a place the *reader* chose, and nothing
+      overwrites it. The page is recognized by comparing its locator as text, never by parsing
+      one — a CFI comparator in Dart is the forbidden second implementation, and what the
+      cheaper rule costs is small and stated where it is made: a bookmark taken at one type size
+      is not recognized as *this page* at another, so the control offers to make a new one, and
+      the old mark is still in the list and still navigates to the right passage
 - [ ] `feat: add the annotations screen` — everything marked in one book and everything marked
       across the library, each navigating back to its passage
 - [ ] `feat: add annotation export` — Markdown and JSON, to a file the reader chooses. It is

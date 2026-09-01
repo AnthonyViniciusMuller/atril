@@ -1252,5 +1252,25 @@
   "readerNoted": "Anotação guardada.",
   "@readerNoted": {
     "description": "Aviso mostrado depois que uma anotação é guardada, acompanhado da ação de desfazer."
+  },
+
+  "readerBookmark": "Marcar esta página",
+  "@readerBookmark": {
+    "description": "Ação que marca a página aberta para o leitor voltar a ela depois. Dica do botão na barra do leitor, quando a página ainda não está marcada."
+  },
+
+  "readerBookmarkRemove": "Desmarcar esta página",
+  "@readerBookmarkRemove": {
+    "description": "Ação que tira a marcação da página aberta. Dica do mesmo botão, quando a página já está marcada."
+  },
+
+  "readerBookmarked": "Página marcada.",
+  "@readerBookmarked": {
+    "description": "Aviso mostrado depois que a página é marcada. É dito porque o ícone acabou de mudar sob o dedo do leitor e as duas mudanças se parecem."
+  },
+
+  "readerBookmarkRemoved": "Marcação da página removida.",
+  "@readerBookmarkRemoved": {
+    "description": "Aviso mostrado depois que a marcação da página é removida."
   }
 }

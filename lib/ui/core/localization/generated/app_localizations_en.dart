@@ -763,4 +763,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerNoted => 'Note saved.';
+
+  @override
+  String get readerBookmark => 'Bookmark this page';
+
+  @override
+  String get readerBookmarkRemove => 'Remove this bookmark';
+
+  @override
+  String get readerBookmarked => 'Page bookmarked.';
+
+  @override
+  String get readerBookmarkRemoved => 'Bookmark removed.';
 }

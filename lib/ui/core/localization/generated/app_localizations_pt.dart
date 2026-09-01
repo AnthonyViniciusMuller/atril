@@ -765,6 +765,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerNoted => 'Anotação guardada.';
+
+  @override
+  String get readerBookmark => 'Marcar esta página';
+
+  @override
+  String get readerBookmarkRemove => 'Desmarcar esta página';
+
+  @override
+  String get readerBookmarked => 'Página marcada.';
+
+  @override
+  String get readerBookmarkRemoved => 'Marcação da página removida.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1527,4 +1539,16 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerNoted => 'Anotação guardada.';
+
+  @override
+  String get readerBookmark => 'Marcar esta página';
+
+  @override
+  String get readerBookmarkRemove => 'Desmarcar esta página';
+
+  @override
+  String get readerBookmarked => 'Página marcada.';
+
+  @override
+  String get readerBookmarkRemoved => 'Marcação da página removida.';
 }

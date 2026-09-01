@@ -663,6 +663,34 @@ final class FakeAnnotationRepository implements AnnotationRepository {
     );
   }
 
+  /// Every place it was asked to bookmark, in order.
+  final List<({String ebookId, String locator})> bookmarked =
+      <({String ebookId, String locator})>[];
+
+  @override
+  Future<Result<Annotation>> bookmark({
+    required String ebookId,
+    required String locator,
+  }) async {
+    bookmarked.add((ebookId: ebookId, locator: locator));
+
+    final Exception? refused = refusal;
+
+    if (refused != null) {
+      return Result<Annotation>.error(refused);
+    }
+
+    return Result<Annotation>.ok(
+      Annotation(
+        id: 'mark-${highlighted.length + noted.length + bookmarked.length}',
+        ebookId: ebookId,
+        kind: AnnotationKind.bookmark,
+        locator: locator,
+        revision: Revision.first('device', DateTime.utc(2026, 9, 1)),
+      ),
+    );
+  }
+
   @override
   Future<Result<void>> removeMark(String annotationId) async {
     removed.add(annotationId);
