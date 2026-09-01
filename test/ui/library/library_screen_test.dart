@@ -1,6 +1,7 @@
 /// The shelf, its two shapes, and the two things an empty one can mean.
 library;
 
+import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
@@ -8,6 +9,7 @@ import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
+import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,12 +51,13 @@ Collection _grouping(String name, {String id = 'b'}) => Collection(
 /// and one spelling the English would be a test that never sees the template.
 late AppLocalizations l10n;
 
+/// What a test drives the screen with.
+typedef Harness = ({FakeLibraryRepository library, FakeFilePicker picker});
+
 /// The screen at [width] logical pixels, which is what decides its shape.
-Future<FakeLibraryRepository> pump(
-  WidgetTester tester, {
-  double width = 400,
-}) async {
+Future<Harness> pump(WidgetTester tester, {double width = 400}) async {
   final library = FakeLibraryRepository();
+  final picker = FakeFilePicker();
 
   tester.view
     ..physicalSize = Size(width, 900)
@@ -63,7 +66,7 @@ Future<FakeLibraryRepository> pump(
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(library: library),
+      providers: repositoryProviders(library: library, picker: picker),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -73,7 +76,7 @@ Future<FakeLibraryRepository> pump(
   );
   await tester.pump();
 
-  return library;
+  return (library: library, picker: picker);
 }
 
 void main() {
@@ -98,7 +101,7 @@ void main() {
   testWidgets('tells a reader with no books what to do next', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
     await tester.pumpAndSettle();
@@ -107,7 +110,7 @@ void main() {
   });
 
   testWidgets('is a list on a narrow window', (WidgetTester tester) async {
-    final library = await pump(tester, width: gridWidth - 1);
+    final (:library, :picker) = await pump(tester, width: gridWidth - 1);
 
     library.works.add(
       Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
@@ -120,7 +123,7 @@ void main() {
   });
 
   testWidgets('is a grid on a wide one', (WidgetTester tester) async {
-    final library = await pump(tester, width: gridWidth + 200);
+    final (:library, :picker) = await pump(tester, width: gridWidth + 200);
 
     library.works.add(
       Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
@@ -136,7 +139,7 @@ void main() {
   ) async {
     // Absent and empty are different claims, and the screen says the first one
     // rather than showing a blank line the reader would read as a bug.
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(
       Result<List<Ebook>>.ok(<Ebook>[_work('Anônimo')]),
@@ -149,7 +152,7 @@ void main() {
   testWidgets('asks a narrowed query when a shelf is chosen', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
     library.groupings.add(
@@ -166,7 +169,7 @@ void main() {
   testWidgets('distinguishes an empty shelf from an empty library', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(
       Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]),
@@ -187,7 +190,7 @@ void main() {
   testWidgets('offers the way back out of an empty shelf', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
     library.groupings.add(
@@ -209,7 +212,7 @@ void main() {
   testWidgets('re-asks in the order the reader chose', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
     await tester.pumpAndSettle();
@@ -222,10 +225,98 @@ void main() {
     expect(library.queries.last.sort, LibrarySort.title);
   });
 
+  testWidgets('opens the dialog when the reader asks for a book', (
+    WidgetTester tester,
+  ) async {
+    final (:library, :picker) = await pump(tester);
+
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    // Both entry points are the same command: the button in the empty state
+    // and the floating one, which is what the reader reaches for once there is
+    // something on the shelf behind it.
+    await tester.tap(find.widgetWithText(FilledButton, l10n.libraryImport));
+    await tester.pumpAndSettle();
+
+    expect(picker.opened, 1);
+  });
+
+  testWidgets('says nothing when the reader closes the dialog', (
+    WidgetTester tester,
+  ) async {
+    // Cancelling is not a failure. A screen that apologized for it would be
+    // apologizing for the reader's decision.
+    final (:library, :picker) = await pump(tester);
+
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(library.imports, isEmpty);
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('names the work that entered the collection', (
+    WidgetTester tester,
+  ) async {
+    final (:library, :picker) = await pump(tester);
+
+    picker.file = const NamedFile('Vidas Secas.epub');
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(library.imports, hasLength(1));
+    expect(
+      find.text(l10n.libraryImported('Vidas Secas.epub')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('names the formats it takes when it cannot place a file', (
+    WidgetTester tester,
+  ) async {
+    final (:library, :picker) = await pump(tester);
+
+    picker.file = const NamedFile('anotações.txt');
+    library.refusal = const AppException(
+      kind: ErrorKind.invalidArgument,
+      code: codeUnsupportedFormat,
+    );
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.libraryImportUnsupported), findsOneWidget);
+  });
+
+  testWidgets('says so when an import fails for any other reason', (
+    WidgetTester tester,
+  ) async {
+    final (:library, :picker) = await pump(tester);
+
+    picker.file = const NamedFile('Vidas Secas.epub');
+    library.refusal = const AppException(kind: ErrorKind.internal);
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.libraryImportFailed), findsOneWidget);
+  });
+
   testWidgets('says so when the replica itself cannot be read', (
     WidgetTester tester,
   ) async {
-    final library = await pump(tester);
+    final (:library, :picker) = await pump(tester);
 
     library.works.add(Result<List<Ebook>>.error(Exception('no such table')));
     await tester.pumpAndSettle();

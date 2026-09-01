@@ -85,5 +85,10 @@
   "librarySortAuthor": "Author",
   "libraryUnknownAuthor": "Unknown author",
   "libraryReadFailed": "Your library could not be read on this device.",
-  "libraryBookCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}"
+  "libraryBookCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}",
+
+  "libraryImport": "Import a book",
+  "libraryImportUnsupported": "This application imports EPUB, PDF, MOBI, DJVU and CBZ files.",
+  "libraryImportFailed": "The file could not be imported.",
+  "libraryImported": "{title} joined your library."
 }

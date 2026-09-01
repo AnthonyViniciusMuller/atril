@@ -14,6 +14,9 @@ import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
+import 'package:atril/data/services/files/file_source.dart';
+import 'package:atril/domain/crdt/revision.dart';
+import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
@@ -196,6 +199,38 @@ final class FakeLibraryRepository implements LibraryRepository {
   /// Every query the screen has asked, in order.
   final List<LibraryQuery> queries = <LibraryQuery>[];
 
+  /// Every file it was asked to import, in order.
+  final List<FileSource> imports = <FileSource>[];
+
+  /// What the next import fails with, or `null` to let it succeed.
+  Exception? refusal;
+
+  @override
+  Future<Result<Ebook>> importEbook(FileSource file) async {
+    imports.add(file);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<Ebook>.error(refused);
+    }
+
+    return Result<Ebook>.ok(_imported(file));
+  }
+
+  Ebook _imported(FileSource file) => Ebook(
+    id: 'imported',
+    title: file.name,
+    format: EbookFormat.epub,
+    contentHash: '0' * 64,
+    importedAt: DateTime.utc(2026, 8, 31),
+    revision: Revision(
+      vectorClock: VectorClock.empty.tick('device'),
+      updatedAt: DateTime.utc(2026, 8, 31),
+      deviceId: 'device',
+    ),
+  );
+
   @override
   Stream<Result<List<Ebook>>> watchEbooks([
     LibraryQuery query = const LibraryQuery(),
@@ -230,6 +265,41 @@ final class FakeLibraryRepository implements LibraryRepository {
       groupings.stream;
 }
 
+/// A [FilePicker] that answers with whatever a test put in it.
+///
+/// The default is `null`, which is a reader who opened the dialog and closed
+/// it — the outcome that must not be reported as a failure, and the one a real
+/// picker makes awkward to reach.
+final class FakeFilePicker implements FilePicker {
+  /// What the next pick answers with.
+  FileSource? file;
+
+  /// How many times the dialog was opened.
+  int opened = 0;
+
+  @override
+  Future<FileSource?> pickEbook() async {
+    opened++;
+
+    return file;
+  }
+}
+
+/// A file with a name and no bytes worth speaking of.
+final class NamedFile implements FileSource {
+  /// The file called [name].
+  const NamedFile(this.name);
+
+  @override
+  final String name;
+
+  @override
+  Future<int?> length() async => 3;
+
+  @override
+  Stream<List<int>> openRead() => Stream<List<int>>.value(<int>[1, 2, 3]);
+}
+
 /// What an onboarding screen reads out of the tree.
 ///
 /// The environment defaults to a shipped one, so a test that says nothing gets
@@ -240,10 +310,12 @@ List<SingleChildWidget> repositoryProviders({
   ServerRepository? servers,
   AuthRepository? auth,
   LibraryRepository? library,
+  FilePicker? picker,
   Environment? environment,
 }) => <SingleChildWidget>[
   Provider<Environment>.value(value: environment ?? Environment.production()),
   Provider<ServerRepository>.value(value: servers ?? FakeServerRepository()),
   Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
   Provider<LibraryRepository>.value(value: library ?? FakeLibraryRepository()),
+  Provider<FilePicker>.value(value: picker ?? FakeFilePicker()),
 ];

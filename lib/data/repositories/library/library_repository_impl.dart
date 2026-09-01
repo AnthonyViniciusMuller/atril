@@ -8,12 +8,20 @@ import '../../../domain/crdt/revision.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
+import '../../../domain/models/operation.dart';
 import '../../../utils/collation.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/identifiers.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
 import '../../services/api/errors.dart';
+import '../../services/files/file_kind.dart';
+import '../../services/files/file_source.dart';
 import '../../services/local/dao/library_dao.dart';
 import '../../services/local/database.dart';
+import '../../services/storage/blob_storage.dart';
+import '../../services/sync/author.dart';
+import '../../services/sync/delta.dart';
 import 'library_repository.dart';
 
 final _log = loggerFor('data/library');
@@ -21,13 +29,89 @@ final _log = loggerFor('data/library');
 /// The operation a failed reading of the collection reports under.
 const String opReadLibrary = 'library/collection: read';
 
+/// The operation an import reports under.
+const String opImport = 'library/collection: import';
+
 /// The reader's collection, read out of drift.
 final class LibraryRepositoryImpl implements LibraryRepository {
-  /// The repository over [library].
-  LibraryRepositoryImpl({required this.library});
+  /// The repository over [library], writing through [author] and keeping the
+  /// bytes in [blobs].
+  ///
+  /// [mint] names a work and [now] stamps when it entered the collection; both
+  /// are parameters so that a test can say what it expects rather than read
+  /// back what happened.
+  LibraryRepositoryImpl({
+    required this.library,
+    required this.author,
+    required this.blobs,
+    String Function()? mint,
+    DateTime Function()? now,
+  }) : _mint = mint ?? mintIdentifier,
+       _now = now ?? DateTime.now;
 
   /// The rows.
   final LibraryDao library;
+
+  /// Where a change to a replicable record goes. There is no other way out of
+  /// this repository, and C21 is why.
+  final OperationAuthor author;
+
+  /// Where the bytes go.
+  final BlobStore blobs;
+
+  final String Function() _mint;
+  final DateTime Function() _now;
+
+  @override
+  Future<Result<Ebook>> importEbook(FileSource file) async {
+    try {
+      final kind = describeFile(file.name);
+
+      if (kind == null) {
+        // Refused before a byte is copied. The node records what it is told
+        // the bytes are and never opens them, so a format guessed here is a
+        // format nothing downstream can correct.
+        throw AppException(
+          kind: ErrorKind.invalidArgument,
+          message: 'this app cannot tell what ${file.name} is',
+          code: codeUnsupportedFormat,
+          op: opImport,
+        ).withField('format', 'the name carries no extension this app knows');
+      }
+
+      // The bytes first, and the record after them. A device interrupted
+      // between the two has a file nothing names, which the next import of the
+      // same book adopts for free — the store is keyed by the digest. The
+      // other order would leave a work whose file this device never had, which
+      // reads to a reader as a book that will not open.
+      final stored = await blobs.store(file.openRead());
+
+      _log.fine('imported ${file.name} as $stored');
+
+      final id = _mint();
+      final claims = DeltaWriter()
+        ..text(fieldTitle, titleFromFileName(file.name))
+        ..text(fieldFormat, kind.format.wireName)
+        ..id(fieldContentHash, stored.contentHash)
+        ..integer(fieldSizeBytes, stored.sizeBytes)
+        ..instant(fieldImportedAt, _now().toUtc());
+
+      await author.write(
+        Change.insert(TargetEntity.ebook, id, claims.fields),
+      );
+
+      final imported = await library.readEbook(id);
+
+      // The row is read back rather than built here. What a work *is* after a
+      // change is the reconciler's answer, and a repository that assembled its
+      // own copy would be a second one to keep in step.
+      return Result<Ebook>.ok(ebookOfRow(imported!));
+    } on Object catch (error, stackTrace) {
+      _log.warning('${file.name} could not be imported', error, stackTrace);
+
+      return Result<Ebook>.error(failureFrom(error, op: opImport));
+    }
+  }
 
   @override
   Stream<Result<List<Ebook>>> watchEbooks([

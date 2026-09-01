@@ -609,10 +609,20 @@ that reason.
       it is also what keeps `pumpAndSettle` from waiting forever on an animation nothing ends.
       The grid threshold is the navigation surface's own `compactWidth`, so that the two layouts
       change together rather than at two widths a dragged window crosses separately
-- [ ] `feat: add e-book import` — a file picked, hashed with SHA-256 as it is read so the bytes
+- [x] `feat: add e-book import` — a file picked, hashed with SHA-256 as it is read so the bytes
       are never held twice, written to the blob store under that digest, and registered as an
       operation. The digest is what identifies the bytes across the federation, so importing the
-      same file twice on two devices converges on one object
+      same file twice on two devices converges on one object. The picker is `file_selector`,
+      flutter.dev's own, behind a port whose whole surface is a name and a *stream*: a path is a
+      concept the web target does not have and a `Uint8List` is a book held twice, and the one
+      shape all six targets share is also exactly what a digest computed as the bytes go past
+      needs. The bytes are written before the record, deliberately — a device interrupted between
+      the two has a file nothing names, which the next import of the same book adopts for free
+      because the store is keyed by the digest, while the other order leaves a work whose file
+      this device never had. The format is guessed from the extension and never from the bytes,
+      which is `internal/client`'s own `describe` and is checked against it: the node stores what
+      it was told and never opens the file, so a guess made here is one nothing downstream can
+      correct
 - [ ] `feat: extract epub metadata on import` — title, author, publisher, language and the cover,
       out of the OPF. What the file did not say is absent and not empty: a work whose author is
       unknown and one whose author is the empty string are different claims, and the contract

@@ -295,6 +295,21 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get libraryImport => 'Importar um livro';
+
+  @override
+  String get libraryImportUnsupported =>
+      'Este aplicativo importa arquivos EPUB, PDF, MOBI, DJVU e CBZ.';
+
+  @override
+  String get libraryImportFailed => 'Não foi possível importar o arquivo.';
+
+  @override
+  String libraryImported(String title) {
+    return '$title entrou na sua biblioteca.';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -586,5 +601,20 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
       zero: 'Nenhum livro',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get libraryImport => 'Importar um livro';
+
+  @override
+  String get libraryImportUnsupported =>
+      'Este aplicativo importa arquivos EPUB, PDF, MOBI, DJVU e CBZ.';
+
+  @override
+  String get libraryImportFailed => 'Não foi possível importar o arquivo.';
+
+  @override
+  String libraryImported(String title) {
+    return '$title entrou na sua biblioteca.';
   }
 }

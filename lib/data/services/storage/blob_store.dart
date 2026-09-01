@@ -14,7 +14,10 @@
 /// and nothing in `ebooks` references this.
 library;
 
+import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
 
 import '../../../utils/errors.dart';
 
@@ -92,8 +95,83 @@ abstract interface class BlobWrite {
   Future<void> abort();
 }
 
+/// What a stream of bytes turned out to be.
+///
+/// It is the answer to the question an import cannot ask beforehand: the
+/// digest names the object across the whole federation, and it is not known
+/// until the last byte has gone past.
+final class StoredBlob {
+  /// An object of [sizeBytes] bytes, stored under [contentHash].
+  const StoredBlob({required this.contentHash, required this.sizeBytes});
+
+  /// The digest the object is addressed by, lowercase hex sha-256.
+  final String contentHash;
+
+  /// How many bytes there are, counted while they were copied.
+  ///
+  /// It is counted and not asked of the platform. A length read off a
+  /// directory entry and a length counted while reading can differ on a file
+  /// something else is still writing, and the one the node checks the transfer
+  /// against has to be the one that describes the bytes it receives.
+  final int sizeBytes;
+
+  @override
+  String toString() => 'StoredBlob($contentHash, $sizeBytes bytes)';
+}
+
 /// Writing an object whose digest the caller already knows.
 extension BlobStoreWriting on BlobStore {
+  /// Copies [bytes] into the store, hashing them as they go past.
+  ///
+  /// This is the import, and the order of the two things it does at once is
+  /// the point: the digest is computed *while* the file is being written, so
+  /// a book is never held in memory and never read twice. A store keyed by the
+  /// digest cannot be written to before the digest is known, which is why the
+  /// write is staged and published at the end rather than opened under a name.
+  ///
+  /// The same file imported twice — on this device or on another — converges
+  /// on one stored object, because the name is what the bytes are.
+  ///
+  /// A stream that fails part way leaves nothing behind: the staged object is
+  /// discarded and no digest was ever attached to it.
+  Future<StoredBlob> store(Stream<List<int>> bytes) async {
+    final write = await beginWrite();
+
+    Digest? computed;
+
+    final hashing = sha256.startChunkedConversion(
+      ChunkedConversionSink<Digest>.withCallback(
+        (List<Digest> digests) => computed = digests.single,
+      ),
+    );
+    var length = 0;
+
+    try {
+      await for (final chunk in bytes) {
+        hashing.add(chunk);
+        await write.add(chunk);
+        length += chunk.length;
+      }
+
+      hashing.close();
+
+      final contentHash = computed.toString();
+
+      await write.commit(contentHash);
+
+      // The length is this loop's own count and not what `commit` answered.
+      // The two agree for a file this store did not already hold, and where it
+      // did, `commit` reports what was there — which is the same number by
+      // construction, since the digest is the name. Counting here is what makes
+      // that an argument rather than an assumption.
+      return StoredBlob(contentHash: contentHash, sizeBytes: length);
+    } on Object {
+      await write.abort();
+
+      rethrow;
+    }
+  }
+
   /// Writes [bytes] under [contentHash].
   ///
   /// It is what a download uses: the node was asked for a digest, so there is

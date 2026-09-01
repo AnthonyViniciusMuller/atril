@@ -25,9 +25,31 @@ import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
 import '../../../utils/result.dart';
+import '../../services/files/file_source.dart';
+
+/// The stable code of a file whose name this app cannot place.
+const String codeUnsupportedFormat = 'unsupported_format';
 
 /// The reader's collection.
 abstract interface class LibraryRepository {
+  /// UC02. Takes [file] into the collection.
+  ///
+  /// The bytes are copied into the blob store under the digest computed while
+  /// they were copied, and the work is authored as an operation — in that
+  /// order, and both of them locally. Nothing here reaches a node: the record
+  /// travels when the log is pushed and the file travels when the transfer
+  /// runs, so importing a book on an aeroplane is the ordinary case and not a
+  /// degraded one.
+  ///
+  /// The two are one import and two records. The digest identifies the bytes
+  /// across the whole federation, so the same file imported on two devices
+  /// converges on one stored object and the two works that name it are two
+  /// works — which is what a reader who imported the same book twice actually
+  /// has.
+  ///
+  /// It fails with [codeUnsupportedFormat] for a name this app cannot place.
+  Future<Result<Ebook>> importEbook(FileSource file);
+
   /// The works [query] asks for, as they change.
   ///
   /// Sorted here rather than in SQL, because sqlite's collations are ASCII and

@@ -81,6 +81,8 @@ lib/
 │   │   ├── api/                  one client per gRPC service, over the generated stubs
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
 │   │   ├── discovery/            the `.well-known` lookup — the one call that is not gRPC
+│   │   ├── epub/                 the OPF, read for the metadata an import claims
+│   │   ├── files/                the file a reader named: the picker port, and what a name says
 │   │   ├── local/                the drift database, its tables and its DAOs
 │   │   ├── sync/                 the reconciler, the operation author, the sync loop
 │   │   └── storage/              the session store, the e-book blob store, the window's size

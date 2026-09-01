@@ -24,9 +24,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
+import '../../../utils/errors.dart';
+import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../../core/ui/adaptive_scaffold.dart';
 import '../view_model/library_view_model.dart';
@@ -60,12 +63,54 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   late final LibraryViewModel _model = LibraryViewModel(
     library: context.read<LibraryRepository>(),
+    picker: context.read<FilePicker>(),
   );
 
   @override
+  void initState() {
+    super.initState();
+    _model.importBook.addListener(_onImported);
+  }
+
+  @override
   void dispose() {
+    _model.importBook.removeListener(_onImported);
     _model.dispose();
     super.dispose();
+  }
+
+  /// Says what happened to an import, once.
+  ///
+  /// It is a listener rather than something awaited at the call site because
+  /// the command is what carries the outcome — a screen that awaited the tap
+  /// would have two places holding the same answer. The result is cleared by
+  /// the command's next run, so a message is shown for one outcome and not
+  /// again on the next rebuild.
+  void _onImported() {
+    if (_model.importBook.running || !mounted) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final message = switch (_model.importBook.result) {
+      // The reader closed the dialog without choosing. Nothing happened, and
+      // saying so would be the app commenting on a decision.
+      Ok<Ebook?>(value: null) => null,
+      Ok<Ebook?>(:final value) => l10n.libraryImported(value!.title),
+      Error<Ebook?>(:final error)
+          when error is AppException && error.code == codeUnsupportedFormat =>
+        l10n.libraryImportUnsupported,
+      Error<Ebook?>() => l10n.libraryImportFailed,
+      null => null,
+    };
+
+    if (message == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -84,9 +129,33 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
       body: ListenableBuilder(
-        listenable: _model,
+        // The command is a listenable of its own, and the empty state carries
+        // a button that has to go quiet while an import is running. Merging
+        // them is what keeps the body and the floating button from disagreeing
+        // about whether one is in flight.
+        listenable: Listenable.merge(<Listenable>[_model, _model.importBook]),
         builder: (BuildContext context, Widget? _) => _LibraryBody(
           model: _model,
+        ),
+      ),
+      floatingActionButton: ListenableBuilder(
+        listenable: _model.importBook,
+        builder: (BuildContext context, Widget? _) => FloatingActionButton(
+          // Disabled while one import is in flight, and not because two would
+          // corrupt anything — the store is keyed by a digest and two writes
+          // of one file converge. It is that a second dialog opened over the
+          // first is a reader who cannot tell which file they are answering
+          // about.
+          onPressed: _model.importBook.running
+              ? null
+              : _model.importBook.execute,
+          tooltip: l10n.libraryImport,
+          child: _model.importBook.running
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.add),
         ),
       ),
     );
@@ -246,6 +315,13 @@ class _EmptyShelf extends StatelessWidget {
         icon: Icons.local_library_outlined,
         title: l10n.libraryEmptyTitle,
         message: l10n.libraryEmptyMessage,
+        action: FilledButton.icon(
+          onPressed: model.importBook.running
+              ? null
+              : model.importBook.execute,
+          icon: const Icon(Icons.add),
+          label: Text(l10n.libraryImport),
+        ),
       );
     }
 

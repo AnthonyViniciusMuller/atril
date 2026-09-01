@@ -566,6 +566,30 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{count, plural, =0{Nenhum livro} =1{1 livro} other{{count} livros}}'**
   String libraryBookCount(int count);
+
+  /// Ação que abre o seletor de arquivos do sistema para trazer um livro para o acervo. Aparece como botão flutuante na tela da biblioteca e como botão do estado vazio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Importar um livro'**
+  String get libraryImport;
+
+  /// Erro mostrado quando o arquivo escolhido tem uma extensão que o aplicativo não sabe nomear. A lista é a mesma dos formatos que o contrato admite, e o formato é decidido pelo nome do arquivo porque o servidor guarda o que lhe dizem e nunca abre os bytes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este aplicativo importa arquivos EPUB, PDF, MOBI, DJVU e CBZ.'**
+  String get libraryImportUnsupported;
+
+  /// Erro geral da importação, para uma falha que a extensão do arquivo não explica — o arquivo ficou ilegível no meio da cópia, ou não coube no dispositivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível importar o arquivo.'**
+  String get libraryImportFailed;
+
+  /// Confirmação mostrada depois de importar. Diz o nome com que o livro entrou, que é o que o arquivo dizia sobre si mesmo e pode não ser o que o leitor esperava — é a deixa para renomear.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{title} entrou na sua biblioteca.'**
+  String libraryImported(String title);
 }
 
 class _AppLocalizationsDelegate

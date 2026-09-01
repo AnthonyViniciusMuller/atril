@@ -18,9 +18,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
+import '../../../utils/command.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
 
@@ -28,9 +30,13 @@ final _log = loggerFor('ui/library');
 
 /// The state of the library screen.
 final class LibraryViewModel extends ChangeNotifier {
-  /// The view model over [library], starting from [query].
-  LibraryViewModel({required this.library, LibraryQuery? query})
-    : _query = query ?? const LibraryQuery() {
+  /// The view model over [library] and [picker], starting from [query].
+  LibraryViewModel({
+    required this.library,
+    required this.picker,
+    LibraryQuery? query,
+  }) : _query = query ?? const LibraryQuery() {
+    importBook = Command0<Ebook?>(_import);
     _subscribe();
     _groupings = library.watchCollections().listen(_onCollections);
     _counts = library.watchFilingCounts().listen(_onCounts);
@@ -38,6 +44,21 @@ final class LibraryViewModel extends ChangeNotifier {
 
   /// Where the collection is read from.
   final LibraryRepository library;
+
+  /// Where the reader names a file.
+  final FilePicker picker;
+
+  /// UC02. Asks for a file and takes it into the collection.
+  ///
+  /// It answers `null` when the reader closed the dialog without choosing,
+  /// which is not a failure and is not reported as one: a reader who changed
+  /// their mind has done nothing wrong, and a screen that apologized for it
+  /// would be apologizing for their decision.
+  ///
+  /// Nothing here waits on a node. The bytes are written to this device and
+  /// the work is authored into the log, so the confirmation the reader sees is
+  /// the truth on this device and not a promise about a server.
+  late final Command0<Ebook?> importBook;
 
   LibraryQuery _query;
   StreamSubscription<Result<List<Ebook>>>? _works;
@@ -92,6 +113,22 @@ final class LibraryViewModel extends ChangeNotifier {
     unawaited(_groupings.cancel());
     unawaited(_counts.cancel());
     super.dispose();
+  }
+
+  Future<Result<Ebook?>> _import() async {
+    final file = await picker.pickEbook();
+
+    if (file == null) {
+      return const Result<Ebook?>.ok(null);
+    }
+
+    // The work appears on the shelf through the subscription that is already
+    // open, because the import wrote to the database this screen is reading.
+    // Nothing here inserts it into a list.
+    return switch (await library.importEbook(file)) {
+      Ok<Ebook>(:final value) => Result<Ebook?>.ok(value),
+      Error<Ebook>(:final error) => Result<Ebook?>.error(error),
+    };
   }
 
   void _ask(LibraryQuery query) {

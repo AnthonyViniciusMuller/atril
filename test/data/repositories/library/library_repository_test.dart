@@ -1,14 +1,25 @@
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/library/library_repository_impl.dart';
+import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/data/services/local/database.dart';
+import 'package:atril/data/services/sync/author.dart';
+import 'package:atril/data/services/sync/reconciler.dart';
+import 'package:atril/domain/crdt/hybrid_clock.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
+import 'dart:io';
+
+import 'package:atril/domain/models/operation.dart';
+import 'package:atril/data/services/sync/delta.dart';
+import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../services/storage/memory_blob_store.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
 
@@ -25,8 +36,96 @@ AtrilDatabase _open() {
   return database;
 }
 
-LibraryRepository _repository(AtrilDatabase database) =>
-    LibraryRepositoryImpl(library: database.libraryDao);
+/// The store the repository writes a book's bytes into.
+late MemoryBlobStore blobs;
+
+int _minted = 0;
+
+String _nextId() =>
+    '${(++_minted).toString().padLeft(8, '0')}-1111-4111-8111-111111111111';
+
+/// The repository over [database], with a device bound so that it can author.
+///
+/// Binding is not incidental: an operation carrying no author is refused by
+/// the node and would be a clock entry nothing could attribute, so the author
+/// refuses to write on a device that has none.
+Future<LibraryRepository> _repository(
+  AtrilDatabase database, {
+  bool bound = true,
+}) async {
+  if (bound) {
+    await database.identityDao.bindDevice(
+      id: _device,
+      name: 'o telefone',
+      platform: 'android',
+      at: _at,
+    );
+  }
+
+  final clock = HybridClock(wall: () => _at);
+
+  blobs = MemoryBlobStore();
+
+  return LibraryRepositoryImpl(
+    library: database.libraryDao,
+    author: OperationAuthor(
+      database: database,
+      clock: clock,
+      reconciler: Reconciler(database, clock),
+      mint: _nextId,
+    ),
+    blobs: blobs,
+    mint: _nextId,
+    now: () => _at,
+  );
+}
+
+/// A file the reader named, made of [bytes].
+final class _File implements FileSource {
+  _File(this.name, this.bytes);
+
+  @override
+  final String name;
+
+  final List<int> bytes;
+
+  /// How many times the bytes were asked for, which a streaming import reads
+  /// exactly once.
+  int reads = 0;
+
+  @override
+  Future<int?> length() async => bytes.length;
+
+  @override
+  Stream<List<int>> openRead() async* {
+    reads++;
+
+    // In two chunks, because a platform hands a file over in whatever pieces
+    // it likes and a digest computed over one buffer would pass a test a
+    // streaming one fails.
+    yield bytes.sublist(0, bytes.length ~/ 2);
+    yield bytes.sublist(bytes.length ~/ 2);
+  }
+}
+
+/// A file that fails part way through, which is a connection dropping while a
+/// book is being copied off a network share.
+final class _Unreadable implements FileSource {
+  const _Unreadable(this.name);
+
+  @override
+  final String name;
+
+  @override
+  Future<int?> length() async => null;
+
+  @override
+  Stream<List<int>> openRead() async* {
+    yield <int>[1, 2, 3];
+
+    throw const FileSystemException('the file went away');
+  }
+}
 
 Future<void> _work(
   AtrilDatabase database, {
@@ -108,19 +207,182 @@ extension on Result<List<Ebook>> {
 }
 
 void main() {
+  group('an import', () {
+    test('stores the bytes under the digest of what it read', () async {
+      final database = _open();
+      final repository = await _repository(database);
+      final file = _File('Vidas Secas.epub', <int>[1, 2, 3, 4, 5, 6, 7, 8]);
+
+      final result = await repository.importEbook(file);
+
+      // The digest of those eight bytes, computed independently of the code
+      // that computed it here: the name an object is stored under is what
+      // every replica in the federation will address it by, so a test that
+      // asked the implementation what it hashed would prove nothing.
+      const digest =
+          '66840dda154e8a113c31dd0ad32f7f3a366a80e8136979d8f5a101d3d29d6f72';
+
+      expect((result as Ok<Ebook>).value.contentHash, digest);
+      expect(blobs.objects.keys, <String>[digest]);
+      expect(blobs.objects[digest], <int>[1, 2, 3, 4, 5, 6, 7, 8]);
+    });
+
+    test('reads the file once, in whatever pieces it arrives in', () async {
+      // The digest and the copy happen in one pass. A book is large enough
+      // that holding it twice matters, and reading it twice would need a
+      // source that can be replayed — which a browser's file input is not.
+      final database = _open();
+      final file = _File('Vidas Secas.epub', <int>[1, 2, 3, 4]);
+
+      await (await _repository(database)).importEbook(file);
+
+      expect(file.reads, 1);
+    });
+
+    test('declares the length it counted', () async {
+      final database = _open();
+      final file = _File('Vidas Secas.epub', List<int>.filled(1000, 7));
+
+      final result = await (await _repository(database)).importEbook(file);
+
+      expect((result as Ok<Ebook>).value.sizeBytes, 1000);
+    });
+
+    test('names the format from the extension, not from the bytes', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Os Sertões.PDF', <int>[1, 2, 3]),
+      );
+
+      expect((result as Ok<Ebook>).value.format, EbookFormat.pdf);
+    });
+
+    test('calls a work by its file name when nothing else has', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Grande Sertão: Veredas.epub', <int>[1]),
+      );
+
+      expect((result as Ok<Ebook>).value.title, 'Grande Sertão: Veredas');
+    });
+
+    test('refuses a name this app cannot place, before copying', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('anotações.txt', <int>[1, 2, 3]),
+      );
+
+      expect(
+        ((result as Error<Ebook>).error as AppException).code,
+        codeUnsupportedFormat,
+      );
+      // Nothing was staged, so nothing had to be discarded: the refusal
+      // happens before the first byte moves.
+      expect(blobs.objects, isEmpty);
+      expect(blobs.aborted, 0);
+    });
+
+    test('authors the work as an operation this device owes', () async {
+      // The whole of C21 in one assertion. A work created through the node's
+      // CreateEbook would write the node's table and append nothing to its
+      // log, so it would reach the reader's other devices — never.
+      final database = _open();
+      final repository = await _repository(database);
+
+      await repository.importEbook(_File('Vidas Secas.epub', <int>[1]));
+
+      final owed = await database.syncDao.pending();
+
+      expect(owed, hasLength(1));
+      expect(owed.single.entity, TargetEntity.ebook);
+      expect(owed.single.kind, OperationKind.insert);
+      expect(owed.single.delta[fieldTitle], 'Vidas Secas');
+    });
+
+    test('shows the work in the collection it was imported into', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      await repository.importEbook(_File('Vidas Secas.epub', <int>[1]));
+
+      final result = await repository.watchEbooks().first;
+
+      expect(result.titles, <String>['Vidas Secas']);
+    });
+
+    test('converges on one object when the same file arrives twice', () async {
+      // Two works and one file. It is what a digest-addressed store is for,
+      // and it is the same answer whether the second import happened here or
+      // on another device of the same reader.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final first = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final second = await repository.importEbook(
+        _File('Vidas Secas (cópia).epub', <int>[1, 2, 3]),
+      );
+
+      expect(
+        (first as Ok<Ebook>).value.contentHash,
+        (second as Ok<Ebook>).value.contentHash,
+      );
+      expect(first.value.id, isNot(second.value.id));
+      expect(blobs.objects, hasLength(1));
+    });
+
+    test('leaves nothing behind when the file cannot be read', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _Unreadable('Vidas Secas.epub'),
+      );
+
+      expect(result, isA<Error<Ebook>>());
+      // Staged and discarded: a store never holds a partial object under a
+      // digest, because the digest is only attached once the object is whole.
+      expect(blobs.objects, isEmpty);
+      expect(blobs.aborted, 1);
+      expect(await database.syncDao.pending(), isEmpty);
+    });
+
+    test('refuses to author on a device that has not been bound', () async {
+      // An operation carrying no author is a clock entry nothing can
+      // attribute. The bytes are still stored, and the next import of the same
+      // file on a bound device adopts them.
+      final database = _open();
+      final repository = await _repository(database, bound: false);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1]),
+      );
+
+      expect(result, isA<Error<Ebook>>());
+      expect(await database.syncDao.pending(), isEmpty);
+    });
+  });
+
   group('the collection', () {
     test('answers with what this device holds and nothing else', () async {
       final database = _open();
 
       await _work(database, id: _id('aaaa', 1), title: 'Grande Sertão');
 
-      final result = await _repository(database).watchEbooks().first;
+      final result = await (await _repository(database)).watchEbooks().first;
 
       expect(result.titles, <String>['Grande Sertão']);
     });
 
     test('is empty on a device that has imported nothing', () async {
-      final result = await _repository(_open()).watchEbooks().first;
+      final result = await (await _repository(_open())).watchEbooks().first;
 
       expect(result.titles, isEmpty);
     });
@@ -137,14 +399,14 @@ void main() {
         deleted: true,
       );
 
-      final result = await _repository(database).watchEbooks().first;
+      final result = await (await _repository(database)).watchEbooks().first;
 
       expect(result.titles, <String>['Kept']);
     });
 
     test('answers again when a work is imported', () async {
       final database = _open();
-      final answers = _repository(database).watchEbooks();
+      final answers = (await _repository(database)).watchEbooks();
 
       expect(
         answers.map((result) => result.titles),
@@ -177,7 +439,7 @@ void main() {
         importedAt: _at.add(const Duration(days: 1)),
       );
 
-      final result = await _repository(database).watchEbooks().first;
+      final result = await (await _repository(database)).watchEbooks().first;
 
       expect(result.titles, <String>['Newer', 'Older']);
     });
@@ -189,7 +451,7 @@ void main() {
       await _work(database, id: _id('aaaa', 2), title: 'Sertão', seed: 2);
       await _work(database, id: _id('aaaa', 3), title: 'Sermão', seed: 3);
 
-      final result = await _repository(database)
+      final result = await (await _repository(database))
           .watchEbooks(const LibraryQuery(sort: LibrarySort.title))
           .first;
 
@@ -213,7 +475,7 @@ void main() {
         seed: 2,
       );
 
-      final result = await _repository(database)
+      final result = await (await _repository(database))
           .watchEbooks(const LibraryQuery(sort: LibrarySort.author))
           .first;
 
@@ -235,7 +497,7 @@ void main() {
         collectionId: _id('bbbb', 1),
       );
 
-      final result = await _repository(database)
+      final result = await (await _repository(database))
           .watchEbooks(LibraryQuery(collectionId: _id('bbbb', 1)))
           .first;
 
@@ -255,7 +517,7 @@ void main() {
         deleted: true,
       );
 
-      final result = await _repository(database)
+      final result = await (await _repository(database))
           .watchEbooks(LibraryQuery(collectionId: _id('bbbb', 1)))
           .first;
 
@@ -282,7 +544,7 @@ void main() {
         collectionId: _id('bbbb', 1),
       );
 
-      final counts = await _repository(database).watchFilingCounts().first;
+      final counts = await (await _repository(database)).watchFilingCounts().first;
 
       // A grouping nothing is filed under is absent rather than zero, which is
       // what one query over two tables can answer and what `?? 0` reads.
@@ -311,9 +573,9 @@ void main() {
         collectionId: _id('bbbb', 2),
       );
 
-      final result = await _repository(
+      final result = await (await _repository(
         database,
-      ).watchCollectionsOf(_id('aaaa', 1)).first;
+      )).watchCollectionsOf(_id('aaaa', 1)).first;
 
       expect(
         <String>[
@@ -331,7 +593,7 @@ void main() {
 
       await _work(database, id: _id('aaaa', 1), title: 'Doomed');
 
-      final answers = _repository(database).watchEbook(_id('aaaa', 1));
+      final answers = (await _repository(database)).watchEbook(_id('aaaa', 1));
 
       expect(
         answers.map(
@@ -356,7 +618,7 @@ void main() {
         deleted: true,
       );
 
-      final result = await _repository(database).ebook(_id('aaaa', 1));
+      final result = await (await _repository(database)).ebook(_id('aaaa', 1));
 
       expect((result as Ok<Ebook?>).value?.revision.deleted, isTrue);
     });
@@ -371,7 +633,7 @@ void main() {
         extraMetadata: '{"series":"Os Sertões","volume":2}',
       );
 
-      final result = await _repository(database).ebook(_id('aaaa', 1));
+      final result = await (await _repository(database)).ebook(_id('aaaa', 1));
 
       expect((result as Ok<Ebook?>).value?.extraMetadata, <String, Object?>{
         'series': 'Os Sertões',

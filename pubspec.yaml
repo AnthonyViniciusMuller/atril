@@ -181,6 +181,36 @@ dependencies:
   # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`
   # file imports it: it does not parse for the other five targets.
   web: ^1.1.1
+  # How a reader names the file they are importing. Flutter has no picker of
+  # its own on any of the six targets, and this is flutter.dev's — the same
+  # publisher as `path_provider` and `shared_preferences`, which is what this
+  # project already leans on for a platform edge. It hands back an `XFile`,
+  # whose `openRead` is a *stream*: the import hashes a book while it copies
+  # it and never holds the bytes twice, which is the whole reason the picker
+  # matters more than a path would.
+  file_selector: ^1.1.0
+
+  # What an EPUB is, structurally: a zip holding an XML manifest. Both packages
+  # are pure Dart and compile on all six targets, which the alternative did not
+  # — sqlite's inflate is not available and `dart:io`'s `ZLibCodec` does not
+  # exist in a browser, so a hand-rolled reader would have had to carry its own
+  # inflate as well as its own XML.
+  #
+  # They are used in exactly one place, `data/services/epub`, and phase 9's
+  # reader needs neither: it hands the file to epub.js, which does its own
+  # unzipping inside the host. `xml` is promoted from transitive rather than
+  # added, and is named here because this app is written against its API.
+  archive: ^4.2.0
+  xml: ^7.0.1
+
+  # sha-256, streamed. The digest is what identifies a file across the whole
+  # federation, so it is computed as the bytes are read rather than over a
+  # buffer holding the book — `startChunkedConversion` is the API that makes
+  # the difference, and it is why this is a dependency of the app and not of
+  # its tests.
+  #
+  # It was a dev dependency until this phase, where the import needs it.
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -219,7 +249,6 @@ dev_dependencies:
   # the reason the generated contract is, and CI regenerates and diffs it.
   drift_dev: ^2.34.5
   build_runner: ^2.16.0
-  crypto: ^3.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

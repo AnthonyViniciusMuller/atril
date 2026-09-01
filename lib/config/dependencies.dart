@@ -45,6 +45,8 @@ import '../data/services/api/session.dart';
 import '../data/services/api/sync_api.dart';
 import '../data/services/channel/channel.dart';
 import '../data/services/discovery/well_known.dart';
+import '../data/services/files/file_source.dart';
+import '../data/services/files/system_file_picker.dart';
 import '../data/services/local/database.dart';
 import '../data/services/local/hybrid_clock_store.dart';
 import '../data/services/sync/author.dart';
@@ -217,8 +219,18 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // device is the one place the read RPCs are called, and after it this is
     // the truth.
     Provider<LibraryRepository>(
-      create: (_) => LibraryRepositoryImpl(library: database.libraryDao),
+      create: (BuildContext context) => LibraryRepositoryImpl(
+        library: database.libraryDao,
+        author: context.read<OperationAuthor>(),
+        blobs: blobs,
+      ),
     ),
+
+    // The platform's own file dialog, behind a port. It is one implementation
+    // and not six: `file_selector` is itself the split, and what this app adds
+    // is the type group — which is spelled once, out of the formats UC02
+    // admits, rather than in the screen that opens it.
+    Provider<FilePicker>(create: (_) => const SystemFilePicker()),
 
     Provider<AuthRepository>(
       create: (BuildContext context) => AuthRepositoryImpl(

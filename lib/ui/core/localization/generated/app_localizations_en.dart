@@ -294,4 +294,19 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get libraryImport => 'Import a book';
+
+  @override
+  String get libraryImportUnsupported =>
+      'This application imports EPUB, PDF, MOBI, DJVU and CBZ files.';
+
+  @override
+  String get libraryImportFailed => 'The file could not be imported.';
+
+  @override
+  String libraryImported(String title) {
+    return '$title joined your library.';
+  }
 }
