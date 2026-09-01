@@ -266,6 +266,27 @@ dependencies:
   # a report from a reader. Drop the pin when a stable 6.2.0 exists.
   flutter_inappwebview: 6.2.0-beta.3
 
+  # The engine's host on Linux, and the one platform dependency in this project
+  # that is measured in hundreds of megabytes.
+  #
+  # Linux ships no webview a Flutter plugin can embed offscreen. GTK's WebKit is
+  # not offscreen-renderable the way an embedder needs, and the WPE-based
+  # alternative is declined two blocks below for reasons of its own. So Linux
+  # runs CEF — Chromium, rendered to a Flutter texture — and it is the same
+  # engine, page and bridge the other five targets load.
+  #
+  # What it costs was measured before the phase began rather than discovered
+  # during it. CEF is fetched at build time (658 MB, into the pub cache, once
+  # per machine) and the `libcef.so` that ships is 244 MB stripped, so a Linux
+  # bundle is about 300 MB. Its CMake step also patches `linux/runner/main.cc`
+  # and `my_application.cc` — a CEF process bootstrap and two key handlers — and
+  # those patches are committed here, so the build is a no-op over them and the
+  # change is a diff somebody reviewed rather than a mutation during a build.
+  #
+  # It is Linux only. Windows has WebView2 and reaches the reader through
+  # `flutter_inappwebview` like the other three native targets.
+  webview_cef: ^0.6.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

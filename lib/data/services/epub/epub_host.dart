@@ -376,3 +376,83 @@ abstract interface class EpubHostFactory {
   /// A host for one book on one screen.
   EpubHost create();
 }
+
+/// How long a book gets to open before the reader is told it did not.
+///
+/// A webview that never calls back leaves a reader looking at a spinner with
+/// no way to tell that from a slow book, and the ones that are slow are large
+/// and on a phone. Half a minute is long enough to be unfair to neither.
+const Duration epubOpenTimeout = Duration(seconds: 30);
+
+/// The type size, in CSS pixels, that [EpubStyle.fontSize] is a percentage of.
+///
+/// The engine's own knob is `rendition.themes.fontSize`, which takes a length
+/// and sets it on the root — so the book's own relative units still scale
+/// beneath it and a heading the author asked to be large stays large. Sixteen
+/// is the browser default and the number the percentage is therefore honest
+/// about: 100% is the size the book would have had.
+const double epubBaseFontSizePx = 16;
+
+/// The colours one reading theme is drawn in.
+final class EpubPalette {
+  const EpubPalette({
+    required this.background,
+    required this.foreground,
+    required this.link,
+  });
+
+  final Color background;
+  final Color foreground;
+  final Color link;
+}
+
+/// The palette for [theme], resolving [EpubTheme.followSystem] against
+/// [brightness].
+///
+/// They are here and not in `ui/core/themes` on purpose. These are the colours
+/// of a *page*, chosen against paper rather than against the app's surfaces: a
+/// reading ground that matched the application's background would be a book
+/// printed on the same card as the shelf it came off. Sepia is the clearest
+/// case — it is nothing the Material scheme has a name for, and readers ask
+/// for it by name.
+EpubPalette epubPaletteOf(EpubTheme theme, Brightness brightness) =>
+    switch (theme) {
+      EpubTheme.followSystem =>
+        brightness == Brightness.dark
+            ? epubPaletteOf(EpubTheme.dark, brightness)
+            : epubPaletteOf(EpubTheme.light, brightness),
+      EpubTheme.light => const EpubPalette(
+        background: Color(0xFFFFFFFF),
+        foreground: Color(0xFF1A1A1A),
+        link: Color(0xFF1A4F8B),
+      ),
+      EpubTheme.sepia => const EpubPalette(
+        background: Color(0xFFF4ECD8),
+        foreground: Color(0xFF3B2F1E),
+        link: Color(0xFF7A4A16),
+      ),
+      EpubTheme.dark => const EpubPalette(
+        background: Color(0xFF121212),
+        foreground: Color(0xFFE0E0E0),
+        link: Color(0xFF8AB4F8),
+      ),
+    };
+
+/// [color] as the `#rrggbb` the engine's CSS wants.
+String cssColor(Color color) =>
+    '#${((color.toARGB32()) & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+
+/// The bytes of a book, for a caller that has a stream.
+///
+/// It is here because both hosts want the same thing and the blob store answers
+/// with a stream: epub.js reads a zip by seeking in it, so the file has to be
+/// whole before it crosses the bridge.
+Future<Uint8List> collectBook(Stream<List<int>> bytes) async {
+  final BytesBuilder builder = BytesBuilder(copy: false);
+
+  await for (final List<int> chunk in bytes) {
+    builder.add(chunk);
+  }
+
+  return builder.takeBytes();
+}

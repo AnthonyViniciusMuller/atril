@@ -197,7 +197,7 @@ bootstrap runs before `g_application_run`, so on Linux `main` branches before th
 application is constructed. The patch is idempotent and is committed, which makes it a diff
 somebody reviewed instead of a mutation of tracked files that happens during a build.
 
-### Four things are chosen by conditional export
+### Five things are chosen by conditional export
 
 `ClientChannel` over HTTP/2 does not exist in a browser and `GrpcWebClientChannel` does not exist
 outside one. `data/services/channel/channel.dart` is a conditional export over `channel_io.dart`
@@ -211,12 +211,24 @@ a filesystem or in that same origin-private store. All three are cases where the
 `package:web` one does not parse for the others — so an interface chosen at run time would not
 help: both implementations would still have to compile.
 
-There is a fourth, and it is of a different kind: `data/services/api/grpc_status.dart` exports
-`GrpcError` and `StatusCode` from `package:grpc/grpc.dart` or from `package:grpc/grpc_web.dart`.
+The fifth is the reader's host. `data/services/epub/host/host_factory.dart` exports a native
+branch or a browser one, and it meets the same rule for the same reason: the Linux host serves
+the pinned engine over an `HttpServer`, which is `dart:io`, and a `dart:io` import does not parse
+for the web target. It is the first of the five whose two sides are both this project's own code.
+
+The split *inside* that native branch is a different kind and is deliberately not a conditional
+export. Linux and the four other native targets can both be compiled, so which of the two hosts
+to build is a question about the machine rather than about the language, and it is answered with
+`defaultTargetPlatform` where the graph is composed — the same way `config/platform.dart` answers
+what this device calls itself.
+
+There is another, and it is of a different kind again: `data/services/api/grpc_status.dart`
+exports `GrpcError` and `StatusCode` from `package:grpc/grpc.dart` or from
+`package:grpc/grpc_web.dart`.
 The two types are one class each in one file, and the package publishes them only through those
 two libraries — one of which drags in `dart:io` and the other `dart:js_interop`. So the split has
 nothing of this project's own on either side of it: it is the same constraint met inside a
-dependency, and it is named here so that a future reader counts four and not a rule that was
+dependency, and it is named here so that a future reader counts five and not a rule that was
 broken.
 
 Everything else that merely behaves differently per platform (the secure store, the storage

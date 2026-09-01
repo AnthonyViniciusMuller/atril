@@ -35,22 +35,6 @@ final _log = loggerFor('data/epub');
 /// The operation a failure in this file reports under.
 const String opEpubHost = 'epub/webview host';
 
-/// How long a book gets to open before the reader is told it did not.
-///
-/// A webview that never calls back leaves a reader looking at a spinner with
-/// no way to tell that from a slow book, and the ones that are slow are large
-/// and on a phone. Half a minute is long enough to be unfair to neither.
-const Duration epubOpenTimeout = Duration(seconds: 30);
-
-/// The type size, in CSS pixels, that [EpubStyle.fontSize] is a percentage of.
-///
-/// The engine's own knob is `rendition.themes.fontSize`, which takes a length
-/// and sets it on the root — so the book's own relative units still scale
-/// beneath it and a heading the author asked to be large stays large. Sixteen
-/// is the browser default and the number the percentage is therefore honest
-/// about: 100% is the size the book would have had.
-const double epubBaseFontSizePx = 16;
-
 /// The engine, hosted by whichever webview this platform has.
 final class WebviewEpubHost implements EpubHost {
   /// A host for one book on one screen.
@@ -364,57 +348,6 @@ final class _Rendering {
   final EpubBook book;
   final String? initialCfi;
 }
-
-/// The colours one reading theme is drawn in.
-final class EpubPalette {
-  const EpubPalette({
-    required this.background,
-    required this.foreground,
-    required this.link,
-  });
-
-  final Color background;
-  final Color foreground;
-  final Color link;
-}
-
-/// The palette for [theme], resolving [EpubTheme.followSystem] against
-/// [brightness].
-///
-/// They are here and not in `ui/core/themes` on purpose. These are the colours
-/// of a *page*, chosen against paper rather than against the app's surfaces: a
-/// reading ground that matched the application's background would be a book
-/// printed on the same card as the shelf it came off. Sepia is the clearest
-/// case — it is nothing the Material scheme has a name for, and readers ask
-/// for it by name.
-@visibleForTesting
-EpubPalette epubPaletteOf(EpubTheme theme, Brightness brightness) =>
-    switch (theme) {
-      EpubTheme.followSystem =>
-        brightness == Brightness.dark
-            ? epubPaletteOf(EpubTheme.dark, brightness)
-            : epubPaletteOf(EpubTheme.light, brightness),
-      EpubTheme.light => const EpubPalette(
-        background: Color(0xFFFFFFFF),
-        foreground: Color(0xFF1A1A1A),
-        link: Color(0xFF1A4F8B),
-      ),
-      EpubTheme.sepia => const EpubPalette(
-        background: Color(0xFFF4ECD8),
-        foreground: Color(0xFF3B2F1E),
-        link: Color(0xFF7A4A16),
-      ),
-      EpubTheme.dark => const EpubPalette(
-        background: Color(0xFF121212),
-        foreground: Color(0xFFE0E0E0),
-        link: Color(0xFF8AB4F8),
-      ),
-    };
-
-/// [color] as the `#rrggbb` the engine's CSS wants.
-@visibleForTesting
-String cssColor(Color color) =>
-    '#${((color.toARGB32()) & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
 
 /// The package's location as the port's position.
 ///

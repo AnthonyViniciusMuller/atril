@@ -920,12 +920,28 @@ and they are recorded here because none of them is visible from the package's RE
       that declares no platform. Android, web and Linux were each built to prove it. The three
       warnings Flutter prints about the missing default plugin are left visible, because they
       are an accurate description of what is being done
-- [ ] `feat: add the desktop epub host` — `webview_cef` for Linux, loading the same pinned assets
+- [x] `feat: add the desktop epub host` — `webview_cef` for Linux, loading the same pinned assets
       over a loopback server, because a CEF webview has no asset protocol to be handed and the
       host page resolves its scripts by relative path. The bridge is the same one: the package's
       glue talks to `window.flutter_inappwebview.callHandler`, and both the browser host and this
       one shim exactly that — so the three hosts differ in what gives epub.js a DOM and in
-      nothing above it. The runner patch lands here, committed rather than applied at build time
+      nothing above it. The runner patch lands here, committed and annotated rather than applied
+      at build time.
+
+      The server is the part worth reading. It binds the loopback address only, serves **exactly**
+      the closure `engine.dart` pins and answers 404 to everything else — which is not tidiness:
+      the page rendering in that webview is a file somebody else wrote, and a server that would
+      hand it the rest of the bundle if asked is a server handing a book the application's
+      insides. It is one server for the process rather than one per book, and nothing is copied
+      to disk, so what is served is what `engine_test.dart` hashes rather than a second copy that
+      outlives the run. That is also the one place in the whole chain where a byte of the engine
+      passes through this project's own code, so its test hashes every asset off the socket.
+
+      The port picking is the **fifth** conditional export and the first whose two sides are both
+      this project's code: the server is `dart:io`, which does not parse for the web target.
+      Choosing between the two *native* hosts is deliberately not one — both compile, so it is a
+      question about the machine and `defaultTargetPlatform` answers it where the graph is
+      composed
 - [ ] `test: prove a locator round-trips between hosts` — the correctness claim the whole split
       rests on
 - [ ] `feat: add the reader chrome` — the page, the progress, the table of contents, and the

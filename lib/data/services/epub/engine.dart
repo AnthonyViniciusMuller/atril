@@ -159,9 +159,10 @@ Future<ByteData> loadEngineAsset(String key, {AssetBundle? bundle}) =>
 ///
 /// The Linux host has no asset protocol to hand a webview, so it serves these
 /// over a loopback socket under the paths [EpubEngine.hostPage] resolves its
-/// relative `src` attributes against. Deriving the map here keeps the two
-/// halves — what is pinned and what is served — from drifting apart.
-@visibleForTesting
+/// relative `src` attributes against. Deriving the map here rather than writing
+/// it out in the server keeps the two halves from drifting apart: what is
+/// served is exactly what is pinned, so a file the digests do not cover is a
+/// file that answers 404 rather than one that quietly renders.
 Map<String, String> engineAssetsByPath() => <String, String>{
   for (final String key in EpubEngine.assetDigests.keys)
     key.substring(EpubEngine.assetRoot.length + 1): key,
