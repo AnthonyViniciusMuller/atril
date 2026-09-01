@@ -1196,9 +1196,17 @@ and they are recorded here because none of them is visible from the package's RE
       outbox as dumb as its own comment asks for. And a quarantined change **stops being offered**,
       which is the half that makes the drain work at all: the head of the outbox moves without
       retiring, so one refusal no longer stops every change behind it from ever being pushed
-- [ ] `test: prove two devices converge` — two databases, one operation log, the later write
+- [x] `test: prove two devices converge` — two databases, one operation log, the later write
       pushed first, both landing on the write that wins on `(updated_at, device_id)`. It is
-      Quire's own end-to-end reconciliation test, written from this side
+      Quire's own end-to-end reconciliation test, written from this side. It is not a second
+      `reconciler_convergence_test.dart`: that one shuffles a synthetic log into a reconciler and
+      proves the merge, and this drives two whole replicas through everything *around* it — the
+      author stamping a version on the right predecessor, the outbox, the two calls, the cursor.
+      Those are the divergences no amount of correctness in the merge repairs. Two assertions
+      beyond the plan's earned their place: both devices end holding the same *causal state* and
+      not only the same row, since the next write either one authors is stamped on top of what it
+      thinks the current version is; and neither device is left owing anything, because the write
+      that lost was stored by the node and retired here rather than retried for ever
 
 ## Phase 12 — Federation and sovereignty (UC06, UC12, UC15, UC16)
 
