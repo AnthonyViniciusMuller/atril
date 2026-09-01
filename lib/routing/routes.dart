@@ -205,6 +205,13 @@ abstract final class Routes {
   /// Where a reader moves to another origin server (UC16).
   static const String migrate = '$settings/$migrateSegment';
 
+  /// The path segment the reader's own record is shown under, relative to
+  /// [settings].
+  static const String accountSegment = 'account';
+
+  /// Where the reader's own record is shown and changed (UC06).
+  static const String account = '$settings/$accountSegment';
+
   /// The path segment the reader's devices are shown under, relative to
   /// [settings].
   static const String devicesSegment = 'devices';

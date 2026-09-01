@@ -2540,6 +2540,192 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Salvar'**
   String get devicesSave;
+
+  /// Item da tela de configurações que leva à tela onde o leitor edita o nome exibido, o e-mail e a senha. Também é o título dessa tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sua conta'**
+  String get settingsAccount;
+
+  /// Subtítulo do item das configurações que leva à conta. Uma frase dizendo o que o leitor vai encontrar lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome, e-mail e senha.'**
+  String get settingsAccountExplanation;
+
+  /// Rótulo da linha que mostra o identificador federado completo do leitor, no formato @nome:servidor. Ele não é editável: as duas metades são o nome de usuário e o domínio do servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Identificador'**
+  String get accountIdentifier;
+
+  /// Frase abaixo do identificador federado, dizendo por que ele não pode ser editado ali. RN08.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'As duas metades são o seu nome de usuário e o servidor onde você está registrado. Ele só muda mudando de servidor.'**
+  String get accountIdentifierExplanation;
+
+  /// Rótulo da linha e do campo do nome que o leitor usa para se apresentar. É o único campo da conta que se altera diretamente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome exibido'**
+  String get accountDisplayName;
+
+  /// Rótulo da linha e do campo do endereço de e-mail da conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'E-mail'**
+  String get accountEmail;
+
+  /// Frase abaixo do e-mail, dizendo por que a troca exige senha. Correção C14: quem pode mudar o endereço pode receber a recuperação e depois definir a senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'É por aqui que a recuperação de senha passa, então mudá-lo pede a sua senha.'**
+  String get accountEmailExplanation;
+
+  /// Linha mostrada no lugar do endereço quando o servidor não informou nenhum. Acontece num nó que apenas replica o leitor, que guarda a linha sem endereço.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhum e-mail registrado.'**
+  String get accountEmailAbsent;
+
+  /// Rótulo da linha que leva à troca de senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha'**
+  String get accountPassword;
+
+  /// Frase abaixo da senha, avisando o que a troca custa. O servidor encerra todas as sessões, e o contrato não diz isso — só o fluxo de recuperação diz.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Trocar a senha encerra a sua sessão em todos os aparelhos, inclusive neste.'**
+  String get accountPasswordExplanation;
+
+  /// Linha que diz quando a conta foi criada no servidor. O parâmetro vem da localização do sistema.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Conta criada em {date}'**
+  String accountCreated(String date);
+
+  /// Aviso mostrado quando a releitura da conta no servidor falha. O que está na tela veio do que este aparelho guardou no último acesso.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler a sua conta. O servidor não respondeu.'**
+  String get accountFailed;
+
+  /// Título do diálogo em que o leitor edita o nome exibido.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mudar o nome exibido'**
+  String get accountEditName;
+
+  /// Erro mostrado no diálogo do nome exibido quando ele está em branco ou é longo demais.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe um nome.'**
+  String get accountNameInvalid;
+
+  /// Confirmação mostrada depois que o nome exibido muda. O parâmetro é o nome novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Agora você aparece como {name}.'**
+  String accountNameChanged(String name);
+
+  /// Erro mostrado quando a troca do nome exibido falha no servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível mudar o nome exibido.'**
+  String get accountNameFailed;
+
+  /// Título do diálogo em que o leitor troca o endereço de e-mail, informando a senha atual.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mudar o e-mail'**
+  String get accountEditEmail;
+
+  /// Rótulo do campo da senha atual, usada como prova de que é o leitor e não apenas um aparelho destravado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha atual'**
+  String get accountCurrentPassword;
+
+  /// Erro mostrado no diálogo do e-mail quando o endereço não tem a forma esperada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe um e-mail válido.'**
+  String get accountEmailInvalid;
+
+  /// Frase dentro do diálogo de troca de e-mail. O servidor avisa o endereço anterior, e essa é a parte que protege quem já teve a senha descoberta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Um aviso é enviado para o endereço antigo. É assim que você fica sabendo se não foi você quem trocou.'**
+  String get accountEmailNotice;
+
+  /// Confirmação mostrada depois que o endereço muda. O parâmetro é o endereço novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O e-mail agora é {email}.'**
+  String accountEmailChanged(String email);
+
+  /// Erro mostrado quando a troca de endereço falha no servidor por um motivo que não é a senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível mudar o e-mail.'**
+  String get accountEmailFailed;
+
+  /// Erro mostrado quando o servidor recusa o endereço novo porque ele já pertence a outra conta ali.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este e-mail já está registrado neste servidor.'**
+  String get accountEmailRegistered;
+
+  /// Título do diálogo em que o leitor troca a senha, informando a atual e a nova.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Trocar a senha'**
+  String get accountEditPassword;
+
+  /// Rótulo do campo da senha nova, no diálogo de troca de senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nova senha'**
+  String get accountNewPassword;
+
+  /// Erro mostrado no diálogo de senha quando a nova senha é curta ou longa demais para o que o servidor aceita.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A senha precisa de pelo menos 8 caracteres.'**
+  String get accountPasswordInvalid;
+
+  /// Aviso dentro do diálogo de troca de senha, dizendo o que a troca custa e por que esse custo é o correto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todas as suas sessões acabam, e você entra de novo em cada aparelho. É o que se quer quando se troca a senha por desconfiança.'**
+  String get accountPasswordEndsSessions;
+
+  /// Confirmação mostrada depois que a senha muda. A sessão deste aparelho acabou junto, então o leitor é levado de volta ao início.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha trocada. Entre de novo.'**
+  String get accountPasswordChanged;
+
+  /// Erro mostrado quando a troca de senha falha no servidor por um motivo que não é a senha atual.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível trocar a senha.'**
+  String get accountPasswordFailed;
+
+  /// Erro mostrado quando o servidor recusa a prova: a senha atual informada não confere. É a mesma recusa para a troca de e-mail, a troca de senha e a exclusão da conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha atual incorreta.'**
+  String get accountWrongPassword;
+
+  /// Rótulo do botão que confirma uma alteração num diálogo da tela da conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Salvar'**
+  String get accountSave;
 }
 
 class _AppLocalizationsDelegate

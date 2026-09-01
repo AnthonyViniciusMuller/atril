@@ -14,6 +14,7 @@
 library;
 
 import '../../../domain/models/device.dart';
+import '../../../domain/models/user.dart';
 import '../../../utils/result.dart';
 
 /// The reader's devices, and which of them is this one.
@@ -39,6 +40,49 @@ final class BoundDevices {
 
 /// The reader's account, as their origin server holds it.
 abstract interface class AccountRepository {
+  /// UC06, read. The reader's own record, as the node holds it now.
+  ///
+  /// It is the one call in this repository whose answer is *also* kept
+  /// locally. The reader's row is what phase 6 wrote at sign-in and what every
+  /// surface in the app names them by, and the address on it is the field this
+  /// screen exists to change — so what the node answers is written there
+  /// rather than held beside it, and the two cannot come apart.
+  Future<Result<User>> readAccount();
+
+  /// UC06, update. The display name, which is the only field `UpdateUser`
+  /// writes.
+  ///
+  /// The address is a credential in its own right and goes through
+  /// [changeEmail]; the password goes through [changePassword]. C14 is why
+  /// neither is a field here, and why a field mask could not have expressed
+  /// it: a request naming both would have to demand a password for both or
+  /// accept one for neither.
+  Future<Result<User>> changeDisplayName(String displayName);
+
+  /// UC06, update — the address, proved with the current [password].
+  ///
+  /// The proof is asked for because the address is the channel UC08 recovers
+  /// an account through: whoever can change it can have a recovery credential
+  /// sent somewhere of their choosing and then set the password. A session
+  /// proves that a device is unlocked, not that the reader is at it.
+  Future<Result<User>> changeEmail({
+    required String password,
+    required String email,
+  });
+
+  /// UC06, update — the password, proved with the current one.
+  ///
+  /// **It ends every session of every device, and the contract does not say
+  /// so.** `internal/identity/application/usecase/changepassword` does: a
+  /// reader changing their password is responding to a suspicion, and a
+  /// session that survived would be the one they suspect. So this device's own
+  /// session is cleared here rather than left to fail at the next call, and
+  /// the screen warns before it asks.
+  Future<Result<void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
   /// RF11. The reader's devices, and which of them is asking.
   Future<Result<BoundDevices>> devices();
 

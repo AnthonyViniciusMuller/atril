@@ -921,5 +921,98 @@
   "@devicesCannotRevokeThisOne": {},
 
   "devicesSave": "Save",
-  "@devicesSave": {}
+  "@devicesSave": {},
+
+  "settingsAccount": "Your account",
+  "@settingsAccount": {},
+
+  "settingsAccountExplanation": "Name, email and password.",
+  "@settingsAccountExplanation": {},
+
+  "accountIdentifier": "Identifier",
+  "@accountIdentifier": {},
+
+  "accountIdentifierExplanation": "Its two halves are your username and the server you are registered at. It only changes by moving server.",
+  "@accountIdentifierExplanation": {},
+
+  "accountDisplayName": "Display name",
+  "@accountDisplayName": {},
+
+  "accountEmail": "Email",
+  "@accountEmail": {},
+
+  "accountEmailExplanation": "It is where password recovery goes, so changing it asks for your password.",
+  "@accountEmailExplanation": {},
+
+  "accountEmailAbsent": "No email on record.",
+  "@accountEmailAbsent": {},
+
+  "accountPassword": "Password",
+  "@accountPassword": {},
+
+  "accountPasswordExplanation": "Changing the password ends your session on every device, this one included.",
+  "@accountPasswordExplanation": {},
+
+  "accountCreated": "Account created on {date}",
+  "@accountCreated": {},
+
+  "accountFailed": "Your account could not be read. The node did not answer.",
+  "@accountFailed": {},
+
+  "accountEditName": "Change display name",
+  "@accountEditName": {},
+
+  "accountNameInvalid": "Enter a name.",
+  "@accountNameInvalid": {},
+
+  "accountNameChanged": "You now appear as {name}.",
+  "@accountNameChanged": {},
+
+  "accountNameFailed": "The display name could not be changed.",
+  "@accountNameFailed": {},
+
+  "accountEditEmail": "Change email",
+  "@accountEditEmail": {},
+
+  "accountCurrentPassword": "Current password",
+  "@accountCurrentPassword": {},
+
+  "accountEmailInvalid": "Enter a valid email address.",
+  "@accountEmailInvalid": {},
+
+  "accountEmailNotice": "A notice goes to the previous address. That is how you find out if it was not you who changed it.",
+  "@accountEmailNotice": {},
+
+  "accountEmailChanged": "Your email is now {email}.",
+  "@accountEmailChanged": {},
+
+  "accountEmailFailed": "The email could not be changed.",
+  "@accountEmailFailed": {},
+
+  "accountEmailRegistered": "That email is already registered on this server.",
+  "@accountEmailRegistered": {},
+
+  "accountEditPassword": "Change password",
+  "@accountEditPassword": {},
+
+  "accountNewPassword": "New password",
+  "@accountNewPassword": {},
+
+  "accountPasswordInvalid": "The password needs at least 8 characters.",
+  "@accountPasswordInvalid": {},
+
+  "accountPasswordEndsSessions": "Every session of yours ends and you sign in again on each device. That is what you want when the reason for changing it is a suspicion.",
+  "@accountPasswordEndsSessions": {},
+
+  "accountPasswordChanged": "Password changed. Sign in again.",
+  "@accountPasswordChanged": {},
+
+  "accountPasswordFailed": "The password could not be changed.",
+  "@accountPasswordFailed": {},
+
+  "accountWrongPassword": "That is not your current password.",
+  "@accountWrongPassword": {},
+
+  "accountSave": "Save",
+  "@accountSave": {}
 }

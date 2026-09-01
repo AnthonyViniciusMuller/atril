@@ -1466,6 +1466,113 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesSave => 'Salvar';
+
+  @override
+  String get settingsAccount => 'Sua conta';
+
+  @override
+  String get settingsAccountExplanation => 'Nome, e-mail e senha.';
+
+  @override
+  String get accountIdentifier => 'Identificador';
+
+  @override
+  String get accountIdentifierExplanation =>
+      'As duas metades são o seu nome de usuário e o servidor onde você está registrado. Ele só muda mudando de servidor.';
+
+  @override
+  String get accountDisplayName => 'Nome exibido';
+
+  @override
+  String get accountEmail => 'E-mail';
+
+  @override
+  String get accountEmailExplanation =>
+      'É por aqui que a recuperação de senha passa, então mudá-lo pede a sua senha.';
+
+  @override
+  String get accountEmailAbsent => 'Nenhum e-mail registrado.';
+
+  @override
+  String get accountPassword => 'Senha';
+
+  @override
+  String get accountPasswordExplanation =>
+      'Trocar a senha encerra a sua sessão em todos os aparelhos, inclusive neste.';
+
+  @override
+  String accountCreated(String date) {
+    return 'Conta criada em $date';
+  }
+
+  @override
+  String get accountFailed =>
+      'Não foi possível ler a sua conta. O servidor não respondeu.';
+
+  @override
+  String get accountEditName => 'Mudar o nome exibido';
+
+  @override
+  String get accountNameInvalid => 'Informe um nome.';
+
+  @override
+  String accountNameChanged(String name) {
+    return 'Agora você aparece como $name.';
+  }
+
+  @override
+  String get accountNameFailed => 'Não foi possível mudar o nome exibido.';
+
+  @override
+  String get accountEditEmail => 'Mudar o e-mail';
+
+  @override
+  String get accountCurrentPassword => 'Senha atual';
+
+  @override
+  String get accountEmailInvalid => 'Informe um e-mail válido.';
+
+  @override
+  String get accountEmailNotice =>
+      'Um aviso é enviado para o endereço antigo. É assim que você fica sabendo se não foi você quem trocou.';
+
+  @override
+  String accountEmailChanged(String email) {
+    return 'O e-mail agora é $email.';
+  }
+
+  @override
+  String get accountEmailFailed => 'Não foi possível mudar o e-mail.';
+
+  @override
+  String get accountEmailRegistered =>
+      'Este e-mail já está registrado neste servidor.';
+
+  @override
+  String get accountEditPassword => 'Trocar a senha';
+
+  @override
+  String get accountNewPassword => 'Nova senha';
+
+  @override
+  String get accountPasswordInvalid =>
+      'A senha precisa de pelo menos 8 caracteres.';
+
+  @override
+  String get accountPasswordEndsSessions =>
+      'Todas as suas sessões acabam, e você entra de novo em cada aparelho. É o que se quer quando se troca a senha por desconfiança.';
+
+  @override
+  String get accountPasswordChanged => 'Senha trocada. Entre de novo.';
+
+  @override
+  String get accountPasswordFailed => 'Não foi possível trocar a senha.';
+
+  @override
+  String get accountWrongPassword => 'Senha atual incorreta.';
+
+  @override
+  String get accountSave => 'Salvar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -2929,4 +3036,111 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get devicesSave => 'Salvar';
+
+  @override
+  String get settingsAccount => 'Sua conta';
+
+  @override
+  String get settingsAccountExplanation => 'Nome, e-mail e senha.';
+
+  @override
+  String get accountIdentifier => 'Identificador';
+
+  @override
+  String get accountIdentifierExplanation =>
+      'As duas metades são o seu nome de usuário e o servidor onde você está registrado. Ele só muda mudando de servidor.';
+
+  @override
+  String get accountDisplayName => 'Nome exibido';
+
+  @override
+  String get accountEmail => 'E-mail';
+
+  @override
+  String get accountEmailExplanation =>
+      'É por aqui que a recuperação de senha passa, então mudá-lo pede a sua senha.';
+
+  @override
+  String get accountEmailAbsent => 'Nenhum e-mail registrado.';
+
+  @override
+  String get accountPassword => 'Senha';
+
+  @override
+  String get accountPasswordExplanation =>
+      'Trocar a senha encerra a sua sessão em todos os aparelhos, inclusive neste.';
+
+  @override
+  String accountCreated(String date) {
+    return 'Conta criada em $date';
+  }
+
+  @override
+  String get accountFailed =>
+      'Não foi possível ler a sua conta. O servidor não respondeu.';
+
+  @override
+  String get accountEditName => 'Mudar o nome exibido';
+
+  @override
+  String get accountNameInvalid => 'Informe um nome.';
+
+  @override
+  String accountNameChanged(String name) {
+    return 'Agora você aparece como $name.';
+  }
+
+  @override
+  String get accountNameFailed => 'Não foi possível mudar o nome exibido.';
+
+  @override
+  String get accountEditEmail => 'Mudar o e-mail';
+
+  @override
+  String get accountCurrentPassword => 'Senha atual';
+
+  @override
+  String get accountEmailInvalid => 'Informe um e-mail válido.';
+
+  @override
+  String get accountEmailNotice =>
+      'Um aviso é enviado para o endereço antigo. É assim que você fica sabendo se não foi você quem trocou.';
+
+  @override
+  String accountEmailChanged(String email) {
+    return 'O e-mail agora é $email.';
+  }
+
+  @override
+  String get accountEmailFailed => 'Não foi possível mudar o e-mail.';
+
+  @override
+  String get accountEmailRegistered =>
+      'Este e-mail já está registrado neste servidor.';
+
+  @override
+  String get accountEditPassword => 'Trocar a senha';
+
+  @override
+  String get accountNewPassword => 'Nova senha';
+
+  @override
+  String get accountPasswordInvalid =>
+      'A senha precisa de pelo menos 8 caracteres.';
+
+  @override
+  String get accountPasswordEndsSessions =>
+      'Todas as suas sessões acabam, e você entra de novo em cada aparelho. É o que se quer quando se troca a senha por desconfiança.';
+
+  @override
+  String get accountPasswordChanged => 'Senha trocada. Entre de novo.';
+
+  @override
+  String get accountPasswordFailed => 'Não foi possível trocar a senha.';
+
+  @override
+  String get accountWrongPassword => 'Senha atual incorreta.';
+
+  @override
+  String get accountSave => 'Salvar';
 }

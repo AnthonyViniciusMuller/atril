@@ -11,6 +11,7 @@ import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/session.dart';
 import 'package:atril/routing/router.dart';
 import 'package:atril/routing/routes.dart';
+import 'package:atril/ui/account/widgets/account_screen.dart';
 import 'package:atril/ui/account/widgets/devices_screen.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
@@ -351,6 +352,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DevicesScreen), findsOneWidget);
+
+      router.go(Routes.account);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AccountScreen), findsOneWidget);
     },
   );
 

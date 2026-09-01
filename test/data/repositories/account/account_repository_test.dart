@@ -14,7 +14,9 @@ import 'package:atril/data/services/channel/channel.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/device.dart';
+import 'package:atril/domain/models/server.dart';
 import 'package:atril/domain/models/session.dart';
+import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:drift/native.dart';
@@ -67,6 +69,16 @@ void main() {
       ),
     );
 
+    // The reader's row references the node they are hosted at, so the
+    // catalogue has to know it before anything can be written about them.
+    await database.identityDao.rememberDescriptor(
+      const ServerDescriptor(
+        domain: 'quire-a.example',
+        baseUrl: 'https://quire-a.example',
+      ),
+      at: _at,
+    );
+
     await database.identityDao.bindDevice(
       id: _thisDevice,
       name: 'Celular',
@@ -91,7 +103,11 @@ void main() {
       ].map(wireDevice),
     );
 
-    account = AccountRepositoryImpl(auth: auth, identity: database.identityDao);
+    account = AccountRepositoryImpl(
+      auth: auth,
+      identity: database.identityDao,
+      session: session,
+    );
   });
 
   tearDown(() async {
@@ -99,6 +115,119 @@ void main() {
     await connection.shutdown();
     await server.shutdown();
     await database.close();
+  });
+
+  group('the reader\'s record', () {
+    test('is written into this device\'s own row when it is read', () async {
+      final read = await account.readAccount();
+
+      expect(read, isA<Ok<User>>());
+
+      final row = await database.identityDao.reader();
+
+      expect(row!.email, 'reader@example.com');
+      expect(row.displayName, 'A leitora');
+    });
+
+    test('names only the display name in the mask', () async {
+      // The address is a credential in its own right and the password is
+      // another; C14 is why neither is a field here, and why a mask could not
+      // have said so.
+      await account.changeDisplayName('  Ana Maria  ');
+
+      expect(node.updated, hasLength(1));
+      expect(node.updated.single.$1.toList(), <String>['display_name']);
+      expect(node.updated.single.$2, 'Ana Maria');
+    });
+
+    test('a blank display name is refused before anything travels', () async {
+      final renamed = await account.changeDisplayName('   ');
+
+      expect(renamed, isA<Error<User>>());
+      expect(node.updated, isEmpty);
+    });
+
+    test('changing the address proves it with the password', () async {
+      final changed = await account.changeEmail(
+        password: node.password,
+        email: 'ana@example.com',
+      );
+
+      expect(changed, isA<Ok<User>>());
+      expect(node.emails, <(String, String)>[
+        (node.password, 'ana@example.com'),
+      ]);
+
+      final row = await database.identityDao.reader();
+
+      expect(row!.email, 'ana@example.com');
+    });
+
+    test('a proof that did not match comes back as itself', () async {
+      final changed = await account.changeEmail(
+        password: 'not the password',
+        email: 'ana@example.com',
+      );
+
+      expect(
+        changed,
+        isA<Error<User>>().having(
+          (Error<User> it) => (it.error as AppException).code,
+          'code',
+          codeWrongPassword,
+        ),
+      );
+    });
+
+    test('an address somebody else holds here is reported as such', () async {
+      final changed = await account.changeEmail(
+        password: node.password,
+        email: FakeAuthService.registeredEmail,
+      );
+
+      expect(
+        changed,
+        isA<Error<User>>().having(
+          (Error<User> it) => (it.error as AppException).code,
+          'code',
+          'email_registered',
+        ),
+      );
+    });
+
+    test('changing the password ends this session too', () async {
+      // The node ends every session of every device. Its own use case says so
+      // and the contract does not, so a client that kept the credential would
+      // present one the node has already thrown away on every call it makes.
+      final changed = await account.changePassword(
+        currentPassword: node.password,
+        newPassword: 'outra senha boa',
+      );
+
+      expect(changed, isA<Ok<void>>());
+      expect(await session.credential(), isNull);
+    });
+
+    test('a password the node would refuse never reaches it', () async {
+      final changed = await account.changePassword(
+        currentPassword: node.password,
+        newPassword: 'curta',
+      );
+
+      expect(changed, isA<Error<void>>());
+      expect(node.passwords, isEmpty);
+      expect(await session.credential(), isNotNull);
+    });
+
+    test('a wrong current password leaves the session alone', () async {
+      final changed = await account.changePassword(
+        currentPassword: 'not the password',
+        newPassword: 'outra senha boa',
+      );
+
+      expect(changed, isA<Error<void>>());
+      expect(await session.credential(), isNotNull);
+    });
   });
 
   test('asks for the unbound devices too', () async {

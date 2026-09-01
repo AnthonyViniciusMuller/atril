@@ -25,12 +25,24 @@ class AccountSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return ListTile(
-      leading: const Icon(Icons.devices_other_outlined),
-      title: Text(l10n.settingsDevices),
-      subtitle: Text(l10n.settingsDevicesExplanation),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.go(Routes.devices),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        ListTile(
+          leading: const Icon(Icons.manage_accounts_outlined),
+          title: Text(l10n.settingsAccount),
+          subtitle: Text(l10n.settingsAccountExplanation),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.account),
+        ),
+        ListTile(
+          leading: const Icon(Icons.devices_other_outlined),
+          title: Text(l10n.settingsDevices),
+          subtitle: Text(l10n.settingsDevicesExplanation),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.go(Routes.devices),
+        ),
+      ],
     );
   }
 }

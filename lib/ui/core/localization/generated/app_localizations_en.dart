@@ -1459,4 +1459,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesSave => 'Save';
+
+  @override
+  String get settingsAccount => 'Your account';
+
+  @override
+  String get settingsAccountExplanation => 'Name, email and password.';
+
+  @override
+  String get accountIdentifier => 'Identifier';
+
+  @override
+  String get accountIdentifierExplanation =>
+      'Its two halves are your username and the server you are registered at. It only changes by moving server.';
+
+  @override
+  String get accountDisplayName => 'Display name';
+
+  @override
+  String get accountEmail => 'Email';
+
+  @override
+  String get accountEmailExplanation =>
+      'It is where password recovery goes, so changing it asks for your password.';
+
+  @override
+  String get accountEmailAbsent => 'No email on record.';
+
+  @override
+  String get accountPassword => 'Password';
+
+  @override
+  String get accountPasswordExplanation =>
+      'Changing the password ends your session on every device, this one included.';
+
+  @override
+  String accountCreated(String date) {
+    return 'Account created on $date';
+  }
+
+  @override
+  String get accountFailed =>
+      'Your account could not be read. The node did not answer.';
+
+  @override
+  String get accountEditName => 'Change display name';
+
+  @override
+  String get accountNameInvalid => 'Enter a name.';
+
+  @override
+  String accountNameChanged(String name) {
+    return 'You now appear as $name.';
+  }
+
+  @override
+  String get accountNameFailed => 'The display name could not be changed.';
+
+  @override
+  String get accountEditEmail => 'Change email';
+
+  @override
+  String get accountCurrentPassword => 'Current password';
+
+  @override
+  String get accountEmailInvalid => 'Enter a valid email address.';
+
+  @override
+  String get accountEmailNotice =>
+      'A notice goes to the previous address. That is how you find out if it was not you who changed it.';
+
+  @override
+  String accountEmailChanged(String email) {
+    return 'Your email is now $email.';
+  }
+
+  @override
+  String get accountEmailFailed => 'The email could not be changed.';
+
+  @override
+  String get accountEmailRegistered =>
+      'That email is already registered on this server.';
+
+  @override
+  String get accountEditPassword => 'Change password';
+
+  @override
+  String get accountNewPassword => 'New password';
+
+  @override
+  String get accountPasswordInvalid =>
+      'The password needs at least 8 characters.';
+
+  @override
+  String get accountPasswordEndsSessions =>
+      'Every session of yours ends and you sign in again on each device. That is what you want when the reason for changing it is a suspicion.';
+
+  @override
+  String get accountPasswordChanged => 'Password changed. Sign in again.';
+
+  @override
+  String get accountPasswordFailed => 'The password could not be changed.';
+
+  @override
+  String get accountWrongPassword => 'That is not your current password.';
+
+  @override
+  String get accountSave => 'Save';
 }

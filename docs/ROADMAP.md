@@ -1302,9 +1302,24 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       before this screen did — which is also why UC06 and RF11 share one: both are `AuthService`,
       both are served by the one node that authenticates the reader (RN08), and neither
       replicates
-- [ ] `feat: add account settings` — UC06. Display name, address, password. Only the display name
+- [x] `feat: add account settings` — UC06. Display name, address, password. Only the display name
       is writable directly; the address and the password are credentials in their own right and
-      go through their own calls, which is C14
+      go through their own calls, which is C14. The screen keeps that shape rather than hiding
+      it: three dialogs and not one form, because a single *save* button would have to demand a
+      password for the name as well or accept one for none of it — which is the same thing a
+      field mask cannot express, one layer up. **One finding changes client code and is not in
+      the contract**: `ChangePassword` ends every session of every device.
+      `internal/identity/application/usecase/changepassword` says so and says why — a reader
+      changing their password is responding to a suspicion, and a session that survived would be
+      the one they suspect — while `auth.proto` says it only of the reset. So this device clears
+      its own session after the call, exactly as the password reset of phase 6 does, and the
+      dialog warns *before* it asks: a reader who was not told would experience a correct
+      security decision as the app breaking. Two smaller things. The screen watches this device's
+      **reader row** and asks `GetUser` once when it opens, writing the answer into that same
+      row — so it shows something on a device that has been offline for a week, there is no
+      third copy to disagree, and a refresh that failed costs a line rather than the screen. And
+      the refusals a reader can act on are named out of the node's own codes: `wrong_password`,
+      which is one code for all three credential calls on the other side, and `email_registered`
 - [ ] `feat: add account deletion` — with what it does and does not reach spelled out: this node,
       and not the replicas that already hold a copy
 

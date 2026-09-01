@@ -2370,5 +2370,175 @@
   "devicesSave": "Salvar",
   "@devicesSave": {
     "description": "Rótulo do botão que confirma o novo nome no diálogo de renomear um aparelho."
+  },
+
+  "settingsAccount": "Sua conta",
+  "@settingsAccount": {
+    "description": "Item da tela de configurações que leva à tela onde o leitor edita o nome exibido, o e-mail e a senha. Também é o título dessa tela."
+  },
+
+  "settingsAccountExplanation": "Nome, e-mail e senha.",
+  "@settingsAccountExplanation": {
+    "description": "Subtítulo do item das configurações que leva à conta. Uma frase dizendo o que o leitor vai encontrar lá."
+  },
+
+  "accountIdentifier": "Identificador",
+  "@accountIdentifier": {
+    "description": "Rótulo da linha que mostra o identificador federado completo do leitor, no formato @nome:servidor. Ele não é editável: as duas metades são o nome de usuário e o domínio do servidor."
+  },
+
+  "accountIdentifierExplanation": "As duas metades são o seu nome de usuário e o servidor onde você está registrado. Ele só muda mudando de servidor.",
+  "@accountIdentifierExplanation": {
+    "description": "Frase abaixo do identificador federado, dizendo por que ele não pode ser editado ali. RN08."
+  },
+
+  "accountDisplayName": "Nome exibido",
+  "@accountDisplayName": {
+    "description": "Rótulo da linha e do campo do nome que o leitor usa para se apresentar. É o único campo da conta que se altera diretamente."
+  },
+
+  "accountEmail": "E-mail",
+  "@accountEmail": {
+    "description": "Rótulo da linha e do campo do endereço de e-mail da conta."
+  },
+
+  "accountEmailExplanation": "É por aqui que a recuperação de senha passa, então mudá-lo pede a sua senha.",
+  "@accountEmailExplanation": {
+    "description": "Frase abaixo do e-mail, dizendo por que a troca exige senha. Correção C14: quem pode mudar o endereço pode receber a recuperação e depois definir a senha."
+  },
+
+  "accountEmailAbsent": "Nenhum e-mail registrado.",
+  "@accountEmailAbsent": {
+    "description": "Linha mostrada no lugar do endereço quando o servidor não informou nenhum. Acontece num nó que apenas replica o leitor, que guarda a linha sem endereço."
+  },
+
+  "accountPassword": "Senha",
+  "@accountPassword": {
+    "description": "Rótulo da linha que leva à troca de senha."
+  },
+
+  "accountPasswordExplanation": "Trocar a senha encerra a sua sessão em todos os aparelhos, inclusive neste.",
+  "@accountPasswordExplanation": {
+    "description": "Frase abaixo da senha, avisando o que a troca custa. O servidor encerra todas as sessões, e o contrato não diz isso — só o fluxo de recuperação diz."
+  },
+
+  "accountCreated": "Conta criada em {date}",
+  "@accountCreated": {
+    "description": "Linha que diz quando a conta foi criada no servidor. O parâmetro vem da localização do sistema.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountFailed": "Não foi possível ler a sua conta. O servidor não respondeu.",
+  "@accountFailed": {
+    "description": "Aviso mostrado quando a releitura da conta no servidor falha. O que está na tela veio do que este aparelho guardou no último acesso."
+  },
+
+  "accountEditName": "Mudar o nome exibido",
+  "@accountEditName": {
+    "description": "Título do diálogo em que o leitor edita o nome exibido."
+  },
+
+  "accountNameInvalid": "Informe um nome.",
+  "@accountNameInvalid": {
+    "description": "Erro mostrado no diálogo do nome exibido quando ele está em branco ou é longo demais."
+  },
+
+  "accountNameChanged": "Agora você aparece como {name}.",
+  "@accountNameChanged": {
+    "description": "Confirmação mostrada depois que o nome exibido muda. O parâmetro é o nome novo.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountNameFailed": "Não foi possível mudar o nome exibido.",
+  "@accountNameFailed": {
+    "description": "Erro mostrado quando a troca do nome exibido falha no servidor."
+  },
+
+  "accountEditEmail": "Mudar o e-mail",
+  "@accountEditEmail": {
+    "description": "Título do diálogo em que o leitor troca o endereço de e-mail, informando a senha atual."
+  },
+
+  "accountCurrentPassword": "Senha atual",
+  "@accountCurrentPassword": {
+    "description": "Rótulo do campo da senha atual, usada como prova de que é o leitor e não apenas um aparelho destravado."
+  },
+
+  "accountEmailInvalid": "Informe um e-mail válido.",
+  "@accountEmailInvalid": {
+    "description": "Erro mostrado no diálogo do e-mail quando o endereço não tem a forma esperada."
+  },
+
+  "accountEmailNotice": "Um aviso é enviado para o endereço antigo. É assim que você fica sabendo se não foi você quem trocou.",
+  "@accountEmailNotice": {
+    "description": "Frase dentro do diálogo de troca de e-mail. O servidor avisa o endereço anterior, e essa é a parte que protege quem já teve a senha descoberta."
+  },
+
+  "accountEmailChanged": "O e-mail agora é {email}.",
+  "@accountEmailChanged": {
+    "description": "Confirmação mostrada depois que o endereço muda. O parâmetro é o endereço novo.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountEmailFailed": "Não foi possível mudar o e-mail.",
+  "@accountEmailFailed": {
+    "description": "Erro mostrado quando a troca de endereço falha no servidor por um motivo que não é a senha."
+  },
+
+  "accountEmailRegistered": "Este e-mail já está registrado neste servidor.",
+  "@accountEmailRegistered": {
+    "description": "Erro mostrado quando o servidor recusa o endereço novo porque ele já pertence a outra conta ali."
+  },
+
+  "accountEditPassword": "Trocar a senha",
+  "@accountEditPassword": {
+    "description": "Título do diálogo em que o leitor troca a senha, informando a atual e a nova."
+  },
+
+  "accountNewPassword": "Nova senha",
+  "@accountNewPassword": {
+    "description": "Rótulo do campo da senha nova, no diálogo de troca de senha."
+  },
+
+  "accountPasswordInvalid": "A senha precisa de pelo menos 8 caracteres.",
+  "@accountPasswordInvalid": {
+    "description": "Erro mostrado no diálogo de senha quando a nova senha é curta ou longa demais para o que o servidor aceita."
+  },
+
+  "accountPasswordEndsSessions": "Todas as suas sessões acabam, e você entra de novo em cada aparelho. É o que se quer quando se troca a senha por desconfiança.",
+  "@accountPasswordEndsSessions": {
+    "description": "Aviso dentro do diálogo de troca de senha, dizendo o que a troca custa e por que esse custo é o correto."
+  },
+
+  "accountPasswordChanged": "Senha trocada. Entre de novo.",
+  "@accountPasswordChanged": {
+    "description": "Confirmação mostrada depois que a senha muda. A sessão deste aparelho acabou junto, então o leitor é levado de volta ao início."
+  },
+
+  "accountPasswordFailed": "Não foi possível trocar a senha.",
+  "@accountPasswordFailed": {
+    "description": "Erro mostrado quando a troca de senha falha no servidor por um motivo que não é a senha atual."
+  },
+
+  "accountWrongPassword": "Senha atual incorreta.",
+  "@accountWrongPassword": {
+    "description": "Erro mostrado quando o servidor recusa a prova: a senha atual informada não confere. É a mesma recusa para a troca de e-mail, a troca de senha e a exclusão da conta."
+  },
+
+  "accountSave": "Salvar",
+  "@accountSave": {
+    "description": "Rótulo do botão que confirma uma alteração num diálogo da tela da conta."
   }
 }

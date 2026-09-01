@@ -246,6 +246,9 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
       create: (BuildContext context) => AccountRepositoryImpl(
         auth: context.read<AuthApi>(),
         identity: database.identityDao,
+        // What a password change clears: the node ends every session of every
+        // device, which its own use case says and the contract does not.
+        session: context.read<SessionHolder>(),
       ),
     ),
 

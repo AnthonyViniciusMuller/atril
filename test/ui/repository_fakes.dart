@@ -208,6 +208,97 @@ final class FakeAccountRepository implements AccountRepository {
   /// Every device an unbinding was asked for, in order.
   final List<String> unbound = <String>[];
 
+  /// The reader this node reports, which a test sets.
+  User reader = User(
+    id: '22222222-2222-4222-8222-222222222222',
+    localName: 'ana',
+    displayName: 'Ana Maria',
+    originServerDomain: 'quire-a.example',
+    federatedId: '@ana:quire-a.example',
+    email: 'ana@example.com',
+    createdAt: DateTime.utc(2026),
+  );
+
+  /// How many times the record was read from the node.
+  int reads = 0;
+
+  /// Every display name it was asked to write, in order.
+  final List<String> displayNames = <String>[];
+
+  /// Every address change, as `(password, email)`.
+  final List<(String, String)> emails = <(String, String)>[];
+
+  /// Every password change, as `(current, next)`.
+  final List<(String, String)> passwords = <(String, String)>[];
+
+  @override
+  Future<Result<User>> readAccount() async {
+    reads++;
+
+    final refused = refusal;
+
+    return refused == null
+        ? Result<User>.ok(reader)
+        : Result<User>.error(refused);
+  }
+
+  @override
+  Future<Result<User>> changeDisplayName(String displayName) async {
+    displayNames.add(displayName);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<User>.error(refused);
+    }
+
+    reader = _reading(displayName: displayName);
+
+    return Result<User>.ok(reader);
+  }
+
+  @override
+  Future<Result<User>> changeEmail({
+    required String password,
+    required String email,
+  }) async {
+    emails.add((password, email));
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<User>.error(refused);
+    }
+
+    reader = _reading(email: email);
+
+    return Result<User>.ok(reader);
+  }
+
+  @override
+  Future<Result<void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    passwords.add((currentPassword, newPassword));
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  User _reading({String? displayName, String? email}) => User(
+    id: reader.id,
+    localName: reader.localName,
+    displayName: displayName ?? reader.displayName,
+    originServerDomain: reader.originServerDomain,
+    federatedId: reader.federatedId,
+    email: email ?? reader.email,
+    createdAt: reader.createdAt,
+  );
+
   @override
   Future<Result<BoundDevices>> devices() async {
     final refused = refusal;

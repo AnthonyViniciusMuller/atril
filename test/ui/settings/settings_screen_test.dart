@@ -65,9 +65,13 @@ void main() {
     expect(find.text('See the state of the synchronization'), findsOneWidget);
   });
 
-  testWidgets('offers the reader their devices', (WidgetTester tester) async {
+  testWidgets('offers the reader their account and their devices', (
+    WidgetTester tester,
+  ) async {
     await pump(tester, FakeAuthRepository());
 
+    expect(find.text('Your account'), findsOneWidget);
+    expect(find.text('Name, email and password.'), findsOneWidget);
     expect(find.text('Your devices'), findsOneWidget);
     expect(
       find.text('Which devices may write on your account.'),
