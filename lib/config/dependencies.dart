@@ -36,6 +36,8 @@ import '../data/repositories/annotations/annotation_repository.dart';
 import '../data/repositories/annotations/annotation_repository_impl.dart';
 import '../data/repositories/auth/auth_repository.dart';
 import '../data/repositories/auth/auth_repository_impl.dart';
+import '../data/repositories/federation/federation_repository.dart';
+import '../data/repositories/federation/federation_repository_impl.dart';
 import '../data/repositories/library/library_repository.dart';
 import '../data/repositories/library/library_repository_impl.dart';
 import '../data/repositories/reading/reading_repository.dart';
@@ -232,6 +234,17 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         // flavour names rather than the one it publishes, and nothing under
         // `data/` should have to import a flavour to know that.
         endpointFor: environment.endpointFor,
+      ),
+    ),
+
+    // The reader's federation, and the one repository here that answers from
+    // the node rather than from the replica. What it holds is not a record
+    // that replicates: it is what the node knows and enforces, and there is
+    // nothing a reader can do about any of it while the node is unreachable.
+    Provider<FederationRepository>(
+      create: (BuildContext context) => FederationRepositoryImpl(
+        federation: context.read<FederationApi>(),
+        identity: database.identityDao,
       ),
     ),
 

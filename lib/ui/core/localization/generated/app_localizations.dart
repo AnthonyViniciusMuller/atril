@@ -1814,6 +1814,234 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Uma marcação'**
   String get syncRecordAnnotation;
+
+  /// Título da seção da tela de configurações que reúne os servidores conhecidos, as réplicas autorizadas e a mudança de servidor de origem. Palavra curta, usada como cabeçalho de seção.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Federação'**
+  String get settingsFederationSection;
+
+  /// Item da tela de configurações que leva ao catálogo de servidores que o leitor conhece. Também é o título dessa tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Servidores conhecidos'**
+  String get settingsKnownServers;
+
+  /// Subtítulo do item das configurações que leva ao catálogo de servidores. Uma frase dizendo o que o leitor vai encontrar lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Os servidores que o seu servidor conhece e para os quais ele pode replicar.'**
+  String get settingsKnownServersExplanation;
+
+  /// Parágrafo de abertura da tela de servidores conhecidos, explicando o que o catálogo significa e por que a descoberta importa. RN03.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nada sai do seu servidor para um servidor que você não tenha nomeado aqui. Cada um destes foi descoberto pelo endereço que você digitou, e a chave que ele apresentou ficou registrada.'**
+  String get federationServersExplanation;
+
+  /// Mensagem mostrada na tela de servidores conhecidos quando o catálogo do servidor está vazio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você ainda não adicionou nenhum servidor.'**
+  String get federationServersEmpty;
+
+  /// Mensagem mostrada na tela de servidores conhecidos quando a leitura do catálogo falhou. A tela lê direto do servidor, então não há uma lista antiga para mostrar no lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler o catálogo. O servidor não respondeu.'**
+  String get federationServersFailed;
+
+  /// Rótulo do botão que repete uma leitura do catálogo que falhou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tentar de novo'**
+  String get federationRetry;
+
+  /// Rótulo do campo onde o leitor digita o domínio de um servidor que quer adicionar ao catálogo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Endereço do servidor'**
+  String get federationAddLabel;
+
+  /// Texto de exemplo dentro do campo de domínio, mostrando a forma esperada. É um domínio de exemplo e a palavra "exemplo" é o que muda entre os idiomas.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'quire-b.exemplo'**
+  String get federationAddHint;
+
+  /// Rótulo do botão que descobre o domínio digitado e o adiciona ao catálogo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Adicionar'**
+  String get federationAdd;
+
+  /// Confirmação mostrada depois que um servidor entra no catálogo. O parâmetro é o domínio adicionado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} foi adicionado.'**
+  String federationAdded(String domain);
+
+  /// Erro mostrado no campo de domínio quando o que foi digitado não tem a forma de um endereço, antes de qualquer requisição sair do aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Isto não é um endereço de servidor.'**
+  String get federationAddInvalid;
+
+  /// Erro mostrado quando o servidor recusa a adição porque o domínio já consta do catálogo do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este servidor já está no seu catálogo.'**
+  String get federationAddAlreadyKnown;
+
+  /// Erro mostrado quando a adição falha por qualquer outro motivo — o servidor não respondeu, ou o domínio não publica o documento que o descobrimento lê.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível adicionar este servidor. Ele pode não publicar um documento de descobrimento.'**
+  String get federationAddFailed;
+
+  /// Marca mostrada na linha do servidor em que o leitor está registrado, para distingui-lo dos demais do catálogo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O seu servidor'**
+  String get federationServerOrigin;
+
+  /// Rótulo do interruptor que diz se o servidor participa da replicação, no estado ligado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Participa da replicação'**
+  String get federationServerActive;
+
+  /// Subtítulo da linha de um servidor que o leitor desligou. Ele continua no catálogo e nada trafega para ele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Fora da replicação'**
+  String get federationServerInactive;
+
+  /// Linha que mostra onde o servidor efetivamente responde, que pode ser um endereço diferente do domínio. O parâmetro é a URL base.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Responde em {url}'**
+  String federationServerBaseUrl(String url);
+
+  /// Linha que mostra o endereço gRPC que um par disca para replicar. O parâmetro é o par host:porta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'gRPC em {authority}'**
+  String federationServerGrpc(String authority);
+
+  /// Linha mostrada no lugar do endereço gRPC quando o servidor não publica nenhum. É um servidor que pode ser registrado e não pode receber replicação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não publica endereço gRPC — nada replica para ele.'**
+  String get federationServerGrpcAbsent;
+
+  /// Linha que mostra a impressão da chave pública fixada para o mTLS entre servidores. O parâmetro é a impressão inteira, na forma spki-sha256.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Chave {fingerprint}'**
+  String federationServerFingerprint(String fingerprint);
+
+  /// Linha mostrada no lugar da impressão da chave quando o servidor não publica nenhuma.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhuma chave fixada.'**
+  String get federationServerFingerprintAbsent;
+
+  /// Linha que diz quando o documento de descobrimento deste servidor foi lido pela última vez. Os dois parâmetros vêm da localização do sistema.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Descoberto em {date}, às {time}'**
+  String federationServerDiscovered(String date, String time);
+
+  /// Linha mostrada no lugar da data de descobrimento quando o servidor nunca foi consultado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ainda não descoberto.'**
+  String get federationServerNeverDiscovered;
+
+  /// Rótulo da ação que lê de novo o documento de descobrimento de um servidor. É a única forma de a chave fixada mudar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Redescobrir'**
+  String get federationRefresh;
+
+  /// Confirmação mostrada depois de um redescobrimento em que nada mudou. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} foi redescoberto e a chave é a mesma.'**
+  String federationRefreshed(String domain);
+
+  /// Erro mostrado quando o redescobrimento falha — o servidor não respondeu, ou deixou de publicar o documento.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível redescobrir este servidor.'**
+  String get federationRefreshFailed;
+
+  /// Título do aviso mostrado quando um redescobrimento encontra uma chave diferente da que estava fixada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A chave deste servidor mudou'**
+  String get federationKeyChangedTitle;
+
+  /// Corpo do aviso de chave trocada. Diz por que a decisão é do leitor: uma rotação e uma interceptação são idênticas vistas deste lado. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} apresenta agora uma chave diferente da que estava registrada. Isso acontece quando o operador troca o certificado — e é também o que se veria se alguém estivesse respondendo no lugar dele. Daqui não dá para saber qual dos dois é.'**
+  String federationKeyChangedExplanation(String domain);
+
+  /// Rótulo do botão que fecha o aviso de chave trocada. O aviso informa e não pede uma decisão, porque a nova chave já foi fixada pelo servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Entendi'**
+  String get federationKeyChangedUnderstood;
+
+  /// Rótulo da ação que remove um servidor do catálogo do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esquecer'**
+  String get federationForget;
+
+  /// Título da confirmação de remoção de um servidor do catálogo. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Esquecer {domain}?'**
+  String federationForgetTitle(String domain);
+
+  /// Corpo da confirmação de remoção. Diz o que a remoção alcança e o que não alcança, para que o leitor não a tome por um apagamento.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nada mais trafega para este servidor. O que ele já tiver recebido continua lá — esquecer não alcança o banco de outro operador.'**
+  String get federationForgetExplanation;
+
+  /// Confirmação mostrada depois que um servidor sai do catálogo. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{domain} foi esquecido.'**
+  String federationForgotten(String domain);
+
+  /// Erro mostrado quando o servidor recusa a remoção porque uma autorização de réplica ainda nomeia esse servidor. Esquecer um par que ainda guarda uma cópia deixaria o leitor sem como revogá-la.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este servidor guarda uma cópia sua. Revogue a réplica antes de esquecê-lo.'**
+  String get federationForgetRefused;
+
+  /// Erro mostrado quando a remoção de um servidor falha por qualquer outro motivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível esquecer este servidor.'**
+  String get federationForgetFailed;
+
+  /// Erro mostrado quando o servidor recusa a mudança do interruptor que diz se um par participa da replicação.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível mudar a participação deste servidor.'**
+  String get federationActiveFailed;
+
+  /// Rótulo do botão que fecha uma confirmação da tela de federação sem fazer nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cancelar'**
+  String get federationCancel;
 }
 
 class _AppLocalizationsDelegate

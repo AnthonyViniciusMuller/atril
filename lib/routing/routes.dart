@@ -179,6 +179,18 @@ abstract final class Routes {
   /// navigation surface carries that as a badge.
   static const String sync = '$settings/$syncSegment';
 
+  /// The path segment the reader's catalogue of nodes is shown under,
+  /// relative to [settings].
+  static const String serversSegment = 'servers';
+
+  /// Where the reader's catalogue of nodes is shown (UC12).
+  ///
+  /// It is below the settings for the reason the synchronization screen is:
+  /// which nodes this reader federates with is a property of the app rather
+  /// than a place they visit, and the shell has three destinations because
+  /// three is what a reader navigates *between*.
+  static const String servers = '$settings/$serversSegment';
+
   /// The destinations that share the shell, in the order the navigation
   /// surface shows them.
   ///

@@ -62,8 +62,23 @@ void main() {
     await pump(tester, FakeAuthRepository(), sync: sync);
 
     expect(find.text('2 changes waiting'), findsOneWidget);
+    expect(find.text('See the state of the synchronization'), findsOneWidget);
+  });
+
+  testWidgets('offers the federation, and says what is behind it', (
+    WidgetTester tester,
+  ) async {
+    // A section and not a fourth destination: which nodes a reader federates
+    // with is a property of the app rather than a place they navigate to.
+    await pump(tester, FakeAuthRepository());
+
+    expect(find.text('Federation'), findsOneWidget);
+    expect(find.text('Known servers'), findsOneWidget);
     expect(
-      find.text('See the state of the synchronization'),
+      find.text(
+        'The servers your node knows, and the ones it may replicate '
+        'to.',
+      ),
       findsOneWidget,
     );
   });
@@ -183,6 +198,13 @@ void _storage() {
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
+    // The storage section is at the foot of the settings, below the sync and
+    // federation ones, so on a phone-sized surface it has to be scrolled to
+    // before it can be tapped.
+    await tester.scrollUntilVisible(find.text(l10n.storageRelease), 200);
+    await tester.ensureVisible(find.text(l10n.storageRelease));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text(l10n.storageRelease));
     await tester.pumpAndSettle();
 
@@ -221,6 +243,13 @@ void _storage() {
     await tester.pumpAndSettle();
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    // The storage section is at the foot of the settings, below the sync and
+    // federation ones, so on a phone-sized surface it has to be scrolled to
+    // before it can be tapped.
+    await tester.scrollUntilVisible(find.text(l10n.storageRelease), 200);
+    await tester.ensureVisible(find.text(l10n.storageRelease));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text(l10n.storageRelease));
     await tester.pumpAndSettle();

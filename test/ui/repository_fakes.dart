@@ -15,11 +15,13 @@ import 'dart:typed_data';
 import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
+import 'package:atril/data/repositories/federation/federation_repository.dart';
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
 import 'package:atril/data/repositories/sync/sync_repository.dart';
+import 'package:atril/data/services/api/federation_api.dart';
 import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/data/services/storage/blob_storage.dart';
@@ -185,6 +187,129 @@ final class FakeAuthRepository implements AuthRepository {
     federatedId: '@$localName:quire-a.example',
     createdAt: DateTime.utc(2026),
   );
+}
+
+/// A [FederationRepository] that answers from memory.
+///
+/// It answers with a `Result` and holds no stream, because the repository it
+/// stands in for holds none either: the catalogue is what the node knows, so
+/// every screen above it asks and is answered once.
+final class FakeFederationRepository implements FederationRepository {
+  /// The catalogue this node reports, which a test sets.
+  List<KnownServer> catalogue = <KnownServer>[];
+
+  /// What the next call fails with, or `null` to let it answer.
+  Exception? refusal;
+
+  /// How many times the catalogue was read.
+  int reads = 0;
+
+  /// Every domain an addition was asked for, in order.
+  final List<String> added = <String>[];
+
+  /// Every change to the switch, as `(serverId, active)`.
+  final List<(String, bool)> switched = <(String, bool)>[];
+
+  /// Every server a refresh was asked for, in order.
+  final List<String> refreshed = <String>[];
+
+  /// Every server a removal was asked for, in order.
+  final List<String> forgotten = <String>[];
+
+  /// Whether the next refresh reports a key that moved.
+  bool fingerprintChanges = false;
+
+  @override
+  Future<Result<List<KnownServer>>> servers() async {
+    reads++;
+
+    final refused = refusal;
+
+    return refused == null
+        ? Result<List<KnownServer>>.ok(catalogue)
+        : Result<List<KnownServer>>.error(refused);
+  }
+
+  @override
+  Future<Result<KnownServer>> addServer(String domain) async {
+    added.add(domain);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<KnownServer>.error(refused);
+    }
+
+    final server = KnownServer(
+      id: 'added',
+      descriptor: ServerDescriptor(
+        domain: domain,
+        baseUrl: 'https://$domain',
+        grpcAuthority: '$domain:9090',
+      ),
+      isOrigin: false,
+      active: true,
+    );
+
+    catalogue = <KnownServer>[...catalogue, server];
+
+    return Result<KnownServer>.ok(server);
+  }
+
+  @override
+  Future<Result<KnownServer>> setActive({
+    required String serverId,
+    required bool active,
+  }) async {
+    switched.add((serverId, active));
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<KnownServer>.error(refused);
+    }
+
+    return Result<KnownServer>.ok(_byId(serverId));
+  }
+
+  @override
+  Future<Result<ServerRefresh>> refreshServer(String serverId) async {
+    refreshed.add(serverId);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<ServerRefresh>.error(refused);
+    }
+
+    return Result<ServerRefresh>.ok(
+      ServerRefresh(
+        server: _byId(serverId),
+        fingerprintChanged: fingerprintChanges,
+      ),
+    );
+  }
+
+  @override
+  Future<Result<void>> forgetServer(KnownServer server) async {
+    forgotten.add(server.id);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<void>.error(refused);
+    }
+
+    catalogue = <KnownServer>[
+      for (final held in catalogue)
+        if (held.id != server.id) held,
+    ];
+
+    return const Result<void>.ok(null);
+  }
+
+  KnownServer _byId(String id) =>
+      catalogue.firstWhere((KnownServer server) => server.id == id);
 }
 
 /// A [LibraryRepository] that answers from memory.
@@ -929,6 +1054,7 @@ final class NamedFile implements FileSource {
 List<SingleChildWidget> repositoryProviders({
   ServerRepository? servers,
   AuthRepository? auth,
+  FederationRepository? federation,
   LibraryRepository? library,
   ReadingRepository? reading,
   AnnotationRepository? annotations,
@@ -940,6 +1066,9 @@ List<SingleChildWidget> repositoryProviders({
   Provider<Environment>.value(value: environment ?? Environment.production()),
   Provider<ServerRepository>.value(value: servers ?? FakeServerRepository()),
   Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
+  Provider<FederationRepository>.value(
+    value: federation ?? FakeFederationRepository(),
+  ),
   Provider<LibraryRepository>.value(value: library ?? FakeLibraryRepository()),
   Provider<ReadingRepository>.value(value: reading ?? FakeReadingRepository()),
   Provider<AnnotationRepository>.value(

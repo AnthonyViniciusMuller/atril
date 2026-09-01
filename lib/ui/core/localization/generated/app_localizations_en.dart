@@ -1010,4 +1010,146 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncRecordAnnotation => 'A mark';
+
+  @override
+  String get settingsFederationSection => 'Federation';
+
+  @override
+  String get settingsKnownServers => 'Known servers';
+
+  @override
+  String get settingsKnownServersExplanation =>
+      'The servers your node knows, and the ones it may replicate to.';
+
+  @override
+  String get federationServersExplanation =>
+      'Nothing leaves your node for a server you have not named here. Each of these was discovered from the domain you typed, and the key it presented was pinned.';
+
+  @override
+  String get federationServersEmpty => 'You have not added any server yet.';
+
+  @override
+  String get federationServersFailed =>
+      'The catalogue could not be read. The node did not answer.';
+
+  @override
+  String get federationRetry => 'Try again';
+
+  @override
+  String get federationAddLabel => 'Server domain';
+
+  @override
+  String get federationAddHint => 'quire-b.example';
+
+  @override
+  String get federationAdd => 'Add';
+
+  @override
+  String federationAdded(String domain) {
+    return '$domain was added.';
+  }
+
+  @override
+  String get federationAddInvalid => 'That is not a server domain.';
+
+  @override
+  String get federationAddAlreadyKnown =>
+      'That server is already in your catalogue.';
+
+  @override
+  String get federationAddFailed =>
+      'That server could not be added. It may publish no discovery document.';
+
+  @override
+  String get federationServerOrigin => 'Your node';
+
+  @override
+  String get federationServerActive => 'Takes part in replication';
+
+  @override
+  String get federationServerInactive => 'Not replicating';
+
+  @override
+  String federationServerBaseUrl(String url) {
+    return 'Answers at $url';
+  }
+
+  @override
+  String federationServerGrpc(String authority) {
+    return 'gRPC at $authority';
+  }
+
+  @override
+  String get federationServerGrpcAbsent =>
+      'Publishes no gRPC address — nothing replicates to it.';
+
+  @override
+  String federationServerFingerprint(String fingerprint) {
+    return 'Key $fingerprint';
+  }
+
+  @override
+  String get federationServerFingerprintAbsent => 'No key pinned.';
+
+  @override
+  String federationServerDiscovered(String date, String time) {
+    return 'Discovered on $date at $time';
+  }
+
+  @override
+  String get federationServerNeverDiscovered => 'Not discovered yet.';
+
+  @override
+  String get federationRefresh => 'Refresh';
+
+  @override
+  String federationRefreshed(String domain) {
+    return '$domain was refreshed and the key has not changed.';
+  }
+
+  @override
+  String get federationRefreshFailed => 'That server could not be refreshed.';
+
+  @override
+  String get federationKeyChangedTitle =>
+      'This server presents a different key';
+
+  @override
+  String federationKeyChangedExplanation(String domain) {
+    return '$domain now presents a different key from the one on record. That happens when its operator rotates the certificate — and it is also what somebody answering in its place would look like. From here the two are indistinguishable.';
+  }
+
+  @override
+  String get federationKeyChangedUnderstood => 'Understood';
+
+  @override
+  String get federationForget => 'Forget';
+
+  @override
+  String federationForgetTitle(String domain) {
+    return 'Forget $domain?';
+  }
+
+  @override
+  String get federationForgetExplanation =>
+      'Nothing more travels to it. Whatever it already received stays there — forgetting does not reach into another operator’s database.';
+
+  @override
+  String federationForgotten(String domain) {
+    return '$domain was forgotten.';
+  }
+
+  @override
+  String get federationForgetRefused =>
+      'That server holds a copy of your data. Revoke the replica before forgetting it.';
+
+  @override
+  String get federationForgetFailed => 'That server could not be forgotten.';
+
+  @override
+  String get federationActiveFailed =>
+      'That server’s participation could not be changed.';
+
+  @override
+  String get federationCancel => 'Cancel';
 }

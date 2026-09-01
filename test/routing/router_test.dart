@@ -14,6 +14,7 @@ import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
+import 'package:atril/ui/federation/widgets/known_servers_screen.dart';
 import 'package:atril/ui/library/widgets/ebook_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
 import 'package:atril/ui/onboarding/widgets/register_screen.dart';
@@ -310,6 +311,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AnnotationsScreen), findsOneWidget);
+  });
+
+  testWidgets('the catalogue of nodes is a location below the settings', (
+    WidgetTester tester,
+  ) async {
+    // Below and not beside: the shell has three destinations because three is
+    // what a reader navigates between, and closing this lands on the screen
+    // that led here — which on the web is what the back button does anyway.
+    final session = _holder();
+    await session.begin(_session());
+
+    final router = atrilRouter(session: session);
+
+    addTearDown(router.dispose);
+    addTearDown(session.dispose);
+
+    await _pump(tester, router);
+
+    router.go(Routes.servers);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(KnownServersScreen), findsOneWidget);
   });
 
   test('the shell destinations are the branches, in order', () {

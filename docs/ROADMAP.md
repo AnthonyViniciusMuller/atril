@@ -1212,8 +1212,26 @@ and they are recorded here because none of them is visible from the package's RE
 
 The phase the thesis is actually about, and the one a demonstration ends on.
 
-- [ ] `feat: add the known servers screen` — UC12. The catalogue, adding a node by domain, what
-      discovery learned about it, and refreshing a node whose key was rotated
+- [x] `feat: add the known servers screen` — UC12. The catalogue, adding a node by domain, what
+      discovery learned about it, and refreshing a node whose key was rotated. **It is the first
+      repository in this app that does not answer from the local replica, and that is the phase's
+      own shape rather than an oversight.** Every other one holds records that replicate, so the
+      truth is here and the node hears later; a catalogue entry is what the *node* knows and
+      enforces, it changes on the reader's other devices, and none of the four things this screen
+      offers can be done while the node is unreachable — so a cached list would be a screen
+      showing a peer that may already be gone, under controls that would all fail. A failed read
+      says the node did not answer and offers to ask again. The catalogue is still *mirrored* into
+      `known_servers` as each answer arrives, which is a different job and the reason the table
+      has a nullable `remote_id`: `ListKnownServers` is the only call that reports a node's own
+      identifier, and that identifier is what a replica grant is addressed by. Three details the
+      plan did not name. The screen asks for the **deactivated** nodes, which the contract hides
+      by default — this is where the switch that deactivated one lives, and a list that hid them
+      would have no way back from the state its own control produces. Forgetting a node
+      **deactivates the local row rather than deleting it**, which is what the column's comment
+      has asked for since the table was written: the reader's own row references a domain, and a
+      revoked peer that still holds a copy is something they should keep being able to see. And
+      the reader's own node carries neither the switch nor the removal, because it is not a peer
+      they chose and neither control has anything coherent to do to it
 - [ ] `feat: add replica authorization` — UC15. Granting a node the right to hold a copy, with
       and without the files, and revoking it. Metadata without the files is the cheap replica a
       reader is most likely to want on a node they do not own, and the screen makes the choice

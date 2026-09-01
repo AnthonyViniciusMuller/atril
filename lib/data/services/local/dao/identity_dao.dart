@@ -151,6 +151,66 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
     ),
   );
 
+  /// Records a node exactly as the reader's own node reports it.
+  ///
+  /// It is the other half of [rememberDescriptor] and it keeps the opposite
+  /// rule. A `.well-known` document carries three of a descriptor's five
+  /// fields, so a lookup must not clear what it was never going to mention;
+  /// `ListKnownServers` carries all five *and* the node's own identifier,
+  /// because the node did the discovery and pinned the result. So this
+  /// overwrites, absences included: a fingerprint the node no longer reports
+  /// is a fingerprint that is no longer pinned, and keeping the old one here
+  /// would be this device remembering a key its own node has forgotten.
+  ///
+  /// [KnownServers.remoteId] is filled in here and nowhere else. It is the one
+  /// value only the node can report, and the reason the catalogue is keyed by
+  /// the domain rather than by it.
+  Future<void> rememberKnownServer(KnownServer server, {required DateTime at}) {
+    final descriptor = server.descriptor;
+    final remoteId = server.id.isEmpty ? null : server.id.toLowerCase();
+    final discoveredAt = server.discoveredAt ?? at;
+
+    return into(knownServers).insert(
+      KnownServersCompanion.insert(
+        domain: canonicalServerDomain(descriptor.domain),
+        remoteId: Value<String?>(remoteId),
+        baseUrl: descriptor.baseUrl,
+        grpcAuthority: Value<String?>(descriptor.grpcAuthority),
+        jwksUri: Value<String?>(descriptor.jwksUri),
+        certificateFingerprint: Value<String?>(
+          descriptor.certificateFingerprint,
+        ),
+        discoveredAt: Value<DateTime>(discoveredAt),
+        active: Value<bool>(server.active),
+      ),
+      onConflict: DoUpdate<$KnownServersTable, ServerRow>(
+        (_) => KnownServersCompanion(
+          remoteId: Value<String?>(remoteId),
+          baseUrl: Value<String>(descriptor.baseUrl),
+          grpcAuthority: Value<String?>(descriptor.grpcAuthority),
+          jwksUri: Value<String?>(descriptor.jwksUri),
+          certificateFingerprint: Value<String?>(
+            descriptor.certificateFingerprint,
+          ),
+          discoveredAt: Value<DateTime>(discoveredAt),
+          active: Value<bool>(server.active),
+        ),
+      ),
+    );
+  }
+
+  /// Marks the node at [domain] as one the reader has taken out of their
+  /// catalogue.
+  ///
+  /// The row stays, and the column's own comment says why: a peer that still
+  /// holds a copy is something the reader should keep being able to see, and
+  /// the reader's row references this domain besides.
+  Future<int> deactivateServer(String domain) =>
+      (update(knownServers)..where(
+            (server) => server.domain.equals(canonicalServerDomain(domain)),
+          ))
+          .write(const KnownServersCompanion(active: Value<bool>(false)));
+
   /// Makes the node at [domain] the one the reader is signed in at, and no
   /// other.
   ///

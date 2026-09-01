@@ -1010,6 +1010,150 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get syncRecordAnnotation => 'Uma marcação';
+
+  @override
+  String get settingsFederationSection => 'Federação';
+
+  @override
+  String get settingsKnownServers => 'Servidores conhecidos';
+
+  @override
+  String get settingsKnownServersExplanation =>
+      'Os servidores que o seu servidor conhece e para os quais ele pode replicar.';
+
+  @override
+  String get federationServersExplanation =>
+      'Nada sai do seu servidor para um servidor que você não tenha nomeado aqui. Cada um destes foi descoberto pelo endereço que você digitou, e a chave que ele apresentou ficou registrada.';
+
+  @override
+  String get federationServersEmpty =>
+      'Você ainda não adicionou nenhum servidor.';
+
+  @override
+  String get federationServersFailed =>
+      'Não foi possível ler o catálogo. O servidor não respondeu.';
+
+  @override
+  String get federationRetry => 'Tentar de novo';
+
+  @override
+  String get federationAddLabel => 'Endereço do servidor';
+
+  @override
+  String get federationAddHint => 'quire-b.exemplo';
+
+  @override
+  String get federationAdd => 'Adicionar';
+
+  @override
+  String federationAdded(String domain) {
+    return '$domain foi adicionado.';
+  }
+
+  @override
+  String get federationAddInvalid => 'Isto não é um endereço de servidor.';
+
+  @override
+  String get federationAddAlreadyKnown =>
+      'Este servidor já está no seu catálogo.';
+
+  @override
+  String get federationAddFailed =>
+      'Não foi possível adicionar este servidor. Ele pode não publicar um documento de descobrimento.';
+
+  @override
+  String get federationServerOrigin => 'O seu servidor';
+
+  @override
+  String get federationServerActive => 'Participa da replicação';
+
+  @override
+  String get federationServerInactive => 'Fora da replicação';
+
+  @override
+  String federationServerBaseUrl(String url) {
+    return 'Responde em $url';
+  }
+
+  @override
+  String federationServerGrpc(String authority) {
+    return 'gRPC em $authority';
+  }
+
+  @override
+  String get federationServerGrpcAbsent =>
+      'Não publica endereço gRPC — nada replica para ele.';
+
+  @override
+  String federationServerFingerprint(String fingerprint) {
+    return 'Chave $fingerprint';
+  }
+
+  @override
+  String get federationServerFingerprintAbsent => 'Nenhuma chave fixada.';
+
+  @override
+  String federationServerDiscovered(String date, String time) {
+    return 'Descoberto em $date, às $time';
+  }
+
+  @override
+  String get federationServerNeverDiscovered => 'Ainda não descoberto.';
+
+  @override
+  String get federationRefresh => 'Redescobrir';
+
+  @override
+  String federationRefreshed(String domain) {
+    return '$domain foi redescoberto e a chave é a mesma.';
+  }
+
+  @override
+  String get federationRefreshFailed =>
+      'Não foi possível redescobrir este servidor.';
+
+  @override
+  String get federationKeyChangedTitle => 'A chave deste servidor mudou';
+
+  @override
+  String federationKeyChangedExplanation(String domain) {
+    return '$domain apresenta agora uma chave diferente da que estava registrada. Isso acontece quando o operador troca o certificado — e é também o que se veria se alguém estivesse respondendo no lugar dele. Daqui não dá para saber qual dos dois é.';
+  }
+
+  @override
+  String get federationKeyChangedUnderstood => 'Entendi';
+
+  @override
+  String get federationForget => 'Esquecer';
+
+  @override
+  String federationForgetTitle(String domain) {
+    return 'Esquecer $domain?';
+  }
+
+  @override
+  String get federationForgetExplanation =>
+      'Nada mais trafega para este servidor. O que ele já tiver recebido continua lá — esquecer não alcança o banco de outro operador.';
+
+  @override
+  String federationForgotten(String domain) {
+    return '$domain foi esquecido.';
+  }
+
+  @override
+  String get federationForgetRefused =>
+      'Este servidor guarda uma cópia sua. Revogue a réplica antes de esquecê-lo.';
+
+  @override
+  String get federationForgetFailed =>
+      'Não foi possível esquecer este servidor.';
+
+  @override
+  String get federationActiveFailed =>
+      'Não foi possível mudar a participação deste servidor.';
+
+  @override
+  String get federationCancel => 'Cancelar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -2017,4 +2161,148 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get syncRecordAnnotation => 'Uma marcação';
+
+  @override
+  String get settingsFederationSection => 'Federação';
+
+  @override
+  String get settingsKnownServers => 'Servidores conhecidos';
+
+  @override
+  String get settingsKnownServersExplanation =>
+      'Os servidores que o seu servidor conhece e para os quais ele pode replicar.';
+
+  @override
+  String get federationServersExplanation =>
+      'Nada sai do seu servidor para um servidor que você não tenha nomeado aqui. Cada um destes foi descoberto pelo endereço que você digitou, e a chave que ele apresentou ficou registrada.';
+
+  @override
+  String get federationServersEmpty =>
+      'Você ainda não adicionou nenhum servidor.';
+
+  @override
+  String get federationServersFailed =>
+      'Não foi possível ler o catálogo. O servidor não respondeu.';
+
+  @override
+  String get federationRetry => 'Tentar de novo';
+
+  @override
+  String get federationAddLabel => 'Endereço do servidor';
+
+  @override
+  String get federationAddHint => 'quire-b.exemplo';
+
+  @override
+  String get federationAdd => 'Adicionar';
+
+  @override
+  String federationAdded(String domain) {
+    return '$domain foi adicionado.';
+  }
+
+  @override
+  String get federationAddInvalid => 'Isto não é um endereço de servidor.';
+
+  @override
+  String get federationAddAlreadyKnown =>
+      'Este servidor já está no seu catálogo.';
+
+  @override
+  String get federationAddFailed =>
+      'Não foi possível adicionar este servidor. Ele pode não publicar um documento de descobrimento.';
+
+  @override
+  String get federationServerOrigin => 'O seu servidor';
+
+  @override
+  String get federationServerActive => 'Participa da replicação';
+
+  @override
+  String get federationServerInactive => 'Fora da replicação';
+
+  @override
+  String federationServerBaseUrl(String url) {
+    return 'Responde em $url';
+  }
+
+  @override
+  String federationServerGrpc(String authority) {
+    return 'gRPC em $authority';
+  }
+
+  @override
+  String get federationServerGrpcAbsent =>
+      'Não publica endereço gRPC — nada replica para ele.';
+
+  @override
+  String federationServerFingerprint(String fingerprint) {
+    return 'Chave $fingerprint';
+  }
+
+  @override
+  String get federationServerFingerprintAbsent => 'Nenhuma chave fixada.';
+
+  @override
+  String federationServerDiscovered(String date, String time) {
+    return 'Descoberto em $date, às $time';
+  }
+
+  @override
+  String get federationServerNeverDiscovered => 'Ainda não descoberto.';
+
+  @override
+  String get federationRefresh => 'Redescobrir';
+
+  @override
+  String federationRefreshed(String domain) {
+    return '$domain foi redescoberto e a chave é a mesma.';
+  }
+
+  @override
+  String get federationRefreshFailed =>
+      'Não foi possível redescobrir este servidor.';
+
+  @override
+  String get federationKeyChangedTitle => 'A chave deste servidor mudou';
+
+  @override
+  String federationKeyChangedExplanation(String domain) {
+    return '$domain apresenta agora uma chave diferente da que estava registrada. Isso acontece quando o operador troca o certificado — e é também o que se veria se alguém estivesse respondendo no lugar dele. Daqui não dá para saber qual dos dois é.';
+  }
+
+  @override
+  String get federationKeyChangedUnderstood => 'Entendi';
+
+  @override
+  String get federationForget => 'Esquecer';
+
+  @override
+  String federationForgetTitle(String domain) {
+    return 'Esquecer $domain?';
+  }
+
+  @override
+  String get federationForgetExplanation =>
+      'Nada mais trafega para este servidor. O que ele já tiver recebido continua lá — esquecer não alcança o banco de outro operador.';
+
+  @override
+  String federationForgotten(String domain) {
+    return '$domain foi esquecido.';
+  }
+
+  @override
+  String get federationForgetRefused =>
+      'Este servidor guarda uma cópia sua. Revogue a réplica antes de esquecê-lo.';
+
+  @override
+  String get federationForgetFailed =>
+      'Não foi possível esquecer este servidor.';
+
+  @override
+  String get federationActiveFailed =>
+      'Não foi possível mudar a participação deste servidor.';
+
+  @override
+  String get federationCancel => 'Cancelar';
 }

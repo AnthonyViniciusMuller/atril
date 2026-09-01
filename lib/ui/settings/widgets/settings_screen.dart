@@ -1,8 +1,8 @@
 /// The account, the devices, the known servers and the state of the sync.
 ///
 /// It is one destination and several screens behind it, which is why it is a
-/// branch of the shell and not a page pushed from somewhere: phase 11 puts the
-/// sync status here, phase 12 the devices and the federation, and phase 4
+/// branch of the shell and not a page pushed from somewhere: phase 11 put the
+/// sync status here, phase 12 the federation and the account, and phase 4
 /// already left it something to say — `SecureSessionStore.isSecure` is false on
 /// the web, and a reader whose refresh credential is in `localStorage` is
 /// entitled to be told so rather than to assume otherwise.
@@ -21,6 +21,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../core/localization/localization.dart';
+import '../../federation/widgets/federation_section.dart';
 import '../../sync/widgets/sync_section.dart';
 import '../view_model/settings_view_model.dart';
 import 'storage_section.dart';
@@ -90,6 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: _model.signOut.execute,
               ),
               const SyncSection(),
+              const FederationSection(),
               const StorageSection(),
             ],
           );

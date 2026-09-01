@@ -558,5 +558,119 @@
   "@syncRecordProgress": {},
 
   "syncRecordAnnotation": "A mark",
-  "@syncRecordAnnotation": {}
+  "@syncRecordAnnotation": {},
+
+  "settingsFederationSection": "Federation",
+  "@settingsFederationSection": {},
+
+  "settingsKnownServers": "Known servers",
+  "@settingsKnownServers": {},
+
+  "settingsKnownServersExplanation": "The servers your node knows, and the ones it may replicate to.",
+  "@settingsKnownServersExplanation": {},
+
+  "federationServersExplanation": "Nothing leaves your node for a server you have not named here. Each of these was discovered from the domain you typed, and the key it presented was pinned.",
+  "@federationServersExplanation": {},
+
+  "federationServersEmpty": "You have not added any server yet.",
+  "@federationServersEmpty": {},
+
+  "federationServersFailed": "The catalogue could not be read. The node did not answer.",
+  "@federationServersFailed": {},
+
+  "federationRetry": "Try again",
+  "@federationRetry": {},
+
+  "federationAddLabel": "Server domain",
+  "@federationAddLabel": {},
+
+  "federationAddHint": "quire-b.example",
+  "@federationAddHint": {},
+
+  "federationAdd": "Add",
+  "@federationAdd": {},
+
+  "federationAdded": "{domain} was added.",
+  "@federationAdded": {},
+
+  "federationAddInvalid": "That is not a server domain.",
+  "@federationAddInvalid": {},
+
+  "federationAddAlreadyKnown": "That server is already in your catalogue.",
+  "@federationAddAlreadyKnown": {},
+
+  "federationAddFailed": "That server could not be added. It may publish no discovery document.",
+  "@federationAddFailed": {},
+
+  "federationServerOrigin": "Your node",
+  "@federationServerOrigin": {},
+
+  "federationServerActive": "Takes part in replication",
+  "@federationServerActive": {},
+
+  "federationServerInactive": "Not replicating",
+  "@federationServerInactive": {},
+
+  "federationServerBaseUrl": "Answers at {url}",
+  "@federationServerBaseUrl": {},
+
+  "federationServerGrpc": "gRPC at {authority}",
+  "@federationServerGrpc": {},
+
+  "federationServerGrpcAbsent": "Publishes no gRPC address — nothing replicates to it.",
+  "@federationServerGrpcAbsent": {},
+
+  "federationServerFingerprint": "Key {fingerprint}",
+  "@federationServerFingerprint": {},
+
+  "federationServerFingerprintAbsent": "No key pinned.",
+  "@federationServerFingerprintAbsent": {},
+
+  "federationServerDiscovered": "Discovered on {date} at {time}",
+  "@federationServerDiscovered": {},
+
+  "federationServerNeverDiscovered": "Not discovered yet.",
+  "@federationServerNeverDiscovered": {},
+
+  "federationRefresh": "Refresh",
+  "@federationRefresh": {},
+
+  "federationRefreshed": "{domain} was refreshed and the key has not changed.",
+  "@federationRefreshed": {},
+
+  "federationRefreshFailed": "That server could not be refreshed.",
+  "@federationRefreshFailed": {},
+
+  "federationKeyChangedTitle": "This server presents a different key",
+  "@federationKeyChangedTitle": {},
+
+  "federationKeyChangedExplanation": "{domain} now presents a different key from the one on record. That happens when its operator rotates the certificate — and it is also what somebody answering in its place would look like. From here the two are indistinguishable.",
+  "@federationKeyChangedExplanation": {},
+
+  "federationKeyChangedUnderstood": "Understood",
+  "@federationKeyChangedUnderstood": {},
+
+  "federationForget": "Forget",
+  "@federationForget": {},
+
+  "federationForgetTitle": "Forget {domain}?",
+  "@federationForgetTitle": {},
+
+  "federationForgetExplanation": "Nothing more travels to it. Whatever it already received stays there — forgetting does not reach into another operator’s database.",
+  "@federationForgetExplanation": {},
+
+  "federationForgotten": "{domain} was forgotten.",
+  "@federationForgotten": {},
+
+  "federationForgetRefused": "That server holds a copy of your data. Revoke the replica before forgetting it.",
+  "@federationForgetRefused": {},
+
+  "federationForgetFailed": "That server could not be forgotten.",
+  "@federationForgetFailed": {},
+
+  "federationActiveFailed": "That server’s participation could not be changed.",
+  "@federationActiveFailed": {},
+
+  "federationCancel": "Cancel",
+  "@federationCancel": {}
 }
