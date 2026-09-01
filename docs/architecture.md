@@ -118,7 +118,9 @@ domain behaviour and not a mapping.
 **A repository owns one feature and answers from the local database.** `LibraryRepository`
 reads drift and returns a stream; it does not know whether the network is up. The sync loop is
 what moves rows, and a view that shows a spinner while a book saves has been written against the
-wrong layer.
+wrong layer. Two repositories do not obey the second half of that sentence, and the section on
+[the federation and the account](#the-federation-and-the-account) is where the exception is
+argued: what they hold does not replicate, so there is no local truth for them to answer from.
 
 **Every fallible call returns `Result<T>`.** The guide's sealed `Result.ok` / `Result.error`,
 never a thrown exception across a layer boundary. gRPC's `GrpcError` is mapped once, in
@@ -499,6 +501,71 @@ A device that is up to date exchanges no operations, so a timestamp that only mo
 would tell a reader their last synchronization was whenever somebody last happened to write
 something. What the sync surface shows is *when this device last reached its node*, and that is
 the fact the column now holds.
+
+## The federation and the account
+
+Phase 12 adds two repositories that break the rule every other one keeps, and the break is the
+point rather than an exception.
+
+**`FederationRepository` and `AccountRepository` do not answer from the local replica.** Every
+other repository holds records that *replicate*, so the truth is here and the node hears about it
+later — that is C21 read forwards. A catalogue entry, a replica permission, a device row and an
+account are none of those. They are what the node knows and enforces, they change on the reader's
+other devices, and there is nothing a reader can do about any of them while the node cannot be
+reached. A cached list would therefore be a peer that may already be gone, shown under controls
+that would all fail — so each of those screens reads on open, says plainly when the node did not
+answer, and offers to ask again.
+
+The catalogue is still **mirrored** into `known_servers` as each answer arrives, and that is a
+different job from showing it. The local row is what a launch dials, and `ListKnownServers` is the
+only call that reports a node's own identifier — which is what a replica grant is addressed by,
+and the reason that column has been a nullable `remote_id` since the table was written. The two
+writers of that table keep opposite rules and both are right: a `.well-known` document carries
+three of a descriptor's five fields and must not clear what it was never going to mention, while
+the node's own answer carries all five and overwrites, absences included.
+
+**Three lists are asked for in full where the contract hides half of them.** The deactivated
+nodes, the revoked replica permissions and the unbound devices are all `include_inactive` on the
+wire and all shown here, and each for the same shape of reason: the row is the only thing that
+explains a state the reader can otherwise not account for. A catalogue that hid a deactivated node
+would have no way back from its own switch; a sovereignty screen that hid a revoked permission
+would answer *nobody* to a reader asking who holds their library; and a device list that hid an
+unbound device would make the history that names it unreadable.
+
+### A device cannot unbind itself, and this app is what refuses it
+
+`RevokeDevice` naming the calling device is a request the node cannot tell apart from any other,
+and it would carry it out — ending this session and every future one, on the device holding the
+screen, with nothing left on it to undo the act. So the refusal is in `AccountRepository`, and the
+row offers no control rather than an error the reader had to provoke.
+
+### Migration: what travels, and what is deliberately not cleared
+
+UC16 is the phase's centre and three of its decisions are places the obvious answer is wrong.
+
+**The devices travel with their identifiers, and the identifiers survive a node that does not
+answer.** C11 is why they have to travel at all. The names, though, are only the node being *left*
+can give, and asking it would make UC16 depend on the availability that UC16 exists to remove — so
+the wizard asks once, when it opens, and falls back to the device identifiers the replica's own
+vector clocks name. A device carried under an invented name is a device the reader renames
+afterwards; a device carried under a new identifier is a clock entry that never merges.
+
+**This device goes first in the list, and the vendored contract does not say so.** C20: the
+session comes back for the first device, `MigrateHomeServerRequest.devices` carries no field naming
+the caller, and `tcc-corrections.md` records the sentence as still to be added to that comment. The
+repository is what guarantees the order and deduplicates, and it says so where it does it.
+
+**Nothing is cleared on the way through.** The outbox, the causal state and the replica are what
+the devices then push to the new node; a client that emptied them would have completed the
+migration by discarding what was being migrated. The one thing that *is* dropped is the cursor for
+the new node, because a position is a number in that node's log and the log it is about to write
+for this reader is empty.
+
+The device is pointed at the new node at the **last step and not before**. Discovering the domain
+early would validate it and would also leave the app talking to a node the reader has no account
+on while they fill in a form, so committing and connecting are one act — and a migration that
+fails points the device back, since a device holding a session for one node while dialling another
+fails every call for a reason nothing on screen explains.
 
 ## What the node will not tell us
 

@@ -1410,6 +1410,8 @@ disproved rather than fixed — which is why they are recorded instead of delete
   device through the read calls. The day it closes, all three are revisited deliberately — the
   rule becomes a preference and the seeding step becomes unnecessary.
 - **C22 is still open.** Nothing in the contract can tell a node that it is a replica, so the
-  authorization screen of phase 12 grants a permission it cannot act on. What the screen says
-  about that is a wording question, not a technical one, and it should be answered by whoever
-  writes the defence rather than by the app.
+  authorization screen of phase 12 grants a permission it cannot act on. The wording landed with
+  that screen and is a paragraph rather than a caveat — the permission is on the reader's own
+  node and completing the federation is between the two operators — and it sits beside the grants
+  permanently, because a sentence that scrolled away would leave the claim it corrects standing.
+  Whoever writes the defence should read it as a first draft rather than as a decision.
