@@ -1033,9 +1033,29 @@ and they are recorded here because none of them is visible from the package's RE
       repository, because what it is about is the rate of page turns and the view model is what
       sees them; a failure to write is logged and never shown, since a banner over a book because
       a bookmark did not save is worse than the thing it reports
-- [ ] `feat: add continue reading` — the shelf that reads the position rows back, including the
+- [x] `feat: add continue reading` — the strip that reads the position rows back, including the
       ones this reader's other devices wrote. Where each device stopped in each book is a
-      question with one answer per device, and showing all of them is the point
+      question with one answer per device, and showing all of them is the point: RN01 asks for it
+      and C05 is what makes it correct, because a phone and a desktop disagreeing about where the
+      reader is are not in conflict — they are two true statements about two devices. Collapsing
+      them would be this application deciding which of a reader's devices counts.
+
+      **It says *another device* and never which one, and that is a finding rather than a
+      shortcut.** Nothing in this application stores the reader's other devices: `ListDevices` is
+      in the contract and phase 12 is what calls it. Until then the honest answer is that some
+      other device of theirs got here, and inventing a name would be worse than the shorter
+      sentence. A test pins the wording so that a later phase adding device names is a decision
+      rather than a drift.
+
+      A `ReadingDao` lands with it, its own accessor rather than a method on the library's, for
+      the reason the repositories above them are two. It orders in SQL — unlike the shelf, which
+      cannot, because sqlite's collations are ASCII and a title is not an integer. The strip is
+      not narrowed by the search or the shelf filter: what it answers is *where was I*, and a
+      strip that emptied as somebody typed would be a second set of results competing with the
+      one they asked for. A tombstoned work is left out, since a reader who deleted a book has
+      said they are not reading it, and a failure leaves the strip as it was rather than emptying
+      it — a band that vanished because one query failed would look like a reader who had never
+      opened a book
 
 
 ## Phase 10 — Annotations (UC05)

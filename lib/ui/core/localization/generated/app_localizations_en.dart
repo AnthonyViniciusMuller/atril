@@ -713,4 +713,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerSpread => 'Two pages';
+
+  @override
+  String get libraryContinueReading => 'Continue reading';
+
+  @override
+  String get libraryContinueHere => 'On this device';
+
+  @override
+  String get libraryContinueElsewhere => 'On another device';
+
+  @override
+  String libraryContinuePercent(Object percent) {
+    return '$percent%';
+  }
 }

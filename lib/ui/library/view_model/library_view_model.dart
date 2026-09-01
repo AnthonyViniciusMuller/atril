@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
@@ -33,6 +34,7 @@ final class LibraryViewModel extends ChangeNotifier {
   /// The view model over [library] and [picker], starting from [query].
   LibraryViewModel({
     required this.library,
+    required this.reading,
     required this.picker,
     LibraryQuery? query,
   }) : _query = query ?? const LibraryQuery() {
@@ -40,13 +42,29 @@ final class LibraryViewModel extends ChangeNotifier {
     _subscribe();
     _groupings = library.watchCollections().listen(_onCollections);
     _counts = library.watchFilingCounts().listen(_onCounts);
+    _places = reading.watchContinueReading().listen(_onPlaces);
   }
 
   /// Where the collection is read from.
   final LibraryRepository library;
 
+  /// Where the reader got to, on every device.
+  ///
+  /// A second repository on this screen rather than a method on the first,
+  /// because *what is in the collection* and *where reading got to* are two
+  /// questions with two lifetimes — and this one is answered by rows every
+  /// device writes rather than only this one.
+  final ReadingRepository reading;
+
   /// Where the reader names a file.
   final FilePicker picker;
+
+  /// Where each of this reader's devices stopped, most recent first.
+  ///
+  /// It is empty until something has been read, and a screen showing it is
+  /// expected to render nothing rather than an explanation of what would go
+  /// there.
+  List<ReadingPlace> get places => _placesRead;
 
   /// UC02. Asks for a file and takes it into the collection.
   ///
@@ -64,9 +82,11 @@ final class LibraryViewModel extends ChangeNotifier {
   StreamSubscription<Result<List<Ebook>>>? _works;
   late final StreamSubscription<Result<List<Collection>>> _groupings;
   late final StreamSubscription<Result<Map<String, int>>> _counts;
+  late final StreamSubscription<Result<List<ReadingPlace>>> _places;
 
   List<Ebook>? _ebooks;
   List<Collection> _collections = const <Collection>[];
+  List<ReadingPlace> _placesRead = const <ReadingPlace>[];
   Map<String, int> _filingCounts = const <String, int>{};
   Exception? _error;
 
@@ -130,6 +150,7 @@ final class LibraryViewModel extends ChangeNotifier {
     unawaited(_works?.cancel());
     unawaited(_groupings.cancel());
     unawaited(_counts.cancel());
+    unawaited(_places.cancel());
     super.dispose();
   }
 
@@ -192,6 +213,18 @@ final class LibraryViewModel extends ChangeNotifier {
         _ask(_query.within(null));
       }
 
+      notifyListeners();
+    }
+  }
+
+  /// What the reader's devices have got to.
+  ///
+  /// A failure leaves the strip as it was rather than emptying it: a *continue
+  /// reading* band that vanished because one query failed would look like a
+  /// reader who had never opened a book.
+  void _onPlaces(Result<List<ReadingPlace>> result) {
+    if (result case Ok<List<ReadingPlace>>(:final List<ReadingPlace> value)) {
+      _placesRead = value;
       notifyListeners();
     }
   }

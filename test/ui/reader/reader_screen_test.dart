@@ -130,6 +130,14 @@ final class _FakeReading implements ReadingRepository {
   }
 
   @override
+  Stream<Result<List<ReadingPlace>>> watchContinueReading({int limit = 20}) =>
+      const Stream<Result<List<ReadingPlace>>>.empty();
+
+  @override
+  Stream<Result<List<ReadingPlace>>> watchPlacesIn(String ebookId) =>
+      const Stream<Result<List<ReadingPlace>>>.empty();
+
+  @override
   Future<Result<Ebook?>> ebook(String ebookId) async => Result<Ebook?>.ok(null);
 }
 

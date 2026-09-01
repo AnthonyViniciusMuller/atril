@@ -25,6 +25,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_metadata.dart';
 import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
@@ -36,6 +37,7 @@ import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../../core/ui/adaptive_scaffold.dart';
 import '../view_model/library_view_model.dart';
+import 'continue_reading.dart';
 
 /// The width from which the shelf is a grid.
 ///
@@ -71,6 +73,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   late final LibraryViewModel _model = LibraryViewModel(
     library: context.read<LibraryRepository>(),
+    reading: context.read<ReadingRepository>(),
     picker: context.read<FilePicker>(),
   );
 
@@ -310,6 +313,16 @@ class _LibraryBody extends StatelessWidget {
 
     return Column(
       children: <Widget>[
+        // Above the filters and the shelf, and only when there is something in
+        // it: a reader who has imported books and opened none should see their
+        // shelf rather than an empty band explaining what would go there.
+        //
+        // It is not narrowed by the search or the shelf filter. What it answers
+        // is *where was I*, which is a question about the last few days rather
+        // than about whatever is currently being looked for — and a strip that
+        // emptied as somebody typed would be a second set of results competing
+        // with the one they asked for.
+        ContinueReading(places: model.places),
         if (model.collections.isNotEmpty)
           _ShelfFilter(
             collections: model.collections,

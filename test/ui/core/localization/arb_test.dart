@@ -102,6 +102,7 @@ void main() {
       // both languages and what differs — the separator, and whether a space
       // precedes it — is `intl`'s placement rather than a translator's word.
       'readerFontSizeValue',
+      'libraryContinuePercent',
     };
 
     for (final message in messagesOf(template).difference(sameInBoth)) {

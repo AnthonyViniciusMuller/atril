@@ -714,6 +714,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerSpread => 'Duas páginas';
+
+  @override
+  String get libraryContinueReading => 'Continuar lendo';
+
+  @override
+  String get libraryContinueHere => 'Neste dispositivo';
+
+  @override
+  String get libraryContinueElsewhere => 'Em outro dispositivo';
+
+  @override
+  String libraryContinuePercent(Object percent) {
+    return '$percent%';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1425,4 +1439,18 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerSpread => 'Duas páginas';
+
+  @override
+  String get libraryContinueReading => 'Continuar lendo';
+
+  @override
+  String get libraryContinueHere => 'Neste dispositivo';
+
+  @override
+  String get libraryContinueElsewhere => 'Em outro dispositivo';
+
+  @override
+  String libraryContinuePercent(Object percent) {
+    return '$percent%';
+  }
 }

@@ -9,6 +9,8 @@ import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
 import '../../services/epub/epub_host.dart';
 import '../../services/local/dao/library_dao.dart';
+import '../../services/local/database.dart';
+import '../../services/local/dao/reading_dao.dart';
 import '../../services/sync/author.dart';
 import '../../services/sync/delta.dart';
 import '../../services/storage/blob_store.dart';
@@ -38,12 +40,16 @@ final class ReadingRepositoryImpl implements ReadingRepository {
   /// through [author].
   const ReadingRepositoryImpl({
     required this.library,
+    required this.places,
     required this.blobs,
     required this.author,
   });
 
   /// The rows.
   final LibraryDao library;
+
+  /// Where reading got to, on every device.
+  final ReadingDao places;
 
   /// Where the file is.
   final BlobStore blobs;
@@ -158,6 +164,71 @@ final class ReadingRepositoryImpl implements ReadingRepository {
       _log.warning('the position in $ebookId could not be written', error);
 
       return Result<void>.error(_failure(error));
+    }
+  }
+
+  @override
+  Stream<Result<List<ReadingPlace>>> watchContinueReading({int limit = 20}) =>
+      _watch(places.watchPlaces(limit: limit).asyncMap(_placesOf));
+
+  @override
+  Stream<Result<List<ReadingPlace>>> watchPlacesIn(String ebookId) => _watch(
+    places.watchPlacesIn(ebookId).asyncMap((List<ProgressRow> rows) async {
+      final row = await library.readEbook(ebookId);
+
+      if (row == null) {
+        return const <ReadingPlace>[];
+      }
+
+      final Ebook work = ebookOfRow(row);
+      final String? here = await library.attachedDatabase.identityDao
+          .deviceId();
+
+      return <ReadingPlace>[
+        for (final ProgressRow position in rows) _placeOf(position, work, here),
+      ];
+    }),
+  );
+
+  /// The places [rows] describe, with this device's own marked.
+  Future<List<ReadingPlace>> _placesOf(List<ReadingPlaceRow> rows) async {
+    // Asked once per emission and not once per row: the identity of this
+    // device does not change while a list is being built, and twenty queries
+    // to learn one answer would be twenty.
+    final String? here = await library.attachedDatabase.identityDao.deviceId();
+
+    return <ReadingPlace>[
+      for (final ReadingPlaceRow row in rows)
+        _placeOf(row.position, ebookOfRow(row.work), here),
+    ];
+  }
+
+  ReadingPlace _placeOf(ProgressRow position, Ebook work, String? here) =>
+      ReadingPlace(
+        work: work,
+        locator: position.locator,
+        percent: position.percent,
+        updatedAt: position.updatedAt,
+        onThisDevice: here != null && position.deviceId == here,
+      );
+
+  /// [source] as a stream of results.
+  ///
+  /// A stream that failed by ending would be an exception crossing a layer
+  /// boundary with a `Stream` around it, and a list that stops arriving looks
+  /// exactly like an empty one — which is the argument `LibraryRepository`
+  /// makes at length and this repository follows.
+  Stream<Result<List<ReadingPlace>>> _watch(
+    Stream<List<ReadingPlace>> source,
+  ) async* {
+    try {
+      await for (final List<ReadingPlace> places in source) {
+        yield Result<List<ReadingPlace>>.ok(places);
+      }
+    } on Object catch (error) {
+      _log.warning('the reading places could not be read', error);
+
+      yield Result<List<ReadingPlace>>.error(_failure(error));
     }
   }
 

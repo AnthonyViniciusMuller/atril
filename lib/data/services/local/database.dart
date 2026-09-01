@@ -29,6 +29,7 @@ import 'connection/connection.dart';
 import 'converters.dart';
 import 'dao/identity_dao.dart';
 import 'dao/library_dao.dart';
+import 'dao/reading_dao.dart';
 import 'dao/records_dao.dart';
 import 'dao/transfers_dao.dart';
 import 'dao/sync_dao.dart';
@@ -69,7 +70,14 @@ final _log = loggerFor('data/local');
     ContentUploads,
     ContentPins,
   ],
-  daos: <Type>[IdentityDao, LibraryDao, SyncDao, RecordsDao, TransfersDao],
+  daos: <Type>[
+    IdentityDao,
+    LibraryDao,
+    ReadingDao,
+    SyncDao,
+    RecordsDao,
+    TransfersDao,
+  ],
 )
 class AtrilDatabase extends _$AtrilDatabase {
   /// The replica over [executor], or over the platform's own connection.

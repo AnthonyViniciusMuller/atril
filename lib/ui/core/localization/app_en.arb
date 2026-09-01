@@ -270,5 +270,17 @@
   "@readerThemeDark": {},
 
   "readerSpread": "Two pages",
-  "@readerSpread": {}
+  "@readerSpread": {},
+
+  "libraryContinueReading": "Continue reading",
+  "@libraryContinueReading": {},
+
+  "libraryContinueHere": "On this device",
+  "@libraryContinueHere": {},
+
+  "libraryContinueElsewhere": "On another device",
+  "@libraryContinueElsewhere": {},
+
+  "libraryContinuePercent": "{percent}%",
+  "@libraryContinuePercent": {}
 }

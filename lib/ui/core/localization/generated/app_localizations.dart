@@ -1292,6 +1292,30 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Duas páginas'**
   String get readerSpread;
+
+  /// Título da faixa que reúne os livros em que a leitura já começou, no alto da biblioteca.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Continuar lendo'**
+  String get libraryContinueReading;
+
+  /// Diz que a posição mostrada foi marcada aqui mesmo. Aparece junto com a porcentagem.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Neste dispositivo'**
+  String get libraryContinueHere;
+
+  /// Diz que a posição mostrada veio de outro aparelho do mesmo leitor. Não diz qual: nada aqui guarda os outros dispositivos ainda, e inventar um nome seria pior do que não dizer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Em outro dispositivo'**
+  String get libraryContinueElsewhere;
+
+  /// Quanto do livro foi percorrido, ao lado da barra na faixa de continuar lendo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{percent}%'**
+  String libraryContinuePercent(Object percent);
 }
 
 class _AppLocalizationsDelegate

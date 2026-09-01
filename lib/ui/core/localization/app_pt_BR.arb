@@ -1172,5 +1172,25 @@
   "readerSpread": "Duas páginas",
   "@readerSpread": {
     "description": "Ajuste que permite mostrar duas páginas lado a lado quando há largura para isso. Numa janela estreita continua sendo uma só."
+  },
+
+  "libraryContinueReading": "Continuar lendo",
+  "@libraryContinueReading": {
+    "description": "Título da faixa que reúne os livros em que a leitura já começou, no alto da biblioteca."
+  },
+
+  "libraryContinueHere": "Neste dispositivo",
+  "@libraryContinueHere": {
+    "description": "Diz que a posição mostrada foi marcada aqui mesmo. Aparece junto com a porcentagem."
+  },
+
+  "libraryContinueElsewhere": "Em outro dispositivo",
+  "@libraryContinueElsewhere": {
+    "description": "Diz que a posição mostrada veio de outro aparelho do mesmo leitor. Não diz qual: nada aqui guarda os outros dispositivos ainda, e inventar um nome seria pior do que não dizer."
+  },
+
+  "libraryContinuePercent": "{percent}%",
+  "@libraryContinuePercent": {
+    "description": "Quanto do livro foi percorrido, ao lado da barra na faixa de continuar lendo."
   }
 }

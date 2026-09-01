@@ -115,6 +115,7 @@ void main() {
     );
     reading = ReadingRepositoryImpl(
       library: database.libraryDao,
+      places: database.readingDao,
       blobs: blobs,
       author: author,
     );
@@ -216,6 +217,7 @@ void main() {
 
         final ReadingRepository small = ReadingRepositoryImpl(
           library: database.libraryDao,
+          places: database.readingDao,
           blobs: _CapaciousStore(blobs, reported: readableSizeLimit + 1),
           author: author,
         );
@@ -352,6 +354,176 @@ void main() {
             .getSingle();
 
         expect(row.percent, isNull);
+      },
+    );
+  });
+
+  group('where the reader got to, across devices', () {
+    /// A position written directly, as another device's operation would land.
+    Future<void> seedPlace(
+      String work,
+      String device, {
+      required double percent,
+      required DateTime at,
+      String locator = 'epubcfi(/6/4!/4/2/2)',
+    }) => database
+        .into(database.progress)
+        .insert(
+          ProgressCompanion.insert(
+            id: _id('r${++_minted}'),
+            ebookId: _id(work),
+            deviceId: device,
+            locator: locator,
+            percent: Value<double?>(percent),
+            vectorClock: VectorClock.of(<String, int>{device: 1}),
+            updatedAt: at,
+          ),
+        );
+
+    test('answers one row per device and does not collapse them', () async {
+      // RN01, and C05 is what makes it correct: a phone and a desktop
+      // disagreeing about where the reader is are not in conflict, they are two
+      // true statements. Collapsing them here would be this application
+      // deciding which of a reader's devices counts.
+      const String other = '22222222-2222-4222-8222-222222222222';
+
+      await _seed(database, blobs, id: 'a', bytes: <int>[1]);
+      await seedPlace('a', _device, percent: 20, at: _at);
+      await seedPlace(
+        'a',
+        other,
+        percent: 80,
+        at: _at.add(const Duration(hours: 1)),
+      );
+
+      final List<ReadingPlace> places = await reading
+          .watchContinueReading()
+          .map(
+            (Result<List<ReadingPlace>> r) =>
+                (r as Ok<List<ReadingPlace>>).value,
+          )
+          .first;
+
+      expect(places, hasLength(2));
+      expect(places.map((ReadingPlace p) => p.percent), <double>[80, 20]);
+    });
+
+    test(
+      'says which one is this device, and nothing more about the others',
+      () async {
+        // `ListDevices` is in the contract and phase 12 is what calls it, so
+        // until then *another device* is the whole honest answer.
+        const String other = '22222222-2222-4222-8222-222222222222';
+
+        await _seed(database, blobs, id: 'b', bytes: <int>[1]);
+        await seedPlace('b', _device, percent: 20, at: _at);
+        await seedPlace(
+          'b',
+          other,
+          percent: 80,
+          at: _at.add(const Duration(hours: 1)),
+        );
+
+        final List<ReadingPlace> places = await reading
+            .watchContinueReading()
+            .map(
+              (Result<List<ReadingPlace>> r) =>
+                  (r as Ok<List<ReadingPlace>>).value,
+            )
+            .first;
+
+        expect(places.first.onThisDevice, isFalse);
+        expect(places.last.onThisDevice, isTrue);
+      },
+    );
+
+    test('is ordered by when it was written, most recent first', () async {
+      await _seed(database, blobs, id: 'c', bytes: <int>[1]);
+      await _seed(database, blobs, id: 'd', bytes: <int>[1]);
+      await seedPlace('c', _device, percent: 10, at: _at);
+      await seedPlace(
+        'd',
+        _device,
+        percent: 90,
+        at: _at.add(const Duration(days: 1)),
+      );
+
+      final List<ReadingPlace> places = await reading
+          .watchContinueReading()
+          .map(
+            (Result<List<ReadingPlace>> r) =>
+                (r as Ok<List<ReadingPlace>>).value,
+          )
+          .first;
+
+      expect(places.first.work.id, _id('d'));
+    });
+
+    test('leaves out a work the reader deleted', () async {
+      // A reader who deleted a book has said they are not reading it, and a
+      // *continue reading* row for it would be the deletion not having
+      // happened.
+      await _seed(database, blobs, id: 'e', bytes: <int>[1], deleted: true);
+      await seedPlace('e', _device, percent: 50, at: _at);
+
+      final List<ReadingPlace> places = await reading
+          .watchContinueReading()
+          .map(
+            (Result<List<ReadingPlace>> r) =>
+                (r as Ok<List<ReadingPlace>>).value,
+          )
+          .first;
+
+      expect(places, isEmpty);
+    });
+
+    test('carries the work, so a screen can render what it is given', () async {
+      // A position with no work to show is nothing a screen can render, which
+      // is why the two are read together rather than handed over separately.
+      await _seed(database, blobs, id: 'f', bytes: <int>[1], title: 'Iracema');
+      await seedPlace('f', _device, percent: 5, at: _at);
+
+      final ReadingPlace place =
+          (await reading
+                  .watchContinueReading()
+                  .map(
+                    (Result<List<ReadingPlace>> r) =>
+                        (r as Ok<List<ReadingPlace>>).value,
+                  )
+                  .first)
+              .single;
+
+      expect(place.work.title, 'Iracema');
+      expect(place.fraction, closeTo(0.05, 1e-9));
+    });
+
+    test(
+      'a position this app wrote comes back through the same stream',
+      () async {
+        // The round trip that matters for the feature: what `saveProgress`
+        // authors is what *continue reading* reads back, through the reconciler
+        // rather than around it.
+        await _seed(database, blobs, id: 'g', bytes: <int>[1]);
+
+        await reading.saveProgress(
+          ebookId: _id('g'),
+          locator: 'epubcfi(/6/16[ch8]!/4/2/44/1:12)',
+          percent: 63.5,
+        );
+
+        final ReadingPlace place =
+            (await reading
+                    .watchContinueReading()
+                    .map(
+                      (Result<List<ReadingPlace>> r) =>
+                          (r as Ok<List<ReadingPlace>>).value,
+                    )
+                    .first)
+                .single;
+
+        expect(place.locator, 'epubcfi(/6/16[ch8]!/4/2/44/1:12)');
+        expect(place.percent, 63.5);
+        expect(place.onThisDevice, isTrue);
       },
     );
   });

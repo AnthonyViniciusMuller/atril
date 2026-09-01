@@ -266,6 +266,7 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     Provider<ReadingRepository>(
       create: (BuildContext context) => ReadingRepositoryImpl(
         library: database.libraryDao,
+        places: database.readingDao,
         blobs: blobs,
         author: context.read<OperationAuthor>(),
       ),

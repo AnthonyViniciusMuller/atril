@@ -7663,6 +7663,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
   late final LibraryDao libraryDao = LibraryDao(this as AtrilDatabase);
+  late final ReadingDao readingDao = ReadingDao(this as AtrilDatabase);
   late final SyncDao syncDao = SyncDao(this as AtrilDatabase);
   late final RecordsDao recordsDao = RecordsDao(this as AtrilDatabase);
   late final TransfersDao transfersDao = TransfersDao(this as AtrilDatabase);
