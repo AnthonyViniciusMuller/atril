@@ -992,5 +992,45 @@
   "ebookShelvesFailed": "Não foi possível mudar as estantes deste livro.",
   "@ebookShelvesFailed": {
     "description": "Erro geral ao arquivar ou desarquivar um livro em uma estante."
+  },
+
+  "librarySearch": "Buscar",
+  "@librarySearch": {
+    "description": "Ação que abre o campo de busca na barra da biblioteca. Rótulo curto, usado como dica do botão."
+  },
+
+  "librarySearchHint": "Buscar por título ou autor",
+  "@librarySearchHint": {
+    "description": "Dica dentro do campo de busca. Diz onde a busca procura: título e autor, que são as duas coisas de que um leitor se lembra. Editora e idioma ficam de fora de propósito — buscar por elas devolveria a casa inteira por causa de uma palavra."
+  },
+
+  "librarySearchClear": "Limpar a busca",
+  "@librarySearchClear": {
+    "description": "Ação que apaga o que foi digitado e fecha o campo de busca."
+  },
+
+  "libraryFilterFormat": "Formato",
+  "@libraryFilterFormat": {
+    "description": "Rótulo do menu que restringe a listagem a um formato de arquivo. Rótulo curto, usado como dica do botão."
+  },
+
+  "libraryAllFormats": "Todos os formatos",
+  "@libraryAllFormats": {
+    "description": "Opção do menu de formatos que desfaz a restrição e mostra o acervo inteiro."
+  },
+
+  "libraryNoMatchesTitle": "Nada encontrado",
+  "@libraryNoMatchesTitle": {
+    "description": "Título mostrado quando o leitor tem livros e nenhum deles combina com a busca ou com o filtro de formato. É diferente do estado vazio da biblioteca e do de uma estante vazia: aqui foi o que se pediu que não achou nada."
+  },
+
+  "libraryNoMatchesMessage": "Nenhum livro do seu acervo combina com o que você pediu.",
+  "@libraryNoMatchesMessage": {
+    "description": "Corpo do estado sem resultados, acompanhado do botão que desfaz todos os filtros de uma vez."
+  },
+
+  "libraryClearFilters": "Limpar os filtros",
+  "@libraryClearFilters": {
+    "description": "Ação que desfaz de uma vez a busca, o formato e a estante escolhidos. É um botão só porque quem está olhando para uma lista vazia não deveria ter que desfazer três coisas uma a uma para descobrir qual delas era o problema."
   }
 }

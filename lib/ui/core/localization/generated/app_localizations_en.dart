@@ -596,4 +596,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ebookShelvesFailed => 'This book\'s shelves could not be changed.';
+
+  @override
+  String get librarySearch => 'Search';
+
+  @override
+  String get librarySearchHint => 'Search by title or author';
+
+  @override
+  String get librarySearchClear => 'Clear the search';
+
+  @override
+  String get libraryFilterFormat => 'Format';
+
+  @override
+  String get libraryAllFormats => 'All formats';
+
+  @override
+  String get libraryNoMatchesTitle => 'Nothing found';
+
+  @override
+  String get libraryNoMatchesMessage =>
+      'No book in your library matches what you asked for.';
+
+  @override
+  String get libraryClearFilters => 'Clear the filters';
 }

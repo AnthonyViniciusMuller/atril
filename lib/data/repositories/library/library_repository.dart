@@ -135,7 +135,10 @@ abstract interface class LibraryRepository {
   /// It claims exactly the fields that differ, for the reason an edit to a
   /// work does (C17): a delta restating a name nobody touched carries this
   /// device's claim to it.
-  Future<Result<void>> editCollection(String collectionId, CollectionEdits edits);
+  Future<Result<void>> editCollection(
+    String collectionId,
+    CollectionEdits edits,
+  );
 
   /// UC03, delete. Tombstones a grouping.
   ///

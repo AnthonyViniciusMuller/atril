@@ -203,6 +203,7 @@ Future<void> _work(
   DateTime? importedAt,
   bool deleted = false,
   String? extraMetadata,
+  String format = 'epub',
 }) => database
     .into(database.ebooks)
     .insert(
@@ -210,7 +211,7 @@ Future<void> _work(
         id: id,
         title: title,
         author: Value<String?>(author),
-        format: 'epub',
+        format: format,
         contentHash: _hashOf(seed),
         extraMetadata: Value<String?>(extraMetadata),
         importedAt: importedAt ?? _at,
@@ -757,7 +758,10 @@ void main() {
 
       expect(row, isNotNull);
       expect(row?.deleted, isTrue);
-      expect((await database.syncDao.pending()).last.kind, OperationKind.delete);
+      expect(
+        (await database.syncDao.pending()).last.kind,
+        OperationKind.delete,
+      );
     });
 
     test('takes the work off the shelf', () async {
@@ -840,10 +844,7 @@ void main() {
         const CollectionEdits(name: 'Sertão', kind: CollectionKind.category),
       );
 
-      expect(
-        (result as Ok<Collection>).value.kind,
-        CollectionKind.category,
-      );
+      expect((result as Ok<Collection>).value.kind, CollectionKind.category);
     });
 
     test('claims only what an edit changed', () async {
@@ -891,19 +892,20 @@ void main() {
 
       await repository.deleteCollection(id);
 
-      expect(await repository.watchCollections().first, isA<Ok<List<Collection>>>()
-          .having(
-            (result) => result.value,
-            'the groupings on the shelf screen',
-            isEmpty,
-          ));
+      expect(
+        await repository.watchCollections().first,
+        isA<Ok<List<Collection>>>().having(
+          (result) => result.value,
+          'the groupings on the shelf screen',
+          isEmpty,
+        ),
+      );
       expect(await database.libraryDao.readCollection(id), isNotNull);
 
       await repository.restoreCollection(id);
 
       expect(
-        ((await repository.watchCollections().first)
-                as Ok<List<Collection>>)
+        ((await repository.watchCollections().first) as Ok<List<Collection>>)
             .value,
         hasLength(1),
       );
@@ -1275,6 +1277,164 @@ void main() {
 
       expect((budget as Ok<StorageBudget>).value.used, 300);
       expect(budget.value.available, 700);
+    });
+  });
+
+  group('a search', () {
+    /// Three works with different titles, authors and formats.
+    Future<LibraryRepository> shelf(AtrilDatabase database) async {
+      final repository = await _repository(database);
+
+      await _work(
+        database,
+        id: _id('aaaa', 1),
+        title: 'Grande Sertão: Veredas',
+        author: 'João Guimarães Rosa',
+      );
+      await _work(
+        database,
+        id: _id('aaaa', 2),
+        title: 'Vidas Secas',
+        author: 'Graciliano Ramos',
+        seed: 2,
+      );
+      await _work(
+        database,
+        id: _id('aaaa', 3),
+        title: 'Os Sertões',
+        author: 'Euclides da Cunha',
+        seed: 3,
+        format: 'pdf',
+      );
+
+      return repository;
+    }
+
+    test('finds a word the reader typed without its accents', () async {
+      // The same fold the shelf is ordered by. `LIKE` in sqlite is
+      // ASCII-insensitive and nothing else, so this reader would find nothing.
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(term: 'sertao'))
+          .first;
+
+      expect(result.titles, <String>['Grande Sertão: Veredas']);
+    });
+
+    test('matches what it was given and does not guess a plural', () async {
+      // `sertao` does not find *Os Sertões*, and that is the match this app
+      // makes rather than a gap in it: folding removes the marks above the
+      // letters and nothing else, so a search stays something a reader can
+      // predict. A stemmer would find the plural and would also decide, on
+      // this app's behalf, which words are the same word — in a library that
+      // holds books in more than one language.
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(term: 'sert'))
+          .first;
+
+      expect(result.titles, <String>['Grande Sertão: Veredas', 'Os Sertões']);
+    });
+
+    test('searches the author as well as the title', () async {
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(term: 'graciliano'))
+          .first;
+
+      expect(result.titles, <String>['Vidas Secas']);
+    });
+
+    test('matches every word, and not the phrase in order', () async {
+      // A reader who types an author and a title is naming two things, and a
+      // search that required them adjacent would find nothing.
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(term: 'rosa veredas'))
+          .first;
+
+      expect(result.titles, <String>['Grande Sertão: Veredas']);
+    });
+
+    test('narrows to one format', () async {
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(format: EbookFormat.pdf))
+          .first;
+
+      expect(result.titles, <String>['Os Sertões']);
+    });
+
+    test('narrows by the format and the search together', () async {
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(
+            const LibraryQuery(term: 'sertao', format: EbookFormat.epub),
+          )
+          .first;
+
+      expect(result.titles, <String>['Grande Sertão: Veredas']);
+    });
+
+    test('narrows by the shelf, the format and the search together', () async {
+      final database = _open();
+      final repository = await shelf(database);
+
+      await _grouping(database, id: _id('bbbb', 1), name: 'Para reler');
+      await _filing(
+        database,
+        id: _id('cccc', 1),
+        ebookId: _id('aaaa', 1),
+        collectionId: _id('bbbb', 1),
+      );
+      await _filing(
+        database,
+        id: _id('cccc', 2),
+        ebookId: _id('aaaa', 3),
+        collectionId: _id('bbbb', 1),
+      );
+
+      final result = await repository
+          .watchEbooks(
+            LibraryQuery(
+              collectionId: _id('bbbb', 1),
+              format: EbookFormat.epub,
+              term: 'sertao',
+            ),
+          )
+          .first;
+
+      expect(result.titles, <String>['Grande Sertão: Veredas']);
+    });
+
+    test('answers the whole collection for a term of only spaces', () async {
+      final repository = await shelf(_open());
+
+      final result = await repository
+          .watchEbooks(const LibraryQuery(term: '   '))
+          .first;
+
+      expect(result.titles, hasLength(3));
+    });
+
+    test('reaches no node to answer any of it', () async {
+      // The collection is on this device, so narrowing it is a question about
+      // rows this app already holds — and the client in this fixture dials a
+      // host nothing is listening on, which is what makes that assertion
+      // rather than an assumption.
+      final repository = await shelf(_open());
+
+      expect(
+        (await repository.watchEbooks(const LibraryQuery(term: 'sertao')).first)
+            .titles,
+        isNotEmpty,
+      );
     });
   });
 

@@ -302,6 +302,106 @@ void main() {
     expect(find.text(l10n.libraryImportFailed), findsOneWidget);
   });
 
+  group('searching', () {
+    testWidgets('asks as the reader types, with nothing to wait for', (
+      WidgetTester tester,
+    ) async {
+      // No debounce, because there is nothing to debounce: the answer is a
+      // query over rows this device already holds, and a delay would be the
+      // app pretending to wait for a network it is not talking to.
+      final (:library, :picker) = await pump(tester);
+
+      library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'sertao');
+      await tester.pumpAndSettle();
+
+      expect(library.queries.last.term, 'sertao');
+    });
+
+    testWidgets('narrows to the format the reader chose', (
+      WidgetTester tester,
+    ) async {
+      final (:library, :picker) = await pump(tester);
+
+      library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('PDF').last);
+      await tester.pumpAndSettle();
+
+      expect(library.queries.last.format, EbookFormat.pdf);
+    });
+
+    testWidgets('names what was asked for when nothing matches', (
+      WidgetTester tester,
+    ) async {
+      // Three emptinesses and not one. *Nothing on this shelf* names a place;
+      // *nothing found* names what was asked for.
+      final (:library, :picker) = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'capitu');
+      library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.libraryNoMatchesTitle), findsOneWidget);
+      expect(find.text(l10n.libraryFilterEmptyTitle), findsNothing);
+    });
+
+    testWidgets('undoes every filter at once', (WidgetTester tester) async {
+      // A reader looking at nothing should not have to undo three filters one
+      // at a time to find out which of them was the problem.
+      final (:library, :picker) = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
+      library.groupings.add(
+        Result<List<Collection>>.ok(<Collection>[_grouping('Para reler')]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Para reler'));
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'capitu');
+      library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.libraryClearFilters));
+      await tester.pumpAndSettle();
+
+      expect(library.queries.last.isNarrowed, isFalse);
+    });
+
+    testWidgets('clears the search when the field is closed', (
+      WidgetTester tester,
+    ) async {
+      final (:library, :picker) = await pump(tester);
+
+      library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'capitu');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      expect(library.queries.last.term, isEmpty);
+      expect(find.byType(TextField), findsNothing);
+    });
+  });
+
   testWidgets('says so when the replica itself cannot be read', (
     WidgetTester tester,
   ) async {

@@ -87,9 +87,7 @@ class _ShelvesScreenState extends State<ShelvesScreen> {
     }
 
     if (_model.remove.result is Error<void>) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.shelvesDeleteFailed)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.shelvesDeleteFailed)));
 
       return;
     }
@@ -237,11 +235,7 @@ class _Empty extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(
-                Icons.shelves,
-                size: 48,
-                color: theme.colorScheme.outline,
-              ),
+              Icon(Icons.shelves, size: 48, color: theme.colorScheme.outline),
               const SizedBox(height: 16),
               Text(
                 l10n.shelvesEmpty,

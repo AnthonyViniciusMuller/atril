@@ -45,16 +45,22 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase>
   /// A filing that has been tombstoned does not count as a filing. The row
   /// survives because the federation needs it; the shelf it names does not
   /// show the work any more.
-  Stream<List<EbookRow>> watchEbooks({String? collectionId}) =>
+  /// [format] narrows it to one of the formats UC02 admits, which is an
+  /// equality on a column and therefore SQL's to do. The *search* is not: it
+  /// is matched on the folded key for the reason the ordering is, and the
+  /// repository above is where both happen.
+  Stream<List<EbookRow>> watchEbooks({String? collectionId, String? format}) =>
       collectionId == null
-      ? _live.watch()
-      : _filedUnder(collectionId).watch().map(_worksOf);
+      ? _live(format).watch()
+      : _filedUnder(collectionId, format).watch().map(_worksOf);
 
   /// The works the reader holds, once.
-  Future<List<EbookRow>> readEbooks({String? collectionId}) async =>
-      collectionId == null
-      ? _live.get()
-      : _worksOf(await _filedUnder(collectionId).get());
+  Future<List<EbookRow>> readEbooks({
+    String? collectionId,
+    String? format,
+  }) async => collectionId == null
+      ? _live(format).get()
+      : _worksOf(await _filedUnder(collectionId, format).get());
 
   /// One work, as it changes, or `null` while this device does not hold it.
   ///
@@ -209,19 +215,29 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase>
     );
   }
 
-  SimpleSelectStatement<$EbooksTable, EbookRow> get _live =>
-      select(ebooks)..where((row) => row.deleted.not());
+  SimpleSelectStatement<$EbooksTable, EbookRow> _live(String? format) =>
+      select(ebooks)..where(
+        (row) => format == null
+            ? row.deleted.not()
+            : row.deleted.not() & row.format.equals(format),
+      );
 
   JoinedSelectStatement<HasResultSet, dynamic> _filedUnder(
     String collectionId,
-  ) => select(ebooks).join(<Join<HasResultSet, dynamic>>[
-    innerJoin(
-      ebookCollections,
-      ebookCollections.ebookId.equalsExp(ebooks.id) &
-          ebookCollections.collectionId.equals(collectionId) &
-          ebookCollections.deleted.not(),
-    ),
-  ])..where(ebooks.deleted.not());
+    String? format,
+  ) =>
+      select(ebooks).join(<Join<HasResultSet, dynamic>>[
+        innerJoin(
+          ebookCollections,
+          ebookCollections.ebookId.equalsExp(ebooks.id) &
+              ebookCollections.collectionId.equals(collectionId) &
+              ebookCollections.deleted.not(),
+        ),
+      ])..where(
+        format == null
+            ? ebooks.deleted.not()
+            : ebooks.deleted.not() & ebooks.format.equals(format),
+      );
 
   List<EbookRow> _worksOf(List<TypedResult> rows) => <EbookRow>[
     for (final row in rows) row.readTable(ebooks),

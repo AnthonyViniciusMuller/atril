@@ -597,6 +597,31 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get ebookShelvesFailed =>
       'Não foi possível mudar as estantes deste livro.';
+
+  @override
+  String get librarySearch => 'Buscar';
+
+  @override
+  String get librarySearchHint => 'Buscar por título ou autor';
+
+  @override
+  String get librarySearchClear => 'Limpar a busca';
+
+  @override
+  String get libraryFilterFormat => 'Formato';
+
+  @override
+  String get libraryAllFormats => 'Todos os formatos';
+
+  @override
+  String get libraryNoMatchesTitle => 'Nada encontrado';
+
+  @override
+  String get libraryNoMatchesMessage =>
+      'Nenhum livro do seu acervo combina com o que você pediu.';
+
+  @override
+  String get libraryClearFilters => 'Limpar os filtros';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1191,4 +1216,29 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get ebookShelvesFailed =>
       'Não foi possível mudar as estantes deste livro.';
+
+  @override
+  String get librarySearch => 'Buscar';
+
+  @override
+  String get librarySearchHint => 'Buscar por título ou autor';
+
+  @override
+  String get librarySearchClear => 'Limpar a busca';
+
+  @override
+  String get libraryFilterFormat => 'Formato';
+
+  @override
+  String get libraryAllFormats => 'Todos os formatos';
+
+  @override
+  String get libraryNoMatchesTitle => 'Nada encontrado';
+
+  @override
+  String get libraryNoMatchesMessage =>
+      'Nenhum livro do seu acervo combina com o que você pediu.';
+
+  @override
+  String get libraryClearFilters => 'Limpar os filtros';
 }

@@ -153,9 +153,7 @@ class _EbookScreenState extends State<EbookScreen> {
     await _model.delete.execute();
 
     if (_model.delete.result is Error<void>) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.ebookDeleteFailed)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.ebookDeleteFailed)));
 
       return;
     }
@@ -531,9 +529,7 @@ Future<void> _chooseShelves(BuildContext context, EbookViewModel model) async {
   );
 
   if (model.file.result is Error<void>) {
-    messenger.showSnackBar(
-      SnackBar(content: Text(l10n.ebookShelvesFailed)),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(l10n.ebookShelvesFailed)));
   }
 }
 

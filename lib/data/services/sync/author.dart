@@ -76,7 +76,12 @@ const String opAuthor = 'sync/author: write';
 /// keeps whatever device wrote it last and a field named as JSON null is a
 /// field the reader cleared. `delta.dart` is where that vocabulary is spelled.
 final class Change {
-  const Change._(this.key, this.kind, this.delta, {this.liftsTombstone = false});
+  const Change._(
+    this.key,
+    this.kind,
+    this.delta, {
+    this.liftsTombstone = false,
+  });
 
   /// A record this device is creating: a work, a grouping or a mark.
   ///

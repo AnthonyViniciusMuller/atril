@@ -211,14 +211,14 @@ void main() {
     // rather than assumed: a sixth client added under `data/services/api` is
     // covered by being called `*_api.dart`, and one that is not would otherwise
     // narrow this check out of existence quietly.
-    final clients = _dartFilesUnder(
-      apiDirectory,
-    ).where((File file) => file.path.endsWith('_api.dart'));
+    final clients = _dartFilesUnder(apiDirectory)
+        .where((File file) => file.path.endsWith('_api.dart'));
 
     expect(clients, isNotEmpty, reason: 'the clients are where they were');
 
     for (final client in clients) {
-      final imported = "import '../../${client.path.substring('lib/'.length)}';";
+      final imported =
+          "import '../../${client.path.substring('lib/'.length)}';";
 
       expect(
         canReachNode(path: 'lib/pretend.dart', source: imported),

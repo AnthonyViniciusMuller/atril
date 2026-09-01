@@ -177,5 +177,14 @@
   "ebookShelvesEdit": "Choose shelves",
   "ebookShelvesDialogTitle": "File under",
   "ebookShelvesNone": "You have not made any shelves yet.",
-  "ebookShelvesFailed": "This book's shelves could not be changed."
+  "ebookShelvesFailed": "This book's shelves could not be changed.",
+
+  "librarySearch": "Search",
+  "librarySearchHint": "Search by title or author",
+  "librarySearchClear": "Clear the search",
+  "libraryFilterFormat": "Format",
+  "libraryAllFormats": "All formats",
+  "libraryNoMatchesTitle": "Nothing found",
+  "libraryNoMatchesMessage": "No book in your library matches what you asked for.",
+  "libraryClearFilters": "Clear the filters"
 }

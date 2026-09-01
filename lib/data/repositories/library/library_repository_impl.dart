@@ -738,8 +738,24 @@ final class LibraryRepositoryImpl implements LibraryRepository {
     LibraryQuery query = const LibraryQuery(),
   ]) => _guard(
     library
-        .watchEbooks(collectionId: query.collectionId)
-        .map((rows) => _sorted(rows.map(ebookOfRow).toList(), query.sort)),
+        .watchEbooks(
+          collectionId: query.collectionId,
+          format: query.format?.wireName,
+        )
+        .map(
+          (rows) => _sorted(
+            // The search is matched here and not in SQL, on the same folded key
+            // the shelf is ordered by. `LIKE` in sqlite is ASCII-insensitive
+            // and nothing else, so a reader who typed `sertao` would find
+            // nothing — and one who typed `Sertão` would find it under a rule
+            // that disagrees with the order the results come back in.
+            <Ebook>[
+              for (final row in rows.map(ebookOfRow))
+                if (_matches(row, query.term)) row,
+            ],
+            query.sort,
+          ),
+        ),
   );
 
   @override
@@ -835,6 +851,29 @@ List<Ebook> _sorted(List<Ebook> works, LibrarySort sort) {
 }
 
 int _byName(Collection a, Collection b) => compareFolded(a.name, b.name);
+
+/// Whether [work] answers [term].
+///
+/// The title and the author, which are the two things a reader remembers about
+/// a book they are looking for. The publisher and the language are not: a
+/// search over them would return every book from one house for a term that
+/// happened to name one.
+///
+/// Every word has to match something, and not the whole phrase in order: a
+/// reader who types `rosa sertão` is naming an author and a title, and a search
+/// that required them adjacent would find nothing.
+bool _matches(Ebook work, String term) {
+  final words = term.trim().split(RegExp(r'\s+'))
+    ..removeWhere((String word) => word.isEmpty);
+
+  if (words.isEmpty) {
+    return true;
+  }
+
+  final haystack = '${work.title} ${work.author ?? ''}';
+
+  return words.every((String word) => containsFolded(haystack, word));
+}
 
 /// A work, as the replica holds it.
 ///

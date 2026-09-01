@@ -1076,6 +1076,54 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível mudar as estantes deste livro.'**
   String get ebookShelvesFailed;
+
+  /// Ação que abre o campo de busca na barra da biblioteca. Rótulo curto, usado como dica do botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Buscar'**
+  String get librarySearch;
+
+  /// Dica dentro do campo de busca. Diz onde a busca procura: título e autor, que são as duas coisas de que um leitor se lembra. Editora e idioma ficam de fora de propósito — buscar por elas devolveria a casa inteira por causa de uma palavra.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Buscar por título ou autor'**
+  String get librarySearchHint;
+
+  /// Ação que apaga o que foi digitado e fecha o campo de busca.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Limpar a busca'**
+  String get librarySearchClear;
+
+  /// Rótulo do menu que restringe a listagem a um formato de arquivo. Rótulo curto, usado como dica do botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Formato'**
+  String get libraryFilterFormat;
+
+  /// Opção do menu de formatos que desfaz a restrição e mostra o acervo inteiro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todos os formatos'**
+  String get libraryAllFormats;
+
+  /// Título mostrado quando o leitor tem livros e nenhum deles combina com a busca ou com o filtro de formato. É diferente do estado vazio da biblioteca e do de uma estante vazia: aqui foi o que se pediu que não achou nada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nada encontrado'**
+  String get libraryNoMatchesTitle;
+
+  /// Corpo do estado sem resultados, acompanhado do botão que desfaz todos os filtros de uma vez.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhum livro do seu acervo combina com o que você pediu.'**
+  String get libraryNoMatchesMessage;
+
+  /// Ação que desfaz de uma vez a busca, o formato e a estante escolhidos. É um botão só porque quem está olhando para uma lista vazia não deveria ter que desfazer três coisas uma a uma para descobrir qual delas era o problema.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Limpar os filtros'**
+  String get libraryClearFilters;
 }
 
 class _AppLocalizationsDelegate

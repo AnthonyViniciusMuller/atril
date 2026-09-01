@@ -116,9 +116,7 @@ void main() {
     expect(find.textContaining(l10n.shelvesCount(3)), findsOneWidget);
   });
 
-  testWidgets('creates the kind the reader chose', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('creates the kind the reader chose', (WidgetTester tester) async {
     final library = await pump(tester);
 
     await tester.tap(find.widgetWithText(FilledButton, l10n.shelvesCreate));

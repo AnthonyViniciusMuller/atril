@@ -303,9 +303,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(
         find.text(
-          MaterialLocalizations.of(
-            tester.element(find.byType(EbookScreen)),
-          ).cancelButtonLabel,
+          MaterialLocalizations.of(tester.element(find.byType(EbookScreen)))
+              .cancelButtonLabel,
         ),
       );
       await tester.pumpAndSettle();
@@ -402,9 +401,7 @@ void main() {
 
       expect(find.text(l10n.ebookShelvesDialogTitle), findsOneWidget);
       expect(
-        tester
-            .widget<CheckboxListTile>(find.byType(CheckboxListTile))
-            .value,
+        tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
         // The fake answers the same list for *every* shelf and for the ones
         // this work is on, which is a book already filed there.
         isTrue,

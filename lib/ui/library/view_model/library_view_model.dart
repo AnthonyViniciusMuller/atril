@@ -108,6 +108,23 @@ final class LibraryViewModel extends ChangeNotifier {
   void showCollection(String? collectionId) =>
       _ask(_query.within(collectionId));
 
+  /// Narrows the collection to [format], or widens it to every format.
+  void showFormat(EbookFormat? format) => _ask(_query.ofFormat(format));
+
+  /// Shows the works matching [term].
+  ///
+  /// There is no debounce and there is nothing to debounce: the answer is a
+  /// query over rows this device already holds and a fold over what came back,
+  /// so a keystroke costs what a keystroke costs. A delay here would be this
+  /// app pretending to wait for a network it is not talking to.
+  void search(String term) => _ask(_query.matching(term));
+
+  /// Undoes the search, the format and the shelf at once.
+  ///
+  /// One action, because a reader looking at nothing should not have to undo
+  /// three filters one at a time to find out which of them was the problem.
+  void clearFilters() => _ask(_query.widened);
+
   @override
   void dispose() {
     unawaited(_works?.cancel());

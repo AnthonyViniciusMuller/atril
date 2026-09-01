@@ -64,6 +64,11 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
+  final TextEditingController _search = TextEditingController();
+
+  /// Whether the app bar has turned into a search field.
+  bool _searching = false;
+
   late final LibraryViewModel _model = LibraryViewModel(
     library: context.read<LibraryRepository>(),
     picker: context.read<FilePicker>(),
@@ -78,8 +83,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void dispose() {
     _model.importBook.removeListener(_onImported);
+    _search.dispose();
     _model.dispose();
     super.dispose();
+  }
+
+  void _closeSearch() {
+    setState(() => _searching = false);
+    _search.clear();
+    _model.search('');
   }
 
   /// Says what happened to an import, once.
@@ -121,12 +133,43 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.navigationLibrary),
+        title: _searching
+            ? TextField(
+                controller: _search,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: l10n.librarySearchHint,
+                  border: InputBorder.none,
+                ),
+                // As it is typed. The answer is a query over rows this device
+                // already holds, so there is nothing to wait for and a
+                // debounce would be this app pretending to.
+                onChanged: _model.search,
+              )
+            : Text(l10n.navigationLibrary),
         actions: <Widget>[
-          IconButton(
-            onPressed: () => context.go(Routes.shelves),
-            tooltip: l10n.shelvesTitle,
-            icon: const Icon(Icons.shelves),
+          if (_searching)
+            IconButton(
+              onPressed: _closeSearch,
+              tooltip: l10n.librarySearchClear,
+              icon: const Icon(Icons.close),
+            )
+          else ...<Widget>[
+            IconButton(
+              onPressed: () => setState(() => _searching = true),
+              tooltip: l10n.librarySearch,
+              icon: const Icon(Icons.search),
+            ),
+            IconButton(
+              onPressed: () => context.go(Routes.shelves),
+              tooltip: l10n.shelvesTitle,
+              icon: const Icon(Icons.shelves),
+            ),
+          ],
+          ListenableBuilder(
+            listenable: _model,
+            builder: (BuildContext context, Widget? _) =>
+                _FormatMenu(model: _model),
           ),
           ListenableBuilder(
             listenable: _model,
@@ -196,6 +239,40 @@ class _SortMenu extends StatelessWidget {
           value: LibrarySort.author,
           child: Text(l10n.librarySortAuthor),
         ),
+      ],
+    );
+  }
+}
+
+/// The menu that narrows the shelf to one format.
+class _FormatMenu extends StatelessWidget {
+  const _FormatMenu({required this.model});
+
+  final LibraryViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopupMenuButton<EbookFormat?>(
+      icon: Icon(
+        model.query.format == null
+            ? Icons.filter_alt_outlined
+            : Icons.filter_alt,
+      ),
+      tooltip: l10n.libraryFilterFormat,
+      initialValue: model.query.format,
+      onSelected: model.showFormat,
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<EbookFormat?>>[
+        PopupMenuItem<EbookFormat?>(child: Text(l10n.libraryAllFormats)),
+        for (final format in EbookFormat.values)
+          PopupMenuItem<EbookFormat?>(
+            value: format,
+            // The format's own name, which is the token the contract, the
+            // node's column and this schema all spell. Translating it would
+            // name a format nothing else calls that.
+            child: Text(format.wireName.toUpperCase()), // l10n-ignore
+          ),
       ],
     );
   }
@@ -329,13 +406,23 @@ class _EmptyShelf extends StatelessWidget {
       );
     }
 
+    // Three emptinesses and not one, because they are three different things
+    // to tell a reader. *You have no books* is where to start; *nothing on
+    // this shelf* names a place; *nothing found* names what was asked for.
+    // Only the last two need a way out, and it is the same one.
+    final searched = model.query.isSearching || model.query.format != null;
+
     return _Message(
-      icon: Icons.filter_list_off,
-      title: l10n.libraryFilterEmptyTitle,
-      message: l10n.libraryFilterEmptyMessage,
+      icon: searched ? Icons.search_off : Icons.filter_list_off,
+      title: searched
+          ? l10n.libraryNoMatchesTitle
+          : l10n.libraryFilterEmptyTitle,
+      message: searched
+          ? l10n.libraryNoMatchesMessage
+          : l10n.libraryFilterEmptyMessage,
       action: TextButton(
-        onPressed: () => model.showCollection(null),
-        child: Text(l10n.libraryShowAll),
+        onPressed: model.clearFilters,
+        child: Text(searched ? l10n.libraryClearFilters : l10n.libraryShowAll),
       ),
     );
   }

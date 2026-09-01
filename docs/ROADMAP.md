@@ -793,8 +793,23 @@ that reason.
       closes, which is what a register makes natural — filing a work and filing it again are one
       request, so there is nothing to batch and nothing to undo if the reader walks away half way
       through
-- [ ] `feat: add search and filtering` — over the local replica, by title, author, collection and
-      format. No RPC: the collection is here
+- [x] `feat: add search and filtering` — over the local replica, by title, author, collection and
+      format. No RPC: the collection is here. The format is an equality on a column and stays in
+      SQL; the search is matched in Dart on the **same folded key the shelf is ordered by**, which
+      is the first commit of this phase paying for itself — `LIKE` in sqlite is ASCII-insensitive
+      and nothing else, so a reader who typed `sertao` would find nothing, and one who typed
+      `Sertão` would find it under a rule that disagreed with the order the results came back in.
+      Every word has to match something and not the phrase in order, because a reader who types
+      an author and a title is naming two things. It matches what it was given and does not guess
+      a plural: `sertao` does not find *Os Sertões*, and a stemmer would decide on the reader's
+      behalf which words are the same word — in a library that holds more than one language.
+      There are now **three** empty states rather than two: *you have no books* is where to
+      start, *nothing on this shelf* names a place, *nothing found* names what was asked for —
+      and the last two share one way out, which undoes the search, the format and the shelf at
+      once, because a reader looking at nothing should not have to undo three filters one at a
+      time to find out which was the problem. Nothing is debounced: the answer is a query over
+      rows this device already holds, and a delay would be this app pretending to wait for a
+      network it is not talking to
 
 ## Phase 9 — The reader (UC04)
 
