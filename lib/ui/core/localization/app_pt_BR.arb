@@ -870,5 +870,107 @@
         "example": "Vidas Secas"
       }
     }
+  },
+
+  "shelvesTitle": "Estantes",
+  "@shelvesTitle": {
+    "description": "Título da tela que administra as estantes e as categorias do leitor. Aparece também como rótulo da ação que leva até ela."
+  },
+
+  "shelvesCollections": "Estantes",
+  "@shelvesCollections": {
+    "description": "Cabeçalho da lista das estantes — os agrupamentos que o leitor montou. Fica separado das categorias porque as duas coisas são a mesma estrutura com significados diferentes, e misturá-las na tela seria apagar a diferença."
+  },
+
+  "shelvesCategories": "Categorias",
+  "@shelvesCategories": {
+    "description": "Cabeçalho da lista das categorias — os assuntos sob os quais o leitor arquivou obras. Uma estante é um agrupamento que o leitor montou; uma categoria é um assunto, e a tela não confunde os dois."
+  },
+
+  "shelvesEmpty": "Você ainda não criou nenhuma estante.",
+  "@shelvesEmpty": {
+    "description": "Estado vazio da tela de estantes, mostrado a quem não criou nenhum agrupamento."
+  },
+
+  "shelvesEmptyMessage": "Uma estante é um agrupamento que você monta; uma categoria é um assunto. Os dois arquivam as mesmas obras de jeitos diferentes.",
+  "@shelvesEmptyMessage": {
+    "description": "Corpo do estado vazio da tela de estantes. Explica a diferença entre os dois tipos, que é a única decisão que o leitor precisa tomar ao criar um."
+  },
+
+  "shelvesCreate": "Nova estante",
+  "@shelvesCreate": {
+    "description": "Ação que abre o formulário de criação de uma estante ou categoria."
+  },
+
+  "shelvesEditTitle": "Editar estante",
+  "@shelvesEditTitle": {
+    "description": "Título do formulário quando ele está editando um agrupamento que já existe."
+  },
+
+  "shelvesNameLabel": "Nome",
+  "@shelvesNameLabel": {
+    "description": "Rótulo do campo do nome da estante. É o único campo obrigatório."
+  },
+
+  "shelvesNameRequired": "O nome não pode ficar em branco.",
+  "@shelvesNameRequired": {
+    "description": "Erro do campo do nome quando ele fica vazio. Um agrupamento sem nome é recusado pelo contrato e pela restrição da coluna, então o formulário recusa antes."
+  },
+
+  "shelvesDescriptionLabel": "Para que serve",
+  "@shelvesDescriptionLabel": {
+    "description": "Rótulo do campo opcional que descreve a estante — o que o leitor guarda nela."
+  },
+
+  "shelvesKindCollection": "Estante",
+  "@shelvesKindCollection": {
+    "description": "Opção do seletor de tipo: um agrupamento que o leitor montou."
+  },
+
+  "shelvesKindCategory": "Categoria",
+  "@shelvesKindCategory": {
+    "description": "Opção do seletor de tipo: um assunto sob o qual o leitor arquiva obras."
+  },
+
+  "shelvesSave": "Salvar",
+  "@shelvesSave": {
+    "description": "Botão que grava a estante, criada ou editada."
+  },
+
+  "shelvesSaveFailed": "Não foi possível salvar esta estante.",
+  "@shelvesSaveFailed": {
+    "description": "Erro geral ao criar ou editar uma estante."
+  },
+
+  "shelvesDelete": "Excluir",
+  "@shelvesDelete": {
+    "description": "Ação que exclui uma estante. Rótulo curto, no menu de cada linha da lista."
+  },
+
+  "shelvesDeleted": "{name} foi excluída. Os livros continuam no acervo.",
+  "@shelvesDeleted": {
+    "description": "Confirmação depois de excluir uma estante, junto com a ação de desfazer. Diz numa frase só que os livros ficam, porque é exatamente o medo que impede alguém de arrumar o próprio acervo — e porque duas mensagens juntadas com um espaço em Dart seriam uma frase montada fora do arquivo de tradução. A concordância é feminina porque \"estante\" é feminino em português; a mesma mensagem serve para uma categoria, que também é.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Para reler"
+      }
+    }
+  },
+
+
+  "shelvesDeleteFailed": "Não foi possível excluir esta estante.",
+  "@shelvesDeleteFailed": {
+    "description": "Erro geral ao excluir uma estante."
+  },
+
+  "shelvesCount": "{count, plural, =0{Nenhum livro} =1{1 livro} other{{count} livros}}",
+  "@shelvesCount": {
+    "description": "Quantos livros estão arquivados em uma estante, mostrado abaixo do nome dela.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

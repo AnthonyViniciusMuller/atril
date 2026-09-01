@@ -153,5 +153,24 @@
   "ebookDeleted": "{title} was deleted.",
   "ebookDeleteUndo": "Undo",
   "ebookDeleteFailed": "This book could not be deleted.",
-  "ebookRestored": "{title} is back in your library."
+  "ebookRestored": "{title} is back in your library.",
+
+  "shelvesTitle": "Shelves",
+  "shelvesCollections": "Shelves",
+  "shelvesCategories": "Categories",
+  "shelvesEmpty": "You have not made any shelves yet.",
+  "shelvesEmptyMessage": "A shelf is a grouping you put together; a category is a subject. Both file the same works in different ways.",
+  "shelvesCreate": "New shelf",
+  "shelvesEditTitle": "Edit shelf",
+  "shelvesNameLabel": "Name",
+  "shelvesNameRequired": "The name cannot be blank.",
+  "shelvesDescriptionLabel": "What it is for",
+  "shelvesKindCollection": "Shelf",
+  "shelvesKindCategory": "Category",
+  "shelvesSave": "Save",
+  "shelvesSaveFailed": "This shelf could not be saved.",
+  "shelvesDelete": "Delete",
+  "shelvesDeleted": "{name} was deleted. The books stay in your library.",
+  "shelvesDeleteFailed": "This shelf could not be deleted.",
+  "shelvesCount": "{count, plural, =0{No books} =1{1 book} other{{count} books}}"
 }

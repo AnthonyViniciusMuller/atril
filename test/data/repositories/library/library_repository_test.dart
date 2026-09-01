@@ -813,6 +813,136 @@ void main() {
     });
   });
 
+  group('a grouping', () {
+    test('is created as an operation this device owes', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler'),
+      );
+
+      final owed = (await database.syncDao.pending()).single;
+
+      expect((result as Ok<Collection>).value.name, 'Para reler');
+      expect(owed.entity, TargetEntity.collection);
+      expect(owed.kind, OperationKind.insert);
+      expect(owed.delta[fieldKind], 'collection');
+    });
+
+    test('carries the kind the reader chose', () async {
+      // A collection is a grouping the reader put together and a category is a
+      // subject. One structure, two meanings, and the choice is the reader's.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.createCollection(
+        const CollectionEdits(name: 'Sertão', kind: CollectionKind.category),
+      );
+
+      expect(
+        (result as Ok<Collection>).value.kind,
+        CollectionKind.category,
+      );
+    });
+
+    test('claims only what an edit changed', () async {
+      final database = _open();
+      final repository = await _repository(database);
+      final created = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler', description: 'Um dia'),
+      );
+      final id = (created as Ok<Collection>).value.id;
+
+      await repository.editCollection(
+        id,
+        const CollectionEdits(name: 'Reler', description: 'Um dia'),
+      );
+
+      final delta = (await database.syncDao.pending()).last.delta;
+
+      expect(delta, <String, Object?>{fieldName: 'Reler'});
+    });
+
+    test('is not an operation when an edit changed nothing', () async {
+      final database = _open();
+      final repository = await _repository(database);
+      final created = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler'),
+      );
+      final id = (created as Ok<Collection>).value.id;
+      final before = (await database.syncDao.pending()).length;
+
+      await repository.editCollection(
+        id,
+        const CollectionEdits(name: 'Para reler'),
+      );
+
+      expect(await database.syncDao.pending(), hasLength(before));
+    });
+
+    test('is tombstoned rather than removed, and comes back', () async {
+      final database = _open();
+      final repository = await _repository(database);
+      final created = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler'),
+      );
+      final id = (created as Ok<Collection>).value.id;
+
+      await repository.deleteCollection(id);
+
+      expect(await repository.watchCollections().first, isA<Ok<List<Collection>>>()
+          .having(
+            (result) => result.value,
+            'the groupings on the shelf screen',
+            isEmpty,
+          ));
+      expect(await database.libraryDao.readCollection(id), isNotNull);
+
+      await repository.restoreCollection(id);
+
+      expect(
+        ((await repository.watchCollections().first)
+                as Ok<List<Collection>>)
+            .value,
+        hasLength(1),
+      );
+    });
+
+    test('leaves the works behind when it is deleted', () async {
+      // Deleting a shelf is not deleting what was on it, which is what the
+      // contract says where `DeleteCollection` is declared.
+      final database = _open();
+      final repository = await _repository(database);
+      final imported = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final created = await repository.createCollection(
+        const CollectionEdits(name: 'Para reler'),
+      );
+
+      await repository.deleteCollection((created as Ok<Collection>).value.id);
+
+      expect((await repository.watchEbooks().first).titles, <String>[
+        (imported as Ok<Ebook>).value.title,
+      ]);
+    });
+
+    test('refuses an edit to a grouping this device does not hold', () async {
+      final repository = await _repository(_open());
+
+      final result = await repository.editCollection(
+        'ffffffff-1111-4111-8111-111111111111',
+        const CollectionEdits(name: 'Nada'),
+      );
+
+      expect(
+        ((result as Error<void>).error as AppException).kind,
+        ErrorKind.notFound,
+      );
+    });
+  });
+
   group('what this device keeps', () {
     test('is every book, on a target that keeps everything', () async {
       final database = _open();

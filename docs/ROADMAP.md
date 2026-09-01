@@ -769,9 +769,18 @@ that reason.
       files that could be *making* a call: the ones under `data/services/api` and the ones that
       import a client, the stubs or `package:grpc`. The narrowing is itself pinned, by asserting
       that every `*_api.dart` there counts as a client
-- [ ] `feat: add collections` — UC03. Create, rename, describe, delete, and the two kinds the
+- [x] `feat: add collections` — UC03. Create, rename, describe, delete, and the two kinds the
       contract admits. A collection is a grouping the reader defined and a category is not, and
-      the screen does not blur them
+      the screen does not blur them: two headings, two lists, and one choice in the form that
+      makes either. A single list with a badge would be this app deciding the distinction does
+      not matter, which is a decision about the reader's library and not this app's to take —
+      and the split lives in the view model, where it can be tested, rather than in a widget
+      filtering as it builds. Deleting a shelf is not deleting what was on it, and the message
+      says so **in the same sentence** rather than in two joined with a space: the fear that
+      stops somebody tidying their library is exactly that, and where that clause goes is a
+      translator's decision. The route is `/library/shelves`, declared *before* `/library/:ebookId`
+      because `go_router` matches in declaration order and a parameter would otherwise swallow a
+      literal and try to show a book called *shelves*
 - [ ] `feat: add filing a work under a collection` — UC02, and the reason C06 exists: two devices
       that add and remove the same book from the same shelf while offline reach the same answer,
       because membership is a register per pair and not a row

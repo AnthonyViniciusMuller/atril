@@ -327,6 +327,77 @@ final class FakeLibraryRepository implements LibraryRepository {
         : Result<void>.error(refused);
   }
 
+  /// Every grouping it was asked to create, in order.
+  final List<CollectionEdits> created = <CollectionEdits>[];
+
+  /// Every change to a grouping, as `(collectionId, edits)`.
+  final List<(String, CollectionEdits)> collectionEdits =
+      <(String, CollectionEdits)>[];
+
+  /// Every grouping it was asked to tombstone, and to bring back.
+  final List<String> deletedCollections = <String>[];
+
+  /// Every grouping it was asked to bring back, in order.
+  final List<String> restoredCollections = <String>[];
+
+  @override
+  Future<Result<Collection>> createCollection(CollectionEdits edits) async {
+    created.add(edits);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<Collection>.error(refused);
+    }
+
+    return Result<Collection>.ok(
+      Collection(
+        id: 'created',
+        name: edits.name,
+        kind: edits.kind,
+        description: edits.description,
+        createdAt: DateTime.utc(2026, 8, 31),
+        revision: Revision(
+          vectorClock: VectorClock.empty.tick('device'),
+          updatedAt: DateTime.utc(2026, 8, 31),
+          deviceId: 'device',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<void>> editCollection(
+    String collectionId,
+    CollectionEdits edits,
+  ) async {
+    collectionEdits.add((collectionId, edits));
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  @override
+  Future<Result<void>> deleteCollection(String collectionId) async {
+    deletedCollections.add(collectionId);
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  @override
+  Future<Result<void>> restoreCollection(String collectionId) async {
+    restoredCollections.add(collectionId);
+
+    return const Result<void>.ok(null);
+  }
+
   /// Every work it was asked to tombstone, in order.
   final List<String> deleted = <String>[];
 

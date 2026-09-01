@@ -37,6 +37,7 @@ import '../ui/core/ui/not_found_screen.dart';
 import '../ui/library/widgets/ebook_edit_screen.dart';
 import '../ui/library/widgets/ebook_screen.dart';
 import '../ui/library/widgets/library_screen.dart';
+import '../ui/library/widgets/shelves_screen.dart';
 import '../ui/onboarding/widgets/password_reset_screen.dart';
 import '../ui/onboarding/widgets/recovery_screen.dart';
 import '../ui/onboarding/widgets/register_screen.dart';
@@ -143,6 +144,14 @@ GoRouter atrilRouter({
                 // what makes the location survive a reload in a browser and a
                 // link somebody pasted.
                 routes: <RouteBase>[
+                  // Before the parameter, deliberately: `go_router` matches in
+                  // declaration order, and `:ebookId` would otherwise swallow
+                  // this and try to show a book called *shelves*.
+                  GoRoute(
+                    path: Routes.shelvesSegment,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const ShelvesScreen(),
+                  ),
                   GoRoute(
                     path: Routes.ebookSegment,
                     builder: (BuildContext context, GoRouterState state) =>

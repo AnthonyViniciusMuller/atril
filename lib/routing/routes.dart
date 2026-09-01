@@ -87,6 +87,19 @@ abstract final class Routes {
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 
+  /// The path segment the reader's groupings are shown under, relative to
+  /// [library].
+  ///
+  /// It is declared **before** [ebookSegment] in the route table, and that
+  /// ordering is the whole of why a literal segment can live beside a
+  /// parameter: `go_router` matches routes in the order they are declared, and
+  /// `:ebookId` would otherwise swallow this one and try to show a book called
+  /// *shelves*.
+  static const String shelvesSegment = 'shelves';
+
+  /// Where the reader's groupings are managed.
+  static const String shelves = '$library/$shelvesSegment';
+
   /// The path segment one work is shown under, relative to [library].
   ///
   /// It is nested rather than a location of its own, so that a reader who

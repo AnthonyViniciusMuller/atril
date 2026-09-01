@@ -123,6 +123,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
       appBar: AppBar(
         title: Text(l10n.navigationLibrary),
         actions: <Widget>[
+          IconButton(
+            onPressed: () => context.go(Routes.shelves),
+            tooltip: l10n.shelvesTitle,
+            icon: const Icon(Icons.shelves),
+          ),
           ListenableBuilder(
             listenable: _model,
             builder: (BuildContext context, Widget? _) =>

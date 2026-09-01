@@ -93,8 +93,60 @@ final class EbookEdits {
   String toString() => 'EbookEdits($title)';
 }
 
+/// What a reader called a grouping, and what they said it is for (UC03).
+///
+/// The kind is here because it is the reader's to choose and not this app's to
+/// infer: a *collection* is a grouping they put together and a *category* is a
+/// subject they filed a work under. They are one structure with two meanings —
+/// which is what lets RF05 offer both without a second entity — and the screen
+/// is what keeps them apart.
+final class CollectionEdits {
+  /// The grouping called [name].
+  const CollectionEdits({
+    required this.name,
+    this.kind = CollectionKind.collection,
+    this.description,
+  });
+
+  /// What the reader calls it. A grouping cannot be without one.
+  final String name;
+
+  /// Which of the two meanings it carries.
+  final CollectionKind kind;
+
+  /// What the reader said it is for, or `null` where they cleared it.
+  final String? description;
+
+  @override
+  String toString() => 'CollectionEdits($name, $kind)';
+}
+
 /// The reader's collection.
 abstract interface class LibraryRepository {
+  /// UC03, create. Adds a grouping the reader defined.
+  ///
+  /// It answers with the grouping as the replica now holds it, which is the
+  /// reconciler's account and not this repository's: what a record *is* after
+  /// a change is one question with one answer.
+  Future<Result<Collection>> createCollection(CollectionEdits edits);
+
+  /// UC03, update. Records what the reader changed about a grouping.
+  ///
+  /// It claims exactly the fields that differ, for the reason an edit to a
+  /// work does (C17): a delta restating a name nobody touched carries this
+  /// device's claim to it.
+  Future<Result<void>> editCollection(String collectionId, CollectionEdits edits);
+
+  /// UC03, delete. Tombstones a grouping.
+  ///
+  /// The works survive it. Deleting a shelf is not deleting what was on it —
+  /// the contract says so where `DeleteCollection` is declared — and the
+  /// filings go with the shelf rather than the books.
+  Future<Result<void>> deleteCollection(String collectionId);
+
+  /// Brings back a grouping this device tombstoned.
+  Future<Result<void>> restoreCollection(String collectionId);
+
   /// RF05. Records what the reader changed about one work.
   ///
   /// It claims exactly the fields that differ from the record, and nothing

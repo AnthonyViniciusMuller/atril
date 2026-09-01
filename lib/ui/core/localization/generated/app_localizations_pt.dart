@@ -518,6 +518,72 @@ class AppLocalizationsPt extends AppLocalizations {
   String ebookRestored(String title) {
     return '$title voltou para o acervo.';
   }
+
+  @override
+  String get shelvesTitle => 'Estantes';
+
+  @override
+  String get shelvesCollections => 'Estantes';
+
+  @override
+  String get shelvesCategories => 'Categorias';
+
+  @override
+  String get shelvesEmpty => 'Você ainda não criou nenhuma estante.';
+
+  @override
+  String get shelvesEmptyMessage =>
+      'Uma estante é um agrupamento que você monta; uma categoria é um assunto. Os dois arquivam as mesmas obras de jeitos diferentes.';
+
+  @override
+  String get shelvesCreate => 'Nova estante';
+
+  @override
+  String get shelvesEditTitle => 'Editar estante';
+
+  @override
+  String get shelvesNameLabel => 'Nome';
+
+  @override
+  String get shelvesNameRequired => 'O nome não pode ficar em branco.';
+
+  @override
+  String get shelvesDescriptionLabel => 'Para que serve';
+
+  @override
+  String get shelvesKindCollection => 'Estante';
+
+  @override
+  String get shelvesKindCategory => 'Categoria';
+
+  @override
+  String get shelvesSave => 'Salvar';
+
+  @override
+  String get shelvesSaveFailed => 'Não foi possível salvar esta estante.';
+
+  @override
+  String get shelvesDelete => 'Excluir';
+
+  @override
+  String shelvesDeleted(String name) {
+    return '$name foi excluída. Os livros continuam no acervo.';
+  }
+
+  @override
+  String get shelvesDeleteFailed => 'Não foi possível excluir esta estante.';
+
+  @override
+  String shelvesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livros',
+      one: '1 livro',
+      zero: 'Nenhum livro',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1032,5 +1098,71 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String ebookRestored(String title) {
     return '$title voltou para o acervo.';
+  }
+
+  @override
+  String get shelvesTitle => 'Estantes';
+
+  @override
+  String get shelvesCollections => 'Estantes';
+
+  @override
+  String get shelvesCategories => 'Categorias';
+
+  @override
+  String get shelvesEmpty => 'Você ainda não criou nenhuma estante.';
+
+  @override
+  String get shelvesEmptyMessage =>
+      'Uma estante é um agrupamento que você monta; uma categoria é um assunto. Os dois arquivam as mesmas obras de jeitos diferentes.';
+
+  @override
+  String get shelvesCreate => 'Nova estante';
+
+  @override
+  String get shelvesEditTitle => 'Editar estante';
+
+  @override
+  String get shelvesNameLabel => 'Nome';
+
+  @override
+  String get shelvesNameRequired => 'O nome não pode ficar em branco.';
+
+  @override
+  String get shelvesDescriptionLabel => 'Para que serve';
+
+  @override
+  String get shelvesKindCollection => 'Estante';
+
+  @override
+  String get shelvesKindCategory => 'Categoria';
+
+  @override
+  String get shelvesSave => 'Salvar';
+
+  @override
+  String get shelvesSaveFailed => 'Não foi possível salvar esta estante.';
+
+  @override
+  String get shelvesDelete => 'Excluir';
+
+  @override
+  String shelvesDeleted(String name) {
+    return '$name foi excluída. Os livros continuam no acervo.';
+  }
+
+  @override
+  String get shelvesDeleteFailed => 'Não foi possível excluir esta estante.';
+
+  @override
+  String shelvesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count livros',
+      one: '1 livro',
+      zero: 'Nenhum livro',
+    );
+    return '$_temp0';
   }
 }

@@ -518,4 +518,70 @@ class AppLocalizationsEn extends AppLocalizations {
   String ebookRestored(String title) {
     return '$title is back in your library.';
   }
+
+  @override
+  String get shelvesTitle => 'Shelves';
+
+  @override
+  String get shelvesCollections => 'Shelves';
+
+  @override
+  String get shelvesCategories => 'Categories';
+
+  @override
+  String get shelvesEmpty => 'You have not made any shelves yet.';
+
+  @override
+  String get shelvesEmptyMessage =>
+      'A shelf is a grouping you put together; a category is a subject. Both file the same works in different ways.';
+
+  @override
+  String get shelvesCreate => 'New shelf';
+
+  @override
+  String get shelvesEditTitle => 'Edit shelf';
+
+  @override
+  String get shelvesNameLabel => 'Name';
+
+  @override
+  String get shelvesNameRequired => 'The name cannot be blank.';
+
+  @override
+  String get shelvesDescriptionLabel => 'What it is for';
+
+  @override
+  String get shelvesKindCollection => 'Shelf';
+
+  @override
+  String get shelvesKindCategory => 'Category';
+
+  @override
+  String get shelvesSave => 'Save';
+
+  @override
+  String get shelvesSaveFailed => 'This shelf could not be saved.';
+
+  @override
+  String get shelvesDelete => 'Delete';
+
+  @override
+  String shelvesDeleted(String name) {
+    return '$name was deleted. The books stay in your library.';
+  }
+
+  @override
+  String get shelvesDeleteFailed => 'This shelf could not be deleted.';
+
+  @override
+  String shelvesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+      zero: 'No books',
+    );
+    return '$_temp0';
+  }
 }

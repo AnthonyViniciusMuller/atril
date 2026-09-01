@@ -944,6 +944,114 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{title} voltou para o acervo.'**
   String ebookRestored(String title);
+
+  /// Título da tela que administra as estantes e as categorias do leitor. Aparece também como rótulo da ação que leva até ela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Estantes'**
+  String get shelvesTitle;
+
+  /// Cabeçalho da lista das estantes — os agrupamentos que o leitor montou. Fica separado das categorias porque as duas coisas são a mesma estrutura com significados diferentes, e misturá-las na tela seria apagar a diferença.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Estantes'**
+  String get shelvesCollections;
+
+  /// Cabeçalho da lista das categorias — os assuntos sob os quais o leitor arquivou obras. Uma estante é um agrupamento que o leitor montou; uma categoria é um assunto, e a tela não confunde os dois.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Categorias'**
+  String get shelvesCategories;
+
+  /// Estado vazio da tela de estantes, mostrado a quem não criou nenhum agrupamento.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você ainda não criou nenhuma estante.'**
+  String get shelvesEmpty;
+
+  /// Corpo do estado vazio da tela de estantes. Explica a diferença entre os dois tipos, que é a única decisão que o leitor precisa tomar ao criar um.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Uma estante é um agrupamento que você monta; uma categoria é um assunto. Os dois arquivam as mesmas obras de jeitos diferentes.'**
+  String get shelvesEmptyMessage;
+
+  /// Ação que abre o formulário de criação de uma estante ou categoria.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nova estante'**
+  String get shelvesCreate;
+
+  /// Título do formulário quando ele está editando um agrupamento que já existe.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Editar estante'**
+  String get shelvesEditTitle;
+
+  /// Rótulo do campo do nome da estante. É o único campo obrigatório.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome'**
+  String get shelvesNameLabel;
+
+  /// Erro do campo do nome quando ele fica vazio. Um agrupamento sem nome é recusado pelo contrato e pela restrição da coluna, então o formulário recusa antes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O nome não pode ficar em branco.'**
+  String get shelvesNameRequired;
+
+  /// Rótulo do campo opcional que descreve a estante — o que o leitor guarda nela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Para que serve'**
+  String get shelvesDescriptionLabel;
+
+  /// Opção do seletor de tipo: um agrupamento que o leitor montou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Estante'**
+  String get shelvesKindCollection;
+
+  /// Opção do seletor de tipo: um assunto sob o qual o leitor arquiva obras.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Categoria'**
+  String get shelvesKindCategory;
+
+  /// Botão que grava a estante, criada ou editada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Salvar'**
+  String get shelvesSave;
+
+  /// Erro geral ao criar ou editar uma estante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível salvar esta estante.'**
+  String get shelvesSaveFailed;
+
+  /// Ação que exclui uma estante. Rótulo curto, no menu de cada linha da lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Excluir'**
+  String get shelvesDelete;
+
+  /// Confirmação depois de excluir uma estante, junto com a ação de desfazer. Diz numa frase só que os livros ficam, porque é exatamente o medo que impede alguém de arrumar o próprio acervo — e porque duas mensagens juntadas com um espaço em Dart seriam uma frase montada fora do arquivo de tradução. A concordância é feminina porque "estante" é feminino em português; a mesma mensagem serve para uma categoria, que também é.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{name} foi excluída. Os livros continuam no acervo.'**
+  String shelvesDeleted(String name);
+
+  /// Erro geral ao excluir uma estante.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível excluir esta estante.'**
+  String get shelvesDeleteFailed;
+
+  /// Quantos livros estão arquivados em uma estante, mostrado abaixo do nome dela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{count, plural, =0{Nenhum livro} =1{1 livro} other{{count} livros}}'**
+  String shelvesCount(int count);
 }
 
 class _AppLocalizationsDelegate

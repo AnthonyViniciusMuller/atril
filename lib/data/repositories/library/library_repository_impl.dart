@@ -52,6 +52,9 @@ const String opEdit = 'library/collection: edit';
 /// The operation a deletion and its undo report under.
 const String opDelete = 'library/collection: delete';
 
+/// The operation a change to a grouping reports under.
+const String opGrouping = 'library/groupings: write';
+
 /// [value], or `null` where it holds nothing.
 ///
 /// An object with no entries and no object at all are the same claim about a
@@ -544,6 +547,104 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       _log.warning('$ebookId could not be edited', error, stackTrace);
 
       return Result<void>.error(failureFrom(error, op: opEdit));
+    }
+  }
+
+  @override
+  Future<Result<Collection>> createCollection(CollectionEdits edits) async {
+    try {
+      final id = _mint();
+      final claims = DeltaWriter()
+        ..text(fieldName, edits.name.trim())
+        ..text(fieldKind, edits.kind.wireName)
+        ..text(fieldDescription, _blankIsCleared(edits.description))
+        ..instant(fieldCreatedAt, _now().toUtc());
+
+      await author.write(
+        Change.insert(TargetEntity.collection, id, claims.fields),
+      );
+
+      return Result<Collection>.ok(
+        collectionOfRow((await library.readCollection(id))!),
+      );
+    } on Object catch (error, stackTrace) {
+      _log.warning('the grouping could not be created', error, stackTrace);
+
+      return Result<Collection>.error(failureFrom(error, op: opGrouping));
+    }
+  }
+
+  @override
+  Future<Result<void>> editCollection(
+    String collectionId,
+    CollectionEdits edits,
+  ) async {
+    try {
+      final row = await library.readCollection(collectionId);
+
+      if (row == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no grouping called $collectionId',
+          op: opGrouping,
+        );
+      }
+
+      final claims = DeltaWriter()
+        ..text(fieldName, edits.name.trim(), current: row.name)
+        ..text(fieldKind, edits.kind.wireName, current: row.kind)
+        ..text(
+          fieldDescription,
+          _blankIsCleared(edits.description),
+          current: row.description,
+        );
+
+      if (claims.isEmpty) {
+        return const Result<void>.ok(null);
+      }
+
+      await author.write(
+        Change.update(TargetEntity.collection, collectionId, claims.fields),
+      );
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning('$collectionId could not be edited', error, stackTrace);
+
+      return Result<void>.error(failureFrom(error, op: opGrouping));
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteCollection(String collectionId) => _grouping(
+    collectionId,
+    Change.delete(TargetEntity.collection, collectionId),
+  );
+
+  @override
+  Future<Result<void>> restoreCollection(String collectionId) => _grouping(
+    collectionId,
+    Change.restore(TargetEntity.collection, collectionId),
+  );
+
+  /// Authors [change] against the grouping [collectionId] names.
+  Future<Result<void>> _grouping(String collectionId, Change change) async {
+    try {
+      if (await library.readCollection(collectionId) == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no grouping called $collectionId',
+          op: opGrouping,
+        );
+      }
+
+      await author.write(change);
+
+      return const Result<void>.ok(null);
+    } on Object catch (error, stackTrace) {
+      _log.warning('$change on $collectionId did not apply', error, stackTrace);
+
+      return Result<void>.error(failureFrom(error, op: opGrouping));
     }
   }
 
