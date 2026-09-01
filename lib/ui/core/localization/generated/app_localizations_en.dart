@@ -1252,4 +1252,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get replicasRevokeFailed => 'That authorization could not be revoked.';
+
+  @override
+  String get settingsMigrate => 'Move to another server';
+
+  @override
+  String get settingsMigrateExplanation =>
+      'Take your library to a different server.';
+
+  @override
+  String get migrationStepWhat => 'What this does';
+
+  @override
+  String get migrationExplanation =>
+      'Your whole library is on this device, which is why it can move to another server without the current one agreeing — or even being up. Nothing is asked of it and nothing is lost there.';
+
+  @override
+  String migrationIdentifierChanges(String localName, String domain) {
+    return 'Your identifier changes. Its second half is the server’s domain, so @$localName:$domain becomes a different name — one that holds the same history.';
+  }
+
+  @override
+  String get migrationReauthorize =>
+      'Servers that held a copy have to be authorized again, because their authorization names the old identifier.';
+
+  @override
+  String get migrationIrreversible => 'It cannot be undone.';
+
+  @override
+  String get migrationStepServer => 'Where to';
+
+  @override
+  String get migrationDomainLabel => 'New server domain';
+
+  @override
+  String get migrationConnectsAtTheEnd =>
+      'This device only starts talking to the new server at the last step. Until then it stays on the current one.';
+
+  @override
+  String get migrationLocalNameLabel => 'Username at the new server';
+
+  @override
+  String get migrationDisplayNameLabel => 'Display name';
+
+  @override
+  String get migrationEmailLabel => 'Email';
+
+  @override
+  String get migrationPasswordLabel => 'Password at the new server';
+
+  @override
+  String get migrationInvalidDomain => 'That is not a server domain.';
+
+  @override
+  String get migrationInvalidLocalName =>
+      'Use lower-case letters, digits, and . - _ between them.';
+
+  @override
+  String get migrationInvalidDisplayName => 'Enter a name.';
+
+  @override
+  String get migrationInvalidEmail => 'Enter a valid email address.';
+
+  @override
+  String get migrationInvalidPassword =>
+      'The password needs at least 8 characters.';
+
+  @override
+  String get migrationStepDevices => 'What travels';
+
+  @override
+  String get migrationDevicesExplanation =>
+      'All your devices travel, with the identifiers they already hold. It is what lets each of them go on from where it stopped: every change names the device that made it.';
+
+  @override
+  String get migrationThisDevice => 'This device';
+
+  @override
+  String migrationUnnamedDevice(String handle) {
+    return 'Device $handle';
+  }
+
+  @override
+  String get migrationDevicesUnnamed =>
+      'The current server did not answer, so the names are gone. The identifiers came from the history kept on this device, which is the half that cannot be recreated — you can rename each device afterwards.';
+
+  @override
+  String get migrationDevicesFailed => 'Your devices could not be worked out.';
+
+  @override
+  String get migrationStepConfirm => 'Confirm';
+
+  @override
+  String migrationSummary(String localName, String domain, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count devices',
+      one: '1 device',
+    );
+    return '@$localName:$domain becomes your account, with $_temp0 and your whole library.';
+  }
+
+  @override
+  String get migrationNothingIsCleared =>
+      'Nothing is erased from this device. Whatever has not been handed over yet stays queued and is sent to the new server.';
+
+  @override
+  String get migrationGo => 'Move';
+
+  @override
+  String get migrationBack => 'Back';
+
+  @override
+  String get migrationNext => 'Continue';
+
+  @override
+  String migrationDone(String federatedId) {
+    return 'You are now $federatedId.';
+  }
+
+  @override
+  String get migrationFailed =>
+      'The migration did not happen. This device is still on the server it was on.';
+
+  @override
+  String get migrationNameTaken =>
+      'That username already exists on that server.';
 }

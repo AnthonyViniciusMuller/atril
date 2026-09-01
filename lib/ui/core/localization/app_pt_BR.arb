@@ -2041,5 +2041,204 @@
   "replicasRevokeFailed": "Não foi possível revogar esta autorização.",
   "@replicasRevokeFailed": {
     "description": "Erro mostrado quando a revogação de uma autorização falha."
+  },
+
+  "settingsMigrate": "Mudar de servidor de origem",
+  "@settingsMigrate": {
+    "description": "Item da tela de configurações que leva ao assistente de migração de servidor de origem. Também é o título dessa tela."
+  },
+
+  "settingsMigrateExplanation": "Levar a sua biblioteca para outro servidor.",
+  "@settingsMigrateExplanation": {
+    "description": "Subtítulo do item das configurações que leva à migração. Uma frase dizendo o que o leitor vai encontrar lá."
+  },
+
+  "migrationStepWhat": "O que isto faz",
+  "@migrationStepWhat": {
+    "description": "Título do primeiro passo do assistente de migração, o que explica a operação antes de pedir qualquer coisa."
+  },
+
+  "migrationExplanation": "A sua biblioteca inteira está neste aparelho, e é por isso que ela pode ir para outro servidor sem que o atual precise concordar — nem estar no ar. Nada é pedido a ele e nada se perde lá.",
+  "@migrationExplanation": {
+    "description": "Parágrafo principal do primeiro passo do assistente: por que a migração não depende do servidor de origem atual. RF17 e a independência que a correção C11 descreve."
+  },
+
+  "migrationIdentifierChanges": "O seu identificador muda. A segunda metade dele é o domínio do servidor, então @{localName}:{domain} passa a ser outro nome — que guarda a mesma história.",
+  "@migrationIdentifierChanges": {
+    "description": "Aviso do primeiro passo do assistente: a migração preserva os dados e não o nome. Os parâmetros são o nome local e o domínio atuais do leitor.",
+    "placeholders": {
+      "localName": {
+        "type": "String"
+      },
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "migrationReauthorize": "Os servidores que guardavam uma cópia sua precisam ser autorizados de novo, porque a autorização deles nomeia o identificador antigo.",
+  "@migrationReauthorize": {
+    "description": "Aviso do primeiro passo do assistente: as réplicas não seguem o leitor sozinhas. Correção C11."
+  },
+
+  "migrationIrreversible": "Não dá para desfazer.",
+  "@migrationIrreversible": {
+    "description": "Aviso do primeiro passo do assistente, dito sozinho e em uma frase curta, porque é a razão de a tela ser um assistente e não um botão."
+  },
+
+  "migrationStepServer": "Para onde",
+  "@migrationStepServer": {
+    "description": "Título do passo do assistente em que o leitor informa o domínio do servidor de destino e cria a conta que terá lá."
+  },
+
+  "migrationDomainLabel": "Endereço do novo servidor",
+  "@migrationDomainLabel": {
+    "description": "Rótulo do campo onde o leitor digita o domínio do servidor para o qual está indo."
+  },
+
+  "migrationConnectsAtTheEnd": "Este aparelho só passa a falar com o novo servidor no último passo. Até lá ele continua no atual.",
+  "@migrationConnectsAtTheEnd": {
+    "description": "Nota abaixo do campo de domínio, dizendo quando a conexão muda. Existe porque apontar o aparelho antes de o leitor confirmar o deixaria falando com um servidor onde ele não tem conta."
+  },
+
+  "migrationLocalNameLabel": "Nome de usuário no novo servidor",
+  "@migrationLocalNameLabel": {
+    "description": "Rótulo do campo do nome local da conta que será criada no servidor de destino."
+  },
+
+  "migrationDisplayNameLabel": "Nome exibido",
+  "@migrationDisplayNameLabel": {
+    "description": "Rótulo do campo do nome que o leitor usa para se apresentar na conta nova."
+  },
+
+  "migrationEmailLabel": "E-mail",
+  "@migrationEmailLabel": {
+    "description": "Rótulo do campo do endereço de e-mail da conta nova, que é por onde a recuperação de senha passa a ser feita."
+  },
+
+  "migrationPasswordLabel": "Senha no novo servidor",
+  "@migrationPasswordLabel": {
+    "description": "Rótulo do campo da senha da conta nova. É uma credencial nova e não a senha antiga levada junto."
+  },
+
+  "migrationInvalidDomain": "Isto não é um endereço de servidor.",
+  "@migrationInvalidDomain": {
+    "description": "Erro mostrado sob o campo de domínio do assistente quando o que foi digitado não tem a forma de um endereço."
+  },
+
+  "migrationInvalidLocalName": "Use letras minúsculas, números e . - _ entre eles.",
+  "@migrationInvalidLocalName": {
+    "description": "Erro mostrado sob o campo de nome de usuário do assistente quando ele não segue a regra do servidor."
+  },
+
+  "migrationInvalidDisplayName": "Informe um nome.",
+  "@migrationInvalidDisplayName": {
+    "description": "Erro mostrado sob o campo de nome exibido do assistente quando ele está em branco ou é longo demais."
+  },
+
+  "migrationInvalidEmail": "Informe um e-mail válido.",
+  "@migrationInvalidEmail": {
+    "description": "Erro mostrado sob o campo de e-mail do assistente quando o endereço não tem a forma esperada."
+  },
+
+  "migrationInvalidPassword": "A senha precisa de pelo menos 8 caracteres.",
+  "@migrationInvalidPassword": {
+    "description": "Erro mostrado sob o campo de senha do assistente quando ela é curta ou longa demais para o que o servidor aceita."
+  },
+
+  "migrationStepDevices": "O que vai junto",
+  "@migrationStepDevices": {
+    "description": "Título do passo do assistente que lista os dispositivos levados na migração."
+  },
+
+  "migrationDevicesExplanation": "Todos os seus aparelhos vão junto, com os identificadores que já têm. É o que permite que cada um continue de onde parou: toda alteração nomeia o aparelho que a fez.",
+  "@migrationDevicesExplanation": {
+    "description": "Parágrafo do passo dos dispositivos, explicando por que os identificadores viajam. Correção C11."
+  },
+
+  "migrationThisDevice": "Este aparelho",
+  "@migrationThisDevice": {
+    "description": "Marca na linha do dispositivo em que o assistente está sendo usado. É o primeiro da lista e o que recebe a sessão nova."
+  },
+
+  "migrationUnnamedDevice": "Aparelho {handle}",
+  "@migrationUnnamedDevice": {
+    "description": "Nome dado a um dispositivo cujo nome o servidor atual não pôde informar. O parâmetro é o começo do identificador, para que dois deles possam ser distinguidos na lista.",
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+
+  "migrationDevicesUnnamed": "O servidor atual não respondeu, então os nomes se perderam. Os identificadores vieram do histórico guardado aqui, que é a parte que não dá para recriar — você pode renomear cada aparelho depois.",
+  "@migrationDevicesUnnamed": {
+    "description": "Aviso do passo dos dispositivos quando o servidor de origem não respondeu e os identificadores foram recuperados dos relógios vetoriais guardados localmente."
+  },
+
+  "migrationDevicesFailed": "Não foi possível levantar os seus aparelhos.",
+  "@migrationDevicesFailed": {
+    "description": "Mensagem mostrada no passo dos dispositivos quando nem o servidor nem o histórico local puderam informar quais aparelhos existem."
+  },
+
+  "migrationStepConfirm": "Confirmar",
+  "@migrationStepConfirm": {
+    "description": "Título do último passo do assistente, o que resume a operação e a executa."
+  },
+
+  "migrationSummary": "@{localName}:{domain} passa a ser a sua conta, com {count, plural, =1{1 aparelho} other{{count} aparelhos}} e toda a sua biblioteca.",
+  "@migrationSummary": {
+    "description": "Resumo do último passo do assistente: qual identificador o leitor passa a ter e quantos aparelhos vão junto.",
+    "placeholders": {
+      "localName": {
+        "type": "String"
+      },
+      "domain": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "migrationNothingIsCleared": "Nada é apagado deste aparelho. O que ainda não foi entregue continua na fila e é enviado ao novo servidor.",
+  "@migrationNothingIsCleared": {
+    "description": "Frase do último passo do assistente dizendo que a fila de envio e o histórico continuam. Limpá-los concluiria a migração descartando justamente o que está sendo migrado."
+  },
+
+  "migrationGo": "Mudar de servidor",
+  "@migrationGo": {
+    "description": "Rótulo do botão que executa a migração, no último passo do assistente."
+  },
+
+  "migrationBack": "Voltar",
+  "@migrationBack": {
+    "description": "Rótulo do botão que volta um passo no assistente."
+  },
+
+  "migrationNext": "Continuar",
+  "@migrationNext": {
+    "description": "Rótulo do botão que avança um passo no assistente."
+  },
+
+  "migrationDone": "Você agora é {federatedId}.",
+  "@migrationDone": {
+    "description": "Confirmação mostrada quando a migração termina. O parâmetro é o identificador federado novo.",
+    "placeholders": {
+      "federatedId": {
+        "type": "String"
+      }
+    }
+  },
+
+  "migrationFailed": "A migração não aconteceu. Este aparelho continua no servidor de antes.",
+  "@migrationFailed": {
+    "description": "Erro mostrado quando a migração falha. Diz também que o aparelho voltou a apontar para o servidor anterior, que é o que evita um estado em que nenhuma chamada funciona."
+  },
+
+  "migrationNameTaken": "Este nome de usuário já existe naquele servidor.",
+  "@migrationNameTaken": {
+    "description": "Erro mostrado quando o servidor de destino recusa a migração porque o nome local escolhido já pertence a outra pessoa lá."
   }
 }

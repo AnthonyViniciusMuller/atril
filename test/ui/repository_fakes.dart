@@ -220,7 +220,7 @@ final class FakeFederationRepository implements FederationRepository {
   bool fingerprintChanges = false;
 
   @override
-  Future<Result<List<KnownServer>>> servers() async {
+  Future<Result<List<KnownServer>>> knownServers() async {
     reads++;
 
     final refused = refusal;
@@ -379,6 +379,54 @@ final class FakeFederationRepository implements FederationRepository {
     ];
 
     return const Result<void>.ok(null);
+  }
+
+  /// The devices this migration would carry, which a test sets.
+  CarriedDevices carried = const CarriedDevices(
+    named: true,
+    devices: <CarriedDevice>[
+      CarriedDevice(
+        id: '11111111-1111-4111-8111-111111111111',
+        isThisDevice: true,
+        name: 'Celular',
+        platform: 'android',
+      ),
+    ],
+  );
+
+  /// Every migration it was handed, in order.
+  final List<HomeServerMigration> migrations = <HomeServerMigration>[];
+
+  @override
+  Future<Result<CarriedDevices>> devicesToCarry() async {
+    final refused = refusal;
+
+    return refused == null
+        ? Result<CarriedDevices>.ok(carried)
+        : Result<CarriedDevices>.error(refused);
+  }
+
+  @override
+  Future<Result<User>> migrate(HomeServerMigration migration) async {
+    migrations.add(migration);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<User>.error(refused);
+    }
+
+    return Result<User>.ok(
+      User(
+        id: '22222222-2222-4222-8222-222222222222',
+        localName: migration.localName,
+        displayName: migration.displayName,
+        originServerDomain: migration.domain,
+        federatedId: '@${migration.localName}:${migration.domain}',
+        createdAt: DateTime.utc(2026, 9),
+        email: migration.email,
+      ),
+    );
   }
 
   KnownServer _byId(String id) =>

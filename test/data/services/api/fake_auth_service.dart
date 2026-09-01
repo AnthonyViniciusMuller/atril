@@ -259,11 +259,46 @@ final class FakeAuthService extends AuthServiceBase {
     RegisterDeviceRequest request,
   ) async => _unimplemented();
 
+  /// The reader's devices, as this node holds them.
+  ///
+  /// It is empty by default, which is a node that has never been asked rather
+  /// than a reader with no device: a test that wants the list sets it.
+  final List<Device> devices = <Device>[];
+
+  /// Whether each listing asked for the unbound devices, in order.
+  final List<bool> listedDevices = <bool>[];
+
+  /// What the next call to a method that checks it fails with, or `null`.
+  ///
+  /// It is a node that is not there, which is a different thing from a node
+  /// that refuses a credential: the second is answered by a refresh and a
+  /// retry, and this is not answered at all.
+  GrpcError? refusal;
+
   @override
   Future<ListDevicesResponse> listDevices(
     ServiceCall call,
     ListDevicesRequest request,
-  ) async => _unimplemented();
+  ) async {
+    _authenticate(call);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      refusal = null;
+
+      throw refused;
+    }
+
+    listedDevices.add(request.includeInactive);
+
+    return ListDevicesResponse(
+      devices: <Device>[
+        for (final device in devices)
+          if (request.includeInactive || device.active) device,
+      ],
+    );
+  }
 
   @override
   Future<UpdateDeviceResponse> updateDevice(

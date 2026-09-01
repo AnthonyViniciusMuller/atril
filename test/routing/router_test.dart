@@ -15,6 +15,7 @@ import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
 import 'package:atril/ui/federation/widgets/known_servers_screen.dart';
+import 'package:atril/ui/federation/widgets/migration_screen.dart';
 import 'package:atril/ui/federation/widgets/replicas_screen.dart';
 import 'package:atril/ui/library/widgets/ebook_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
@@ -339,6 +340,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ReplicasScreen), findsOneWidget);
+
+    router.go(Routes.migrate);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MigrationScreen), findsOneWidget);
   });
 
   test('the shell destinations are the branches, in order', () {

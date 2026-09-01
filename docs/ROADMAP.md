@@ -1252,12 +1252,39 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       names, which is the screen's arithmetic and not the node's. And a candidate publishing no
       gRPC authority is **listed and flagged** rather than hidden: the node accepts the grant,
       nothing will ever replicate there, and saying so costs less than a reader wondering why
-- [ ] `feat: add home server migration` — UC16, and the demonstration this project exists for. A
+- [x] `feat: add home server migration` — UC16, and the demonstration this project exists for. A
       reader moves to a node they had no account on, carrying their devices, and everything each
       one was holding and had not handed over is pushed to the new node under the identifiers it
-      was authored with. The previous node is not asked anything. The screen is a wizard because
-      the operation is not reversible, and the causal state is not cleared on the way through —
-      clearing it would complete the migration by discarding what was being migrated
+      was authored with. The screen is a wizard because the operation is not reversible, and the
+      causal state is not cleared on the way through — clearing it would complete the migration
+      by discarding what was being migrated. **One line of this checkbox needed splitting rather
+      than implementing.** *The previous node is not asked anything* is true of the migration and
+      false of the wizard, and the difference is the point: the identifiers the devices travel
+      under are the half that cannot be recreated, and the names are the half only the node being
+      left knows. So it is asked for the names, once, when the wizard opens — and a node that
+      does not answer costs exactly the names: the identifiers come out of `record_versions`,
+      whose vector clocks are keyed by every device that has ever authored anything this replica
+      has seen. UC16 stays independent of that node's availability, which is what it exists for,
+      and the step says which of the two happened instead of inventing a fact. A device the node
+      could not name travels under one the ARB supplies, carrying the first eight characters of
+      its identifier so that two of them can be told apart in the list the reader renames from
+      afterwards. **C20 was found by reading `../quire` rather than the contract, and it changes
+      client code**: the session comes back for the *first device in the list*, the vendored
+      `.proto` does not say so, and `tcc-corrections.md` records the sentence as still to be
+      added — so this device is put first and deduplicated in the repository, where the rule is
+      named. Three more decisions. This device is **pointed at the new node at the last step and
+      not before**: discovering the domain early would validate it and would also leave the app
+      talking to a node the reader has no account on while they fill in a form, so the domain is
+      checked for shape where it is typed and committing and connecting are one act — and a
+      migration that fails points the device back, since a device holding a session for one node
+      while dialling another fails every call for a reason nothing on screen explains. The
+      **cursor for the new node is dropped**, which the reference client does and the plan did
+      not mention: a position is a number in that node's log, the log it is about to write for
+      this reader is empty, and a number left over from an earlier conversation with the same
+      address would skip everything the migration is about to put there. And the repository
+      grew `AuthApi` for the one call UC16 needs from the identity slice, which is the same
+      seam Quire names on its own side — the one place a controller of one slice translates for
+      a use case of another
 - [ ] `feat: add device management` — the reader's devices, renaming one, and revoking one. A
       revoked device's row stays and so does its clock entry, or the history that names it stops
       being readable, and the screen says *unbound* and not *deleted*

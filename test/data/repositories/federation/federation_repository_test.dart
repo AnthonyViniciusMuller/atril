@@ -70,7 +70,7 @@ void main() {
 
   group('the catalogue', () {
     test('asks for the deactivated nodes too', () async {
-      await federation.servers();
+      await federation.knownServers();
 
       // The screen carries the switch that deactivates one, so a list that
       // hid them would have no way back from the state its own control
@@ -79,7 +79,7 @@ void main() {
     });
 
     test('answers with what the node holds', () async {
-      final catalogue = await federation.servers();
+      final catalogue = await federation.knownServers();
 
       expect(catalogue, isA<Ok<List<KnownServer>>>());
       expect(
@@ -92,7 +92,7 @@ void main() {
     test(
       'records what the node reported, the node\'s own id included',
       () async {
-        await federation.servers();
+        await federation.knownServers();
 
         final row = await database.identityDao.server(fakeOriginDomain);
 
@@ -108,7 +108,7 @@ void main() {
       () async {
         node.refusal = GrpcError.unavailable('the node is down');
 
-        final catalogue = await federation.servers();
+        final catalogue = await federation.knownServers();
 
         expect(catalogue, isA<Error<List<KnownServer>>>());
       },

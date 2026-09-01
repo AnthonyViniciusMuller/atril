@@ -753,5 +753,107 @@
   "@replicasRevoked": {},
 
   "replicasRevokeFailed": "That authorization could not be revoked.",
-  "@replicasRevokeFailed": {}
+  "@replicasRevokeFailed": {},
+
+  "settingsMigrate": "Move to another server",
+  "@settingsMigrate": {},
+
+  "settingsMigrateExplanation": "Take your library to a different server.",
+  "@settingsMigrateExplanation": {},
+
+  "migrationStepWhat": "What this does",
+  "@migrationStepWhat": {},
+
+  "migrationExplanation": "Your whole library is on this device, which is why it can move to another server without the current one agreeing — or even being up. Nothing is asked of it and nothing is lost there.",
+  "@migrationExplanation": {},
+
+  "migrationIdentifierChanges": "Your identifier changes. Its second half is the server’s domain, so @{localName}:{domain} becomes a different name — one that holds the same history.",
+  "@migrationIdentifierChanges": {},
+
+  "migrationReauthorize": "Servers that held a copy have to be authorized again, because their authorization names the old identifier.",
+  "@migrationReauthorize": {},
+
+  "migrationIrreversible": "It cannot be undone.",
+  "@migrationIrreversible": {},
+
+  "migrationStepServer": "Where to",
+  "@migrationStepServer": {},
+
+  "migrationDomainLabel": "New server domain",
+  "@migrationDomainLabel": {},
+
+  "migrationConnectsAtTheEnd": "This device only starts talking to the new server at the last step. Until then it stays on the current one.",
+  "@migrationConnectsAtTheEnd": {},
+
+  "migrationLocalNameLabel": "Username at the new server",
+  "@migrationLocalNameLabel": {},
+
+  "migrationDisplayNameLabel": "Display name",
+  "@migrationDisplayNameLabel": {},
+
+  "migrationEmailLabel": "Email",
+  "@migrationEmailLabel": {},
+
+  "migrationPasswordLabel": "Password at the new server",
+  "@migrationPasswordLabel": {},
+
+  "migrationInvalidDomain": "That is not a server domain.",
+  "@migrationInvalidDomain": {},
+
+  "migrationInvalidLocalName": "Use lower-case letters, digits, and . - _ between them.",
+  "@migrationInvalidLocalName": {},
+
+  "migrationInvalidDisplayName": "Enter a name.",
+  "@migrationInvalidDisplayName": {},
+
+  "migrationInvalidEmail": "Enter a valid email address.",
+  "@migrationInvalidEmail": {},
+
+  "migrationInvalidPassword": "The password needs at least 8 characters.",
+  "@migrationInvalidPassword": {},
+
+  "migrationStepDevices": "What travels",
+  "@migrationStepDevices": {},
+
+  "migrationDevicesExplanation": "All your devices travel, with the identifiers they already hold. It is what lets each of them go on from where it stopped: every change names the device that made it.",
+  "@migrationDevicesExplanation": {},
+
+  "migrationThisDevice": "This device",
+  "@migrationThisDevice": {},
+
+  "migrationUnnamedDevice": "Device {handle}",
+  "@migrationUnnamedDevice": {},
+
+  "migrationDevicesUnnamed": "The current server did not answer, so the names are gone. The identifiers came from the history kept on this device, which is the half that cannot be recreated — you can rename each device afterwards.",
+  "@migrationDevicesUnnamed": {},
+
+  "migrationDevicesFailed": "Your devices could not be worked out.",
+  "@migrationDevicesFailed": {},
+
+  "migrationStepConfirm": "Confirm",
+  "@migrationStepConfirm": {},
+
+  "migrationSummary": "@{localName}:{domain} becomes your account, with {count, plural, =1{1 device} other{{count} devices}} and your whole library.",
+  "@migrationSummary": {},
+
+  "migrationNothingIsCleared": "Nothing is erased from this device. Whatever has not been handed over yet stays queued and is sent to the new server.",
+  "@migrationNothingIsCleared": {},
+
+  "migrationGo": "Move",
+  "@migrationGo": {},
+
+  "migrationBack": "Back",
+  "@migrationBack": {},
+
+  "migrationNext": "Continue",
+  "@migrationNext": {},
+
+  "migrationDone": "You are now {federatedId}.",
+  "@migrationDone": {},
+
+  "migrationFailed": "The migration did not happen. This device is still on the server it was on.",
+  "@migrationFailed": {},
+
+  "migrationNameTaken": "That username already exists on that server.",
+  "@migrationNameTaken": {}
 }

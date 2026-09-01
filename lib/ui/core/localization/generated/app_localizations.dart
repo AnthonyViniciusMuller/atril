@@ -2204,6 +2204,210 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível revogar esta autorização.'**
   String get replicasRevokeFailed;
+
+  /// Item da tela de configurações que leva ao assistente de migração de servidor de origem. Também é o título dessa tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mudar de servidor de origem'**
+  String get settingsMigrate;
+
+  /// Subtítulo do item das configurações que leva à migração. Uma frase dizendo o que o leitor vai encontrar lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Levar a sua biblioteca para outro servidor.'**
+  String get settingsMigrateExplanation;
+
+  /// Título do primeiro passo do assistente de migração, o que explica a operação antes de pedir qualquer coisa.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que isto faz'**
+  String get migrationStepWhat;
+
+  /// Parágrafo principal do primeiro passo do assistente: por que a migração não depende do servidor de origem atual. RF17 e a independência que a correção C11 descreve.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A sua biblioteca inteira está neste aparelho, e é por isso que ela pode ir para outro servidor sem que o atual precise concordar — nem estar no ar. Nada é pedido a ele e nada se perde lá.'**
+  String get migrationExplanation;
+
+  /// Aviso do primeiro passo do assistente: a migração preserva os dados e não o nome. Os parâmetros são o nome local e o domínio atuais do leitor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O seu identificador muda. A segunda metade dele é o domínio do servidor, então @{localName}:{domain} passa a ser outro nome — que guarda a mesma história.'**
+  String migrationIdentifierChanges(String localName, String domain);
+
+  /// Aviso do primeiro passo do assistente: as réplicas não seguem o leitor sozinhas. Correção C11.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Os servidores que guardavam uma cópia sua precisam ser autorizados de novo, porque a autorização deles nomeia o identificador antigo.'**
+  String get migrationReauthorize;
+
+  /// Aviso do primeiro passo do assistente, dito sozinho e em uma frase curta, porque é a razão de a tela ser um assistente e não um botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não dá para desfazer.'**
+  String get migrationIrreversible;
+
+  /// Título do passo do assistente em que o leitor informa o domínio do servidor de destino e cria a conta que terá lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Para onde'**
+  String get migrationStepServer;
+
+  /// Rótulo do campo onde o leitor digita o domínio do servidor para o qual está indo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Endereço do novo servidor'**
+  String get migrationDomainLabel;
+
+  /// Nota abaixo do campo de domínio, dizendo quando a conexão muda. Existe porque apontar o aparelho antes de o leitor confirmar o deixaria falando com um servidor onde ele não tem conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este aparelho só passa a falar com o novo servidor no último passo. Até lá ele continua no atual.'**
+  String get migrationConnectsAtTheEnd;
+
+  /// Rótulo do campo do nome local da conta que será criada no servidor de destino.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome de usuário no novo servidor'**
+  String get migrationLocalNameLabel;
+
+  /// Rótulo do campo do nome que o leitor usa para se apresentar na conta nova.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome exibido'**
+  String get migrationDisplayNameLabel;
+
+  /// Rótulo do campo do endereço de e-mail da conta nova, que é por onde a recuperação de senha passa a ser feita.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'E-mail'**
+  String get migrationEmailLabel;
+
+  /// Rótulo do campo da senha da conta nova. É uma credencial nova e não a senha antiga levada junto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Senha no novo servidor'**
+  String get migrationPasswordLabel;
+
+  /// Erro mostrado sob o campo de domínio do assistente quando o que foi digitado não tem a forma de um endereço.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Isto não é um endereço de servidor.'**
+  String get migrationInvalidDomain;
+
+  /// Erro mostrado sob o campo de nome de usuário do assistente quando ele não segue a regra do servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Use letras minúsculas, números e . - _ entre eles.'**
+  String get migrationInvalidLocalName;
+
+  /// Erro mostrado sob o campo de nome exibido do assistente quando ele está em branco ou é longo demais.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe um nome.'**
+  String get migrationInvalidDisplayName;
+
+  /// Erro mostrado sob o campo de e-mail do assistente quando o endereço não tem a forma esperada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe um e-mail válido.'**
+  String get migrationInvalidEmail;
+
+  /// Erro mostrado sob o campo de senha do assistente quando ela é curta ou longa demais para o que o servidor aceita.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A senha precisa de pelo menos 8 caracteres.'**
+  String get migrationInvalidPassword;
+
+  /// Título do passo do assistente que lista os dispositivos levados na migração.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que vai junto'**
+  String get migrationStepDevices;
+
+  /// Parágrafo do passo dos dispositivos, explicando por que os identificadores viajam. Correção C11.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Todos os seus aparelhos vão junto, com os identificadores que já têm. É o que permite que cada um continue de onde parou: toda alteração nomeia o aparelho que a fez.'**
+  String get migrationDevicesExplanation;
+
+  /// Marca na linha do dispositivo em que o assistente está sendo usado. É o primeiro da lista e o que recebe a sessão nova.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este aparelho'**
+  String get migrationThisDevice;
+
+  /// Nome dado a um dispositivo cujo nome o servidor atual não pôde informar. O parâmetro é o começo do identificador, para que dois deles possam ser distinguidos na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Aparelho {handle}'**
+  String migrationUnnamedDevice(String handle);
+
+  /// Aviso do passo dos dispositivos quando o servidor de origem não respondeu e os identificadores foram recuperados dos relógios vetoriais guardados localmente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O servidor atual não respondeu, então os nomes se perderam. Os identificadores vieram do histórico guardado aqui, que é a parte que não dá para recriar — você pode renomear cada aparelho depois.'**
+  String get migrationDevicesUnnamed;
+
+  /// Mensagem mostrada no passo dos dispositivos quando nem o servidor nem o histórico local puderam informar quais aparelhos existem.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível levantar os seus aparelhos.'**
+  String get migrationDevicesFailed;
+
+  /// Título do último passo do assistente, o que resume a operação e a executa.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Confirmar'**
+  String get migrationStepConfirm;
+
+  /// Resumo do último passo do assistente: qual identificador o leitor passa a ter e quantos aparelhos vão junto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'@{localName}:{domain} passa a ser a sua conta, com {count, plural, =1{1 aparelho} other{{count} aparelhos}} e toda a sua biblioteca.'**
+  String migrationSummary(String localName, String domain, int count);
+
+  /// Frase do último passo do assistente dizendo que a fila de envio e o histórico continuam. Limpá-los concluiria a migração descartando justamente o que está sendo migrado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nada é apagado deste aparelho. O que ainda não foi entregue continua na fila e é enviado ao novo servidor.'**
+  String get migrationNothingIsCleared;
+
+  /// Rótulo do botão que executa a migração, no último passo do assistente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mudar de servidor'**
+  String get migrationGo;
+
+  /// Rótulo do botão que volta um passo no assistente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Voltar'**
+  String get migrationBack;
+
+  /// Rótulo do botão que avança um passo no assistente.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Continuar'**
+  String get migrationNext;
+
+  /// Confirmação mostrada quando a migração termina. O parâmetro é o identificador federado novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Você agora é {federatedId}.'**
+  String migrationDone(String federatedId);
+
+  /// Erro mostrado quando a migração falha. Diz também que o aparelho voltou a apontar para o servidor anterior, que é o que evita um estado em que nenhuma chamada funciona.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A migração não aconteceu. Este aparelho continua no servidor de antes.'**
+  String get migrationFailed;
+
+  /// Erro mostrado quando o servidor de destino recusa a migração porque o nome local escolhido já pertence a outra pessoa lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este nome de usuário já existe naquele servidor.'**
+  String get migrationNameTaken;
 }
 
 class _AppLocalizationsDelegate

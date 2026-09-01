@@ -84,7 +84,7 @@ final class KnownServersViewModel extends ChangeNotifier {
   }
 
   Future<Result<List<KnownServer>>> _load() async {
-    final catalogue = await federation.servers();
+    final catalogue = await federation.knownServers();
 
     if (catalogue case Ok<List<KnownServer>>(:final value)) {
       _servers = value;

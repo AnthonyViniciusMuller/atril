@@ -89,7 +89,7 @@ final class ReplicasViewModel extends ChangeNotifier {
       return Result<void>.error(error);
     }
 
-    final catalogue = await federation.servers();
+    final catalogue = await federation.knownServers();
 
     if (catalogue case Error<List<KnownServer>>(:final error)) {
       return Result<void>.error(error);

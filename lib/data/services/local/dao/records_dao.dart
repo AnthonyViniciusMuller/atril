@@ -72,4 +72,17 @@ class RecordsDao extends DatabaseAccessor<AtrilDatabase>
   /// Every version this device holds, for the migration of phase 12 and for a
   /// test that wants to see the whole of it.
   Future<List<RecordVersionRow>> versions() => select(recordVersions).get();
+
+  /// Every device this replica's causal state names.
+  ///
+  /// A vector clock is keyed by the identifier of the device that ticked it,
+  /// so the union of the keys across this table is the set of devices that
+  /// have ever authored a change this device has seen. It is what a migration
+  /// falls back on when the node being left cannot be asked: the names are
+  /// gone, and the identifiers — which are the half that cannot be recreated,
+  /// because every operation and every clock references them (C11) — are
+  /// here.
+  Future<Set<String>> devicesInHistory() async => <String>{
+    for (final version in await versions()) ...version.vectorClock.devices,
+  };
 }

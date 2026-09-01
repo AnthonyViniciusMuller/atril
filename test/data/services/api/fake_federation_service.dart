@@ -9,6 +9,8 @@
 /// arm, and a record of every request it was sent.
 library;
 
+import 'package:atril/data/services/api/generated/quire/v1/auth.pb.dart'
+    as auth;
 import 'package:atril/data/services/api/generated/quire/v1/federation.pbgrpc.dart';
 import 'package:grpc/grpc.dart' hide Server;
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
@@ -267,11 +269,62 @@ final class FakeFederationService extends FederationServiceBase {
     );
   }
 
+  /// Every migration this node was sent, in order.
+  final List<MigrateHomeServerRequest> migrations =
+      <MigrateHomeServerRequest>[];
+
+  /// The credential this node issues to a reader who arrives.
+  static const String migratedAccessToken = 'migrated-access';
+
+  /// The domain this node calls itself by when it takes a reader in.
+  ///
+  /// It is deliberately not [fakeOriginDomain]: a migration is a move to
+  /// somewhere else, and a test whose two nodes shared a domain could not tell
+  /// the reader's identifier having changed from its not having.
+  static const String migratedDomain = 'quire-b.example';
+
   @override
   Future<MigrateHomeServerResponse> migrateHomeServer(
     ServiceCall call,
     MigrateHomeServerRequest request,
-  ) async => throw GrpcError.unimplemented('not this test');
+  ) async {
+    migrations.add(request);
+    _check();
+
+    if (request.devices.isEmpty) {
+      throw GrpcError.invalidArgument('a migration carries its devices');
+    }
+
+    // The wall clock, because a session holder compares an expiry against the
+    // time of day: a fixed instant would be a credential already expired on
+    // any day but one.
+    final now = DateTime.now().toUtc();
+
+    return MigrateHomeServerResponse(
+      user: auth.User(
+        id: '66666666-6666-4666-8666-666666666666',
+        localName: request.localName,
+        displayName: request.displayName,
+        originServerDomain: migratedDomain,
+        federatedId: '@${request.localName}:$migratedDomain',
+        email: request.email,
+        createdAt: Timestamp.fromDateTime(now),
+      ),
+      // Adopted with the identifiers they arrived with, which is the whole of
+      // C11 and the one thing a client has to be able to check.
+      devices: request.devices,
+      session: auth.Session(
+        accessToken: migratedAccessToken,
+        accessTokenExpiresAt: Timestamp.fromDateTime(
+          now.add(const Duration(minutes: 5)),
+        ),
+        refreshToken: 'migrated-refresh',
+        refreshTokenExpiresAt: Timestamp.fromDateTime(
+          now.add(const Duration(days: 30)),
+        ),
+      ),
+    );
+  }
 
   Server _byId(String id) {
     for (final server in catalogue.values) {

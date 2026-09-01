@@ -230,6 +230,17 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
           .watchSingleOrNull()
           .map((NodeCursorRow? row) => row?.pulledAt);
 
+  /// Forgets this device's position in the log of the node at [serverDomain].
+  ///
+  /// It is what a migration does and the only thing that does it. A position
+  /// is a number in *that* node's log; the log it is about to start writing
+  /// for this reader is empty, and a number left over from an earlier
+  /// conversation with the same address would skip everything the migration is
+  /// about to put there.
+  Future<int> dropCursor(String serverDomain) => (delete(
+    nodeCursors,
+  )..where((cursor) => cursor.serverDomain.equals(serverDomain))).go();
+
   /// Every cursor this device holds.
   Future<List<NodeCursorRow>> cursors() => select(nodeCursors).get();
 

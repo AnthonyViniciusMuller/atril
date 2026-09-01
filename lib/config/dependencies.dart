@@ -245,6 +245,15 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
       create: (BuildContext context) => FederationRepositoryImpl(
         federation: context.read<FederationApi>(),
         identity: database.identityDao,
+        // The five below are what UC16 needs and the catalogue does not. A
+        // migration points this device at another node, adopts an account
+        // there and drops one cursor — and deliberately touches neither the
+        // outbox nor the causal state, which are what the devices then push.
+        auth: context.read<AuthApi>(),
+        records: database.recordsDao,
+        sync: database.syncDao,
+        servers: context.read<ServerRepository>(),
+        session: context.read<SessionHolder>(),
       ),
     ),
 

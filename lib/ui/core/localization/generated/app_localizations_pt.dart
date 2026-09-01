@@ -1257,6 +1257,134 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get replicasRevokeFailed =>
       'Não foi possível revogar esta autorização.';
+
+  @override
+  String get settingsMigrate => 'Mudar de servidor de origem';
+
+  @override
+  String get settingsMigrateExplanation =>
+      'Levar a sua biblioteca para outro servidor.';
+
+  @override
+  String get migrationStepWhat => 'O que isto faz';
+
+  @override
+  String get migrationExplanation =>
+      'A sua biblioteca inteira está neste aparelho, e é por isso que ela pode ir para outro servidor sem que o atual precise concordar — nem estar no ar. Nada é pedido a ele e nada se perde lá.';
+
+  @override
+  String migrationIdentifierChanges(String localName, String domain) {
+    return 'O seu identificador muda. A segunda metade dele é o domínio do servidor, então @$localName:$domain passa a ser outro nome — que guarda a mesma história.';
+  }
+
+  @override
+  String get migrationReauthorize =>
+      'Os servidores que guardavam uma cópia sua precisam ser autorizados de novo, porque a autorização deles nomeia o identificador antigo.';
+
+  @override
+  String get migrationIrreversible => 'Não dá para desfazer.';
+
+  @override
+  String get migrationStepServer => 'Para onde';
+
+  @override
+  String get migrationDomainLabel => 'Endereço do novo servidor';
+
+  @override
+  String get migrationConnectsAtTheEnd =>
+      'Este aparelho só passa a falar com o novo servidor no último passo. Até lá ele continua no atual.';
+
+  @override
+  String get migrationLocalNameLabel => 'Nome de usuário no novo servidor';
+
+  @override
+  String get migrationDisplayNameLabel => 'Nome exibido';
+
+  @override
+  String get migrationEmailLabel => 'E-mail';
+
+  @override
+  String get migrationPasswordLabel => 'Senha no novo servidor';
+
+  @override
+  String get migrationInvalidDomain => 'Isto não é um endereço de servidor.';
+
+  @override
+  String get migrationInvalidLocalName =>
+      'Use letras minúsculas, números e . - _ entre eles.';
+
+  @override
+  String get migrationInvalidDisplayName => 'Informe um nome.';
+
+  @override
+  String get migrationInvalidEmail => 'Informe um e-mail válido.';
+
+  @override
+  String get migrationInvalidPassword =>
+      'A senha precisa de pelo menos 8 caracteres.';
+
+  @override
+  String get migrationStepDevices => 'O que vai junto';
+
+  @override
+  String get migrationDevicesExplanation =>
+      'Todos os seus aparelhos vão junto, com os identificadores que já têm. É o que permite que cada um continue de onde parou: toda alteração nomeia o aparelho que a fez.';
+
+  @override
+  String get migrationThisDevice => 'Este aparelho';
+
+  @override
+  String migrationUnnamedDevice(String handle) {
+    return 'Aparelho $handle';
+  }
+
+  @override
+  String get migrationDevicesUnnamed =>
+      'O servidor atual não respondeu, então os nomes se perderam. Os identificadores vieram do histórico guardado aqui, que é a parte que não dá para recriar — você pode renomear cada aparelho depois.';
+
+  @override
+  String get migrationDevicesFailed =>
+      'Não foi possível levantar os seus aparelhos.';
+
+  @override
+  String get migrationStepConfirm => 'Confirmar';
+
+  @override
+  String migrationSummary(String localName, String domain, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aparelhos',
+      one: '1 aparelho',
+    );
+    return '@$localName:$domain passa a ser a sua conta, com $_temp0 e toda a sua biblioteca.';
+  }
+
+  @override
+  String get migrationNothingIsCleared =>
+      'Nada é apagado deste aparelho. O que ainda não foi entregue continua na fila e é enviado ao novo servidor.';
+
+  @override
+  String get migrationGo => 'Mudar de servidor';
+
+  @override
+  String get migrationBack => 'Voltar';
+
+  @override
+  String get migrationNext => 'Continuar';
+
+  @override
+  String migrationDone(String federatedId) {
+    return 'Você agora é $federatedId.';
+  }
+
+  @override
+  String get migrationFailed =>
+      'A migração não aconteceu. Este aparelho continua no servidor de antes.';
+
+  @override
+  String get migrationNameTaken =>
+      'Este nome de usuário já existe naquele servidor.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -2511,4 +2639,132 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get replicasRevokeFailed =>
       'Não foi possível revogar esta autorização.';
+
+  @override
+  String get settingsMigrate => 'Mudar de servidor de origem';
+
+  @override
+  String get settingsMigrateExplanation =>
+      'Levar a sua biblioteca para outro servidor.';
+
+  @override
+  String get migrationStepWhat => 'O que isto faz';
+
+  @override
+  String get migrationExplanation =>
+      'A sua biblioteca inteira está neste aparelho, e é por isso que ela pode ir para outro servidor sem que o atual precise concordar — nem estar no ar. Nada é pedido a ele e nada se perde lá.';
+
+  @override
+  String migrationIdentifierChanges(String localName, String domain) {
+    return 'O seu identificador muda. A segunda metade dele é o domínio do servidor, então @$localName:$domain passa a ser outro nome — que guarda a mesma história.';
+  }
+
+  @override
+  String get migrationReauthorize =>
+      'Os servidores que guardavam uma cópia sua precisam ser autorizados de novo, porque a autorização deles nomeia o identificador antigo.';
+
+  @override
+  String get migrationIrreversible => 'Não dá para desfazer.';
+
+  @override
+  String get migrationStepServer => 'Para onde';
+
+  @override
+  String get migrationDomainLabel => 'Endereço do novo servidor';
+
+  @override
+  String get migrationConnectsAtTheEnd =>
+      'Este aparelho só passa a falar com o novo servidor no último passo. Até lá ele continua no atual.';
+
+  @override
+  String get migrationLocalNameLabel => 'Nome de usuário no novo servidor';
+
+  @override
+  String get migrationDisplayNameLabel => 'Nome exibido';
+
+  @override
+  String get migrationEmailLabel => 'E-mail';
+
+  @override
+  String get migrationPasswordLabel => 'Senha no novo servidor';
+
+  @override
+  String get migrationInvalidDomain => 'Isto não é um endereço de servidor.';
+
+  @override
+  String get migrationInvalidLocalName =>
+      'Use letras minúsculas, números e . - _ entre eles.';
+
+  @override
+  String get migrationInvalidDisplayName => 'Informe um nome.';
+
+  @override
+  String get migrationInvalidEmail => 'Informe um e-mail válido.';
+
+  @override
+  String get migrationInvalidPassword =>
+      'A senha precisa de pelo menos 8 caracteres.';
+
+  @override
+  String get migrationStepDevices => 'O que vai junto';
+
+  @override
+  String get migrationDevicesExplanation =>
+      'Todos os seus aparelhos vão junto, com os identificadores que já têm. É o que permite que cada um continue de onde parou: toda alteração nomeia o aparelho que a fez.';
+
+  @override
+  String get migrationThisDevice => 'Este aparelho';
+
+  @override
+  String migrationUnnamedDevice(String handle) {
+    return 'Aparelho $handle';
+  }
+
+  @override
+  String get migrationDevicesUnnamed =>
+      'O servidor atual não respondeu, então os nomes se perderam. Os identificadores vieram do histórico guardado aqui, que é a parte que não dá para recriar — você pode renomear cada aparelho depois.';
+
+  @override
+  String get migrationDevicesFailed =>
+      'Não foi possível levantar os seus aparelhos.';
+
+  @override
+  String get migrationStepConfirm => 'Confirmar';
+
+  @override
+  String migrationSummary(String localName, String domain, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aparelhos',
+      one: '1 aparelho',
+    );
+    return '@$localName:$domain passa a ser a sua conta, com $_temp0 e toda a sua biblioteca.';
+  }
+
+  @override
+  String get migrationNothingIsCleared =>
+      'Nada é apagado deste aparelho. O que ainda não foi entregue continua na fila e é enviado ao novo servidor.';
+
+  @override
+  String get migrationGo => 'Mudar de servidor';
+
+  @override
+  String get migrationBack => 'Voltar';
+
+  @override
+  String get migrationNext => 'Continuar';
+
+  @override
+  String migrationDone(String federatedId) {
+    return 'Você agora é $federatedId.';
+  }
+
+  @override
+  String get migrationFailed =>
+      'A migração não aconteceu. Este aparelho continua no servidor de antes.';
+
+  @override
+  String get migrationNameTaken =>
+      'Este nome de usuário já existe naquele servidor.';
 }

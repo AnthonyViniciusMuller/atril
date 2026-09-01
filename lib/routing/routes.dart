@@ -198,6 +198,13 @@ abstract final class Routes {
   /// Where the reader says which nodes may hold a copy of their data (UC15).
   static const String replicas = '$settings/$replicasSegment';
 
+  /// The path segment the home server migration is shown under, relative to
+  /// [settings].
+  static const String migrateSegment = 'migrate';
+
+  /// Where a reader moves to another origin server (UC16).
+  static const String migrate = '$settings/$migrateSegment';
+
   /// The destinations that share the shell, in the order the navigation
   /// surface shows them.
   ///

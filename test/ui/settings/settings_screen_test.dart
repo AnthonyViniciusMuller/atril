@@ -75,6 +75,7 @@ void main() {
     expect(find.text('Federation'), findsOneWidget);
     expect(find.text('Known servers'), findsOneWidget);
     expect(find.text('Authorized replicas'), findsOneWidget);
+    expect(find.text('Move to another server'), findsOneWidget);
     expect(
       find.text(
         'The servers your node knows, and the ones it may replicate '
