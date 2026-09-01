@@ -1136,11 +1136,17 @@ and they are recorded here because none of them is visible from the package's RE
       minted and the replica is untouched, so the cost of dying between the commit and the cursor
       is one decode. The loop also ends on a page that carried operations and did not move the
       cursor past them — a node this build cannot follow, rather than a log it has caught up with
-- [ ] `feat: add the sync stream` — `Sync`, the bidirectional one, on the five native targets:
+- [x] `feat: add the sync stream` — `Sync`, the bidirectional one, on the five native targets:
       `SyncStart` with the cursor, then pushes and acks in one direction and operations in the
       other. The ack is sent after the write commits and not after the read returns, because an
       operation written to a socket is not an operation written to disk and a device that dies in
-      between must come back to the same place
+      between must come back to the same place. Two things the plan did not foresee. The stream
+      is the first call whose two directions cannot be mapped in `data/model` — a `oneof` is a
+      shape and not a record — so `SyncApi` grew a vocabulary of its own, `SyncCommand` and
+      `SyncEvent`, rather than letting a generated message reach the caller. And **closing is
+      ordered**: half-closing and hanging up in one breath discards the frames still in the air,
+      including an acknowledgement already earned, so the outbound half is closed, the node is
+      given a moment to end the stream itself, and the hang-up is what happens when it does not
 - [ ] `feat: add the watch stream` — `WatchOperations` for the web, where gRPC-Web carries no
       bidirectional call. It is a notification and not a delivery: the response carries
       `last_position` and never an operation, so the handler does one thing — compare it against

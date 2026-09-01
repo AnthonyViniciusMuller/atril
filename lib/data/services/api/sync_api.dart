@@ -10,12 +10,17 @@
 /// never compares them. **The log is append-only**: what changes is who has
 /// received an operation, and that is recorded elsewhere.
 ///
-/// Two calls in the service are deliberately not here. `Sync`, the
-/// bidirectional stream, is unreachable from a browser and its acknowledgement
-/// has semantics — the cursor advances on a durable write and not on a read —
-/// that belong with the loop that maintains it, in phase 11.
-/// `ReplicateOperations` is the one RPC in the contract whose caller is a peer
-/// node proving itself with a certificate, and a reader's device is never it.
+/// One call in the service is deliberately not here. `ReplicateOperations` is
+/// the one RPC in the contract whose caller is a peer node proving itself with
+/// a certificate, and a reader's device is never it.
+///
+/// `Sync` is here and is the only method that carries a vocabulary of its own.
+/// The two directions of a bidirectional stream are two `oneof`s, and a caller
+/// that had to pattern-match a generated message would be a caller holding one
+/// — which is the rule `data/model` exists to keep. So the stream speaks
+/// [SyncCommand] and [SyncEvent], and what it is *worth* is decided one layer
+/// up: the acknowledgement means the cursor moved on a durable write and not on
+/// a read, and only the loop that holds the cursor can promise that.
 library;
 
 import 'package:fixnum/fixnum.dart';
@@ -33,6 +38,85 @@ const String opPull = 'sync/operations: pull';
 
 /// The operation a watch reports under.
 const String opWatch = 'sync/operations: watch';
+
+/// The operation the bidirectional stream reports under.
+const String opSync = 'sync/operations: stream';
+
+/// What a device says on the bidirectional stream.
+///
+/// Three messages and no more, which is the contract's own `SyncRequest`: the
+/// cursor, once, first; changes this device authored, at any point after it;
+/// and the confirmation that what arrived is on disk.
+sealed class SyncCommand {
+  const SyncCommand();
+}
+
+/// The cursor, sent exactly once as the first message.
+///
+/// A stream that began with a push would be a device asking a node to store
+/// changes without saying where it had got to, and the node would have nothing
+/// to send back. It is refused, and the refusal is the node's own.
+final class SyncStart extends SyncCommand {
+  /// Begins the stream from [afterPosition].
+  const SyncStart({required this.afterPosition});
+
+  /// This device's position in that node's log. Zero asks from the beginning.
+  final int afterPosition;
+}
+
+/// Changes this device authored.
+final class SyncPush extends SyncCommand {
+  /// Offers [operations], in the order they were authored.
+  const SyncPush(this.operations);
+
+  /// The batch, oldest first.
+  final List<Operation> operations;
+}
+
+/// The confirmation that everything up to a position is stored here.
+///
+/// The node keeps at most one page in flight and does not send again until it
+/// arrives, so a device that never acknowledges receives one page and then only
+/// what its own pushes provoke. It is not a formality: an operation written to
+/// a socket is not an operation written to disk.
+final class SyncAck extends SyncCommand {
+  /// Confirms everything up to and including [position].
+  const SyncAck({required this.position});
+
+  /// The position this device has durably stored up to.
+  final int position;
+}
+
+/// What a node says on the bidirectional stream.
+sealed class SyncEvent {
+  const SyncEvent();
+}
+
+/// Changes this device has not seen.
+final class SyncDelivery extends SyncEvent {
+  /// The batch [operations], ending at [lastPosition] in that node's log.
+  const SyncDelivery({required this.operations, required this.lastPosition});
+
+  /// In ascending position order, as a pull's page is.
+  final List<Operation> operations;
+
+  /// The position of the last operation in the batch, which is what the
+  /// acknowledgement carries once they are stored.
+  ///
+  /// It is read off the wire here and nowhere else. The domain [Operation] has
+  /// no position — it is one node's order for one reader's log — so the number
+  /// travels with the *batch*, which is the thing the cursor is about.
+  final int lastPosition;
+}
+
+/// The verdicts on a batch this device offered.
+final class SyncVerdicts extends SyncEvent {
+  /// One result per operation offered, in the order they were offered.
+  const SyncVerdicts(this.results);
+
+  /// The verdicts, which mean exactly what a unary push's mean.
+  final List<OperationResult> results;
+}
 
 /// What a node did with a batch this device offered.
 final class PushResult {
@@ -132,6 +216,29 @@ final class SyncApi extends ApiClient {
         );
       });
 
+  /// UC10 and UC11 in one call: the same push and pull, kept open.
+  ///
+  /// It is the five native targets' live channel and is unreachable from a
+  /// browser, because gRPC-Web carries a unary call and a server stream and
+  /// neither of the other two. Which of the two a build uses is decided where
+  /// the graph is composed, as the reader's host and the file saver are, and
+  /// not by a conditional export — both sides compile everywhere and the
+  /// question is about the platform rather than about the language.
+  ///
+  /// Nothing here decides what to send or when. [commands] is somebody else's
+  /// stream and the events are handed back unwrapped, because the two things
+  /// that make this call correct — the cursor the start carries, and an
+  /// acknowledgement sent only after the write commits — are properties of
+  /// state this layer does not hold.
+  Stream<SyncEvent> sync(Stream<SyncCommand> commands) => listen(
+    opSync,
+    _stub
+        .sync(commands.map(_requestOf))
+        .map(_eventOf)
+        .where((SyncEvent? event) => event != null)
+        .cast<SyncEvent>(),
+  );
+
   /// UC10. Learns when this node's log has grown past what the caller has
   /// seen.
   ///
@@ -160,4 +267,50 @@ final class SyncApi extends ApiClient {
               response.lastPosition.toInt(),
         ),
   );
+
+  pb.SyncRequest _requestOf(SyncCommand command) => switch (command) {
+    SyncStart(:final afterPosition) => pb.SyncRequest(
+      start: pb.SyncStart(afterPosition: Int64(afterPosition)),
+    ),
+    SyncPush(:final operations) => pb.SyncRequest(
+      push: pb.OperationBatch(
+        operations: <pb.Operation>[
+          for (final operation in operations) wireOperation(operation),
+        ],
+      ),
+    ),
+    SyncAck(:final position) => pb.SyncRequest(
+      ack: pb.SyncAck(position: Int64(position)),
+    ),
+  };
+
+  /// The event [response] carries, or `null` for a payload this build cannot
+  /// name.
+  ///
+  /// A node running a later contract may grow a third one, and ignoring it is
+  /// the only safe answer: the two this build does know still arrive, and the
+  /// cursor is what makes anything missed a latency rather than a loss.
+  SyncEvent? _eventOf(pb.SyncResponse response) {
+    if (response.hasOperations()) {
+      final delivered = response.operations.operations;
+
+      return SyncDelivery(
+        operations: <Operation>[
+          for (final operation in delivered) operationOf(operation),
+        ],
+        lastPosition: delivered.isEmpty
+            ? 0
+            : delivered.last.position.toInt(),
+      );
+    }
+
+    if (response.hasPushResult()) {
+      return SyncVerdicts(<OperationResult>[
+        for (final result in response.pushResult.results)
+          operationResultOf(result),
+      ]);
+    }
+
+    return null;
+  }
 }

@@ -47,6 +47,87 @@ final _log = loggerFor('data/sync');
 /// when it is small.
 const int pushBatchSize = 100;
 
+/// What a set of verdicts came to, and what it retired.
+final class Settlement {
+  /// The tally.
+  const Settlement({
+    required this.applied,
+    required this.duplicate,
+    required this.superseded,
+    required this.refused,
+    required this.retired,
+  });
+
+  /// Stored by the node, and it changed the record there.
+  final int applied;
+
+  /// Already in the node's log, by identifier.
+  final int duplicate;
+
+  /// Stored, and it lost the merge there.
+  final int superseded;
+
+  /// Refused, and therefore still owed.
+  final int refused;
+
+  /// How many operations left the outbox.
+  final int retired;
+
+  /// How many verdicts this build could name.
+  int get answered => applied + duplicate + superseded + refused;
+}
+
+/// Retires what [results] says a node has, and tallies the four outcomes.
+///
+/// It is shared by the unary push and by the bidirectional stream, because the
+/// verdicts mean the same thing on both and a second reading of them would be a
+/// second set of rules for when this device stops owing a change. Only the
+/// stream's arrive without the batch that provoked them, which is why this
+/// counts what it was told about rather than what was offered.
+Future<Settlement> settle(
+  AtrilDatabase database,
+  Iterable<OperationResult> results,
+) async {
+  var applied = 0;
+  var duplicate = 0;
+  var superseded = 0;
+  var refused = 0;
+
+  final retiring = <String>[];
+
+  for (final result in results) {
+    switch (result.outcome) {
+      case OperationOutcome.applied:
+        applied++;
+        retiring.add(result.operationId);
+      case OperationOutcome.duplicate:
+        duplicate++;
+        retiring.add(result.operationId);
+      case OperationOutcome.superseded:
+        // Nothing is written back. The node kept the operation and the record
+        // there already held a version this one does not beat, which is a
+        // verdict on a merge and not a correction to make here.
+        superseded++;
+        retiring.add(result.operationId);
+      case OperationOutcome.rejected:
+        refused++;
+      case null:
+        // A verdict this build cannot name retires nothing. A node running a
+        // later contract may answer with a fifth, and the one thing that is
+        // certainly wrong is to guess.
+        _log.warning('a node answered $result');
+    }
+  }
+
+  return Settlement(
+    applied: applied,
+    duplicate: duplicate,
+    superseded: superseded,
+    refused: refused,
+    retired: await database.syncDao.retire(retiring),
+  );
+}
+
 /// What one pass over the outbox did.
 final class PushRun {
   /// A pass with [applied], [duplicate] and [superseded] retired, [refused]
@@ -145,39 +226,16 @@ final class OperationPusher {
         }
 
         final answer = await api.push(batch);
-        final verdicts = <String, OperationResult>{
-          for (final result in answer.results) result.operationId: result,
-        };
+        final settlement = await settle(database, answer.results);
 
         head = answer.lastPosition;
+        applied += settlement.applied;
+        duplicate += settlement.duplicate;
+        superseded += settlement.superseded;
+        refused += settlement.refused;
+        unanswered += batch.length - settlement.answered;
 
-        final retiring = <String>[];
-
-        for (final operation in batch) {
-          switch (verdicts[operation.id]?.outcome) {
-            case OperationOutcome.applied:
-              applied++;
-              retiring.add(operation.id);
-            case OperationOutcome.duplicate:
-              duplicate++;
-              retiring.add(operation.id);
-            case OperationOutcome.superseded:
-              // Nothing is written back. The node kept the operation and the
-              // record there already held a version this one does not beat,
-              // which is a verdict on a merge and not a correction to make
-              // here.
-              superseded++;
-              retiring.add(operation.id);
-            case OperationOutcome.rejected:
-              refused++;
-            case null:
-              unanswered++;
-          }
-        }
-
-        await database.syncDao.retire(retiring);
-
-        if (retiring.isEmpty) {
+        if (settlement.retired == 0) {
           // Nothing left the outbox, so the next read would return this same
           // batch and offer it again for ever. Every operation in it was
           // refused or unanswered, and both are states the pass reports rather
