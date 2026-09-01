@@ -1,0 +1,40 @@
+# A package that exists so that another one does not.
+#
+# `flutter_inappwebview` 6.2.0-beta.3 declares `flutter_inappwebview_linux` as
+# the endorsed default implementation for Linux, so Flutter adds it to every
+# Linux build of anything that depends on it. That implementation is built on
+# WPE WebKit, which is packaged by neither Ubuntu nor Debian, and its CMake step
+# fails outright when it cannot find it:
+#
+#     WPE WebKit not found. Please install libwpewebkit-1.0-dev
+#
+# Atril does not use it. Linux runs the engine under `webview_cef`, for the
+# reasons `docs/architecture.md` gives, and the WPE implementation is dragged in
+# only because the package above it endorses one. So this replaces it: a package
+# with the same name that declares no Linux platform and therefore builds
+# nothing.
+#
+# The cost is visible and is meant to be. `flutter build linux` prints
+#
+#     Package flutter_inappwebview:linux references flutter_inappwebview_linux
+#     :linux as the default plugin, but the package does not exist, or is not a
+#     plugin package.
+#
+# three times, and that warning is the honest description of what is happening
+# rather than something to be silenced. Delete this directory and the override
+# beside it when either of two things is true: `flutter_inappwebview` reaches a
+# stable 6.2.0 whose Android implementation still carries the proguard fix and
+# whose Linux implementation can be declined, or WPE WebKit becomes ordinary
+# enough on Linux that hosting the engine under it is better than CEF.
+name: flutter_inappwebview_linux
+description: Declines the WPE WebKit implementation Atril does not use.
+version: 0.1.0-beta.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.13.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview_platform_interface: ^1.4.0-beta.3

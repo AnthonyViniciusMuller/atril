@@ -892,7 +892,7 @@ and they are recorded here because none of them is visible from the package's RE
       lives in a blob store addressed by digest. Styling is in the port from the start even though
       the settings screen is four commits away, because the port is meant to be the whole surface
       and a port that grows a method per screen is a port nobody can implement against
-- [ ] `feat: add the webview epub host` — `flutter_epub_viewer` on the five targets it reaches:
+- [x] `feat: add the webview epub host` — `flutter_epub_viewer` on the five targets it reaches:
       Android, iOS, macOS and Windows through `flutter_inappwebview`, and a browser through the
       same package's `<iframe>` and `dart:js_interop` path. It is **one** implementation of the
       port and not two, and that is the finding rather than a shortcut — the package's own
@@ -900,7 +900,26 @@ and they are recorded here because none of them is visible from the package's RE
       the same body. The roadmap carried these as two commits on the assumption that the web path
       needed writing; it needed checking, and it holds. What this commit writes is the mapping
       onto the port: the package already exposes CFI for the position, for navigation and for
-      extracting a text range
+      extracting a text range. Two places are not mechanical and both are commented where they
+      happen — the whole `body` rule is built in one place, because the glue assigns custom CSS
+      *over* the colours it set separately and a rule split between the two loses whichever was
+      written first; and the passage behind a CFI range is fetched through the glue function that
+      takes a range, because the package's Dart API takes two end CFIs and splitting a range back
+      into its ends would be parsing a CFI in Dart. `allowScriptedContent` stays false, which is
+      a security decision rather than an untouched default: a reader's library holds files they
+      were given, and on the web the rendering context is a same-origin iframe.
+
+      **It cost a dependency knot the roadmap did not see coming, and the resolution is three
+      lines in the pubspec.** `flutter_inappwebview` 6.1.5 — the stable release — cannot build
+      for Android at all under this Flutter's Gradle plugin, and it fails while Gradle is still
+      evaluating that package's own build file, so there is no fix on this side. `6.2.0-beta.3`
+      fixes it and brings an endorsed Linux implementation over WPE WebKit, which Flutter then
+      adds to every Linux build and which fails at CMake because WPE is packaged by neither
+      Ubuntu nor Debian. So the pubspec asks for the beta by exact version and *declines* the
+      Linux implementation, replacing it with `tool/no_wpe_webview` — a package of the same name
+      that declares no platform. Android, web and Linux were each built to prove it. The three
+      warnings Flutter prints about the missing default plugin are left visible, because they
+      are an accurate description of what is being done
 - [ ] `feat: add the desktop epub host` — `webview_cef` for Linux, loading the same pinned assets
       over a loopback server, because a CEF webview has no asset protocol to be handed and the
       host page resolves its scripts by relative path. The bridge is the same one: the package's
@@ -1052,12 +1071,19 @@ disproved rather than fixed — which is why they are recorded instead of delete
   is recorded in phase 9 — a 658 MB build-time download, a 244 MB stripped `libcef.so` in the
   bundle, and a small idempotent patch to the Linux runner that is committed rather than applied
   behind the build's back.
-- ~~**`flutter_inappwebview` was last published 23 months ago.**~~ 6.1.5 is still the stable
-  release and it is still what carries the reader, now on four native targets rather than three.
-  It builds and resolves clean against Flutter 3.47.1. The gap is real and is worth watching
-  rather than acting on: a `6.2.0-beta.3` was published in February 2026, so the package is not
-  abandoned, and the alternative to it is `webview_cef` on four more targets — which the spike
-  priced at a quarter of a gigabyte each.
+- **`flutter_inappwebview`'s stable release does not build for Android, and Atril is on a
+  pre-release.** This was the entry that said the package's age was a thing to check rather than
+  a risk to accept, and checking it found the risk. 6.1.5 — the stable release, October 2024 —
+  fails `flutter build apk` against the Android Gradle plugin this Flutter ships:
+  `flutter_inappwebview_android` 1.1.3 names `getDefaultProguardFile('proguard-android.txt')`,
+  which AGP refuses because it carries `-dontoptimize`. It fails while Gradle is still evaluating
+  that package's own build file, so nothing in this repository can patch around it.
+  `6.2.0-beta.3`, February 2026, fixes exactly that line, and the pubspec asks for it by exact
+  version because pub will not select a pre-release to satisfy somebody else's caret. The
+  alternatives were five targets, a downgraded toolchain, or the one thing architecture.md
+  forbids. It stays here rather than moving to *settled* because a pre-release under the reader
+  on five of six targets is a thing to keep watching: drop the pin when a stable 6.2.0 exists.
+  *Watch.*
 
 ### Watching upstream
 

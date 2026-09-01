@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# `flutter build apk` writes here as well as to the root build directory.
+/android/build/

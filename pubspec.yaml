@@ -236,6 +236,36 @@ dependencies:
   # in a browser. Linux is the sixth and is the only one it does not reach.
   flutter_epub_viewer: 2.0.0
 
+  # The webview under it, named here as a direct dependency and held at a
+  # pre-release. Both of those are deliberate and neither is comfortable.
+  #
+  # `flutter_epub_viewer` asks for `^6.1.5`, and 6.1.5 **does not build for
+  # Android** against the Android Gradle plugin this Flutter release ships:
+  # `flutter_inappwebview_android` 1.1.3 names
+  # `getDefaultProguardFile('proguard-android.txt')`, which AGP now refuses
+  # because it carries `-dontoptimize`. The build fails while Gradle is still
+  # evaluating that package's own `build.gradle`, which is before anything in
+  # this repository could patch it — so there is no fix on this side of the
+  # dependency.
+  #
+  # 6.2.0-beta.3 is that fix: its Android implementation names
+  # `proguard-android-optimize.txt`. It was published in February 2026, which is
+  # sixteen months after the stable release, and it is the reason the roadmap's
+  # note about this package being old is recorded as *watch* rather than as
+  # settled. Pub will not select a pre-release to satisfy somebody else's caret,
+  # so it has to be asked for here by exact version.
+  #
+  # The alternatives were weighed and are worse. Staying on 6.1.5 ships five
+  # targets and this project's rule is six. Pinning an older Gradle plugin
+  # downgrades the whole toolchain to accommodate one package. A Dart renderer
+  # for Android is the one thing `docs/architecture.md` forbids outright.
+  #
+  # What makes it tolerable is that the beta is exercised on every target it
+  # reaches, by every build: Android, iOS, macOS, Windows and the browser all
+  # run the reader through it, so a regression in it is a red build rather than
+  # a report from a reader. Drop the pin when a stable 6.2.0 exists.
+  flutter_inappwebview: 6.2.0-beta.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -330,3 +360,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# One override, and it is a *removal* rather than a version.
+#
+# `flutter_inappwebview` endorses a Linux implementation built on WPE WebKit,
+# which Flutter therefore adds to every Linux build, and which fails at CMake
+# because WPE is packaged by neither Ubuntu nor Debian. Atril does not use it —
+# Linux hosts the engine under `webview_cef` — so it is replaced by a package of
+# the same name that declares no platform at all. `tool/no_wpe_webview` carries
+# the whole argument and the two conditions under which it should be deleted.
+dependency_overrides:
+  flutter_inappwebview_linux:
+    path: tool/no_wpe_webview
