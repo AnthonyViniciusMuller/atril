@@ -310,6 +310,68 @@ class AppLocalizationsPt extends AppLocalizations {
   String libraryImported(String title) {
     return '$title entrou na sua biblioteca.';
   }
+
+  @override
+  String get settingsStorageSection => 'Armazenamento';
+
+  @override
+  String storageUsed(String used) {
+    return '$used guardados neste dispositivo';
+  }
+
+  @override
+  String storageUsedOfQuota(String used, String quota) {
+    return '$used de $quota guardados neste dispositivo';
+  }
+
+  @override
+  String get storageKeptExplanationNative =>
+      'Seus livros ficam guardados aqui e abrem sem rede. Você pode liberar o espaço de um livro que já foi enviado ao servidor; ele volta quando você pedir.';
+
+  @override
+  String get storageKeptExplanationWeb =>
+      'No navegador, um livro só fica guardado se você pedir. Os outros são lidos direto do servidor e precisam de rede.';
+
+  @override
+  String get storageNothingKept => 'Nenhum arquivo guardado neste dispositivo.';
+
+  @override
+  String get storageRelease => 'Liberar espaço';
+
+  @override
+  String get storageKeep => 'Guardar neste dispositivo';
+
+  @override
+  String get storageNotYetSent =>
+      'Este livro ainda não chegou ao servidor. Ele só existe aqui, então não dá para liberar o espaço dele agora.';
+
+  @override
+  String get storageReleaseFailed =>
+      'Não foi possível liberar o espaço deste livro.';
+
+  @override
+  String get storageKeepFailed =>
+      'Não foi possível guardar este livro neste dispositivo.';
+
+  @override
+  String bytesInKilobytes(String value) {
+    return '$value kB';
+  }
+
+  @override
+  String bytesInMegabytes(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String bytesInGigabytes(String value) {
+    return '$value GB';
+  }
+
+  @override
+  String bytesExactly(String value) {
+    return '$value B';
+  }
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -616,5 +678,67 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String libraryImported(String title) {
     return '$title entrou na sua biblioteca.';
+  }
+
+  @override
+  String get settingsStorageSection => 'Armazenamento';
+
+  @override
+  String storageUsed(String used) {
+    return '$used guardados neste dispositivo';
+  }
+
+  @override
+  String storageUsedOfQuota(String used, String quota) {
+    return '$used de $quota guardados neste dispositivo';
+  }
+
+  @override
+  String get storageKeptExplanationNative =>
+      'Seus livros ficam guardados aqui e abrem sem rede. Você pode liberar o espaço de um livro que já foi enviado ao servidor; ele volta quando você pedir.';
+
+  @override
+  String get storageKeptExplanationWeb =>
+      'No navegador, um livro só fica guardado se você pedir. Os outros são lidos direto do servidor e precisam de rede.';
+
+  @override
+  String get storageNothingKept => 'Nenhum arquivo guardado neste dispositivo.';
+
+  @override
+  String get storageRelease => 'Liberar espaço';
+
+  @override
+  String get storageKeep => 'Guardar neste dispositivo';
+
+  @override
+  String get storageNotYetSent =>
+      'Este livro ainda não chegou ao servidor. Ele só existe aqui, então não dá para liberar o espaço dele agora.';
+
+  @override
+  String get storageReleaseFailed =>
+      'Não foi possível liberar o espaço deste livro.';
+
+  @override
+  String get storageKeepFailed =>
+      'Não foi possível guardar este livro neste dispositivo.';
+
+  @override
+  String bytesInKilobytes(String value) {
+    return '$value kB';
+  }
+
+  @override
+  String bytesInMegabytes(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String bytesInGigabytes(String value) {
+    return '$value GB';
+  }
+
+  @override
+  String bytesExactly(String value) {
+    return '$value B';
   }
 }

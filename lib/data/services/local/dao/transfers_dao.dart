@@ -4,17 +4,18 @@ library;
 import 'package:drift/drift.dart';
 
 import '../database.dart';
+import '../tables/pins.dart';
 import '../tables/transfers.dart';
 
 part 'transfers_dao.g.dart';
 
-/// The outbox for files.
+/// The outbox for files, and what the reader decided to keep.
 ///
 /// Nothing here decides anything: queueing is what the import does, draining is
 /// what the uploader does, and this is the storage between them — deliberately
 /// dumb, for the reason `SyncDao` is. A queue that reordered or interpreted
 /// what it holds would be a second uploader with no tests.
-@DriftAccessor(tables: <Type>[ContentUploads])
+@DriftAccessor(tables: <Type>[ContentUploads, ContentPins])
 class TransfersDao extends DatabaseAccessor<AtrilDatabase>
     with _$TransfersDaoMixin {
   /// The accessor over [database].
@@ -142,6 +143,42 @@ class TransfersDao extends DatabaseAccessor<AtrilDatabase>
   Future<int> retire(String contentHash) => (delete(
     contentUploads,
   )..where((row) => row.contentHash.equals(contentHash))).go();
+
+  /// What the reader decided about [contentHash], or `null` for a file they
+  /// have not decided about — which is the platform's default and not a
+  /// third state.
+  Future<bool?> decision(String contentHash) async =>
+      (await (select(contentPins)
+                ..where((row) => row.contentHash.equals(contentHash)))
+              .getSingleOrNull())
+          ?.kept;
+
+  /// [decision], as it changes.
+  Stream<bool?> watchDecision(String contentHash) =>
+      (select(contentPins)
+            ..where((row) => row.contentHash.equals(contentHash)))
+          .watchSingleOrNull()
+          .map((row) => row?.kept);
+
+  /// Every decision the reader has taken, by digest.
+  Stream<Map<String, bool>> watchDecisions() => select(contentPins).watch().map(
+    (rows) => <String, bool>{
+      for (final row in rows) row.contentHash: row.kept,
+    },
+  );
+
+  /// Records that this device does or does not keep [contentHash].
+  Future<void> decide({
+    required String contentHash,
+    required bool kept,
+    required DateTime at,
+  }) => into(contentPins).insertOnConflictUpdate(
+    ContentPinsCompanion.insert(
+      contentHash: contentHash,
+      kept: kept,
+      decidedAt: at,
+    ),
+  );
 
   /// How many files are still owed, which is what a sync surface counts.
   Stream<int> watchPendingCount() {

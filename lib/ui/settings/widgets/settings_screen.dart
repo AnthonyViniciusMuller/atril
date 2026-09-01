@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/settings_view_model.dart';
+import 'storage_section.dart';
 
 /// The settings screen.
 class SettingsScreen extends StatefulWidget {
@@ -84,6 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 enabled: !_model.signOut.running,
                 onTap: _model.signOut.execute,
               ),
+              const StorageSection(),
             ],
           );
         },

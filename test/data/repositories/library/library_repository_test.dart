@@ -8,6 +8,7 @@ import 'package:atril/data/services/content/content_uploader.dart';
 import 'package:atril/data/services/content/upload_queue.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/data/services/local/database.dart';
+import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/data/services/sync/author.dart';
 import 'package:atril/data/services/sync/reconciler.dart';
@@ -77,6 +78,8 @@ String _nextId() =>
 Future<LibraryRepository> _repository(
   AtrilDatabase database, {
   bool bound = true,
+  bool keepsByDefault = true,
+  int? quota,
 }) async {
   if (bound) {
     await database.identityDao.bindDevice(
@@ -101,6 +104,10 @@ Future<LibraryRepository> _repository(
     ),
     blobs: blobs,
     downloads: ContentDownloader(api: _api(), blobs: blobs),
+    transfers: database.transfersDao,
+    keepsByDefault: keepsByDefault,
+    budget: (BlobStore store) async =>
+        StorageBudget(used: await store.usedBytes(), quota: quota),
     uploads: UploadQueue(
       database: database,
       // The queue is never run in these tests. What is being checked is that
@@ -519,6 +526,154 @@ void main() {
       final result = await repository.importEbook(_File('livro.pdf', _epub));
 
       expect((result as Ok<Ebook>).value.title, 'livro');
+    });
+  });
+
+  group('what this device keeps', () {
+    test('is every book, on a target that keeps everything', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final id = (result as Ok<Ebook>).value.id;
+
+      expect(
+        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        isTrue,
+      );
+    });
+
+    test('is nothing, on a target that keeps nothing until asked', () async {
+      // The browser. The origin is lent a share of a disk it may be asked to
+      // give back, so a build that filled it by default would be promising
+      // something it cannot keep.
+      final database = _open();
+      final repository = await _repository(database, keepsByDefault: false);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final id = (result as Ok<Ebook>).value.id;
+
+      expect(
+        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        isFalse,
+      );
+    });
+
+    test('is the reader decision where they took one', () async {
+      // One mechanism with two defaults: the row records what the reader
+      // decided, and its absence is what the platform answers. A table of
+      // *kept* books could not express the first case and a table of
+      // *released* ones could not express the second.
+      final database = _open();
+      final repository = await _repository(database, keepsByDefault: false);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final id = (result as Ok<Ebook>).value.id;
+
+      await repository.keepEbook(id);
+
+      expect(
+        ((await repository.watchIsKept(id).first) as Ok<bool>).value,
+        isTrue,
+      );
+    });
+
+    test('refuses to release the only copy there is', () async {
+      // The one gesture in this app that could destroy something. A file still
+      // in the queue is on this device and nowhere else.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      final released = await repository.releaseEbook(work.id);
+
+      expect(
+        ((released as Error<void>).error as AppException).code,
+        codeNotYetSent,
+      );
+      expect(await blobs.contains(work.contentHash), isTrue);
+    });
+
+    test('releases the file once the node has it', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      // The transfer finished, as a pass over the queue would have left it.
+      await database.transfersDao.retire(work.contentHash);
+
+      expect(await repository.releaseEbook(work.id), isA<Ok<void>>());
+      expect(await blobs.contains(work.contentHash), isFalse);
+      expect(
+        ((await repository.watchIsKept(work.id).first) as Ok<bool>).value,
+        isFalse,
+      );
+    });
+
+    test('keeps the record of a work whose file it released', () async {
+      // Releasing space is not deleting a book. The row stays, the shelf still
+      // shows it, and asking for it again brings the file back.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      await database.transfersDao.retire(work.contentHash);
+      await repository.releaseEbook(work.id);
+
+      expect((await repository.watchEbooks().first).titles, <String>[
+        'Vidas Secas',
+      ]);
+    });
+
+    test('lists what it is holding and not what it merely has a row for', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      // A work that arrived by synchronization, whose file is on the node.
+      await _work(database, id: _id('dddd', 1), title: 'Não baixado', seed: 9);
+
+      final held = await repository.watchKeptEbooks().first;
+
+      expect(
+        <String>[for (final book in (held as Ok<List<Ebook>>).value) book.title],
+        <String>['Vidas Secas'],
+      );
+      expect(work.title, 'Vidas Secas');
+    });
+
+    test('reports what the store holds', () async {
+      final database = _open();
+      final repository = await _repository(database, quota: 1000);
+
+      await repository.importEbook(_File('livro.epub', List<int>.filled(300, 7)));
+
+      final budget = await repository.storage();
+
+      expect((budget as Ok<StorageBudget>).value.used, 300);
+      expect(budget.value.available, 700);
     });
   });
 

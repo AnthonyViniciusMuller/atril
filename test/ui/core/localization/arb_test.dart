@@ -91,6 +91,13 @@ void main() {
       'appTitle',
       // Portuguese writes it exactly as English does, hyphen included.
       'registerEmailLabel',
+      // The SI symbols for a size, which are the same in every language: what
+      // differs between the two is the decimal separator inside the number,
+      // and that is `intl`'s to place rather than a translator's.
+      'bytesExactly',
+      'bytesInKilobytes',
+      'bytesInMegabytes',
+      'bytesInGigabytes',
     };
 
     for (final message in messagesOf(template).difference(sameInBoth)) {

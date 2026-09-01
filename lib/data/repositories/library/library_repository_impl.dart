@@ -24,6 +24,7 @@ import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_kind.dart';
 import '../../services/files/file_source.dart';
 import '../../services/local/dao/library_dao.dart';
+import '../../services/local/dao/transfers_dao.dart';
 import '../../services/local/database.dart';
 import '../../services/storage/blob_storage.dart';
 import '../../services/sync/author.dart';
@@ -41,6 +42,9 @@ const String opImport = 'library/collection: import';
 /// The operation a download reports under.
 const String opDownload = 'library/content: download';
 
+/// The operation keeping and releasing report under.
+const String opKeep = 'library/content: keep';
+
 /// The reader's collection, read out of drift.
 final class LibraryRepositoryImpl implements LibraryRepository {
   /// The repository over [library], writing through [author] and keeping the
@@ -55,6 +59,9 @@ final class LibraryRepositoryImpl implements LibraryRepository {
     required this.blobs,
     required this.uploads,
     required this.downloads,
+    required this.transfers,
+    required this.budget,
+    this.keepsByDefault = true,
     String Function()? mint,
     DateTime Function()? now,
   }) : _mint = mint ?? mintIdentifier,
@@ -75,6 +82,21 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
   /// What brings a file the other way.
   final ContentDownloader downloads;
+
+  /// What is owed, and what the reader decided to keep.
+  final TransfersDao transfers;
+
+  /// What the store holds and may hold, asked of the platform.
+  final Future<StorageBudget> Function(BlobStore blobs) budget;
+
+  /// Whether a book arrives kept.
+  ///
+  /// True on the five native targets and false in a browser, decided at the
+  /// composition root rather than here: a repository that asked the framework
+  /// what platform it was on would be a repository that could not be tested as
+  /// any other. It is the *default* and never the answer — the answer is the
+  /// reader's decision where they have taken one.
+  final bool keepsByDefault;
 
   final String Function() _mint;
   final DateTime Function() _now;
@@ -226,6 +248,133 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       (row) async =>
           row != null && await blobs.contains(row.contentHash),
     ),
+  );
+
+  @override
+  Stream<Result<bool>> watchIsKept(String ebookId) => _guard(
+    library.watchEbook(ebookId).asyncExpand(
+      (row) => row == null
+          ? Stream<bool>.value(false)
+          : transfers
+                .watchDecision(row.contentHash)
+                .map((decision) => decision ?? keepsByDefault),
+    ),
+  );
+
+  @override
+  Future<Result<void>> keepEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  }) async {
+    try {
+      final work = await library.readEbook(ebookId);
+
+      if (work == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opKeep,
+        );
+      }
+
+      // The decision first, so that a download interrupted half way through
+      // leaves a device that still intends to keep the book — and a later
+      // pass finishes it — rather than one that has forgotten it was asked.
+      await transfers.decide(
+        contentHash: work.contentHash,
+        kept: true,
+        at: _now(),
+      );
+
+      if (!await blobs.contains(work.contentHash)) {
+        final result = await downloadEbook(
+          ebookId,
+          cancel: cancel,
+          onProgress: onProgress,
+        );
+
+        if (result case Error<EbookContent>(:final error)) {
+          return Result<void>.error(error);
+        }
+      }
+
+      return const Result<void>.ok(null);
+    } on Object catch (error) {
+      _log.warning('$ebookId could not be kept', error);
+
+      return Result<void>.error(failureFrom(error, op: opKeep));
+    }
+  }
+
+  @override
+  Future<Result<void>> releaseEbook(String ebookId) async {
+    try {
+      final work = await library.readEbook(ebookId);
+
+      if (work == null) {
+        throw AppException(
+          kind: ErrorKind.notFound,
+          message: 'this device holds no work called $ebookId',
+          op: opKeep,
+        );
+      }
+
+      // Nothing in this app destroys the only copy of a book. A file still in
+      // the queue is on this device and nowhere else, and releasing it would
+      // be the one gesture here that loses something the reader cannot get
+      // back — so it is refused until the node has it.
+      if (await transfers.transfer(work.contentHash) != null) {
+        throw AppException(
+          kind: ErrorKind.failedPrecondition,
+          message:
+              'the file of $ebookId has not reached the node and is only here',
+          code: codeNotYetSent,
+          op: opKeep,
+        );
+      }
+
+      await transfers.decide(
+        contentHash: work.contentHash,
+        kept: false,
+        at: _now(),
+      );
+
+      // Two works naming one file are one file. Releasing it releases both,
+      // which is not a compromise: they are the same bytes.
+      await blobs.remove(work.contentHash);
+
+      _log.fine('released ${work.contentHash}');
+
+      return const Result<void>.ok(null);
+    } on Object catch (error) {
+      _log.warning('$ebookId could not be released', error);
+
+      return Result<void>.error(failureFrom(error, op: opKeep));
+    }
+  }
+
+  @override
+  Future<Result<StorageBudget>> storage() async {
+    try {
+      return Result<StorageBudget>.ok(await budget(blobs));
+    } on Object catch (error) {
+      _log.warning('the storage budget could not be read', error);
+
+      return Result<StorageBudget>.error(failureFrom(error, op: opKeep));
+    }
+  }
+
+  @override
+  Stream<Result<List<Ebook>>> watchKeptEbooks() => _guard(
+    library.watchEbooks().asyncMap((rows) async {
+      final held = (await blobs.digests()).toSet();
+
+      return <Ebook>[
+        for (final row in rows)
+          if (held.contains(row.contentHash)) ebookOfRow(row),
+      ]..sort((a, b) => b.importedAt.compareTo(a.importedAt));
+    }),
   );
 
   /// Extracts and keeps the cover of [work], if this device can read one.

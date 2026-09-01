@@ -709,12 +709,22 @@ that reason.
       download has stopped wanting the book on this device. Cancelling **breaks out of** the
       stream rather than throwing out of it, which is what ends the call rather than abandoning a
       stream the transport is still holding open
-- [ ] `feat: add offline pinning` — which books this device keeps. On the five native targets
+- [x] `feat: add offline pinning` — which books this device keeps. On the five native targets
       every book is kept and the control is there to release one; on the web nothing is kept
       until the reader says so, and the screen shows what is held against the budget phase 3
       reports. It is one mechanism with two defaults rather than two features, because the
       question a reader is answering is the same one — *is this book here when the network is
-      not* — and only the honest answer differs by platform
+      not* — and only the honest answer differs by platform. The shape that carries both is a
+      table of **decisions** and not a list of kept books: a row says what the reader chose and
+      its absence is what the platform answers, which a membership list could express in one
+      direction only. Two things came out of it. The key is the digest, as it is in the store and
+      in the queue, so two works naming one file are one decision — they *are* the same bytes.
+      And a release is **refused while the file is still owed**: a work whose transfer has not
+      finished exists on this device and nowhere else, so *free the space* would be the one
+      gesture in this app that destroys something a reader cannot get back. The per-book control
+      lands in the settings screen's storage section, which is where a reader looks for what is
+      taking up room; the detail screen of the next commit offers the same decision about the
+      book they are looking at
 - [ ] `feat: add the e-book detail screen` — the metadata, the cover, where the bytes are, and
       the actions
 - [ ] `feat: add metadata editing` — RF05, including the extra metadata the format carried and

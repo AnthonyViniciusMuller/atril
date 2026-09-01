@@ -16,6 +16,7 @@ import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
 import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/epub/epub_metadata.dart';
+import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
@@ -301,6 +302,68 @@ final class FakeLibraryRepository implements LibraryRepository {
   @override
   Stream<Result<bool>> watchIsDownloaded(String ebookId) =>
       works.stream.map((_) => Result<bool>.ok(downloaded.contains(ebookId)));
+
+  /// The works this device keeps, which starts as every one it holds.
+  final Set<String> kept = <String>{};
+
+  /// Every work a release was asked for, in order.
+  final List<String> released = <String>[];
+
+  /// What the store reports.
+  StorageBudget storageBudget = const StorageBudget(used: 0);
+
+  @override
+  Stream<Result<bool>> watchIsKept(String ebookId) =>
+      works.stream.map((_) => Result<bool>.ok(kept.contains(ebookId)));
+
+  @override
+  Future<Result<void>> keepEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  }) async {
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<void>.error(refused);
+    }
+
+    kept.add(ebookId);
+    downloaded.add(ebookId);
+
+    return const Result<void>.ok(null);
+  }
+
+  @override
+  Future<Result<void>> releaseEbook(String ebookId) async {
+    released.add(ebookId);
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<void>.error(refused);
+    }
+
+    kept.remove(ebookId);
+    downloaded.remove(ebookId);
+
+    return const Result<void>.ok(null);
+  }
+
+  @override
+  Future<Result<StorageBudget>> storage() async =>
+      Result<StorageBudget>.ok(storageBudget);
+
+  @override
+  Stream<Result<List<Ebook>>> watchKeptEbooks() => works.stream.map(
+    (result) => switch (result) {
+      Ok<List<Ebook>>(:final value) => Result<List<Ebook>>.ok(<Ebook>[
+        for (final work in value)
+          if (kept.contains(work.id)) work,
+      ]),
+      Error<List<Ebook>>(:final error) => Result<List<Ebook>>.error(error),
+    },
+  );
 
   /// The covers this device has, by work.
   final Map<String, EpubCover> covers = <String, EpubCover>{};

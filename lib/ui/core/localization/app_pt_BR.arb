@@ -511,5 +511,120 @@
         "example": "Vidas Secas"
       }
     }
+  },
+
+  "settingsStorageSection": "Armazenamento",
+  "@settingsStorageSection": {
+    "description": "Título da seção das configurações que mostra quanto espaço os livros guardados neste dispositivo ocupam e quais são eles."
+  },
+
+  "storageUsed": "{used} guardados neste dispositivo",
+  "@storageUsed": {
+    "description": "Quanto os arquivos dos livros ocupam. Mostrado sozinho quando não há como saber o total disponível, que é o caso dos cinco alvos nativos.",
+    "placeholders": {
+      "used": {
+        "type": "String",
+        "example": "128 MB"
+      }
+    }
+  },
+
+  "storageUsedOfQuota": "{used} de {quota} guardados neste dispositivo",
+  "@storageUsedOfQuota": {
+    "description": "Quanto os arquivos ocupam do total que o navegador reservou para este aplicativo. Só aparece na web: nos alvos nativos não há como perguntar ao sistema quanto espaço resta, e um número inventado seria pior do que nenhum.",
+    "placeholders": {
+      "used": {
+        "type": "String",
+        "example": "128 MB"
+      },
+      "quota": {
+        "type": "String",
+        "example": "2 GB"
+      }
+    }
+  },
+
+  "storageKeptExplanationNative": "Seus livros ficam guardados aqui e abrem sem rede. Você pode liberar o espaço de um livro que já foi enviado ao servidor; ele volta quando você pedir.",
+  "@storageKeptExplanationNative": {
+    "description": "Explicação da seção de armazenamento nos cinco alvos nativos, onde tudo é guardado por padrão e o controle serve para liberar espaço."
+  },
+
+  "storageKeptExplanationWeb": "No navegador, um livro só fica guardado se você pedir. Os outros são lidos direto do servidor e precisam de rede.",
+  "@storageKeptExplanationWeb": {
+    "description": "Explicação da seção de armazenamento na web, onde nada é guardado por padrão porque o navegador empresta o espaço e pode retomá-lo."
+  },
+
+  "storageNothingKept": "Nenhum arquivo guardado neste dispositivo.",
+  "@storageNothingKept": {
+    "description": "Mostrado na seção de armazenamento quando o dispositivo não tem o arquivo de nenhum livro — o caso normal de uma instalação nova no navegador."
+  },
+
+  "storageRelease": "Liberar espaço",
+  "@storageRelease": {
+    "description": "Ação que apaga o arquivo de um livro deste dispositivo, mantendo o registro dele na biblioteca. Nada é apagado do servidor."
+  },
+
+  "storageKeep": "Guardar neste dispositivo",
+  "@storageKeep": {
+    "description": "Ação que baixa o arquivo de um livro e passa a guardá-lo, para que ele abra sem rede."
+  },
+
+  "storageNotYetSent": "Este livro ainda não chegou ao servidor. Ele só existe aqui, então não dá para liberar o espaço dele agora.",
+  "@storageNotYetSent": {
+    "description": "Recusa mostrada quando o leitor tenta liberar o espaço de um livro cujo arquivo ainda está na fila de envio. É a única cópia que existe, e apagá-la seria perder o livro."
+  },
+
+  "storageReleaseFailed": "Não foi possível liberar o espaço deste livro.",
+  "@storageReleaseFailed": {
+    "description": "Erro geral ao liberar o espaço de um livro."
+  },
+
+  "storageKeepFailed": "Não foi possível guardar este livro neste dispositivo.",
+  "@storageKeepFailed": {
+    "description": "Erro geral ao baixar e guardar o arquivo de um livro — sem rede, sem espaço, ou o servidor não tem o arquivo."
+  },
+
+  "bytesInKilobytes": "{value} kB",
+  "@bytesInKilobytes": {
+    "description": "Um tamanho em quilobytes. O símbolo é o do SI e é o mesmo nos dois idiomas; o que muda é o separador decimal do número, que a formatação do idioma resolve.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "512"
+      }
+    }
+  },
+
+  "bytesInMegabytes": "{value} MB",
+  "@bytesInMegabytes": {
+    "description": "Um tamanho em megabytes.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "12,4"
+      }
+    }
+  },
+
+  "bytesInGigabytes": "{value} GB",
+  "@bytesInGigabytes": {
+    "description": "Um tamanho em gigabytes.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "1,8"
+      }
+    }
+  },
+
+  "bytesExactly": "{value} B",
+  "@bytesExactly": {
+    "description": "Um tamanho em bytes, para um arquivo pequeno demais para um quilobyte.",
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "820"
+      }
+    }
   }
 }

@@ -1,7 +1,14 @@
 /// The account section, and the way out of it.
 library;
 
+import 'package:atril/data/repositories/library/library_repository.dart';
+import 'package:atril/data/services/storage/blob_storage.dart';
+import 'package:atril/domain/crdt/revision.dart';
+import 'package:atril/domain/crdt/vector_clock.dart';
+import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/user.dart';
+import 'package:atril/utils/errors.dart';
+import 'package:atril/utils/result.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/settings/widgets/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +26,14 @@ final User _reader = User(
   createdAt: DateTime.utc(2026),
 );
 
-Future<void> pump(WidgetTester tester, FakeAuthRepository auth) async {
+Future<void> pump(
+  WidgetTester tester,
+  FakeAuthRepository auth, {
+  FakeLibraryRepository? library,
+}) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(auth: auth),
+      providers: repositoryProviders(auth: auth, library: library),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -34,6 +45,8 @@ Future<void> pump(WidgetTester tester, FakeAuthRepository auth) async {
 }
 
 void main() {
+  _storage();
+
   testWidgets('names the reader by the whole federated identifier', (
     WidgetTester tester,
   ) async {
@@ -79,5 +92,119 @@ void main() {
     // The library, the annotations and the changes this device still owes stay
     // here, and a reader has no way of knowing that unless it is said.
     expect(find.byType(ListTile), findsWidgets);
+  });
+}
+
+
+/// The storage section, whose two sentences are one mechanism.
+void _storage() {
+  testWidgets('says what it holds and nothing it cannot know', (
+    WidgetTester tester,
+  ) async {
+    // A native install has no quota to report: nothing portable can ask a
+    // volume how much room is left, and a number this app invented would be
+    // worse than none.
+    final library = FakeLibraryRepository()
+      ..storageBudget = const StorageBudget(used: 300000);
+
+    await pump(tester, FakeAuthRepository(), library: library);
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(find.text(l10n.storageUsed('300 kB')), findsOneWidget);
+    expect(find.text(l10n.storageKeptExplanationNative), findsOneWidget);
+  });
+
+  testWidgets('spends a budget where the browser reports one', (
+    WidgetTester tester,
+  ) async {
+    final library = FakeLibraryRepository()
+      ..storageBudget = const StorageBudget(used: 500000000, quota: 2000000000);
+
+    await pump(tester, FakeAuthRepository(), library: library);
+    library.works.add(const Result<List<Ebook>>.ok(<Ebook>[]));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(
+      find.text(l10n.storageUsedOfQuota('500 MB', '2 GB')),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.storageKeptExplanationWeb), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('releases a book the reader asked to release', (
+    WidgetTester tester,
+  ) async {
+    final library = FakeLibraryRepository()..kept.add('a');
+
+    await pump(tester, FakeAuthRepository(), library: library);
+    library.works.add(
+      Result<List<Ebook>>.ok(<Ebook>[
+        Ebook(
+          id: 'a',
+          title: 'Vidas Secas',
+          format: EbookFormat.epub,
+          contentHash: '0' * 64,
+          importedAt: DateTime.utc(2026),
+          revision: Revision(
+            vectorClock: VectorClock.empty.tick('device'),
+            updatedAt: DateTime.utc(2026),
+            deviceId: 'device',
+          ),
+        ),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.tap(find.text(l10n.storageRelease));
+    await tester.pumpAndSettle();
+
+    expect(library.released, <String>['a']);
+  });
+
+  testWidgets('refuses to release the only copy, and says why', (
+    WidgetTester tester,
+  ) async {
+    // The one gesture in this app that could destroy something a reader cannot
+    // get back, refused where it would.
+    final library = FakeLibraryRepository()
+      ..kept.add('a')
+      ..refusal = const AppException(
+        kind: ErrorKind.failedPrecondition,
+        code: codeNotYetSent,
+      );
+
+    await pump(tester, FakeAuthRepository(), library: library);
+    library.works.add(
+      Result<List<Ebook>>.ok(<Ebook>[
+        Ebook(
+          id: 'a',
+          title: 'Vidas Secas',
+          format: EbookFormat.epub,
+          contentHash: '0' * 64,
+          importedAt: DateTime.utc(2026),
+          revision: Revision(
+            vectorClock: VectorClock.empty.tick('device'),
+            updatedAt: DateTime.utc(2026),
+            deviceId: 'device',
+          ),
+        ),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.tap(find.text(l10n.storageRelease));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.storageNotYetSent), findsOneWidget);
   });
 }

@@ -35,6 +35,7 @@ import 'dao/sync_dao.dart';
 import 'tables/covers.dart';
 import 'tables/identity.dart';
 import 'tables/library.dart';
+import 'tables/pins.dart';
 import 'tables/reading.dart';
 import 'tables/records.dart';
 import 'tables/sync.dart';
@@ -66,6 +67,7 @@ final _log = loggerFor('data/local');
     AppliedOperations,
     RecordVersions,
     ContentUploads,
+    ContentPins,
   ],
   daos: <Type>[IdentityDao, LibraryDao, SyncDao, RecordsDao, TransfersDao],
 )
@@ -86,7 +88,7 @@ class AtrilDatabase extends _$AtrilDatabase {
   /// starts moving here, one step per table, and each step is exactly what
   /// [migration] says it is.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   /// How the schema is created, how it moves between versions, and what is
   /// switched on for every connection.

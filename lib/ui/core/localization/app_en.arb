@@ -90,5 +90,21 @@
   "libraryImport": "Import a book",
   "libraryImportUnsupported": "This application imports EPUB, PDF, MOBI, DJVU and CBZ files.",
   "libraryImportFailed": "The file could not be imported.",
-  "libraryImported": "{title} joined your library."
+  "libraryImported": "{title} joined your library.",
+
+  "settingsStorageSection": "Storage",
+  "storageUsed": "{used} kept on this device",
+  "storageUsedOfQuota": "{used} of {quota} kept on this device",
+  "storageKeptExplanationNative": "Your books are kept here and open without a network. You can free the space of a book that has already reached the server; it comes back when you ask.",
+  "storageKeptExplanationWeb": "In a browser a book is only kept if you ask. The others are read from the server and need a network.",
+  "storageNothingKept": "No files are kept on this device.",
+  "storageRelease": "Free the space",
+  "storageKeep": "Keep on this device",
+  "storageNotYetSent": "This book has not reached the server yet. It only exists here, so its space cannot be freed now.",
+  "storageReleaseFailed": "The space of this book could not be freed.",
+  "storageKeepFailed": "This book could not be kept on this device.",
+  "bytesInKilobytes": "{value} kB",
+  "bytesInMegabytes": "{value} MB",
+  "bytesInGigabytes": "{value} GB",
+  "bytesExactly": "{value} B"
 }

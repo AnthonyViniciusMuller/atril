@@ -590,6 +590,96 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{title} entrou na sua biblioteca.'**
   String libraryImported(String title);
+
+  /// Título da seção das configurações que mostra quanto espaço os livros guardados neste dispositivo ocupam e quais são eles.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Armazenamento'**
+  String get settingsStorageSection;
+
+  /// Quanto os arquivos dos livros ocupam. Mostrado sozinho quando não há como saber o total disponível, que é o caso dos cinco alvos nativos.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{used} guardados neste dispositivo'**
+  String storageUsed(String used);
+
+  /// Quanto os arquivos ocupam do total que o navegador reservou para este aplicativo. Só aparece na web: nos alvos nativos não há como perguntar ao sistema quanto espaço resta, e um número inventado seria pior do que nenhum.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{used} de {quota} guardados neste dispositivo'**
+  String storageUsedOfQuota(String used, String quota);
+
+  /// Explicação da seção de armazenamento nos cinco alvos nativos, onde tudo é guardado por padrão e o controle serve para liberar espaço.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Seus livros ficam guardados aqui e abrem sem rede. Você pode liberar o espaço de um livro que já foi enviado ao servidor; ele volta quando você pedir.'**
+  String get storageKeptExplanationNative;
+
+  /// Explicação da seção de armazenamento na web, onde nada é guardado por padrão porque o navegador empresta o espaço e pode retomá-lo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'No navegador, um livro só fica guardado se você pedir. Os outros são lidos direto do servidor e precisam de rede.'**
+  String get storageKeptExplanationWeb;
+
+  /// Mostrado na seção de armazenamento quando o dispositivo não tem o arquivo de nenhum livro — o caso normal de uma instalação nova no navegador.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nenhum arquivo guardado neste dispositivo.'**
+  String get storageNothingKept;
+
+  /// Ação que apaga o arquivo de um livro deste dispositivo, mantendo o registro dele na biblioteca. Nada é apagado do servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Liberar espaço'**
+  String get storageRelease;
+
+  /// Ação que baixa o arquivo de um livro e passa a guardá-lo, para que ele abra sem rede.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Guardar neste dispositivo'**
+  String get storageKeep;
+
+  /// Recusa mostrada quando o leitor tenta liberar o espaço de um livro cujo arquivo ainda está na fila de envio. É a única cópia que existe, e apagá-la seria perder o livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este livro ainda não chegou ao servidor. Ele só existe aqui, então não dá para liberar o espaço dele agora.'**
+  String get storageNotYetSent;
+
+  /// Erro geral ao liberar o espaço de um livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível liberar o espaço deste livro.'**
+  String get storageReleaseFailed;
+
+  /// Erro geral ao baixar e guardar o arquivo de um livro — sem rede, sem espaço, ou o servidor não tem o arquivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível guardar este livro neste dispositivo.'**
+  String get storageKeepFailed;
+
+  /// Um tamanho em quilobytes. O símbolo é o do SI e é o mesmo nos dois idiomas; o que muda é o separador decimal do número, que a formatação do idioma resolve.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{value} kB'**
+  String bytesInKilobytes(String value);
+
+  /// Um tamanho em megabytes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{value} MB'**
+  String bytesInMegabytes(String value);
+
+  /// Um tamanho em gigabytes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{value} GB'**
+  String bytesInGigabytes(String value);
+
+  /// Um tamanho em bytes, para um arquivo pequeno demais para um quilobyte.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{value} B'**
+  String bytesExactly(String value);
 }
 
 class _AppLocalizationsDelegate

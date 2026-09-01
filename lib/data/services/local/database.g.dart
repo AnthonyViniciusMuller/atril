@@ -7332,6 +7332,296 @@ class ContentUploadsCompanion extends UpdateCompanion<ContentUploadRow> {
   }
 }
 
+class $ContentPinsTable extends ContentPins
+    with TableInfo<$ContentPinsTable, ContentPinRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContentPinsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentHashMeta = const VerificationMeta(
+    'contentHash',
+  );
+  @override
+  late final GeneratedColumn<String> contentHash = GeneratedColumn<String>(
+    'content_hash',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 64,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _keptMeta = const VerificationMeta('kept');
+  @override
+  late final GeneratedColumn<bool> kept = GeneratedColumn<bool>(
+    'kept',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("kept" IN (0, 1))',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, int> decidedAt =
+      GeneratedColumn<int>(
+        'decided_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ContentPinsTable.$converterdecidedAt);
+  @override
+  List<GeneratedColumn> get $columns => [contentHash, kept, decidedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'content_pins';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContentPinRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_hash')) {
+      context.handle(
+        _contentHashMeta,
+        contentHash.isAcceptableOrUnknown(
+          data['content_hash']!,
+          _contentHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentHashMeta);
+    }
+    if (data.containsKey('kept')) {
+      context.handle(
+        _keptMeta,
+        kept.isAcceptableOrUnknown(data['kept']!, _keptMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keptMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentHash};
+  @override
+  ContentPinRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContentPinRow(
+      contentHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_hash'],
+      )!,
+      kept: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}kept'],
+      )!,
+      decidedAt: $ContentPinsTable.$converterdecidedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}decided_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ContentPinsTable createAlias(String alias) {
+    return $ContentPinsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, int> $converterdecidedAt =
+      const InstantConverter();
+}
+
+class ContentPinRow extends DataClass implements Insertable<ContentPinRow> {
+  /// The file, lowercase hex sha-256.
+  final String contentHash;
+
+  /// Whether this device keeps it.
+  ///
+  /// A row saying `false` is a reader who released a book on a native install;
+  /// a row saying `true` is one who asked for a book in a browser. The absence
+  /// of a row is neither, and is what the platform's default answers.
+  final bool kept;
+
+  /// When they decided, so that a screen can order what is held by when the
+  /// reader asked for it.
+  final DateTime decidedAt;
+  const ContentPinRow({
+    required this.contentHash,
+    required this.kept,
+    required this.decidedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_hash'] = Variable<String>(contentHash);
+    map['kept'] = Variable<bool>(kept);
+    {
+      map['decided_at'] = Variable<int>(
+        $ContentPinsTable.$converterdecidedAt.toSql(decidedAt),
+      );
+    }
+    return map;
+  }
+
+  ContentPinsCompanion toCompanion(bool nullToAbsent) {
+    return ContentPinsCompanion(
+      contentHash: Value(contentHash),
+      kept: Value(kept),
+      decidedAt: Value(decidedAt),
+    );
+  }
+
+  factory ContentPinRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContentPinRow(
+      contentHash: serializer.fromJson<String>(json['contentHash']),
+      kept: serializer.fromJson<bool>(json['kept']),
+      decidedAt: serializer.fromJson<DateTime>(json['decidedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contentHash': serializer.toJson<String>(contentHash),
+      'kept': serializer.toJson<bool>(kept),
+      'decidedAt': serializer.toJson<DateTime>(decidedAt),
+    };
+  }
+
+  ContentPinRow copyWith({
+    String? contentHash,
+    bool? kept,
+    DateTime? decidedAt,
+  }) => ContentPinRow(
+    contentHash: contentHash ?? this.contentHash,
+    kept: kept ?? this.kept,
+    decidedAt: decidedAt ?? this.decidedAt,
+  );
+  ContentPinRow copyWithCompanion(ContentPinsCompanion data) {
+    return ContentPinRow(
+      contentHash: data.contentHash.present
+          ? data.contentHash.value
+          : this.contentHash,
+      kept: data.kept.present ? data.kept.value : this.kept,
+      decidedAt: data.decidedAt.present ? data.decidedAt.value : this.decidedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContentPinRow(')
+          ..write('contentHash: $contentHash, ')
+          ..write('kept: $kept, ')
+          ..write('decidedAt: $decidedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(contentHash, kept, decidedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContentPinRow &&
+          other.contentHash == this.contentHash &&
+          other.kept == this.kept &&
+          other.decidedAt == this.decidedAt);
+}
+
+class ContentPinsCompanion extends UpdateCompanion<ContentPinRow> {
+  final Value<String> contentHash;
+  final Value<bool> kept;
+  final Value<DateTime> decidedAt;
+  final Value<int> rowid;
+  const ContentPinsCompanion({
+    this.contentHash = const Value.absent(),
+    this.kept = const Value.absent(),
+    this.decidedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContentPinsCompanion.insert({
+    required String contentHash,
+    required bool kept,
+    required DateTime decidedAt,
+    this.rowid = const Value.absent(),
+  }) : contentHash = Value(contentHash),
+       kept = Value(kept),
+       decidedAt = Value(decidedAt);
+  static Insertable<ContentPinRow> custom({
+    Expression<String>? contentHash,
+    Expression<bool>? kept,
+    Expression<int>? decidedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contentHash != null) 'content_hash': contentHash,
+      if (kept != null) 'kept': kept,
+      if (decidedAt != null) 'decided_at': decidedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContentPinsCompanion copyWith({
+    Value<String>? contentHash,
+    Value<bool>? kept,
+    Value<DateTime>? decidedAt,
+    Value<int>? rowid,
+  }) {
+    return ContentPinsCompanion(
+      contentHash: contentHash ?? this.contentHash,
+      kept: kept ?? this.kept,
+      decidedAt: decidedAt ?? this.decidedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentHash.present) {
+      map['content_hash'] = Variable<String>(contentHash.value);
+    }
+    if (kept.present) {
+      map['kept'] = Variable<bool>(kept.value);
+    }
+    if (decidedAt.present) {
+      map['decided_at'] = Variable<int>(
+        $ContentPinsTable.$converterdecidedAt.toSql(decidedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContentPinsCompanion(')
+          ..write('contentHash: $contentHash, ')
+          ..write('kept: $kept, ')
+          ..write('decidedAt: $decidedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AtrilDatabase extends GeneratedDatabase {
   _$AtrilDatabase(QueryExecutor e) : super(e);
   $AtrilDatabaseManager get managers => $AtrilDatabaseManager(this);
@@ -7354,6 +7644,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
       $AppliedOperationsTable(this);
   late final $RecordVersionsTable recordVersions = $RecordVersionsTable(this);
   late final $ContentUploadsTable contentUploads = $ContentUploadsTable(this);
+  late final $ContentPinsTable contentPins = $ContentPinsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
     'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
@@ -7395,6 +7686,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     appliedOperations,
     recordVersions,
     contentUploads,
+    contentPins,
     knownServersOrigin,
     ebooksContentHash,
     ebookCollectionsCollection,
@@ -12501,6 +12793,171 @@ typedef $$ContentUploadsTableProcessedTableManager =
       ContentUploadRow,
       PrefetchHooks Function()
     >;
+typedef $$ContentPinsTableCreateCompanionBuilder =
+    ContentPinsCompanion Function({
+      required String contentHash,
+      required bool kept,
+      required DateTime decidedAt,
+      Value<int> rowid,
+    });
+typedef $$ContentPinsTableUpdateCompanionBuilder =
+    ContentPinsCompanion Function({
+      Value<String> contentHash,
+      Value<bool> kept,
+      Value<DateTime> decidedAt,
+      Value<int> rowid,
+    });
+
+class $$ContentPinsTableFilterComposer
+    extends Composer<_$AtrilDatabase, $ContentPinsTable> {
+  $$ContentPinsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get kept => $composableBuilder(
+    column: $table.kept,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get decidedAt =>
+      $composableBuilder(
+        column: $table.decidedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$ContentPinsTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $ContentPinsTable> {
+  $$ContentPinsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get kept => $composableBuilder(
+    column: $table.kept,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get decidedAt => $composableBuilder(
+    column: $table.decidedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContentPinsTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $ContentPinsTable> {
+  $$ContentPinsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get contentHash => $composableBuilder(
+    column: $table.contentHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get kept =>
+      $composableBuilder(column: $table.kept, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, int> get decidedAt =>
+      $composableBuilder(column: $table.decidedAt, builder: (column) => column);
+}
+
+class $$ContentPinsTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $ContentPinsTable,
+          ContentPinRow,
+          $$ContentPinsTableFilterComposer,
+          $$ContentPinsTableOrderingComposer,
+          $$ContentPinsTableAnnotationComposer,
+          $$ContentPinsTableCreateCompanionBuilder,
+          $$ContentPinsTableUpdateCompanionBuilder,
+          (
+            ContentPinRow,
+            BaseReferences<_$AtrilDatabase, $ContentPinsTable, ContentPinRow>,
+          ),
+          ContentPinRow,
+          PrefetchHooks Function()
+        > {
+  $$ContentPinsTableTableManager(_$AtrilDatabase db, $ContentPinsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContentPinsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContentPinsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContentPinsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> contentHash = const Value.absent(),
+                Value<bool> kept = const Value.absent(),
+                Value<DateTime> decidedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContentPinsCompanion(
+                contentHash: contentHash,
+                kept: kept,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String contentHash,
+                required bool kept,
+                required DateTime decidedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ContentPinsCompanion.insert(
+                contentHash: contentHash,
+                kept: kept,
+                decidedAt: decidedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContentPinsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $ContentPinsTable,
+      ContentPinRow,
+      $$ContentPinsTableFilterComposer,
+      $$ContentPinsTableOrderingComposer,
+      $$ContentPinsTableAnnotationComposer,
+      $$ContentPinsTableCreateCompanionBuilder,
+      $$ContentPinsTableUpdateCompanionBuilder,
+      (
+        ContentPinRow,
+        BaseReferences<_$AtrilDatabase, $ContentPinsTable, ContentPinRow>,
+      ),
+      ContentPinRow,
+      PrefetchHooks Function()
+    >;
 
 class $AtrilDatabaseManager {
   final _$AtrilDatabase _db;
@@ -12535,4 +12992,6 @@ class $AtrilDatabaseManager {
       $$RecordVersionsTableTableManager(_db, _db.recordVersions);
   $$ContentUploadsTableTableManager get contentUploads =>
       $$ContentUploadsTableTableManager(_db, _db.contentUploads);
+  $$ContentPinsTableTableManager get contentPins =>
+      $$ContentPinsTableTableManager(_db, _db.contentPins);
 }

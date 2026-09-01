@@ -5,6 +5,7 @@ part of 'transfers_dao.dart';
 // ignore_for_file: type=lint
 mixin _$TransfersDaoMixin on DatabaseAccessor<AtrilDatabase> {
   $ContentUploadsTable get contentUploads => attachedDatabase.contentUploads;
+  $ContentPinsTable get contentPins => attachedDatabase.contentPins;
   TransfersDaoManager get managers => TransfersDaoManager(this);
 }
 
@@ -16,4 +17,6 @@ class TransfersDaoManager {
         _db.attachedDatabase,
         _db.contentUploads,
       );
+  $$ContentPinsTableTableManager get contentPins =>
+      $$ContentPinsTableTableManager(_db.attachedDatabase, _db.contentPins);
 }

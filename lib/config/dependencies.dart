@@ -251,6 +251,14 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         blobs: blobs,
         uploads: context.read<UploadQueue>(),
         downloads: context.read<ContentDownloader>(),
+        transfers: database.transfersDao,
+        // Read at the edge, like every other thing this app learns from the
+        // platform rather than from the reader — and it is a *default* and not
+        // a rule: a native install keeps every book and offers to release one,
+        // a browser keeps nothing until it is asked, and the question the
+        // reader answers is the same on both.
+        keepsByDefault: devicePlatform != 'web',
+        budget: readStorageBudget,
       ),
     ),
 

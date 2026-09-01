@@ -27,11 +27,20 @@ import '../../../domain/models/library_query.dart';
 import '../../../utils/result.dart';
 import '../../../utils/cancellation.dart';
 import '../../services/content/content_downloader.dart';
+import '../../services/storage/blob_storage.dart';
 import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_source.dart';
 
 /// The stable code of a file whose name this app cannot place.
 const String codeUnsupportedFormat = 'unsupported_format';
+
+/// The stable code of a file the node has not received yet.
+///
+/// It is what refuses to release the last copy of a book. A work whose bytes
+/// are still queued exists on this device and nowhere else, and a *keep on
+/// this device* control that could delete it would be the one gesture in this
+/// app that destroys something.
+const String codeNotYetSent = 'content_not_yet_sent';
 
 /// The reader's collection.
 abstract interface class LibraryRepository {
@@ -112,6 +121,46 @@ abstract interface class LibraryRepository {
 
   /// Whether this device holds the bytes of one work.
   Stream<Result<bool>> watchIsDownloaded(String ebookId);
+
+  /// Whether this device keeps the file of one work when the network is not
+  /// there.
+  ///
+  /// One mechanism with two defaults. A book on a native install is kept
+  /// unless the reader released it; in a browser nothing is kept until they
+  /// ask, because the origin is lent a share of a disk the browser may take
+  /// back. What differs by platform is the honest answer, not the question.
+  Stream<Result<bool>> watchIsKept(String ebookId);
+
+  /// Keeps the file of one work on this device, downloading it if it is not
+  /// here.
+  Future<Result<void>> keepEbook(
+    String ebookId, {
+    Cancellation? cancel,
+    Future<void> Function(DownloadProgress progress)? onProgress,
+  });
+
+  /// Stops keeping the file of one work, and removes it.
+  ///
+  /// It refuses with [codeNotYetSent] while the node has not received the
+  /// file. Nothing in this app evicts silently and nothing destroys the only
+  /// copy of a book: a work whose bytes are still queued exists here and
+  /// nowhere else.
+  ///
+  /// Two works naming one file are one file, and releasing it releases both.
+  /// That is not a compromise — they *are* the same bytes, and there is
+  /// nothing to keep separately.
+  Future<Result<void>> releaseEbook(String ebookId);
+
+  /// What the store holds, and what it may hold.
+  ///
+  /// The quota is the browser's own answer and is absent on the five native
+  /// targets, where nothing portable can say — which is why the web build is
+  /// the one that spends a budget and a native install simply keeps
+  /// everything.
+  Future<Result<StorageBudget>> storage();
+
+  /// The works whose files this device is holding, newest decision first.
+  Stream<Result<List<Ebook>>> watchKeptEbooks();
 
   /// The cover this device extracted for one work, or `null`.
   ///

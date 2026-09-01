@@ -309,4 +309,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String libraryImported(String title) {
     return '$title joined your library.';
   }
+
+  @override
+  String get settingsStorageSection => 'Storage';
+
+  @override
+  String storageUsed(String used) {
+    return '$used kept on this device';
+  }
+
+  @override
+  String storageUsedOfQuota(String used, String quota) {
+    return '$used of $quota kept on this device';
+  }
+
+  @override
+  String get storageKeptExplanationNative =>
+      'Your books are kept here and open without a network. You can free the space of a book that has already reached the server; it comes back when you ask.';
+
+  @override
+  String get storageKeptExplanationWeb =>
+      'In a browser a book is only kept if you ask. The others are read from the server and need a network.';
+
+  @override
+  String get storageNothingKept => 'No files are kept on this device.';
+
+  @override
+  String get storageRelease => 'Free the space';
+
+  @override
+  String get storageKeep => 'Keep on this device';
+
+  @override
+  String get storageNotYetSent =>
+      'This book has not reached the server yet. It only exists here, so its space cannot be freed now.';
+
+  @override
+  String get storageReleaseFailed =>
+      'The space of this book could not be freed.';
+
+  @override
+  String get storageKeepFailed => 'This book could not be kept on this device.';
+
+  @override
+  String bytesInKilobytes(String value) {
+    return '$value kB';
+  }
+
+  @override
+  String bytesInMegabytes(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String bytesInGigabytes(String value) {
+    return '$value GB';
+  }
+
+  @override
+  String bytesExactly(String value) {
+    return '$value B';
+  }
 }
