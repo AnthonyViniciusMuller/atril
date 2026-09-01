@@ -1121,9 +1121,14 @@ and they are recorded here because none of them is visible from the package's RE
 
 ## Phase 11 — Synchronization (UC09, UC10, UC11)
 
-- [ ] `feat: add push` — `PushOperations`, draining the local log in order, and the four outcomes
+- [x] `feat: add push` — `PushOperations`, draining the local log in order, and the four outcomes
       handled distinctly: applied and duplicate both retire the operation, superseded retires it
-      and leaves the replica alone, and rejected is the only one that surfaces to a reader
+      and leaves the replica alone, and rejected is the only one that surfaces to a reader. A
+      fifth is handled too and the roadmap did not name it: a node running a later contract can
+      answer with an outcome this build cannot spell, and the operation stays owed rather than
+      being guessed at — the worst that follows is a `duplicate` on the next pass. The pass ends
+      when a batch retires nothing, which is what keeps a head batch of refusals from being
+      offered for ever before the quarantine lands
 - [ ] `feat: add pull` — `PullOperations` from this node's cursor, through the reconciler, with
       the cursor advanced only after the batch is committed. `has_more` is a loop and not a
       recursion
