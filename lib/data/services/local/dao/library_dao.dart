@@ -18,12 +18,13 @@ library;
 import 'package:drift/drift.dart';
 
 import '../database.dart';
+import '../tables/covers.dart';
 import '../tables/library.dart';
 
 part 'library_dao.g.dart';
 
 /// The reader's collection, as this device holds it.
-@DriftAccessor(tables: <Type>[Ebooks, Collections, EbookCollections])
+@DriftAccessor(tables: <Type>[Ebooks, Collections, EbookCollections, EbookCovers])
 class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin {
   /// The accessor over [database].
   LibraryDao(super.database);
@@ -177,6 +178,35 @@ class LibraryDao extends DatabaseAccessor<AtrilDatabase> with _$LibraryDaoMixin 
             (row) => row.contentHash.equals(contentHash) & row.deleted.not(),
           ))
           .get();
+
+  /// The cover this device extracted for [ebookId], or `null`.
+  Future<EbookCoverRow?> readCover(String ebookId) =>
+      (select(ebookCovers)..where((row) => row.ebookId.equals(ebookId)))
+          .getSingleOrNull();
+
+  /// Keeps [bytes] as the cover of [ebookId].
+  ///
+  /// It replaces, because a work has one cover and the file carried one
+  /// picture. A picture past [maxCoverBytes] is dropped rather than stored:
+  /// the placeholder costs the reader an image, and a query over this table
+  /// carrying a megabyte it never renders costs them the shelf.
+  Future<void> saveCover({
+    required String ebookId,
+    required String mediaType,
+    required Uint8List bytes,
+  }) async {
+    if (bytes.isEmpty || bytes.length > maxCoverBytes) {
+      return;
+    }
+
+    await into(ebookCovers).insertOnConflictUpdate(
+      EbookCoversCompanion.insert(
+        ebookId: ebookId,
+        mediaType: mediaType,
+        bytes: bytes,
+      ),
+    );
+  }
 
   SimpleSelectStatement<$EbooksTable, EbookRow> get _live =>
       select(ebooks)..where((row) => row.deleted.not());

@@ -623,10 +623,22 @@ that reason.
       which is `internal/client`'s own `describe` and is checked against it: the node stores what
       it was told and never opens the file, so a guess made here is one nothing downstream can
       correct
-- [ ] `feat: extract epub metadata on import` — title, author, publisher, language and the cover,
+- [x] `feat: extract epub metadata on import` — title, author, publisher, language and the cover,
       out of the OPF. What the file did not say is absent and not empty: a work whose author is
       unknown and one whose author is the empty string are different claims, and the contract
-      spells the difference with `optional`
+      spells the difference with `optional` — so a field the package document did not carry is
+      not *claimed* either, which matters more than the column: a delta naming `author` as null
+      is this device telling every replica the work has none. Three things came out of building
+      it. The OPF is found through `META-INF/container.xml` and its cover href is resolved
+      against the package document's own directory, which is the difference between reading most
+      files and reading the ones whose publisher used a subdirectory. There are two ways to
+      declare a cover — EPUB 3's `properties="cover-image"` and EPUB 2's `<meta name="cover">` —
+      and both are in every reader's library. And the cover is **not** in the blob store and does
+      not replicate: it is derived from a file this device holds, the store's digests are what
+      the reader is shown in a storage budget, and a device that downloads the book later
+      extracts its own. That is the first table this phase adds and therefore the app's first
+      migration — every version so far only adds, so the whole of it is drift's `createAll`,
+      whose statements are `CREATE TABLE IF NOT EXISTS`
 - [ ] `feat: add content upload` — the chunked shape D11 added, on all six targets:
       `BeginEbookUpload` declares the size and the digest and is refused there if the node will
       not take it, `PutEbookChunk` carries each chunk at the offset it continues from, and

@@ -14,7 +14,10 @@ import '../../../utils/errors.dart';
 import '../../../utils/identifiers.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
+import 'dart:typed_data';
+
 import '../../services/api/errors.dart';
+import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_kind.dart';
 import '../../services/files/file_source.dart';
 import '../../services/local/dao/library_dao.dart';
@@ -88,17 +91,53 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
       _log.fine('imported ${file.name} as $stored');
 
+      // Read back out of the store rather than off the source. The source is a
+      // stream that cannot be replayed — a browser's file input is consumed —
+      // and the store is the one place the bytes are now certain to be.
+      final described = await _describe(kind.format, stored);
+
       final id = _mint();
       final claims = DeltaWriter()
-        ..text(fieldTitle, titleFromFileName(file.name))
+        // What the file said, and the file name where it said nothing. A field
+        // the OPF did not carry is not claimed at all, which is the difference
+        // between *unknown* and *empty*: the first keeps whatever another
+        // device wrote there and the second says there is none.
+        ..text(fieldTitle, described?.title ?? titleFromFileName(file.name))
         ..text(fieldFormat, kind.format.wireName)
         ..id(fieldContentHash, stored.contentHash)
         ..integer(fieldSizeBytes, stored.sizeBytes)
         ..instant(fieldImportedAt, _now().toUtc());
 
+      if (described?.author != null) {
+        claims.text(fieldAuthor, described!.author);
+      }
+
+      if (described?.publisher != null) {
+        claims.text(fieldPublisher, described!.publisher);
+      }
+
+      if (described?.language != null) {
+        claims.text(fieldLanguage, described!.language);
+      }
+
+      if (described != null && described.extra.isNotEmpty) {
+        claims.object(fieldExtraMetadata, described.extra);
+      }
+
       await author.write(
         Change.insert(TargetEntity.ebook, id, claims.fields),
       );
+
+      // After the work exists, because the row references it and is deleted
+      // with it. A cover saved first would be a row pointing at nothing, and
+      // the foreign key would refuse it.
+      if (described?.cover case final EpubCover cover) {
+        await library.saveCover(
+          ebookId: id,
+          mediaType: cover.mediaType,
+          bytes: cover.bytes,
+        );
+      }
 
       final imported = await library.readEbook(id);
 
@@ -110,6 +149,52 @@ final class LibraryRepositoryImpl implements LibraryRepository {
       _log.warning('${file.name} could not be imported', error, stackTrace);
 
       return Result<Ebook>.error(failureFrom(error, op: opImport));
+    }
+  }
+
+  @override
+  Future<Result<EpubCover?>> cover(String ebookId) async {
+    try {
+      final row = await library.readCover(ebookId);
+
+      return Result<EpubCover?>.ok(
+        row == null
+            ? null
+            : EpubCover(mediaType: row.mediaType, bytes: row.bytes),
+      );
+    } on Object catch (error) {
+      _log.warning('the cover of $ebookId could not be read', error);
+
+      return Result<EpubCover?>.error(failureFrom(error, op: opReadLibrary));
+    }
+  }
+
+  /// What the stored file says about itself, or `null` where nothing can.
+  ///
+  /// Only an EPUB, because it is the only format in the contract whose
+  /// metadata this app reads — a PDF's is a different specification and a CBZ
+  /// has none — and only under [metadataSizeLimit], because the archive is
+  /// held in memory to be read.
+  Future<EpubMetadata?> _describe(EbookFormat format, StoredBlob stored) async {
+    if (format != EbookFormat.epub || stored.sizeBytes > metadataSizeLimit) {
+      return null;
+    }
+
+    try {
+      final bytes = BytesBuilder(copy: false);
+
+      await for (final chunk in blobs.read(stored.contentHash)) {
+        bytes.add(chunk);
+      }
+
+      return readEpubMetadata(bytes.takeBytes());
+    } on Object catch (error) {
+      // The book is already in the library at this point. Failing the import
+      // because its cover could not be read would throw away a file the reader
+      // has, over a picture.
+      _log.fine('${stored.contentHash} could not be described', error);
+
+      return null;
     }
   }
 

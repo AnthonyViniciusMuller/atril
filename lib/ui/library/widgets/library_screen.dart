@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/services/epub/epub_metadata.dart';
 import '../../../data/services/files/file_source.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
@@ -486,15 +487,77 @@ class _WorkCard extends StatelessWidget {
   }
 }
 
-/// What stands in for a cover.
+/// A work's cover, or what stands in for one.
 ///
-/// There is no cover yet: extracting one out of the OPF is two commits below,
-/// and a work whose file this device has never held will not have one at all.
-/// So the placeholder says the one thing about the work that is always known —
-/// which format it is — rather than showing a grey rectangle that could be a
-/// cover still loading.
-class _Cover extends StatelessWidget {
+/// It is asked for **once per tile** and not watched. A cover is derived from
+/// a file this device holds and changes exactly when that file arrives, so a
+/// shelf of two hundred books watching two hundred covers would be two hundred
+/// queries waking on every import — for a picture that did not change.
+///
+/// A work with no cover is the ordinary case and not a gap to apologize for:
+/// its file may be on the node and not here, or be a format whose metadata
+/// this app does not read. The placeholder says the one thing that is always
+/// known, which is what format the work is.
+class _Cover extends StatefulWidget {
   const _Cover({required this.work});
+
+  final Ebook work;
+
+  @override
+  State<_Cover> createState() => _CoverState();
+}
+
+class _CoverState extends State<_Cover> {
+  late Future<Result<EpubCover?>> _cover = _load();
+
+  Future<Result<EpubCover?>> _load() =>
+      context.read<LibraryRepository>().cover(widget.work.id);
+
+  @override
+  void didUpdateWidget(_Cover old) {
+    super.didUpdateWidget(old);
+
+    // The tile is recycled as the shelf scrolls, so the same state is handed a
+    // different work. A future built once in `initState` would show one book's
+    // cover on another's.
+    if (old.work.id != widget.work.id) {
+      _cover = _load();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Result<EpubCover?>>(
+    future: _cover,
+    builder:
+        (
+          BuildContext context,
+          AsyncSnapshot<Result<EpubCover?>> snapshot,
+        ) {
+          final cover = switch (snapshot.data) {
+            Ok<EpubCover?>(:final value) => value,
+            _ => null,
+          };
+
+          return cover == null
+              ? _CoverPlaceholder(work: widget.work)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.memory(
+                    cover.bytes,
+                    fit: BoxFit.cover,
+                    // A picture that will not decode is a picture, not a
+                    // failure of the shelf.
+                    errorBuilder: (BuildContext context, Object _, StackTrace? _) =>
+                        _CoverPlaceholder(work: widget.work),
+                  ),
+                );
+        },
+  );
+}
+
+/// What is shown for a work with no cover.
+class _CoverPlaceholder extends StatelessWidget {
+  const _CoverPlaceholder({required this.work});
 
   final Ebook work;
 

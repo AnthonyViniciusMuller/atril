@@ -25,6 +25,7 @@ import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../domain/models/library_query.dart';
 import '../../../utils/result.dart';
+import '../../services/epub/epub_metadata.dart';
 import '../../services/files/file_source.dart';
 
 /// The stable code of a file whose name this app cannot place.
@@ -84,4 +85,17 @@ abstract interface class LibraryRepository {
 
   /// The groupings one work is filed under, as they change.
   Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId);
+
+  /// The cover this device extracted for one work, or `null`.
+  ///
+  /// It is a `Future` and not a stream, and the difference is what a cover is:
+  /// it is derived from a file this device holds and changes exactly when that
+  /// file arrives, so a shelf of two hundred books would otherwise open two
+  /// hundred queries that wake on every import. A tile asks once for the work
+  /// it is showing.
+  ///
+  /// `null` is the ordinary answer, not a failure. A work whose file is on the
+  /// node and not here has no cover to extract, and neither has one in a
+  /// format this app does not open.
+  Future<Result<EpubCover?>> cover(String ebookId);
 }

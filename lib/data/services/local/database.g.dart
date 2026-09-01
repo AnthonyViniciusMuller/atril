@@ -3806,6 +3806,290 @@ class EbookCollectionsCompanion extends UpdateCompanion<EbookCollectionRow> {
   }
 }
 
+class $EbookCoversTable extends EbookCovers
+    with TableInfo<$EbookCoversTable, EbookCoverRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EbookCoversTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _ebookIdMeta = const VerificationMeta(
+    'ebookId',
+  );
+  @override
+  late final GeneratedColumn<String> ebookId = GeneratedColumn<String>(
+    'ebook_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ebooks (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _mediaTypeMeta = const VerificationMeta(
+    'mediaType',
+  );
+  @override
+  late final GeneratedColumn<String> mediaType = GeneratedColumn<String>(
+    'media_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bytesMeta = const VerificationMeta('bytes');
+  @override
+  late final GeneratedColumn<Uint8List> bytes = GeneratedColumn<Uint8List>(
+    'bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [ebookId, mediaType, bytes];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ebook_covers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EbookCoverRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('ebook_id')) {
+      context.handle(
+        _ebookIdMeta,
+        ebookId.isAcceptableOrUnknown(data['ebook_id']!, _ebookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ebookIdMeta);
+    }
+    if (data.containsKey('media_type')) {
+      context.handle(
+        _mediaTypeMeta,
+        mediaType.isAcceptableOrUnknown(data['media_type']!, _mediaTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mediaTypeMeta);
+    }
+    if (data.containsKey('bytes')) {
+      context.handle(
+        _bytesMeta,
+        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bytesMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {ebookId};
+  @override
+  EbookCoverRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EbookCoverRow(
+      ebookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ebook_id'],
+      )!,
+      mediaType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_type'],
+      )!,
+      bytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}bytes'],
+      )!,
+    );
+  }
+
+  @override
+  $EbookCoversTable createAlias(String alias) {
+    return $EbookCoversTable(attachedDatabase, alias);
+  }
+}
+
+class EbookCoverRow extends DataClass implements Insertable<EbookCoverRow> {
+  /// The work it belongs to.
+  ///
+  /// It is the primary key, so a work has one cover: the file carried one
+  /// picture and there is nothing to choose between. The cascade is what makes
+  /// the row disappear with the work rather than outliving it.
+  final String ebookId;
+
+  /// What the manifest said the image is.
+  final String mediaType;
+
+  /// The image.
+  final Uint8List bytes;
+  const EbookCoverRow({
+    required this.ebookId,
+    required this.mediaType,
+    required this.bytes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['ebook_id'] = Variable<String>(ebookId);
+    map['media_type'] = Variable<String>(mediaType);
+    map['bytes'] = Variable<Uint8List>(bytes);
+    return map;
+  }
+
+  EbookCoversCompanion toCompanion(bool nullToAbsent) {
+    return EbookCoversCompanion(
+      ebookId: Value(ebookId),
+      mediaType: Value(mediaType),
+      bytes: Value(bytes),
+    );
+  }
+
+  factory EbookCoverRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EbookCoverRow(
+      ebookId: serializer.fromJson<String>(json['ebookId']),
+      mediaType: serializer.fromJson<String>(json['mediaType']),
+      bytes: serializer.fromJson<Uint8List>(json['bytes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'ebookId': serializer.toJson<String>(ebookId),
+      'mediaType': serializer.toJson<String>(mediaType),
+      'bytes': serializer.toJson<Uint8List>(bytes),
+    };
+  }
+
+  EbookCoverRow copyWith({
+    String? ebookId,
+    String? mediaType,
+    Uint8List? bytes,
+  }) => EbookCoverRow(
+    ebookId: ebookId ?? this.ebookId,
+    mediaType: mediaType ?? this.mediaType,
+    bytes: bytes ?? this.bytes,
+  );
+  EbookCoverRow copyWithCompanion(EbookCoversCompanion data) {
+    return EbookCoverRow(
+      ebookId: data.ebookId.present ? data.ebookId.value : this.ebookId,
+      mediaType: data.mediaType.present ? data.mediaType.value : this.mediaType,
+      bytes: data.bytes.present ? data.bytes.value : this.bytes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbookCoverRow(')
+          ..write('ebookId: $ebookId, ')
+          ..write('mediaType: $mediaType, ')
+          ..write('bytes: $bytes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(ebookId, mediaType, $driftBlobEquality.hash(bytes));
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EbookCoverRow &&
+          other.ebookId == this.ebookId &&
+          other.mediaType == this.mediaType &&
+          $driftBlobEquality.equals(other.bytes, this.bytes));
+}
+
+class EbookCoversCompanion extends UpdateCompanion<EbookCoverRow> {
+  final Value<String> ebookId;
+  final Value<String> mediaType;
+  final Value<Uint8List> bytes;
+  final Value<int> rowid;
+  const EbookCoversCompanion({
+    this.ebookId = const Value.absent(),
+    this.mediaType = const Value.absent(),
+    this.bytes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EbookCoversCompanion.insert({
+    required String ebookId,
+    required String mediaType,
+    required Uint8List bytes,
+    this.rowid = const Value.absent(),
+  }) : ebookId = Value(ebookId),
+       mediaType = Value(mediaType),
+       bytes = Value(bytes);
+  static Insertable<EbookCoverRow> custom({
+    Expression<String>? ebookId,
+    Expression<String>? mediaType,
+    Expression<Uint8List>? bytes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (ebookId != null) 'ebook_id': ebookId,
+      if (mediaType != null) 'media_type': mediaType,
+      if (bytes != null) 'bytes': bytes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EbookCoversCompanion copyWith({
+    Value<String>? ebookId,
+    Value<String>? mediaType,
+    Value<Uint8List>? bytes,
+    Value<int>? rowid,
+  }) {
+    return EbookCoversCompanion(
+      ebookId: ebookId ?? this.ebookId,
+      mediaType: mediaType ?? this.mediaType,
+      bytes: bytes ?? this.bytes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (ebookId.present) {
+      map['ebook_id'] = Variable<String>(ebookId.value);
+    }
+    if (mediaType.present) {
+      map['media_type'] = Variable<String>(mediaType.value);
+    }
+    if (bytes.present) {
+      map['bytes'] = Variable<Uint8List>(bytes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EbookCoversCompanion(')
+          ..write('ebookId: $ebookId, ')
+          ..write('mediaType: $mediaType, ')
+          ..write('bytes: $bytes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AnnotationsTable extends Annotations
     with TableInfo<$AnnotationsTable, AnnotationRow> {
   @override
@@ -6436,6 +6720,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $EbookCollectionsTable ebookCollections = $EbookCollectionsTable(
     this,
   );
+  late final $EbookCoversTable ebookCovers = $EbookCoversTable(this);
   late final $AnnotationsTable annotations = $AnnotationsTable(this);
   late final $ProgressTable progress = $ProgressTable(this);
   late final $PendingOperationsTable pendingOperations =
@@ -6476,6 +6761,7 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
     ebooks,
     collections,
     ebookCollections,
+    ebookCovers,
     annotations,
     progress,
     pendingOperations,
@@ -6502,6 +6788,13 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('ebook_collections', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ebook_covers', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -7782,6 +8075,24 @@ final class $$EbooksTableReferences
     );
   }
 
+  static MultiTypedResultKey<$EbookCoversTable, List<EbookCoverRow>>
+  _ebookCoversRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
+    db.ebookCovers,
+    aliasName: 'ebooks__id__ebook_covers__ebook_id',
+  );
+
+  $$EbookCoversTableProcessedTableManager get ebookCoversRefs {
+    final manager = $$EbookCoversTableTableManager(
+      $_db,
+      $_db.ebookCovers,
+    ).filter((f) => f.ebookId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_ebookCoversRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$AnnotationsTable, List<AnnotationRow>>
   _annotationsRefsTable(_$AtrilDatabase db) => MultiTypedResultKey.fromTable(
     db.annotations,
@@ -7917,6 +8228,31 @@ class $$EbooksTableFilterComposer
           }) => $$EbookCollectionsTableFilterComposer(
             $db: $db,
             $table: $db.ebookCollections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> ebookCoversRefs(
+    Expression<bool> Function($$EbookCoversTableFilterComposer f) f,
+  ) {
+    final $$EbookCoversTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCovers,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCoversTableFilterComposer(
+            $db: $db,
+            $table: $db.ebookCovers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8143,6 +8479,31 @@ class $$EbooksTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> ebookCoversRefs<T extends Object>(
+    Expression<T> Function($$EbookCoversTableAnnotationComposer a) f,
+  ) {
+    final $$EbookCoversTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ebookCovers,
+      getReferencedColumn: (t) => t.ebookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbookCoversTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebookCovers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> annotationsRefs<T extends Object>(
     Expression<T> Function($$AnnotationsTableAnnotationComposer a) f,
   ) {
@@ -8209,6 +8570,7 @@ class $$EbooksTableTableManager
           EbookRow,
           PrefetchHooks Function({
             bool ebookCollectionsRefs,
+            bool ebookCoversRefs,
             bool annotationsRefs,
             bool progressRefs,
           })
@@ -8301,6 +8663,7 @@ class $$EbooksTableTableManager
           prefetchHooksCallback:
               ({
                 ebookCollectionsRefs = false,
+                ebookCoversRefs = false,
                 annotationsRefs = false,
                 progressRefs = false,
               }) {
@@ -8308,6 +8671,7 @@ class $$EbooksTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (ebookCollectionsRefs) db.ebookCollections,
+                    if (ebookCoversRefs) db.ebookCovers,
                     if (annotationsRefs) db.annotations,
                     if (progressRefs) db.progress,
                   ],
@@ -8329,6 +8693,27 @@ class $$EbooksTableTableManager
                                 table,
                                 p0,
                               ).ebookCollectionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ebookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (ebookCoversRefs)
+                        await $_getPrefetchedData<
+                          EbookRow,
+                          $EbooksTable,
+                          EbookCoverRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$EbooksTableReferences
+                              ._ebookCoversRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$EbooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).ebookCoversRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.ebookId == item.id,
@@ -8399,6 +8784,7 @@ typedef $$EbooksTableProcessedTableManager =
       EbookRow,
       PrefetchHooks Function({
         bool ebookCollectionsRefs,
+        bool ebookCoversRefs,
         bool annotationsRefs,
         bool progressRefs,
       })
@@ -9248,6 +9634,283 @@ typedef $$EbookCollectionsTableProcessedTableManager =
       (EbookCollectionRow, $$EbookCollectionsTableReferences),
       EbookCollectionRow,
       PrefetchHooks Function({bool ebookId, bool collectionId})
+    >;
+typedef $$EbookCoversTableCreateCompanionBuilder =
+    EbookCoversCompanion Function({
+      required String ebookId,
+      required String mediaType,
+      required Uint8List bytes,
+      Value<int> rowid,
+    });
+typedef $$EbookCoversTableUpdateCompanionBuilder =
+    EbookCoversCompanion Function({
+      Value<String> ebookId,
+      Value<String> mediaType,
+      Value<Uint8List> bytes,
+      Value<int> rowid,
+    });
+
+final class $$EbookCoversTableReferences
+    extends BaseReferences<_$AtrilDatabase, $EbookCoversTable, EbookCoverRow> {
+  $$EbookCoversTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $EbooksTable _ebookIdTable(_$AtrilDatabase db) =>
+      db.ebooks.createAlias('ebook_covers__ebook_id__ebooks__id');
+
+  $$EbooksTableProcessedTableManager get ebookId {
+    final $_column = $_itemColumn<String>('ebook_id')!;
+
+    final manager = $$EbooksTableTableManager(
+      $_db,
+      $_db.ebooks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ebookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EbookCoversTableFilterComposer
+    extends Composer<_$AtrilDatabase, $EbookCoversTable> {
+  $$EbookCoversTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get mediaType => $composableBuilder(
+    column: $table.mediaType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$EbooksTableFilterComposer get ebookId {
+    final $$EbooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableFilterComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCoversTableOrderingComposer
+    extends Composer<_$AtrilDatabase, $EbookCoversTable> {
+  $$EbookCoversTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get mediaType => $composableBuilder(
+    column: $table.mediaType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$EbooksTableOrderingComposer get ebookId {
+    final $$EbooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCoversTableAnnotationComposer
+    extends Composer<_$AtrilDatabase, $EbookCoversTable> {
+  $$EbookCoversTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get mediaType =>
+      $composableBuilder(column: $table.mediaType, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => column);
+
+  $$EbooksTableAnnotationComposer get ebookId {
+    final $$EbooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ebookId,
+      referencedTable: $db.ebooks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EbooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ebooks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EbookCoversTableTableManager
+    extends
+        RootTableManager<
+          _$AtrilDatabase,
+          $EbookCoversTable,
+          EbookCoverRow,
+          $$EbookCoversTableFilterComposer,
+          $$EbookCoversTableOrderingComposer,
+          $$EbookCoversTableAnnotationComposer,
+          $$EbookCoversTableCreateCompanionBuilder,
+          $$EbookCoversTableUpdateCompanionBuilder,
+          (EbookCoverRow, $$EbookCoversTableReferences),
+          EbookCoverRow,
+          PrefetchHooks Function({bool ebookId})
+        > {
+  $$EbookCoversTableTableManager(_$AtrilDatabase db, $EbookCoversTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EbookCoversTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EbookCoversTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EbookCoversTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> ebookId = const Value.absent(),
+                Value<String> mediaType = const Value.absent(),
+                Value<Uint8List> bytes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EbookCoversCompanion(
+                ebookId: ebookId,
+                mediaType: mediaType,
+                bytes: bytes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ebookId,
+                required String mediaType,
+                required Uint8List bytes,
+                Value<int> rowid = const Value.absent(),
+              }) => EbookCoversCompanion.insert(
+                ebookId: ebookId,
+                mediaType: mediaType,
+                bytes: bytes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$EbookCoversTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ebookId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ebookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ebookId,
+                        referencedTable: $$EbookCoversTableReferences
+                            ._ebookIdTable(db),
+                        referencedColumn: $$EbookCoversTableReferences
+                            ._ebookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$EbookCoversTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AtrilDatabase,
+      $EbookCoversTable,
+      EbookCoverRow,
+      $$EbookCoversTableFilterComposer,
+      $$EbookCoversTableOrderingComposer,
+      $$EbookCoversTableAnnotationComposer,
+      $$EbookCoversTableCreateCompanionBuilder,
+      $$EbookCoversTableUpdateCompanionBuilder,
+      (EbookCoverRow, $$EbookCoversTableReferences),
+      EbookCoverRow,
+      PrefetchHooks Function({bool ebookId})
     >;
 typedef $$AnnotationsTableCreateCompanionBuilder =
     AnnotationsCompanion Function({
@@ -10938,6 +11601,8 @@ class $AtrilDatabaseManager {
       $$CollectionsTableTableManager(_db, _db.collections);
   $$EbookCollectionsTableTableManager get ebookCollections =>
       $$EbookCollectionsTableTableManager(_db, _db.ebookCollections);
+  $$EbookCoversTableTableManager get ebookCovers =>
+      $$EbookCoversTableTableManager(_db, _db.ebookCovers);
   $$AnnotationsTableTableManager get annotations =>
       $$AnnotationsTableTableManager(_db, _db.annotations);
   $$ProgressTableTableManager get progress =>

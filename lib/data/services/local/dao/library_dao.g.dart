@@ -8,6 +8,7 @@ mixin _$LibraryDaoMixin on DatabaseAccessor<AtrilDatabase> {
   $CollectionsTable get collections => attachedDatabase.collections;
   $EbookCollectionsTable get ebookCollections =>
       attachedDatabase.ebookCollections;
+  $EbookCoversTable get ebookCovers => attachedDatabase.ebookCovers;
   LibraryDaoManager get managers => LibraryDaoManager(this);
 }
 
@@ -23,4 +24,6 @@ class LibraryDaoManager {
         _db.attachedDatabase,
         _db.ebookCollections,
       );
+  $$EbookCoversTableTableManager get ebookCovers =>
+      $$EbookCoversTableTableManager(_db.attachedDatabase, _db.ebookCovers);
 }

@@ -19,6 +19,8 @@ library;
 
 import 'package:drift/drift.dart';
 
+import '../../../utils/logging.dart';
+
 // The generated part of this library names the types the converters in
 // `converters.dart` map columns onto, so their imports belong here rather than
 // only where the tables declare them.
@@ -29,6 +31,7 @@ import 'dao/identity_dao.dart';
 import 'dao/library_dao.dart';
 import 'dao/records_dao.dart';
 import 'dao/sync_dao.dart';
+import 'tables/covers.dart';
 import 'tables/identity.dart';
 import 'tables/library.dart';
 import 'tables/reading.dart';
@@ -36,6 +39,8 @@ import 'tables/records.dart';
 import 'tables/sync.dart';
 
 part 'database.g.dart';
+
+final _log = loggerFor('data/local');
 
 /// The reader's replica.
 ///
@@ -51,6 +56,7 @@ part 'database.g.dart';
     Ebooks,
     Collections,
     EbookCollections,
+    EbookCovers,
     Annotations,
     Progress,
     PendingOperations,
@@ -67,13 +73,17 @@ class AtrilDatabase extends _$AtrilDatabase {
 
   /// The version of the schema this build expects.
   ///
-  /// It stays at one for the whole of the phase that builds the schema up. A
+  /// It stayed at one for the whole of the phase that built the schema up: a
   /// version number is a promise to a database that already exists somewhere,
-  /// and until this app has been installed by anybody there is no such
-  /// database: bumping it per table would record a migration path nothing has
-  /// ever travelled and that would have to be maintained afterwards.
+  /// and while the tables of one phase were still arriving there was no such
+  /// database to promise anything to.
+  ///
+  /// There is one now — every development install made while that phase was
+  /// worked — and the library adds tables of its own to it. So the number
+  /// starts moving here, one step per table, and each step is exactly what
+  /// [migration] says it is.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   /// How the schema is created, how it moves between versions, and what is
   /// switched on for every connection.
@@ -85,20 +95,28 @@ class AtrilDatabase extends _$AtrilDatabase {
   /// from leaving rows nothing can reach. It is set outside a transaction,
   /// because sqlite ignores the pragma inside one.
   ///
-  /// The upgrade path refuses rather than guesses. There is no released
-  /// version below this one, so a database that claims to be at one is a file
-  /// this app did not write, and creating tables over it would produce a
-  /// replica that is half somebody else's.
+  /// **Every version so far only adds.** No column has been dropped, renamed
+  /// or retyped since version one, and every table added since is one this
+  /// device keeps for itself — a cover it extracted, a transfer it is part way
+  /// through, a book it was told to keep. So the upgrade is `createAll`, whose
+  /// statements are `CREATE TABLE IF NOT EXISTS`: it builds what is missing
+  /// and touches nothing that is there, which is the whole of the difference
+  /// between one version and the next.
+  ///
+  /// It is written this way deliberately rather than as a `case` per step. A
+  /// switch would claim there is a decision to make at each version, and there
+  /// is not — the day a column changes, this becomes a stepped migration and
+  /// the change is visible in the diff instead of hidden in a branch nobody
+  /// took.
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      throw StateError(
-        'the local replica is at schema version $from and this build expects '
-        '$to, which is a database this app did not write',
-      );
+      _log.info('the local replica moves from schema version $from to $to');
+
+      await m.createAll();
     },
     beforeOpen: (OpeningDetails details) async {
       await customStatement('PRAGMA foreign_keys = ON');

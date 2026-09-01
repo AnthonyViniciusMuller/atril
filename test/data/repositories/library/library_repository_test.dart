@@ -11,14 +11,18 @@ import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'dart:io';
 
+import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/domain/models/operation.dart';
 import 'package:atril/data/services/sync/delta.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
-import 'package:drift/drift.dart';
+// drift publishes an `isNull` of its own — the SQL predicate — which is not
+// the matcher this file wants and is ambiguous with it.
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../services/epub/epub_metadata_test.dart';
 import '../../services/storage/memory_blob_store.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
@@ -107,6 +111,31 @@ final class _File implements FileSource {
     yield bytes.sublist(bytes.length ~/ 2);
   }
 }
+
+/// A one-pixel cover, which is a picture as far as this app cares.
+final Uint8List _coverBytes = Uint8List.fromList(<int>[137, 80, 78, 71]);
+
+/// An EPUB that describes itself in full.
+final List<int> _epub = epubOf(<String, Object>{
+  containerPath: containerFor('OEBPS/content.opf'),
+  'OEBPS/content.opf': opfWith(
+    '<dc:title>Grande Sertão: Veredas</dc:title>'
+    '<dc:creator>João Guimarães Rosa</dc:creator>'
+    '<dc:publisher>José Olympio</dc:publisher>'
+    '<dc:language>pt-BR</dc:language>'
+    '<meta name="calibre:series" content="Clássicos"/>',
+    manifest:
+        '<item id="capa" href="capa.png" media-type="image/png" '
+        'properties="cover-image"/>',
+  ),
+  'OEBPS/capa.png': _coverBytes,
+});
+
+/// An EPUB that says only what a work cannot exist without.
+final List<int> _bareEpub = epubOf(<String, Object>{
+  containerPath: containerFor('content.opf'),
+  'content.opf': opfWith('<dc:title>Anônimo</dc:title>'),
+});
 
 /// A file that fails part way through, which is a connection dropping while a
 /// book is being copied off a network share.
@@ -367,6 +396,100 @@ void main() {
 
       expect(result, isA<Error<Ebook>>());
       expect(await database.syncDao.pending(), isEmpty);
+    });
+  });
+
+  group('an EPUB', () {
+    test('is imported under the title its package document gives', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('qualquer-nome.epub', _epub),
+      );
+
+      final work = (result as Ok<Ebook>).value;
+
+      // The file name is the title of last resort and nothing more. A reader
+      // whose books are named `9788535902778.epub` should see the book.
+      expect(work.title, 'Grande Sertão: Veredas');
+      expect(work.author, 'João Guimarães Rosa');
+      expect(work.publisher, 'José Olympio');
+      expect(work.language, 'pt-BR');
+      expect(work.extraMetadata['series'], 'Clássicos');
+    });
+
+    test('claims no field the package document did not carry', () async {
+      // The claim is what matters and not the row: a delta naming `author` as
+      // null is a device saying the work has none, and every replica would
+      // take it — including one whose file did say who wrote it.
+      final database = _open();
+      final repository = await _repository(database);
+
+      await repository.importEbook(_File('livro.epub', _bareEpub));
+
+      final delta = (await database.syncDao.pending()).single.delta;
+
+      expect(delta.containsKey(fieldTitle), isTrue);
+      expect(delta.containsKey(fieldAuthor), isFalse);
+      expect(delta.containsKey(fieldPublisher), isFalse);
+      expect(delta.containsKey(fieldLanguage), isFalse);
+      expect(delta.containsKey(fieldExtraMetadata), isFalse);
+    });
+
+    test('keeps the cover the file carried', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('livro.epub', _epub),
+      );
+
+      final cover = await repository.cover((result as Ok<Ebook>).value.id);
+
+      expect((cover as Ok<EpubCover?>).value?.mediaType, 'image/png');
+      expect(cover.value?.bytes, _coverBytes);
+    });
+
+    test('loses its cover with the work it belonged to', () async {
+      // The row references the work and is cascaded away with it, which is
+      // half of why a cover is a table here rather than an object in the store
+      // the reader's books live in.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('livro.epub', _epub),
+      );
+      final id = (result as Ok<Ebook>).value.id;
+
+      await (database.delete(
+        database.ebooks,
+      )..where((row) => row.id.equals(id))).go();
+
+      expect(((await repository.cover(id)) as Ok<EpubCover?>).value, isNull);
+    });
+
+    test('is imported anyway when its package document is unreadable', () async {
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3, 4]),
+      );
+
+      expect((result as Ok<Ebook>).value.title, 'Vidas Secas');
+    });
+
+    test('is not read at all when it is another format', () async {
+      // A PDF's metadata is a different specification and a CBZ has none.
+      // Handing either to a zip decoder is work with no possible answer.
+      final database = _open();
+      final repository = await _repository(database);
+
+      final result = await repository.importEbook(_File('livro.pdf', _epub));
+
+      expect((result as Ok<Ebook>).value.title, 'livro');
     });
   });
 

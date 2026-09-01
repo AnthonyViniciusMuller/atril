@@ -14,6 +14,7 @@ import 'package:atril/config/environment.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
+import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
@@ -263,6 +264,13 @@ final class FakeLibraryRepository implements LibraryRepository {
   @override
   Stream<Result<List<Collection>>> watchCollectionsOf(String ebookId) =>
       groupings.stream;
+
+  /// The covers this device has, by work.
+  final Map<String, EpubCover> covers = <String, EpubCover>{};
+
+  @override
+  Future<Result<EpubCover?>> cover(String ebookId) async =>
+      Result<EpubCover?>.ok(covers[ebookId]);
 }
 
 /// A [FilePicker] that answers with whatever a test put in it.
