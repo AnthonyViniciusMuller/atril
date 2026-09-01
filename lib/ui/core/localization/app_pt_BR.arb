@@ -1112,5 +1112,65 @@
   "readerDownload": "Baixar",
   "@readerDownload": {
     "description": "Ação que traz o arquivo do livro para este dispositivo. Rótulo curto de botão."
+  },
+
+  "readerSettings": "Aparência",
+  "@readerSettings": {
+    "description": "Ação que abre os ajustes de leitura — tamanho da letra, entrelinha, margem e tema. Rótulo curto, usado como dica do botão."
+  },
+
+  "readerSettingsExplanation": "Vale para este dispositivo. Não é sincronizado.",
+  "@readerSettingsExplanation": {
+    "description": "Dito uma vez no alto dos ajustes. O tamanho confortável num celular no ônibus não é o mesmo de um monitor a um braço de distância, e um ajuste que sincronizasse tornaria toda escolha errada no outro aparelho."
+  },
+
+  "readerFontSize": "Tamanho da letra",
+  "@readerFontSize": {
+    "description": "Rótulo do controle que aumenta e diminui a letra. Os valores são porcentagens do tamanho que o próprio livro pede."
+  },
+
+  "readerFontSizeValue": "{percent}%",
+  "@readerFontSizeValue": {
+    "description": "O tamanho escolhido, mostrado ao lado do controle. É porcentagem porque o livro define o próprio corpo em unidades relativas."
+  },
+
+  "readerLineHeight": "Entrelinha",
+  "@readerLineHeight": {
+    "description": "Rótulo do controle que afasta ou aproxima as linhas. É o termo tipográfico, e é o que um leitor brasileiro reconhece."
+  },
+
+  "readerMargin": "Margem",
+  "@readerMargin": {
+    "description": "Rótulo do controle que estreita ou alarga a mancha de texto na página."
+  },
+
+  "readerTheme": "Tema",
+  "@readerTheme": {
+    "description": "Rótulo do grupo que escolhe as cores da página."
+  },
+
+  "readerThemeSystem": "Do sistema",
+  "@readerThemeSystem": {
+    "description": "Opção de tema que segue o modo claro ou escuro do aparelho. É o padrão: quem já pôs o aparelho no escuro à noite não deveria precisar dizer de novo."
+  },
+
+  "readerThemeLight": "Claro",
+  "@readerThemeLight": {
+    "description": "Opção de tema: texto escuro sobre branco."
+  },
+
+  "readerThemeSepia": "Sépia",
+  "@readerThemeSepia": {
+    "description": "Opção de tema: texto escuro sobre fundo quente. É pedido pelo nome e não corresponde a nada que o esquema de cores do aplicativo tenha."
+  },
+
+  "readerThemeDark": "Escuro",
+  "@readerThemeDark": {
+    "description": "Opção de tema: texto claro sobre fundo quase preto."
+  },
+
+  "readerSpread": "Duas páginas",
+  "@readerSpread": {
+    "description": "Ajuste que permite mostrar duas páginas lado a lado quando há largura para isso. Numa janela estreita continua sendo uma só."
   }
 }

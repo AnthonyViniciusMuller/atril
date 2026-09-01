@@ -234,5 +234,41 @@
   "@readerRetry": {},
 
   "readerDownload": "Download",
-  "@readerDownload": {}
+  "@readerDownload": {},
+
+  "readerSettings": "Appearance",
+  "@readerSettings": {},
+
+  "readerSettingsExplanation": "Applies to this device. It is not synchronized.",
+  "@readerSettingsExplanation": {},
+
+  "readerFontSize": "Type size",
+  "@readerFontSize": {},
+
+  "readerFontSizeValue": "{percent}%",
+  "@readerFontSizeValue": {},
+
+  "readerLineHeight": "Line spacing",
+  "@readerLineHeight": {},
+
+  "readerMargin": "Margin",
+  "@readerMargin": {},
+
+  "readerTheme": "Theme",
+  "@readerTheme": {},
+
+  "readerThemeSystem": "System",
+  "@readerThemeSystem": {},
+
+  "readerThemeLight": "Light",
+  "@readerThemeLight": {},
+
+  "readerThemeSepia": "Sepia",
+  "@readerThemeSepia": {},
+
+  "readerThemeDark": "Dark",
+  "@readerThemeDark": {},
+
+  "readerSpread": "Two pages",
+  "@readerSpread": {}
 }

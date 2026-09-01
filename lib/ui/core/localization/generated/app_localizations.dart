@@ -1220,6 +1220,78 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Baixar'**
   String get readerDownload;
+
+  /// Ação que abre os ajustes de leitura — tamanho da letra, entrelinha, margem e tema. Rótulo curto, usado como dica do botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Aparência'**
+  String get readerSettings;
+
+  /// Dito uma vez no alto dos ajustes. O tamanho confortável num celular no ônibus não é o mesmo de um monitor a um braço de distância, e um ajuste que sincronizasse tornaria toda escolha errada no outro aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Vale para este dispositivo. Não é sincronizado.'**
+  String get readerSettingsExplanation;
+
+  /// Rótulo do controle que aumenta e diminui a letra. Os valores são porcentagens do tamanho que o próprio livro pede.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tamanho da letra'**
+  String get readerFontSize;
+
+  /// O tamanho escolhido, mostrado ao lado do controle. É porcentagem porque o livro define o próprio corpo em unidades relativas.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{percent}%'**
+  String readerFontSizeValue(Object percent);
+
+  /// Rótulo do controle que afasta ou aproxima as linhas. É o termo tipográfico, e é o que um leitor brasileiro reconhece.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Entrelinha'**
+  String get readerLineHeight;
+
+  /// Rótulo do controle que estreita ou alarga a mancha de texto na página.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Margem'**
+  String get readerMargin;
+
+  /// Rótulo do grupo que escolhe as cores da página.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tema'**
+  String get readerTheme;
+
+  /// Opção de tema que segue o modo claro ou escuro do aparelho. É o padrão: quem já pôs o aparelho no escuro à noite não deveria precisar dizer de novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Do sistema'**
+  String get readerThemeSystem;
+
+  /// Opção de tema: texto escuro sobre branco.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Claro'**
+  String get readerThemeLight;
+
+  /// Opção de tema: texto escuro sobre fundo quente. É pedido pelo nome e não corresponde a nada que o esquema de cores do aplicativo tenha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sépia'**
+  String get readerThemeSepia;
+
+  /// Opção de tema: texto claro sobre fundo quase preto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Escuro'**
+  String get readerThemeDark;
+
+  /// Ajuste que permite mostrar duas páginas lado a lado quando há largura para isso. Numa janela estreita continua sendo uma só.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Duas páginas'**
+  String get readerSpread;
 }
 
 class _AppLocalizationsDelegate

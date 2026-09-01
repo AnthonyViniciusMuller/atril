@@ -27,11 +27,13 @@ import 'package:provider/provider.dart';
 
 import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_host.dart';
+import '../../../data/services/storage/reader_settings_store.dart';
 import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
+import 'reader_settings_sheet.dart';
 
 /// The chrome's key, so that a test can name it.
 ///
@@ -61,6 +63,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   late final ReaderViewModel _model = ReaderViewModel(
     reading: context.read<ReadingRepository>(),
     hosts: context.read<EpubHostFactory>(),
+    settings: context.read<ReaderSettingsStore>(),
     ebookId: widget.ebookId,
   );
 
@@ -384,6 +387,12 @@ class _ReaderBar extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall
                       ?.copyWith(color: Colors.white),
                 ),
+              ),
+              IconButton(
+                onPressed: () => showReaderSettings(context, model),
+                icon: const Icon(Icons.text_fields),
+                color: Colors.white,
+                tooltip: l10n.readerSettings,
               ),
               IconButton(
                 onPressed: () => _showContents(context, model),

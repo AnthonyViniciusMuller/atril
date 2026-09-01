@@ -675,6 +675,45 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get readerDownload => 'Baixar';
+
+  @override
+  String get readerSettings => 'Aparência';
+
+  @override
+  String get readerSettingsExplanation =>
+      'Vale para este dispositivo. Não é sincronizado.';
+
+  @override
+  String get readerFontSize => 'Tamanho da letra';
+
+  @override
+  String readerFontSizeValue(Object percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readerLineHeight => 'Entrelinha';
+
+  @override
+  String get readerMargin => 'Margem';
+
+  @override
+  String get readerTheme => 'Tema';
+
+  @override
+  String get readerThemeSystem => 'Do sistema';
+
+  @override
+  String get readerThemeLight => 'Claro';
+
+  @override
+  String get readerThemeSepia => 'Sépia';
+
+  @override
+  String get readerThemeDark => 'Escuro';
+
+  @override
+  String get readerSpread => 'Duas páginas';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1347,4 +1386,43 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerDownload => 'Baixar';
+
+  @override
+  String get readerSettings => 'Aparência';
+
+  @override
+  String get readerSettingsExplanation =>
+      'Vale para este dispositivo. Não é sincronizado.';
+
+  @override
+  String get readerFontSize => 'Tamanho da letra';
+
+  @override
+  String readerFontSizeValue(Object percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readerLineHeight => 'Entrelinha';
+
+  @override
+  String get readerMargin => 'Margem';
+
+  @override
+  String get readerTheme => 'Tema';
+
+  @override
+  String get readerThemeSystem => 'Do sistema';
+
+  @override
+  String get readerThemeLight => 'Claro';
+
+  @override
+  String get readerThemeSepia => 'Sépia';
+
+  @override
+  String get readerThemeDark => 'Escuro';
+
+  @override
+  String get readerSpread => 'Duas páginas';
 }

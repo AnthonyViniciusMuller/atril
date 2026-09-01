@@ -25,6 +25,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_host.dart';
+import '../../../data/services/storage/reader_settings_store.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../utils/command.dart';
 import '../../../utils/logging.dart';
@@ -39,6 +40,7 @@ final class ReaderViewModel extends ChangeNotifier {
   ReaderViewModel({
     required this.reading,
     required this.hosts,
+    required this.settings,
     required this.ebookId,
   }) : host = hosts.create() {
     open = Command0<void>(_open);
@@ -60,6 +62,13 @@ final class ReaderViewModel extends ChangeNotifier {
   /// What makes a host. It is a factory because a host owns a webview and a
   /// book, so there is one per screen.
   final EpubHostFactory hosts;
+
+  /// Where the reader's typography is remembered between two runs.
+  ///
+  /// It is a store and not a repository, because what it holds does not
+  /// replicate and never reaches a node: `shared_preferences` beside the
+  /// window's size, for the reason `architecture.md` gives there.
+  final ReaderSettingsStore settings;
 
   /// The work being read.
   final String ebookId;
@@ -86,6 +95,7 @@ final class ReaderViewModel extends ChangeNotifier {
   StreamSubscription<EpubPosition>? _positions;
 
   Ebook? _work;
+  EpubStyle _style = const EpubStyle();
   List<EpubChapter> _chapters = const <EpubChapter>[];
   EpubPosition? _position;
   bool _chromeVisible = true;
@@ -103,6 +113,38 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// Where the reader is, or `null` before the first page has been laid out.
   EpubPosition? get position => _position;
+
+  /// How the page is laid out, as this device was left.
+  EpubStyle get style => _style;
+
+  /// Applies [style] to the page and remembers it.
+  ///
+  /// The order matters and is the reason this is not two calls at the sheet:
+  /// the page is restyled first, so a reader sees the result of the tap they
+  /// just made, and the preference is written after. A write that failed would
+  /// leave a reader with the size they chose for this session and the old one
+  /// tomorrow, which is the right way round for a value nothing depends on.
+  ///
+  /// It is a method and not a `Command`, deliberately. A `Command` carries
+  /// *running* so that a button can disable itself, and a control that greyed
+  /// out while the type size was being applied would flicker under a reader
+  /// stepping through sizes — which is exactly how this control is used.
+  Future<void> restyle(EpubStyle style) async {
+    if (style == _style) {
+      return;
+    }
+
+    _style = style;
+    notifyListeners();
+
+    try {
+      await host.apply(style);
+    } on Exception catch (error) {
+      _log.warning('the page could not be restyled', error);
+    }
+
+    await settings.write(style);
+  }
 
   /// How far through, 0 to 1, for a control that wants a fraction.
   double get progress => (_position?.percent ?? 0) / 100;
@@ -132,6 +174,10 @@ final class ReaderViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _open() async {
+    // Read before the book, so that the first page a reader sees is at the
+    // size they chose rather than at the default for an instant.
+    _style = await settings.read();
+
     final Result<EpubBook> book = await reading.openBook(ebookId);
 
     switch (book) {
@@ -148,6 +194,7 @@ final class ReaderViewModel extends ChangeNotifier {
         }
 
         try {
+          await host.apply(_style);
           await host.open(value);
         } on Exception catch (error) {
           return Result<void>.error(error);

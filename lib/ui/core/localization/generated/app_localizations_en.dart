@@ -674,4 +674,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerDownload => 'Download';
+
+  @override
+  String get readerSettings => 'Appearance';
+
+  @override
+  String get readerSettingsExplanation =>
+      'Applies to this device. It is not synchronized.';
+
+  @override
+  String get readerFontSize => 'Type size';
+
+  @override
+  String readerFontSizeValue(Object percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readerLineHeight => 'Line spacing';
+
+  @override
+  String get readerMargin => 'Margin';
+
+  @override
+  String get readerTheme => 'Theme';
+
+  @override
+  String get readerThemeSystem => 'System';
+
+  @override
+  String get readerThemeLight => 'Light';
+
+  @override
+  String get readerThemeSepia => 'Sepia';
+
+  @override
+  String get readerThemeDark => 'Dark';
+
+  @override
+  String get readerSpread => 'Two pages';
 }

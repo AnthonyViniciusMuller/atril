@@ -62,6 +62,7 @@ import '../data/services/sync/seed.dart';
 import '../domain/crdt/hybrid_clock.dart';
 import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
+import '../data/services/storage/reader_settings_store.dart';
 import '../data/services/storage/secure_session_store.dart';
 import '../data/services/storage/session_store.dart';
 import '../routing/router.dart';
@@ -273,6 +274,13 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // which is a conditional export on the web and a `defaultTargetPlatform`
     // question between the two native hosts.
     Provider<EpubHostFactory>(create: (_) => epubHostFactory()),
+
+    // How the reader likes a page, kept beside the window's size and for the
+    // same reason: it never replicates, it means nothing on another device, and
+    // the contract has no field for it.
+    Provider<ReaderSettingsStore>(
+      create: (_) => PreferencesReaderSettingsStore(),
+    ),
 
     // The platform's own file dialog, behind a port. It is one implementation
     // and not six: `file_selector` is itself the split, and what this app adds

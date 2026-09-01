@@ -98,6 +98,10 @@ void main() {
       'bytesInKilobytes',
       'bytesInMegabytes',
       'bytesInGigabytes',
+      // A bare percentage, for the same reason: the sign follows the number in
+      // both languages and what differs — the separator, and whether a space
+      // precedes it — is `intl`'s placement rather than a translator's word.
+      'readerFontSizeValue',
     };
 
     for (final message in messagesOf(template).difference(sameInBoth)) {

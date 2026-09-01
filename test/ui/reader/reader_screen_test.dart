@@ -12,6 +12,7 @@ import 'dart:typed_data';
 
 import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
+import 'package:atril/data/services/storage/reader_settings_store.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/reader/widgets/reader_screen.dart';
@@ -69,8 +70,11 @@ final class _FakeHost implements EpubHost {
   @override
   Future<String> textOf(String cfiRange) async => '';
 
+  /// Every style the host was asked for, in order.
+  final List<EpubStyle> styles = <EpubStyle>[];
+
   @override
-  Future<void> apply(EpubStyle style) async {}
+  Future<void> apply(EpubStyle style) async => styles.add(style);
 
   @override
   Future<void> dispose() async {
@@ -113,10 +117,17 @@ final class _FakeReading implements ReadingRepository {
   Future<Result<Ebook?>> ebook(String ebookId) async => Result<Ebook?>.ok(null);
 }
 
-Widget _app(ReadingRepository reading, EpubHostFactory hosts) => MultiProvider(
+Widget _app(
+  ReadingRepository reading,
+  EpubHostFactory hosts, {
+  ReaderSettingsStore? settings,
+}) => MultiProvider(
   providers: <SingleChildWidget>[
     Provider<ReadingRepository>.value(value: reading),
     Provider<EpubHostFactory>.value(value: hosts),
+    Provider<ReaderSettingsStore>.value(
+      value: settings ?? MemoryReaderSettingsStore(),
+    ),
   ],
   child: const MaterialApp(
     // Pinned rather than left to resolution. The test host reports its own
@@ -284,6 +295,106 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(host.disposed, isTrue);
+    });
+  });
+
+  group('the appearance a reader chooses', () {
+    testWidgets('opens at what this device was last left at', (
+      WidgetTester tester,
+    ) async {
+      // Applied before the book is handed over, so the first page a reader
+      // sees is at the size they chose rather than at the default for an
+      // instant.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(
+        _app(
+          _FakeReading(),
+          _FakeHosts(host),
+          settings: MemoryReaderSettingsStore(
+            const EpubStyle(fontSize: 150, theme: EpubTheme.sepia),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(host.styles, isNotEmpty);
+      expect(host.styles.first.fontSize, 150);
+      expect(host.styles.first.theme, EpubTheme.sepia);
+    });
+
+    testWidgets('applies as it is changed, with no apply button', (
+      WidgetTester tester,
+    ) async {
+      // The thing being changed is visible behind the sheet. A dialog that
+      // collected the choices and applied them on dismissal would be asking
+      // somebody to imagine the result of a decision they can look at.
+      final _FakeHost host = _FakeHost();
+      final MemoryReaderSettingsStore settings = MemoryReaderSettingsStore();
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), settings: settings),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().readerSettings));
+      await tester.pumpAndSettle();
+
+      final int before = host.styles.length;
+
+      await tester.tap(find.text(_pt().readerThemeDark));
+      await tester.pumpAndSettle();
+
+      expect(host.styles.length, greaterThan(before));
+      expect(host.styles.last.theme, EpubTheme.dark);
+      // And remembered, so tomorrow's first page is this one.
+      expect((await settings.read()).theme, EpubTheme.dark);
+    });
+
+    testWidgets('steps through the sizes rather than sliding between them', (
+      WidgetTester tester,
+    ) async {
+      // A slider invites a reader to hunt for a value they cannot name and
+      // cannot get back to.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(
+        _app(
+          _FakeReading(),
+          _FakeHosts(host),
+          settings: MemoryReaderSettingsStore(const EpubStyle()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().readerSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Slider), findsNothing);
+
+      await tester.tap(find.byTooltip(_pt().readerFontSize).last);
+      await tester.pumpAndSettle();
+
+      // The next step up from the default, and not the default plus some
+      // arbitrary increment.
+      final int start = readerFontSizes.indexOf(const EpubStyle().fontSize);
+
+      expect(host.styles.last.fontSize, readerFontSizes[start + 1]);
+    });
+
+    testWidgets('says that it applies to this device alone', (
+      WidgetTester tester,
+    ) async {
+      // A reader who set up a phone and then opened the desktop should know
+      // why it did not follow, and the reason is a decision rather than a
+      // missing feature.
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(_FakeHost())));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip(_pt().readerSettings));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().readerSettingsExplanation), findsOneWidget);
     });
   });
 

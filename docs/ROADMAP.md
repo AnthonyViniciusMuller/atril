@@ -989,9 +989,29 @@ and they are recorded here because none of them is visible from the package's RE
       disclosures, because a contents is read by looking down it. Keys turn pages on the desktop
       and in a browser, handled in Flutter rather than in the page, since on Linux the page is a
       texture and the events reach the Flutter view first
-- [ ] `feat: add reader settings` — font, size, line height, margins and the reading theme,
+- [x] `feat: add reader settings` — font, size, line height, margins and the reading theme,
       applied through the host's own styling. Local and deliberately unsynchronized: they are
-      about this screen on this device and the contract has no field for them
+      about this screen on this device and the contract has no field for them — and that absence
+      upstream is right rather than a gap, because a phone read on a train and a desktop at arm's
+      length want different answers, so a setting that synced would make choosing one on either
+      device the wrong choice on the other. The sheet says so once, since a reader who set up a
+      phone and then opened the desktop should learn that it is a decision and not a missing
+      feature.
+
+      They live in `shared_preferences` beside the window's size, and the half-written case is
+      answered the opposite way from the session credential's: each field falls back on its own,
+      so an interrupted write leaves a page mostly the way somebody chose it rather than nothing
+      they chose. A theme name a later build knows and this one does not falls back too — a
+      downgrade should be harmless, and refusing would be a reader who cannot open a book because
+      of a word in a preferences file.
+
+      The sizes are steps and not a slider, because a slider over type size invites a reader to
+      hunt for a value they cannot name and cannot get back to; the control snaps to the nearest
+      step, so a preference from another build is still a size this reader chose. Everything
+      applies as it is changed and there is no *apply*: the page is visible behind the sheet, and
+      a dialog that applied on dismissal would ask somebody to imagine a result they can look at.
+      Restyling is a method rather than a `Command` — a control that greyed out while the size
+      was applying would flicker under a reader stepping through sizes, which is how it is used
 - [ ] `feat: track reading position` — UC04. The CFI the host reports, and the percentage derived
       from it and stored anyway, so a device that cannot open a DjVu can still report that the
       reader is forty percent through it. Written through the operation author like every other
