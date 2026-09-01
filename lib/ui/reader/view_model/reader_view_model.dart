@@ -17,19 +17,30 @@
 /// open is the ordinary case — the file is not on this device, the format is
 /// one this build does not render — and each of those is a sentence the screen
 /// can say rather than a spinner that never stops.
+///
+/// **The marks on the page are a stream reconciled against the paint.** What is
+/// drawn is decided by the list the repository answers with and never by the
+/// gesture that made a mark, so a highlight made on a phone appears here when
+/// it synchronizes and one removed anywhere leaves the page — and the redraw
+/// after a re-open costs the same as the first draw. That is the reason
+/// `EpubHost.draw` is specified as idempotent per range.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../data/repositories/annotations/annotation_repository.dart';
 import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_host.dart';
 import '../../../data/services/storage/reader_settings_store.dart';
+import '../../../domain/models/annotation.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../utils/command.dart';
+import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
+import '../../core/themes/colors.dart';
 
 final _log = loggerFor('ui/reader');
 
@@ -45,12 +56,19 @@ final _log = loggerFor('ui/reader');
 /// once.
 const Duration readingPositionDebounce = Duration(seconds: 3);
 
+/// How solid a mark is painted over the page.
+///
+/// A highlight a reader cannot read through is a highlight that hid the
+/// sentence it was about, which is the one thing it was for.
+const double readerMarkOpacity = 0.35;
+
 /// The state of the reader's screen.
 final class ReaderViewModel extends ChangeNotifier {
   /// The view model over [reading], showing the work [ebookId] names in a host
   /// [hosts] makes.
   ReaderViewModel({
     required this.reading,
+    required this.annotations,
     required this.hosts,
     required this.settings,
     required this.ebookId,
@@ -60,8 +78,15 @@ final class ReaderViewModel extends ChangeNotifier {
     turnForward = Command0<void>(() => _guard(host.nextPage));
     turnBack = Command0<void>(() => _guard(host.previousPage));
     goTo = Command1<void, String>(_goTo);
+    highlight = Command0<Annotation>(_highlight);
+    removeMark = Command1<void, String>(_removeMark);
+    restoreMark = Command1<void, String>(_restoreMark);
 
     _positions = host.positions.listen(_onPosition);
+    _selections = host.selections.listen(_onSelection);
+    _marks = annotations
+        .watchMarksIn(ebookId)
+        .listen(_onMarks, onError: _onMarksError);
 
     // Opened at once rather than on a gesture. A reader who tapped a book has
     // already asked for it, and a screen that waited for a second tap would be
@@ -71,6 +96,13 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// Where the book comes from.
   final ReadingRepository reading;
+
+  /// What the reader has marked in it.
+  ///
+  /// It is a second repository beside the first and not a method on it, for the
+  /// reason the two exist apart: this screen is one open book, and a mark
+  /// outlives it.
+  final AnnotationRepository annotations;
 
   /// What makes a host. It is a factory because a host owns a webview and a
   /// book, so there is one per screen.
@@ -111,7 +143,22 @@ final class ReaderViewModel extends ChangeNotifier {
   /// Moves to a CFI or to a chapter from [chapters].
   late final Command1<void, String> goTo;
 
+  /// UC05. Marks the passage the reader has selected.
+  ///
+  /// It answers with the mark as the replica now holds it, so that the screen
+  /// can offer to undo the one it just made rather than the most recent one it
+  /// happens to be showing.
+  late final Command0<Annotation> highlight;
+
+  /// UC05. Removes a mark.
+  late final Command1<void, String> removeMark;
+
+  /// UC05. Brings a removed mark back.
+  late final Command1<void, String> restoreMark;
+
   StreamSubscription<EpubPosition>? _positions;
+  StreamSubscription<EpubSelection>? _selections;
+  StreamSubscription<Result<List<Annotation>>>? _marks;
   Timer? _pending;
   EpubPosition? _unsaved;
 
@@ -119,6 +166,10 @@ final class ReaderViewModel extends ChangeNotifier {
   EpubStyle _style = const EpubStyle();
   List<EpubChapter> _chapters = const <EpubChapter>[];
   EpubPosition? _position;
+  EpubSelection? _selection;
+  List<Annotation> _annotations = const <Annotation>[];
+  final Map<String, AnnotationKind?> _painted = <String, AnnotationKind?>{};
+  bool _opened = false;
   bool _chromeVisible = true;
   bool _disposed = false;
 
@@ -134,6 +185,28 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// Where the reader is, or `null` before the first page has been laid out.
   EpubPosition? get position => _position;
+
+  /// What the reader has selected, or `null` where they have selected nothing.
+  ///
+  /// A selection is not a mark and does not survive the screen: it is a
+  /// gesture in progress, and what turns it into something replicated is
+  /// [highlight].
+  EpubSelection? get selection => _selection;
+
+  /// What the reader has marked in this book, most recent first.
+  List<Annotation> get marks => _annotations;
+
+  /// Forgets the selection, which is what a reader who changed their mind did.
+  ///
+  /// The engine is not asked to clear anything. What it reported is a range the
+  /// reader made with their own finger, and an app that unmade it would be
+  /// undoing a gesture rather than declining to act on one.
+  void dismissSelection() {
+    if (_selection != null) {
+      _selection = null;
+      notifyListeners();
+    }
+  }
 
   /// How the page is laid out, as this device was left.
   EpubStyle get style => _style;
@@ -230,9 +303,136 @@ final class ReaderViewModel extends ChangeNotifier {
           return const Result<void>.ok(null);
         }
 
+        // The page exists now, so whatever the repository has already said can
+        // be painted. Marks arriving before this point are held rather than
+        // drawn: a mark drawn into an engine with no book in it is a call that
+        // fails for a reason nobody could act on.
+        _opened = true;
+        _painted.clear();
+        unawaited(_repaint());
+
         notifyListeners();
 
         return const Result<void>.ok(null);
+    }
+  }
+
+  /// Marks the passage the reader has selected.
+  Future<Result<Annotation>> _highlight() async {
+    final EpubSelection? selected = _selection;
+
+    if (selected == null) {
+      // Nothing is selected, so there is nothing to mark. It is reachable only
+      // by a control that outlived the selection it was offered for, and the
+      // honest answer is a refusal rather than a mark over an empty range.
+      return Result<Annotation>.error(
+        AppException(
+          kind: ErrorKind.failedPrecondition,
+          // Diagnostic and never shown: `errors.dart` says the message names
+          // hosts and identifiers freely because it is written to the log, and
+          // what a reader sees is chosen from the kind and the code.
+          message: 'nothing is selected in $ebookId', // l10n-ignore
+          op: 'ui/reader: highlight',
+        ),
+      );
+    }
+
+    final Result<Annotation> made = await annotations.highlight(
+      ebookId: ebookId,
+      cfiRange: selected.cfiRange,
+      passage: selected.text,
+    );
+
+    if (made is Ok<Annotation>) {
+      // Cleared on success only. A selection dropped after a failure would
+      // leave the reader with nothing to try again on.
+      dismissSelection();
+    }
+
+    return made;
+  }
+
+  Future<Result<void>> _removeMark(String annotationId) =>
+      annotations.removeMark(annotationId);
+
+  Future<Result<void>> _restoreMark(String annotationId) =>
+      annotations.restoreMark(annotationId);
+
+  void _onSelection(EpubSelection selection) {
+    _selection = selection;
+    // A reader who has just selected something is about to act on it, and the
+    // controls they would act with are in the chrome.
+    _chromeVisible = true;
+    notifyListeners();
+  }
+
+  void _onMarks(Result<List<Annotation>> marks) {
+    switch (marks) {
+      case Error<List<Annotation>>(:final Exception error):
+        _onMarksError(error);
+      case Ok<List<Annotation>>(:final List<Annotation> value):
+        _annotations = value;
+        notifyListeners();
+        unawaited(_repaint());
+    }
+  }
+
+  void _onMarksError(Object error) {
+    // Not shown. The book is on screen and readable; what is missing is the
+    // paint over it, and an error banner across a page because a highlight did
+    // not draw would be worse than the thing it reports.
+    _log.warning('the marks in $ebookId could not be read', error);
+  }
+
+  /// Brings the page's paint in line with the list.
+  ///
+  /// It draws what is not drawn, erases what is no longer in the list, and
+  /// redraws a mark whose kind changed — which is what happens when a highlight
+  /// is given words and becomes a note. Nothing here remembers a gesture: the
+  /// list is the truth, so a mark that arrived by synchronization is painted by
+  /// exactly the same code as one made on this device a second ago.
+  Future<void> _repaint() async {
+    if (!_opened || _disposed) {
+      return;
+    }
+
+    final Map<String, AnnotationKind?> wanted = <String, AnnotationKind?>{
+      for (final Annotation mark in _annotations)
+        // A bookmark is a position and covers no range, so there is nothing to
+        // paint over. It is shown in the chrome instead.
+        if (mark.kind != AnnotationKind.bookmark) mark.locator: mark.kind,
+    };
+
+    try {
+      for (final String range in _painted.keys.toList()) {
+        if (wanted[range] != _painted[range]) {
+          await host.erase(range);
+        }
+      }
+
+      for (final MapEntry<String, AnnotationKind?> mark in wanted.entries) {
+        if (_painted[mark.key] != mark.value) {
+          await host.draw(
+            EpubMark(
+              cfiRange: mark.key,
+              color: mark.value == AnnotationKind.note
+                  ? atrilNote
+                  : atrilHighlight,
+              opacity: readerMarkOpacity,
+            ),
+          );
+        }
+      }
+
+      _painted
+        ..clear()
+        ..addAll(wanted);
+    } on Exception catch (error) {
+      // The paint is out of step with the list and the next emission will try
+      // again. What has been drawn so far is forgotten rather than assumed, so
+      // that the retry is a full redraw and not a diff against a lie.
+      _painted.clear();
+      _log.warning('the marks in $ebookId could not be drawn', error);
     }
   }
 
@@ -310,11 +510,16 @@ final class ReaderViewModel extends ChangeNotifier {
     // closed the book within the debounce still comes back to it.
     unawaited(_savePosition());
     unawaited(_positions?.cancel());
+    unawaited(_selections?.cancel());
+    unawaited(_marks?.cancel());
     unawaited(host.dispose());
     open.dispose();
     turnForward.dispose();
     turnBack.dispose();
     goTo.dispose();
+    highlight.dispose();
+    removeMark.dispose();
+    restoreMark.dispose();
     super.dispose();
   }
 }

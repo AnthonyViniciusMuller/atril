@@ -10,9 +10,12 @@ library;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/services/storage/reader_settings_store.dart';
+import 'package:atril/domain/crdt/revision.dart';
+import 'package:atril/domain/models/annotation.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/reader/view_model/reader_view_model.dart';
@@ -25,12 +28,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../repository_fakes.dart';
+
 const String _id = 'aaaaaaaa-1111-4111-8111-111111111111';
 
 /// A host that renders a label instead of a book.
 final class _FakeHost implements EpubHost {
   final StreamController<EpubPosition> _positions =
       StreamController<EpubPosition>.broadcast();
+  final StreamController<EpubSelection> _selections =
+      StreamController<EpubSelection>.broadcast();
 
   List<EpubChapter> contents = const <EpubChapter>[];
   final List<String> visited = <String>[];
@@ -48,7 +55,7 @@ final class _FakeHost implements EpubHost {
   Stream<EpubPosition> get positions => _positions.stream;
 
   @override
-  Stream<EpubSelection> get selections => const Stream<EpubSelection>.empty();
+  Stream<EpubSelection> get selections => _selections.stream;
 
   @override
   Future<List<EpubChapter>> chapters() async => contents;
@@ -62,11 +69,16 @@ final class _FakeHost implements EpubHost {
   @override
   Future<void> previousPage() async => turnsBack++;
 
-  @override
-  Future<void> draw(EpubMark mark) async {}
+  /// Every range painted over the page, in order, and every one wiped off it.
+  final List<EpubMark> drawn = <EpubMark>[];
+  final List<String> erased = <String>[];
 
   @override
-  Future<void> erase(String cfiRange, {bool underline = false}) async {}
+  Future<void> draw(EpubMark mark) async => drawn.add(mark);
+
+  @override
+  Future<void> erase(String cfiRange, {bool underline = false}) async =>
+      erased.add(cfiRange);
 
   @override
   Future<String> textOf(String cfiRange) async => '';
@@ -81,7 +93,13 @@ final class _FakeHost implements EpubHost {
   Future<void> dispose() async {
     disposed = true;
     await _positions.close();
+    await _selections.close();
   }
+
+  /// Reports a selection, as the engine would when a reader drags over a
+  /// passage.
+  void select(String cfiRange, String text) =>
+      _selections.add(EpubSelection(cfiRange: cfiRange, text: text));
 
   /// Reports where the reader is, as the engine would.
   void moveTo(double percent) => _positions.add(
@@ -141,13 +159,29 @@ final class _FakeReading implements ReadingRepository {
   Future<Result<Ebook?>> ebook(String ebookId) async => Result<Ebook?>.ok(null);
 }
 
+/// A mark over [range], as the repository would answer with one.
+Annotation _mark(
+  String range, {
+  AnnotationKind kind = AnnotationKind.highlight,
+}) => Annotation(
+  id: range,
+  ebookId: _id,
+  kind: kind,
+  locator: range,
+  revision: Revision.first('device', DateTime.utc(2026, 9, 1)),
+);
+
 Widget _app(
   ReadingRepository reading,
   EpubHostFactory hosts, {
   ReaderSettingsStore? settings,
+  AnnotationRepository? annotations,
 }) => MultiProvider(
   providers: <SingleChildWidget>[
     Provider<ReadingRepository>.value(value: reading),
+    Provider<AnnotationRepository>.value(
+      value: annotations ?? FakeAnnotationRepository(),
+    ),
     Provider<EpubHostFactory>.value(value: hosts),
     Provider<ReaderSettingsStore>.value(
       value: settings ?? MemoryReaderSettingsStore(),
@@ -611,6 +645,203 @@ void main() {
       };
 
       expect(titles, hasLength(3));
+    });
+  });
+
+  group('marking a passage', () {
+    const String range = 'epubcfi(/6/14!/4/10,/2/1:1,/3:4)';
+
+    testWidgets('a selection raises the bar that acts on it', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(readerSelectionKey), findsNothing);
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(readerSelectionKey), findsOneWidget);
+      expect(find.text(_pt().readerHighlight), findsOneWidget);
+    });
+
+    testWidgets('the bar stays when the chrome is tapped away', (
+      WidgetTester tester,
+    ) async {
+      // A reader who selected a passage asked a question, and the tap that
+      // clears the page controls must not take the answer with it.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 0);
+      expect(find.byKey(readerSelectionKey), findsOneWidget);
+    });
+
+    testWidgets('highlighting carries the range and the words it covers', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_pt().readerHighlight));
+      await tester.pumpAndSettle();
+
+      expect(marks.highlighted, hasLength(1));
+      expect(marks.highlighted.single.ebookId, _id);
+      expect(marks.highlighted.single.cfiRange, range);
+      expect(marks.highlighted.single.passage, 'A terra é ingrata.');
+
+      // The bar goes once the mark is made; the reader has been answered.
+      expect(find.byKey(readerSelectionKey), findsNothing);
+    });
+
+    testWidgets('a mark just made is offered back as an undo', (
+      WidgetTester tester,
+    ) async {
+      // Offered rather than confirmed beforehand. Marking a passage is what a
+      // reader came here to do, and a dialog in front of it would be the app
+      // asking whether they meant the gesture they just made.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerHighlight));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().readerHighlighted), findsOneWidget);
+
+      await tester.tap(find.text(_pt().readerMarkUndo));
+      await tester.pumpAndSettle();
+
+      expect(marks.removed, <String>['mark-1']);
+    });
+
+    testWidgets('a refused mark says so and keeps the selection', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository()
+        ..refusal = Exception('no');
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      host.select(range, 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pt().readerHighlight));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().readerMarkFailed), findsOneWidget);
+      // Kept, because a selection dropped after a failure leaves the reader
+      // with nothing to try again on.
+      expect(find.byKey(readerSelectionKey), findsOneWidget);
+    });
+  });
+
+  group('the marks over the page', () {
+    testWidgets('are painted from the list and never from the gesture', (
+      WidgetTester tester,
+    ) async {
+      // A mark made on another device arrives the same way one made here does,
+      // and both are drawn by this code and no other.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      marks.emitMarks(<Annotation>[_mark('one'), _mark('two')]);
+      await tester.pumpAndSettle();
+
+      expect(host.drawn.map((EpubMark mark) => mark.cfiRange), <String>[
+        'one',
+        'two',
+      ]);
+
+      marks.emitMarks(<Annotation>[_mark('two')]);
+      await tester.pumpAndSettle();
+
+      expect(host.erased, <String>['one']);
+      // Redrawn nothing: what is already on the page stays on it, which is
+      // what makes the reconciliation cheap enough to run per emission.
+      expect(host.drawn, hasLength(2));
+    });
+
+    testWidgets('a bookmark is not painted over anything', (
+      WidgetTester tester,
+    ) async {
+      // It is a position and covers no range, so there is nothing to draw. The
+      // chrome is where it shows.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      marks.emitMarks(<Annotation>[
+        _mark('one', kind: AnnotationKind.bookmark),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(host.drawn, isEmpty);
+    });
+
+    testWidgets('a list that fails leaves the book on screen', (
+      WidgetTester tester,
+    ) async {
+      // The page is readable; what is missing is the paint over it. An error
+      // banner across a book because a highlight did not draw would be worse
+      // than the thing it reports.
+      final _FakeHost host = _FakeHost();
+      final FakeAnnotationRepository marks = FakeAnnotationRepository();
+      addTearDown(marks.close);
+
+      await tester.pumpWidget(
+        _app(_FakeReading(), _FakeHosts(host), annotations: marks),
+      );
+      await tester.pumpAndSettle();
+
+      marks.failMarks(Exception('the replica is unreadable'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('the page')), findsOneWidget);
+      expect(find.text(_pt().readerFailedTitle), findsNothing);
     });
   });
 }

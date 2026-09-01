@@ -25,9 +25,11 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../data/repositories/annotations/annotation_repository.dart';
 import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_host.dart';
 import '../../../data/services/storage/reader_settings_store.dart';
+import '../../../domain/models/annotation.dart';
 import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
@@ -62,6 +64,7 @@ class ReaderScreen extends StatefulWidget {
 class _ReaderScreenState extends State<ReaderScreen> {
   late final ReaderViewModel _model = ReaderViewModel(
     reading: context.read<ReadingRepository>(),
+    annotations: context.read<AnnotationRepository>(),
     hosts: context.read<EpubHostFactory>(),
     settings: context.read<ReaderSettingsStore>(),
     ebookId: widget.ebookId,
@@ -130,6 +133,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
             children: <Widget>[
               Positioned.fill(child: _ReaderBody(model: _model)),
               _ReaderChrome(model: _model),
+              // Above the chrome and outside it, deliberately. A reader who
+              // has selected a passage has asked a question the app must
+              // answer, and a tap that hid the page controls should not take
+              // the answer away with them.
+              _SelectionActions(model: _model),
             ],
           ),
         ),
@@ -497,4 +505,101 @@ class _ContentsSheet extends StatelessWidget {
     for (final EpubChapter child in chapter.children)
       ..._entriesOf(context, child, depth: depth + 1),
   ];
+}
+
+/// The key of the bar a selection raises, so that a test can name it.
+const Key readerSelectionKey = Key('reader selection');
+
+/// What a reader can do with the passage they have just selected.
+///
+/// It is a bar over the page and not a context menu, for the same reason the
+/// rest of the chrome is Flutter's: a menu drawn by the engine would be
+/// untranslated, unthemed and unreachable by a widget test — and on Linux it
+/// would be drawn by CEF into a texture, where the application has no say over
+/// it at all.
+///
+/// It shows only while something is selected. Nothing here polls the engine to
+/// find out whether the reader has since tapped the selection away; the
+/// dismissal is a control of its own, because a bar that disappeared on its own
+/// timing would be a bar that vanishes as the finger reaches it.
+class _SelectionActions extends StatelessWidget {
+  const _SelectionActions({required this.model});
+
+  final ReaderViewModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final EpubSelection? selection = model.selection;
+
+    if (selection == null) {
+      return const SizedBox.shrink();
+    }
+
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final ThemeData theme = Theme.of(context);
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 96, left: 16, right: 16),
+          child: Material(
+            key: readerSelectionKey,
+            color: theme.colorScheme.surfaceContainerHigh,
+            elevation: 6,
+            borderRadius: BorderRadius.circular(28),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextButton.icon(
+                    onPressed: () => _mark(context, model),
+                    icon: const Icon(Icons.brush_outlined),
+                    label: Text(l10n.readerHighlight),
+                  ),
+                  IconButton(
+                    onPressed: model.dismissSelection,
+                    icon: const Icon(Icons.close),
+                    tooltip: l10n.readerSelectionDismiss,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Marks the selected passage, and offers to undo it.
+///
+/// The undo is offered rather than a confirmation asked for, and the asymmetry
+/// is the point: marking a passage is what the reader came here to do, and a
+/// dialog in front of it would be the app asking whether they meant the gesture
+/// they just made. Unmaking it is one operation, because the removal is a
+/// tombstone and the undo lifts it.
+Future<void> _mark(BuildContext context, ReaderViewModel model) async {
+  final AppLocalizations l10n = AppLocalizations.of(context);
+  final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+
+  await model.highlight.execute();
+
+  switch (model.highlight.result) {
+    case Ok<Annotation>(:final Annotation value):
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.readerHighlighted),
+          action: SnackBarAction(
+            label: l10n.readerMarkUndo,
+            onPressed: () => model.removeMark.execute(value.id),
+          ),
+        ),
+      );
+    case Error<Annotation>():
+      messenger.showSnackBar(SnackBar(content: Text(l10n.readerMarkFailed)));
+    case null:
+      break;
+  }
 }

@@ -27,6 +27,7 @@ import '../../../utils/logging.dart';
 import '../../../domain/crdt/vector_clock.dart';
 import 'connection/connection.dart';
 import 'converters.dart';
+import 'dao/annotations_dao.dart';
 import 'dao/identity_dao.dart';
 import 'dao/library_dao.dart';
 import 'dao/reading_dao.dart';
@@ -74,6 +75,7 @@ final _log = loggerFor('data/local');
     IdentityDao,
     LibraryDao,
     ReadingDao,
+    AnnotationsDao,
     SyncDao,
     RecordsDao,
     TransfersDao,

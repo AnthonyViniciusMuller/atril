@@ -1060,7 +1060,17 @@ and they are recorded here because none of them is visible from the package's RE
 
 ## Phase 10 — Annotations (UC05)
 
-- [ ] `feat: add highlights` — a selection in the reader, anchored to a CFI range
+- [x] `feat: add highlights` — a selection in the reader, anchored to a CFI range. Three
+      decisions came out of building it. **The single `text` field carries the passage for a
+      highlight**, captured from the selection that made it: the contract gives an annotation one
+      nullable text, the screen that lists marks across the library has no engine and no open
+      book to ask, and a highlight that stored nothing could only ever be shown as a CFI. **The
+      paint is reconciled against the list and never against the gesture** — the reader's view
+      model draws what `watchMarksIn` says and erases what leaves it, so a mark that arrived by
+      synchronization is painted by the same code as one made a second ago, and a re-open costs
+      the same as the first draw. And **the marks come back most recent first, never in reading
+      order**: two CFIs are compared by parsing them, and a CFI parser in Dart is the second
+      implementation `architecture.md` forbids outright
 - [ ] `feat: add notes` — a highlight with text, which the contract requires to be present
       because a note without it is an empty note
 - [ ] `feat: add bookmarks` — a position, no text, no selection

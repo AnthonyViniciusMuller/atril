@@ -282,5 +282,20 @@
   "@libraryContinueElsewhere": {},
 
   "libraryContinuePercent": "{percent}%",
-  "@libraryContinuePercent": {}
+  "@libraryContinuePercent": {},
+
+  "readerHighlight": "Highlight",
+  "@readerHighlight": {},
+
+  "readerSelectionDismiss": "Dismiss the selection",
+  "@readerSelectionDismiss": {},
+
+  "readerHighlighted": "Passage highlighted.",
+  "@readerHighlighted": {},
+
+  "readerMarkUndo": "Undo",
+  "@readerMarkUndo": {},
+
+  "readerMarkFailed": "The mark could not be saved.",
+  "@readerMarkFailed": {}
 }

@@ -727,4 +727,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String libraryContinuePercent(Object percent) {
     return '$percent%';
   }
+
+  @override
+  String get readerHighlight => 'Highlight';
+
+  @override
+  String get readerSelectionDismiss => 'Dismiss the selection';
+
+  @override
+  String get readerHighlighted => 'Passage highlighted.';
+
+  @override
+  String get readerMarkUndo => 'Undo';
+
+  @override
+  String get readerMarkFailed => 'The mark could not be saved.';
 }

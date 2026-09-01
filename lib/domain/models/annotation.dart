@@ -10,6 +10,7 @@
 library;
 
 import '../crdt/revision.dart';
+import 'ebook.dart';
 
 /// What kind of mark the reader left.
 enum AnnotationKind {
@@ -118,4 +119,25 @@ final class ReadingProgress {
 
   @override
   String toString() => 'ReadingProgress($ebookId on $deviceId)';
+}
+
+/// A mark and the work it is in.
+///
+/// It is a domain value and not a row type, because three layers hold it: the
+/// repository answers with it, the export formats it, and the screen that lists
+/// everything the reader has marked across the whole library renders it. A mark
+/// with no work beside it is a passage with no book, which is nothing any of
+/// the three can show.
+final class MarkedPassage {
+  /// The [mark] made in [work].
+  const MarkedPassage({required this.mark, required this.work});
+
+  /// What the reader marked.
+  final Annotation mark;
+
+  /// The work it is in.
+  final Ebook work;
+
+  @override
+  String toString() => 'MarkedPassage(${mark.id} in ${work.id})';
 }

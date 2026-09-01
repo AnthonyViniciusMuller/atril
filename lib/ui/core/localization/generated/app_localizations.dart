@@ -1316,6 +1316,36 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'{percent}%'**
   String libraryContinuePercent(Object percent);
+
+  /// Ação que grifa o trecho que o leitor acabou de selecionar na página. Aparece na barra que a seleção levanta, sobre o livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Grifar'**
+  String get readerHighlight;
+
+  /// Ação que fecha a barra levantada por uma seleção sem marcar nada. Dica do botão; quem mudou de ideia não fez nada de errado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Dispensar a seleção'**
+  String get readerSelectionDismiss;
+
+  /// Aviso mostrado depois que um trecho é grifado. Vem acompanhado da ação de desfazer, porque grifar é o que o leitor veio fazer e perguntar antes seria duvidar do gesto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Trecho grifado.'**
+  String get readerHighlighted;
+
+  /// Ação que desfaz a marcação recém-feita, no aviso que a anuncia. Rótulo curto.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desfazer'**
+  String get readerMarkUndo;
+
+  /// Erro mostrado quando uma marcação não pôde ser gravada na réplica local. Não é falha de rede: a marcação é escrita aqui e sincronizada depois.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível guardar a marcação.'**
+  String get readerMarkFailed;
 }
 
 class _AppLocalizationsDelegate

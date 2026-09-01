@@ -38,3 +38,21 @@ final ColorScheme atrilDarkScheme = ColorScheme.fromSeed(
   seedColor: atrilSeed,
   brightness: Brightness.dark,
 );
+
+/// The colour a highlight is painted over the page in.
+///
+/// It is a role Material has no name for, and it is here for the reason this
+/// file exists rather than beside the reading palette: it is one colour, drawn
+/// over somebody else's book, and it has to read on all four reading grounds —
+/// white, sepia, near-black, and whichever of those the system picks. A role of
+/// the scheme would not: those are chosen against this app's surfaces, and the
+/// page is not one of them.
+const Color atrilHighlight = Color(0xFFFFC107);
+
+/// The colour a note is painted in.
+///
+/// A second hue and not a second opacity. A reader glancing at a page has to
+/// tell *I marked this* from *I wrote something about this*, and two marks
+/// differing only in how strong they are read as one mark under a different
+/// light.
+const Color atrilNote = Color(0xFF7E57C2);

@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:atril/config/environment.dart';
+import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
@@ -23,6 +24,7 @@ import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/data/services/files/file_source.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
+import 'package:atril/domain/models/annotation.dart';
 import 'package:atril/domain/models/collection.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
@@ -567,6 +569,89 @@ final class FakeReadingRepository implements ReadingRepository {
   Future<Result<Ebook?>> ebook(String ebookId) async => Result<Ebook?>.ok(null);
 }
 
+/// An [AnnotationRepository] that answers from memory.
+///
+/// The marks are a broadcast controller for the reason the works are: what the
+/// reader's screen is written against is a *stream*, and a repository that
+/// answered a list once would be a repository this app does not have.
+final class FakeAnnotationRepository implements AnnotationRepository {
+  final StreamController<Result<List<Annotation>>> _marks =
+      StreamController<Result<List<Annotation>>>.broadcast();
+
+  /// Every mark it was asked to make, in order.
+  final List<({String ebookId, String cfiRange, String? passage})> highlighted =
+      <({String ebookId, String cfiRange, String? passage})>[];
+
+  /// Every mark it was asked to remove, and to bring back.
+  final List<String> removed = <String>[];
+
+  /// As [removed], the other way.
+  final List<String> restored = <String>[];
+
+  /// What the next write fails with, or `null` to let it succeed.
+  Exception? refusal;
+
+  /// Emits [marks] to whoever is watching.
+  void emitMarks(List<Annotation> marks) =>
+      _marks.add(Result<List<Annotation>>.ok(marks));
+
+  /// Emits a failure, which a screen should ride out rather than empty itself
+  /// over.
+  void failMarks(Exception error) =>
+      _marks.add(Result<List<Annotation>>.error(error));
+
+  /// Closes the stream, as a disposed repository would.
+  Future<void> close() => _marks.close();
+
+  @override
+  Stream<Result<List<Annotation>>> watchMarksIn(String ebookId) =>
+      _marks.stream;
+
+  @override
+  Future<Result<Annotation>> highlight({
+    required String ebookId,
+    required String cfiRange,
+    String? passage,
+  }) async {
+    highlighted.add((ebookId: ebookId, cfiRange: cfiRange, passage: passage));
+
+    final Exception? refused = refusal;
+
+    if (refused != null) {
+      return Result<Annotation>.error(refused);
+    }
+
+    return Result<Annotation>.ok(
+      Annotation(
+        id: 'mark-${highlighted.length}',
+        ebookId: ebookId,
+        kind: AnnotationKind.highlight,
+        locator: cfiRange,
+        text: passage,
+        revision: Revision.first('device', DateTime.utc(2026, 9, 1)),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<void>> removeMark(String annotationId) async {
+    removed.add(annotationId);
+
+    final Exception? refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
+  @override
+  Future<Result<void>> restoreMark(String annotationId) async {
+    restored.add(annotationId);
+
+    return const Result<void>.ok(null);
+  }
+}
+
 /// A [FilePicker] that answers with whatever a test put in it.
 ///
 /// The default is `null`, which is a reader who opened the dialog and closed
@@ -613,6 +698,7 @@ List<SingleChildWidget> repositoryProviders({
   AuthRepository? auth,
   LibraryRepository? library,
   ReadingRepository? reading,
+  AnnotationRepository? annotations,
   FilePicker? picker,
   Environment? environment,
 }) => <SingleChildWidget>[
@@ -621,5 +707,8 @@ List<SingleChildWidget> repositoryProviders({
   Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
   Provider<LibraryRepository>.value(value: library ?? FakeLibraryRepository()),
   Provider<ReadingRepository>.value(value: reading ?? FakeReadingRepository()),
+  Provider<AnnotationRepository>.value(
+    value: annotations ?? FakeAnnotationRepository(),
+  ),
   Provider<FilePicker>.value(value: picker ?? FakeFilePicker()),
 ];

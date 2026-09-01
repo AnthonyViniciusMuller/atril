@@ -728,6 +728,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String libraryContinuePercent(Object percent) {
     return '$percent%';
   }
+
+  @override
+  String get readerHighlight => 'Grifar';
+
+  @override
+  String get readerSelectionDismiss => 'Dispensar a seleção';
+
+  @override
+  String get readerHighlighted => 'Trecho grifado.';
+
+  @override
+  String get readerMarkUndo => 'Desfazer';
+
+  @override
+  String get readerMarkFailed => 'Não foi possível guardar a marcação.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1453,4 +1468,19 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String libraryContinuePercent(Object percent) {
     return '$percent%';
   }
+
+  @override
+  String get readerHighlight => 'Grifar';
+
+  @override
+  String get readerSelectionDismiss => 'Dispensar a seleção';
+
+  @override
+  String get readerHighlighted => 'Trecho grifado.';
+
+  @override
+  String get readerMarkUndo => 'Desfazer';
+
+  @override
+  String get readerMarkFailed => 'Não foi possível guardar a marcação.';
 }

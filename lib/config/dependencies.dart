@@ -30,6 +30,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../data/repositories/annotations/annotation_repository.dart';
+import '../data/repositories/annotations/annotation_repository_impl.dart';
 import '../data/repositories/auth/auth_repository.dart';
 import '../data/repositories/auth/auth_repository_impl.dart';
 import '../data/repositories/library/library_repository.dart';
@@ -268,6 +270,19 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         library: database.libraryDao,
         places: database.readingDao,
         blobs: blobs,
+        author: context.read<OperationAuthor>(),
+      ),
+    ),
+
+    // What the reader wrote down. It is a third repository beside the two
+    // above and not a corner of either, because a mark outlives the session
+    // that made it: it is read on a screen that is not the book's, exported on
+    // its own, and — like every other replicable record — authored here and
+    // pushed rather than sent through `CreateAnnotation`.
+    Provider<AnnotationRepository>(
+      create: (BuildContext context) => AnnotationRepositoryImpl(
+        marks: database.annotationsDao,
+        library: database.libraryDao,
         author: context.read<OperationAuthor>(),
       ),
     ),
