@@ -1573,6 +1573,58 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get accountSave => 'Salvar';
+
+  @override
+  String get accountDelete => 'Excluir a conta';
+
+  @override
+  String get accountDeleteExplanation =>
+      'Remove você deste servidor, com tudo que está ligado à sua conta lá: os seus aparelhos, as suas credenciais e a sua biblioteca no servidor.';
+
+  @override
+  String get accountDeleteReaches => 'O que a exclusão alcança';
+
+  @override
+  String get accountDeleteDoesNotReach => 'O que ela não alcança';
+
+  @override
+  String accountDeleteThisServer(String domain) {
+    return 'A sua conta em $domain';
+  }
+
+  @override
+  String get accountDeleteReplicas =>
+      'Os servidores que já guardam uma cópia sua. Excluir não entra no banco de outro operador — nem revogar entrava.';
+
+  @override
+  String accountDeleteReplicaNames(String domains) {
+    return 'Ainda com uma cópia: $domains';
+  }
+
+  @override
+  String get accountDeleteLocal =>
+      'Os livros e as marcações neste aparelho. Eles são a sua cópia, e você pode exportar as marcações antes de sair.';
+
+  @override
+  String get accountDeleteIrreversible => 'Não dá para desfazer.';
+
+  @override
+  String get accountDeleteMigrateInstead =>
+      'Se o que você quer é mudar de servidor levando a biblioteca, use Mudar de servidor de origem: são coisas diferentes.';
+
+  @override
+  String get accountDeleteConfirm => 'Excluir a minha conta';
+
+  @override
+  String get accountDeletePasswordLabel => 'Sua senha';
+
+  @override
+  String accountDeleted(String domain) {
+    return 'A sua conta em $domain foi excluída.';
+  }
+
+  @override
+  String get accountDeleteFailed => 'Não foi possível excluir a conta.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3143,4 +3195,56 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get accountSave => 'Salvar';
+
+  @override
+  String get accountDelete => 'Excluir a conta';
+
+  @override
+  String get accountDeleteExplanation =>
+      'Remove você deste servidor, com tudo que está ligado à sua conta lá: os seus aparelhos, as suas credenciais e a sua biblioteca no servidor.';
+
+  @override
+  String get accountDeleteReaches => 'O que a exclusão alcança';
+
+  @override
+  String get accountDeleteDoesNotReach => 'O que ela não alcança';
+
+  @override
+  String accountDeleteThisServer(String domain) {
+    return 'A sua conta em $domain';
+  }
+
+  @override
+  String get accountDeleteReplicas =>
+      'Os servidores que já guardam uma cópia sua. Excluir não entra no banco de outro operador — nem revogar entrava.';
+
+  @override
+  String accountDeleteReplicaNames(String domains) {
+    return 'Ainda com uma cópia: $domains';
+  }
+
+  @override
+  String get accountDeleteLocal =>
+      'Os livros e as marcações neste aparelho. Eles são a sua cópia, e você pode exportar as marcações antes de sair.';
+
+  @override
+  String get accountDeleteIrreversible => 'Não dá para desfazer.';
+
+  @override
+  String get accountDeleteMigrateInstead =>
+      'Se o que você quer é mudar de servidor levando a biblioteca, use Mudar de servidor de origem: são coisas diferentes.';
+
+  @override
+  String get accountDeleteConfirm => 'Excluir a minha conta';
+
+  @override
+  String get accountDeletePasswordLabel => 'Sua senha';
+
+  @override
+  String accountDeleted(String domain) {
+    return 'A sua conta em $domain foi excluída.';
+  }
+
+  @override
+  String get accountDeleteFailed => 'Não foi possível excluir a conta.';
 }

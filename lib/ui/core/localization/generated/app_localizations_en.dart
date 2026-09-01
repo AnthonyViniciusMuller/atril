@@ -1566,4 +1566,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountSave => 'Save';
+
+  @override
+  String get accountDelete => 'Delete account';
+
+  @override
+  String get accountDeleteExplanation =>
+      'It removes you from this server, with everything tied to your account there: your devices, your credentials and your library on the server.';
+
+  @override
+  String get accountDeleteReaches => 'What deleting reaches';
+
+  @override
+  String get accountDeleteDoesNotReach => 'What it does not reach';
+
+  @override
+  String accountDeleteThisServer(String domain) {
+    return 'Your account at $domain';
+  }
+
+  @override
+  String get accountDeleteReplicas =>
+      'The servers that already hold a copy of your data. Deleting does not reach into another operator’s database — revoking never did either.';
+
+  @override
+  String accountDeleteReplicaNames(String domains) {
+    return 'Still holding a copy: $domains';
+  }
+
+  @override
+  String get accountDeleteLocal =>
+      'The books and the marks on this device. They are your own copy, and you can export the marks before you go.';
+
+  @override
+  String get accountDeleteIrreversible => 'It cannot be undone.';
+
+  @override
+  String get accountDeleteMigrateInstead =>
+      'If what you want is to move server and keep your library, use Move to another server: they are different things.';
+
+  @override
+  String get accountDeleteConfirm => 'Delete my account';
+
+  @override
+  String get accountDeletePasswordLabel => 'Your password';
+
+  @override
+  String accountDeleted(String domain) {
+    return 'Your account at $domain was deleted.';
+  }
+
+  @override
+  String get accountDeleteFailed => 'The account could not be deleted.';
 }

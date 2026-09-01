@@ -36,6 +36,9 @@ const String opChangePassword = 'identity/user: password';
 /// established and only the proof failed.
 const String codeWrongPassword = 'wrong_password';
 
+/// The operation deleting the account reports under.
+const String opDeleteAccount = 'identity/user: delete';
+
 /// The operation reading the reader's devices reports under.
 const String opDevices = 'identity/device: list';
 
@@ -198,6 +201,23 @@ final class AccountRepositoryImpl implements AccountRepository {
       );
     } on Exception catch (error) {
       _log.warning('the reader row was not brought into step', error);
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteAccount(String password) async {
+    try {
+      await auth.deleteUser(password);
+
+      // The session and nothing else. The replica stays: it is the reader's
+      // own copy, the export is how they take it elsewhere, and erasing it
+      // would destroy the only copy of whatever the node never received.
+      await session?.end();
+      _log.info('the reader was removed from this node');
+
+      return const Result<void>.ok(null);
+    } on Exception catch (error) {
+      return Result<void>.error(failureFrom(error, op: opDeleteAccount));
     }
   }
 

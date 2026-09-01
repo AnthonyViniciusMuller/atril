@@ -1320,8 +1320,21 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       third copy to disagree, and a refresh that failed costs a line rather than the screen. And
       the refusals a reader can act on are named out of the node's own codes: `wrong_password`,
       which is one code for all three credential calls on the other side, and `email_registered`
-- [ ] `feat: add account deletion` — with what it does and does not reach spelled out: this node,
-      and not the replicas that already hold a copy
+- [x] `feat: add account deletion` — with what it does and does not reach spelled out: this node,
+      and not the replicas that already hold a copy. The screen is **two lists, and the second is
+      the point**: a deletion screen that only said what it removes would invite the reader to
+      believe it reaches further than it can. The peers are *named* rather than alluded to, which
+      is why the screen reads the replica permissions — a reader deciding what deletion costs
+      should not have to guess who has their library — and an empty list there means *not known*
+      and never *none*, so the sentence stays and only the names come and go. **The local replica
+      is left alone**, which the plan did not settle: the books and marks here are the reader's
+      own copy, the export of phase 10 is how they take them elsewhere, and erasing them would
+      destroy the only remaining copy of everything the node never received. So deletion ends the
+      session and nothing else, which is what signing out already means one step further on. It
+      is a location below the account and not a dialog on it, for the reason every irreversible
+      screen here is one, and it points at the migration: the two calls exist separately on
+      purpose, and the difference between them is what they cost when the caller was wrong about
+      which they wanted
 
 ## Phase 13 — Delivery
 

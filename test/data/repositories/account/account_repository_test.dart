@@ -86,6 +86,16 @@ void main() {
       at: _at,
     );
 
+    await database.identityDao.rememberReader(
+      id: '22222222-2222-4222-8222-222222222222',
+      localName: 'reader',
+      displayName: 'A leitora',
+      originServerDomain: 'quire-a.example',
+      federatedId: '@reader:quire-a.example',
+      createdAt: _at,
+      email: 'reader@example.com',
+    );
+
     node.devices.addAll(
       <Device>[
         const Device(
@@ -226,6 +236,40 @@ void main() {
       );
 
       expect(changed, isA<Error<void>>());
+      expect(await session.credential(), isNotNull);
+    });
+  });
+
+  group('deleting the account', () {
+    test('proves it with the password and ends this session', () async {
+      final deleted = await account.deleteAccount(node.password);
+
+      expect(deleted, isA<Ok<void>>());
+      expect(node.deleted, <String>[node.password]);
+      expect(await session.credential(), isNull);
+    });
+
+    test('leaves this device\'s replica alone', () async {
+      // The books and the marks here are the reader's own copy, and erasing
+      // them would destroy the only copy of whatever the node never received.
+      // The deletion ends the session and nothing else.
+      await account.deleteAccount(node.password);
+
+      expect(await database.identityDao.deviceId(), _thisDevice);
+      expect(await database.identityDao.reader(), isNotNull);
+    });
+
+    test('a wrong password deletes nothing and keeps the session', () async {
+      final deleted = await account.deleteAccount('not the password');
+
+      expect(
+        deleted,
+        isA<Error<void>>().having(
+          (Error<void> it) => (it.error as AppException).code,
+          'code',
+          codeWrongPassword,
+        ),
+      );
       expect(await session.credential(), isNotNull);
     });
   });

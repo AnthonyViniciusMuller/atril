@@ -2540,5 +2540,90 @@
   "accountSave": "Salvar",
   "@accountSave": {
     "description": "Rótulo do botão que confirma uma alteração num diálogo da tela da conta."
+  },
+
+  "accountDelete": "Excluir a conta",
+  "@accountDelete": {
+    "description": "Item da tela da conta que leva à exclusão, e título da tela de exclusão."
+  },
+
+  "accountDeleteExplanation": "Remove você deste servidor, com tudo que está ligado à sua conta lá: os seus aparelhos, as suas credenciais e a sua biblioteca no servidor.",
+  "@accountDeleteExplanation": {
+    "description": "Parágrafo principal da tela de exclusão da conta, dizendo o que a exclusão de fato remove."
+  },
+
+  "accountDeleteReaches": "O que a exclusão alcança",
+  "@accountDeleteReaches": {
+    "description": "Cabeçalho da seção da tela de exclusão que lista o que é removido."
+  },
+
+  "accountDeleteDoesNotReach": "O que ela não alcança",
+  "@accountDeleteDoesNotReach": {
+    "description": "Cabeçalho da seção da tela de exclusão que lista o que continua existindo depois dela. É a metade que costuma ser suposta errada."
+  },
+
+  "accountDeleteThisServer": "A sua conta em {domain}",
+  "@accountDeleteThisServer": {
+    "description": "Item da lista do que a exclusão alcança: a conta no servidor de origem. O parâmetro é o domínio.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountDeleteReplicas": "Os servidores que já guardam uma cópia sua. Excluir não entra no banco de outro operador — nem revogar entrava.",
+  "@accountDeleteReplicas": {
+    "description": "Item da lista do que a exclusão não alcança: as réplicas autorizadas. RN03 é uma promessa sobre o que começa a ser replicado, não sobre o que já foi."
+  },
+
+  "accountDeleteReplicaNames": "Ainda com uma cópia: {domains}",
+  "@accountDeleteReplicaNames": {
+    "description": "Linha que nomeia os servidores que guardam uma cópia, quando o servidor conseguiu informá-los. O parâmetro é a lista de domínios separada por vírgula.",
+    "placeholders": {
+      "domains": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountDeleteLocal": "Os livros e as marcações neste aparelho. Eles são a sua cópia, e você pode exportar as marcações antes de sair.",
+  "@accountDeleteLocal": {
+    "description": "Item da lista do que a exclusão não alcança: a réplica local. A exclusão encerra a sessão e não apaga nada daqui, porque isso destruiria a única cópia do que o servidor nunca recebeu."
+  },
+
+  "accountDeleteIrreversible": "Não dá para desfazer.",
+  "@accountDeleteIrreversible": {
+    "description": "Aviso curto da tela de exclusão da conta, dito sozinho porque é a razão de a exclusão pedir a senha."
+  },
+
+  "accountDeleteMigrateInstead": "Se o que você quer é mudar de servidor levando a biblioteca, use Mudar de servidor de origem: são coisas diferentes.",
+  "@accountDeleteMigrateInstead": {
+    "description": "Frase da tela de exclusão apontando para a migração. As duas chamadas existem separadas de propósito, e a diferença aparece quando quem chama se enganou sobre qual queria."
+  },
+
+  "accountDeleteConfirm": "Excluir a minha conta",
+  "@accountDeleteConfirm": {
+    "description": "Rótulo do botão que executa a exclusão da conta."
+  },
+
+  "accountDeletePasswordLabel": "Sua senha",
+  "@accountDeletePasswordLabel": {
+    "description": "Rótulo do campo da senha na tela de exclusão. É a prova de que é o leitor e não apenas um aparelho destravado."
+  },
+
+  "accountDeleted": "A sua conta em {domain} foi excluída.",
+  "@accountDeleted": {
+    "description": "Confirmação mostrada depois que a conta é excluída. O parâmetro é o domínio do servidor.",
+    "placeholders": {
+      "domain": {
+        "type": "String"
+      }
+    }
+  },
+
+  "accountDeleteFailed": "Não foi possível excluir a conta.",
+  "@accountDeleteFailed": {
+    "description": "Erro mostrado quando a exclusão da conta falha no servidor por um motivo que não é a senha."
   }
 }

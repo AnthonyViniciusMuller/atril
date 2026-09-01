@@ -68,6 +68,19 @@ void main() {
     expect(find.text('ana@example.com'), findsOneWidget);
   });
 
+  testWidgets('offers the deletion last, and marks it as what it is', (
+    WidgetTester tester,
+  ) async {
+    // A location of its own and not a dialog: what deletion reaches and does
+    // not reach takes reading, and it is not a decision to put one tap away
+    // from the name field.
+    final account = FakeAccountRepository();
+
+    await _pump(tester, account);
+
+    expect(find.text('Excluir a conta'), findsOneWidget);
+  });
+
   testWidgets('says why the identifier is not editable here', (
     WidgetTester tester,
   ) async {

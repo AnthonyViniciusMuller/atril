@@ -21,12 +21,14 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/account/account_repository.dart';
 import '../../../data/repositories/account/account_repository_impl.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../../domain/models/user.dart';
+import '../../../routing/routes.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -156,6 +158,21 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
             ),
+          // Last, and a location of its own: what deletion reaches and does
+          // not reach takes reading, and it is not a decision to put one tap
+          // away from the name field.
+          ListTile(
+            leading: Icon(
+              Icons.person_remove_outlined,
+              color: theme.colorScheme.error,
+            ),
+            title: Text(
+              l10n.accountDelete,
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go(Routes.deleteAccount),
+          ),
         ],
       );
 

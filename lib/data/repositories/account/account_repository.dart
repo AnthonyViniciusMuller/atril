@@ -83,6 +83,24 @@ abstract interface class AccountRepository {
     required String newPassword,
   });
 
+  /// UC06, delete. Removes the reader from this node, proved with their
+  /// password.
+  ///
+  /// **What it reaches is this node and nothing else.** Everything keyed to the
+  /// reader there goes with them — their devices, their credentials, their
+  /// library — by the schema's own foreign keys. It does not reach a peer that
+  /// already holds a copy, because revoking never did either: RN03 is a promise
+  /// about what *starts*, and another operator's database is not this node's to
+  /// empty.
+  ///
+  /// **It leaves this device's replica alone**, and that is deliberate rather
+  /// than deferred. The books and the marks here are the reader's own copy, the
+  /// export of phase 10 is how they take them elsewhere, and a deletion that
+  /// erased them would destroy the only remaining copy of anything the node
+  /// never received. The session ends and nothing else does — which is what
+  /// signing out already means, one step further on.
+  Future<Result<void>> deleteAccount(String password);
+
   /// RF11. The reader's devices, and which of them is asking.
   Future<Result<BoundDevices>> devices();
 

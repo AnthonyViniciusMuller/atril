@@ -299,6 +299,20 @@ final class FakeAccountRepository implements AccountRepository {
     createdAt: reader.createdAt,
   );
 
+  /// Every password a deletion was proved with, in order.
+  final List<String> deletions = <String>[];
+
+  @override
+  Future<Result<void>> deleteAccount(String password) async {
+    deletions.add(password);
+
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
+  }
+
   @override
   Future<Result<BoundDevices>> devices() async {
     final refused = refusal;

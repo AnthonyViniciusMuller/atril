@@ -1014,5 +1014,47 @@
   "@accountWrongPassword": {},
 
   "accountSave": "Save",
-  "@accountSave": {}
+  "@accountSave": {},
+
+  "accountDelete": "Delete account",
+  "@accountDelete": {},
+
+  "accountDeleteExplanation": "It removes you from this server, with everything tied to your account there: your devices, your credentials and your library on the server.",
+  "@accountDeleteExplanation": {},
+
+  "accountDeleteReaches": "What deleting reaches",
+  "@accountDeleteReaches": {},
+
+  "accountDeleteDoesNotReach": "What it does not reach",
+  "@accountDeleteDoesNotReach": {},
+
+  "accountDeleteThisServer": "Your account at {domain}",
+  "@accountDeleteThisServer": {},
+
+  "accountDeleteReplicas": "The servers that already hold a copy of your data. Deleting does not reach into another operator’s database — revoking never did either.",
+  "@accountDeleteReplicas": {},
+
+  "accountDeleteReplicaNames": "Still holding a copy: {domains}",
+  "@accountDeleteReplicaNames": {},
+
+  "accountDeleteLocal": "The books and the marks on this device. They are your own copy, and you can export the marks before you go.",
+  "@accountDeleteLocal": {},
+
+  "accountDeleteIrreversible": "It cannot be undone.",
+  "@accountDeleteIrreversible": {},
+
+  "accountDeleteMigrateInstead": "If what you want is to move server and keep your library, use Move to another server: they are different things.",
+  "@accountDeleteMigrateInstead": {},
+
+  "accountDeleteConfirm": "Delete my account",
+  "@accountDeleteConfirm": {},
+
+  "accountDeletePasswordLabel": "Your password",
+  "@accountDeletePasswordLabel": {},
+
+  "accountDeleted": "Your account at {domain} was deleted.",
+  "@accountDeleted": {},
+
+  "accountDeleteFailed": "The account could not be deleted.",
+  "@accountDeleteFailed": {}
 }

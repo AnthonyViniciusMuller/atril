@@ -2726,6 +2726,90 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Salvar'**
   String get accountSave;
+
+  /// Item da tela da conta que leva à exclusão, e título da tela de exclusão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Excluir a conta'**
+  String get accountDelete;
+
+  /// Parágrafo principal da tela de exclusão da conta, dizendo o que a exclusão de fato remove.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Remove você deste servidor, com tudo que está ligado à sua conta lá: os seus aparelhos, as suas credenciais e a sua biblioteca no servidor.'**
+  String get accountDeleteExplanation;
+
+  /// Cabeçalho da seção da tela de exclusão que lista o que é removido.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que a exclusão alcança'**
+  String get accountDeleteReaches;
+
+  /// Cabeçalho da seção da tela de exclusão que lista o que continua existindo depois dela. É a metade que costuma ser suposta errada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O que ela não alcança'**
+  String get accountDeleteDoesNotReach;
+
+  /// Item da lista do que a exclusão alcança: a conta no servidor de origem. O parâmetro é o domínio.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A sua conta em {domain}'**
+  String accountDeleteThisServer(String domain);
+
+  /// Item da lista do que a exclusão não alcança: as réplicas autorizadas. RN03 é uma promessa sobre o que começa a ser replicado, não sobre o que já foi.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Os servidores que já guardam uma cópia sua. Excluir não entra no banco de outro operador — nem revogar entrava.'**
+  String get accountDeleteReplicas;
+
+  /// Linha que nomeia os servidores que guardam uma cópia, quando o servidor conseguiu informá-los. O parâmetro é a lista de domínios separada por vírgula.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ainda com uma cópia: {domains}'**
+  String accountDeleteReplicaNames(String domains);
+
+  /// Item da lista do que a exclusão não alcança: a réplica local. A exclusão encerra a sessão e não apaga nada daqui, porque isso destruiria a única cópia do que o servidor nunca recebeu.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Os livros e as marcações neste aparelho. Eles são a sua cópia, e você pode exportar as marcações antes de sair.'**
+  String get accountDeleteLocal;
+
+  /// Aviso curto da tela de exclusão da conta, dito sozinho porque é a razão de a exclusão pedir a senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não dá para desfazer.'**
+  String get accountDeleteIrreversible;
+
+  /// Frase da tela de exclusão apontando para a migração. As duas chamadas existem separadas de propósito, e a diferença aparece quando quem chama se enganou sobre qual queria.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Se o que você quer é mudar de servidor levando a biblioteca, use Mudar de servidor de origem: são coisas diferentes.'**
+  String get accountDeleteMigrateInstead;
+
+  /// Rótulo do botão que executa a exclusão da conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Excluir a minha conta'**
+  String get accountDeleteConfirm;
+
+  /// Rótulo do campo da senha na tela de exclusão. É a prova de que é o leitor e não apenas um aparelho destravado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sua senha'**
+  String get accountDeletePasswordLabel;
+
+  /// Confirmação mostrada depois que a conta é excluída. O parâmetro é o domínio do servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'A sua conta em {domain} foi excluída.'**
+  String accountDeleted(String domain);
+
+  /// Erro mostrado quando a exclusão da conta falha no servidor por um motivo que não é a senha.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível excluir a conta.'**
+  String get accountDeleteFailed;
 }
 
 class _AppLocalizationsDelegate

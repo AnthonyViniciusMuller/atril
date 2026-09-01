@@ -212,6 +212,18 @@ abstract final class Routes {
   /// Where the reader's own record is shown and changed (UC06).
   static const String account = '$settings/$accountSegment';
 
+  /// The path segment account deletion is declared under, relative to
+  /// [accountSegment].
+  ///
+  /// It is a location below the account and not a dialog on it, for the reason
+  /// every irreversible screen in this app is one: what it says takes reading,
+  /// a reader who switched away comes back to it, and a browser's back button
+  /// leaves the screen rather than the app.
+  static const String deleteAccountSegment = 'delete';
+
+  /// Where the reader removes themselves from their node (UC06, delete).
+  static const String deleteAccount = '$account/$deleteAccountSegment';
+
   /// The path segment the reader's devices are shown under, relative to
   /// [settings].
   static const String devicesSegment = 'devices';
