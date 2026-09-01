@@ -39,6 +39,7 @@ import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../api/sync_api.dart';
 import '../local/database.dart';
+import 'live_channel.dart';
 import 'push.dart';
 import 'reconciler.dart';
 
@@ -59,7 +60,7 @@ const String opStreamOpen = 'sync/stream: open';
 const Duration streamCloseGrace = Duration(seconds: 2);
 
 /// One open `Sync` stream, and the cursor it maintains.
-final class SyncStream {
+final class SyncStream implements SyncChannel {
   /// The stream over [database], talking to [api] and applying through
   /// [reconciler].
   SyncStream({
@@ -89,7 +90,7 @@ final class SyncStream {
   int _cursor = 0;
   final Set<String> _offered = <String>{};
 
-  /// Whether a stream is open.
+  @override
   bool get isOpen => _commands != null;
 
   /// Where this device's cursor into the node's log stands.
@@ -101,6 +102,7 @@ final class SyncStream {
   /// The future completes when the stream does, and carries whatever ended it.
   /// A caller that wants to know *why* it ended — to back off, to reopen — is
   /// the scheduler, and this is what it awaits.
+  @override
   Future<void> open() async {
     if (isOpen) {
       _log.fine('a sync stream is already open');
@@ -156,6 +158,7 @@ final class SyncStream {
   /// batch is in flight: the verdicts for that one are what decide whether
   /// another follows, and two batches in flight would be this device guessing
   /// at an order the node has not confirmed.
+  @override
   Future<void> offer() async {
     final commands = _commands;
 
@@ -189,6 +192,7 @@ final class SyncStream {
   /// node is given [streamCloseGrace] to end the stream itself. Only after that
   /// is the call hung up. The order is the whole of what makes a close graceful
   /// rather than a discarded acknowledgement — see [streamCloseGrace].
+  @override
   Future<void> close() async {
     final commands = _commands;
     final events = _events;

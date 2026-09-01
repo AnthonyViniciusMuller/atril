@@ -1147,12 +1147,15 @@ and they are recorded here because none of them is visible from the package's RE
       ordered**: half-closing and hanging up in one breath discards the frames still in the air,
       including an acknowledgement already earned, so the outbound half is closed, the node is
       given a moment to end the stream itself, and the hang-up is what happens when it does not
-- [ ] `feat: add the watch stream` — `WatchOperations` for the web, where gRPC-Web carries no
+- [x] `feat: add the watch stream` — `WatchOperations` for the web, where gRPC-Web carries no
       bidirectional call. It is a notification and not a delivery: the response carries
       `last_position` and never an operation, so the handler does one thing — compare it against
       this node's cursor and pull if it is behind. There is no ack, because the node holds
       nothing in flight for this caller, and a missed notification costs a poll rather than an
-      operation
+      operation. What the roadmap left implicit is that the web's *push* is a call of its own,
+      so the watch is not one call but three, and it is the second implementation of a port the
+      scheduler talks to: `SyncChannel` — open, offer, close. That is where the platform question
+      is answered, once, where the graph is composed
 - [ ] `feat: add the sync scheduler` — the stream while the app is in the foreground and
       reachable, a push on reconnect, a bounded backoff on failure, and a policy for the
       background on each platform that has one
