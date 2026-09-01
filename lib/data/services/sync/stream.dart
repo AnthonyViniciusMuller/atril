@@ -96,18 +96,16 @@ final class SyncStream implements SyncChannel {
   /// Where this device's cursor into the node's log stands.
   int get cursor => _cursor;
 
-  /// Opens the stream and serves it until the node ends it or [close] is
-  /// called.
+  /// Opens the stream, sends the cursor, and hands over what this device owes.
   ///
-  /// The future completes when the stream does, and carries whatever ended it.
-  /// A caller that wants to know *why* it ended — to back off, to reopen — is
-  /// the scheduler, and this is what it awaits.
+  /// It completes there. Serving the stream is what happens afterwards, and
+  /// [done] is what says when that stopped and why.
   @override
   Future<void> open() async {
     if (isOpen) {
       _log.fine('a sync stream is already open');
 
-      return _ended?.future;
+      return;
     }
 
     _node = await _originDomain();
@@ -148,9 +146,10 @@ final class SyncStream implements SyncChannel {
     // open, which is the whole of UC11: a reconnection is a backlog and then
     // an ordinary stream.
     await offer();
-
-    return ended.future;
   }
+
+  @override
+  Future<void> get done => _ended?.future ?? Future<void>.value();
 
   /// Offers the next batch this device owes, if the stream is idle.
   ///

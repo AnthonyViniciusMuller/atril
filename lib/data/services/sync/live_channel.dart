@@ -19,11 +19,21 @@ abstract interface class SyncChannel {
   /// Whether the channel is open.
   bool get isOpen;
 
-  /// Opens it, and answers with a future that completes when it ends.
+  /// Opens it.
   ///
-  /// The future carries whatever ended it, which is what lets the scheduler
-  /// tell a node that hung up from one that was never reachable.
+  /// It completes when the channel is up and what this device owed has been
+  /// offered, and throws where it could not be opened at all — a device signed
+  /// in nowhere, a store that would not answer. It does **not** wait for the
+  /// node: gRPC dials lazily, so a channel that is open is a channel this
+  /// device has set up and not one a node has answered.
   Future<void> open();
+
+  /// Completes when the channel ends, carrying whatever ended it.
+  ///
+  /// It is separate from [open] because the two questions are separate: one is
+  /// whether this device could start, and the other is how long it lasted. A
+  /// channel that is not open is already done.
+  Future<void> get done;
 
   /// Hands over what this device owes, if the channel is open.
   ///

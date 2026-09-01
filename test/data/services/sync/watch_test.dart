@@ -217,9 +217,10 @@ void main() {
   });
 
   test('ends when it is closed, and says nothing went wrong', () async {
-    final ended = watch.open();
+    await watch.open();
 
-    await until(() async => watch.isOpen);
+    final ended = watch.done;
+
     await watch.close();
 
     await expectLater(ended, completes);
@@ -227,9 +228,10 @@ void main() {
   });
 
   test('carries what ended it', () async {
-    final ended = watch.open();
+    await watch.open();
 
-    await until(() async => watch.isOpen);
+    final ended = watch.done;
+
     await server.shutdown();
 
     await expectLater(ended, throwsA(isA<Exception>()));

@@ -25,6 +25,8 @@
 /// needed rather than when the holder is built.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -60,8 +62,14 @@ import '../data/services/files/system_file_saver.dart';
 import '../data/services/local/database.dart';
 import '../data/services/local/hybrid_clock_store.dart';
 import '../data/services/sync/author.dart';
+import '../data/services/sync/live_channel.dart';
+import '../data/services/sync/pull.dart';
+import '../data/services/sync/push.dart';
 import '../data/services/sync/reconciler.dart';
+import '../data/services/sync/scheduler.dart';
 import '../data/services/sync/seed.dart';
+import '../data/services/sync/stream.dart';
+import '../data/services/sync/watch.dart';
 import '../domain/crdt/hybrid_clock.dart';
 import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
@@ -246,6 +254,68 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         database: database,
         uploader: context.read<ContentUploader>(),
       ),
+    ),
+
+    // How this device talks to its node, and when.
+    //
+    // The *what* is three services that know nothing about each other's
+    // timing; the *when* is one loop above them. The push and the pull are
+    // built here rather than inside the channels because the web's channel is
+    // both of them plus a watch, and the native one is neither.
+    Provider<OperationPusher>(
+      create: (BuildContext context) =>
+          OperationPusher(database: database, api: context.read<SyncApi>()),
+    ),
+    Provider<OperationPuller>(
+      create: (BuildContext context) => OperationPuller(
+        database: database,
+        api: context.read<SyncApi>(),
+        reconciler: reconciler,
+      ),
+    ),
+
+    // The live channel, and the one place in this app where the platform
+    // decides which of two implementations runs. It is `kIsWeb` and not a
+    // conditional export because both sides compile everywhere: `Sync` is a
+    // bidirectional call and gRPC-Web carries none, so what fails is the call
+    // and not the build, and a question about the platform is answered where
+    // the graph is composed — as the reader's host and the file saver are.
+    Provider<SyncChannel>(
+      create: (BuildContext context) => devicePlatform == 'web'
+          ? WatchChannel(
+              database: database,
+              api: context.read<SyncApi>(),
+              puller: context.read<OperationPuller>(),
+              pusher: context.read<OperationPusher>(),
+            )
+          : SyncStream(
+              database: database,
+              api: context.read<SyncApi>(),
+              reconciler: reconciler,
+            ),
+      dispose: (_, SyncChannel channel) => channel.close(),
+    ),
+
+    // The loop. It is built eagerly and not on its first read, because the
+    // thing that would first read it is a screen — and a device that opened on
+    // the reader's library and synchronized only once they wandered into the
+    // settings would be a device whose guarantee depended on curiosity.
+    Provider<SyncScheduler>(
+      lazy: false,
+      create: (BuildContext context) {
+        final scheduler = SyncScheduler(
+          database: database,
+          channel: context.read<SyncChannel>(),
+          session: context.read<SessionHolder>(),
+          reachability: context.read<NodeReachability>(),
+          uploads: context.read<UploadQueue>(),
+        );
+
+        unawaited(scheduler.start());
+
+        return scheduler;
+      },
+      dispose: (_, SyncScheduler scheduler) => scheduler.dispose(),
     ),
 
     Provider<LibraryRepository>(

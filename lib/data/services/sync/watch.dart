@@ -78,20 +78,22 @@ final class WatchChannel implements SyncChannel {
   @override
   bool get isOpen => _ended != null;
 
+  /// Opens the watch and hands over what this device owes.
+  ///
+  /// It completes there. [done] is what says when the watch stopped and why.
   @override
   Future<void> open() async {
     if (isOpen) {
       _log.fine('a watch is already open');
 
-      return _ended?.future;
+      return;
     }
 
     _node = await _originDomain();
 
     final cursor = await database.syncDao.cursor(_node);
-    final ended = Completer<void>();
 
-    _ended = ended;
+    _ended = Completer<void>();
 
     _events = api
         .watch(afterPosition: cursor)
@@ -109,9 +111,10 @@ final class WatchChannel implements SyncChannel {
     // what it is missing, which is the same order the bidirectional stream
     // sends its first push in.
     await offer();
-
-    return ended.future;
   }
+
+  @override
+  Future<void> get done => _ended?.future ?? Future<void>.value();
 
   @override
   Future<void> offer() async {

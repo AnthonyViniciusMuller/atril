@@ -1156,9 +1156,20 @@ and they are recorded here because none of them is visible from the package's RE
       so the watch is not one call but three, and it is the second implementation of a port the
       scheduler talks to: `SyncChannel` — open, offer, close. That is where the platform question
       is answered, once, where the graph is composed
-- [ ] `feat: add the sync scheduler` — the stream while the app is in the foreground and
-      reachable, a push on reconnect, a bounded backoff on failure, and a policy for the
-      background on each platform that has one
+- [x] `feat: add the sync scheduler` — the channel while the app is in the foreground, a push on
+      reconnect, and a bounded backoff on failure. **Two lines of this checkbox were wrong and are
+      corrected here rather than implemented.** *A policy for the background on each platform that
+      has one* contradicts the decision table above, which says foreground only, uniformly on all
+      six — and the table is right: a background policy is four mechanisms and no fifth for the
+      three desktops, which is a phase and not a line. And *reachable* cannot be a condition for
+      connecting: `NodeReachability` concludes that a node answers only from a call that answered,
+      so a loop that refused to try while it believed otherwise could never learn it was wrong,
+      and every device whose network did not physically change would be stuck. Reachability
+      contributes the one thing it can honestly contribute — a hint that clears the wait — and an
+      unreachable node is what the backoff is *for*. The loop also drives the upload queue, which
+      `upload_queue.dart` had already said was its job, and it learns about a locally authored
+      change by watching `pending_operations` grow rather than by being called: a caller that had
+      to remember to announce a write is a caller that eventually does not
 - [ ] `feat: add the sync status surface` — what is pending and when the last sync completed.
       One line in the shell, one screen behind it. A reader who cannot tell whether their notes
       are only on this phone has not been given the guarantee the app claims

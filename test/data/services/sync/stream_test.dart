@@ -354,9 +354,10 @@ void main() {
   });
 
   test('ends when it is closed, and says nothing went wrong', () async {
-    final ended = stream.open();
+    await stream.open();
 
-    await until(() async => stream.isOpen);
+    final ended = stream.done;
+
     await stream.close();
 
     await expectLater(ended, completes);
@@ -364,9 +365,10 @@ void main() {
   });
 
   test('carries what ended it', () async {
-    final ended = stream.open();
+    await stream.open();
 
-    await until(() async => stream.isOpen);
+    final ended = stream.done;
+
     await server.shutdown();
 
     await expectLater(ended, throwsA(isA<Exception>()));

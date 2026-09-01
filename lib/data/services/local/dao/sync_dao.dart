@@ -142,6 +142,39 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
     ),
   );
 
+  /// Records that this device reached the node at [serverDomain] at [at],
+  /// whether or not it had anything to say.
+  ///
+  /// It moves [NodeCursors.pulledAt] and nothing else, and it is the other half
+  /// of what that column means: a device that is up to date pulls nothing, and
+  /// a timestamp that only moved on a pull would tell a reader their last sync
+  /// was whenever somebody last wrote something.
+  Future<void> recordExchange(String serverDomain, {required DateTime at}) =>
+      into(nodeCursors).insert(
+        NodeCursorsCompanion.insert(
+          serverDomain: serverDomain,
+          pulledAt: Value<DateTime>(at),
+        ),
+        onConflict: DoUpdate<$NodeCursorsTable, NodeCursorRow>(
+          (_) => NodeCursorsCompanion(pulledAt: Value<DateTime>(at)),
+        ),
+      );
+
+  /// When this device last reached the node at [serverDomain], or `null` if it
+  /// never has.
+  Future<DateTime?> lastExchangeWith(String serverDomain) async =>
+      (await (select(nodeCursors)
+                ..where((cursor) => cursor.serverDomain.equals(serverDomain)))
+              .getSingleOrNull())
+          ?.pulledAt;
+
+  /// [lastExchangeWith], as it changes.
+  Stream<DateTime?> watchLastExchangeWith(String serverDomain) =>
+      (select(nodeCursors)
+            ..where((cursor) => cursor.serverDomain.equals(serverDomain)))
+          .watchSingleOrNull()
+          .map((NodeCursorRow? row) => row?.pulledAt);
+
   /// Every cursor this device holds.
   Future<List<NodeCursorRow>> cursors() => select(nodeCursors).get();
 

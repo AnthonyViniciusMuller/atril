@@ -133,11 +133,15 @@ class NodeCursors extends Table {
   /// from.
   IntColumn get lastPosition => integer().withDefault(const Constant(0))();
 
-  /// When the cursor last moved, on a wall clock.
+  /// When this device last completed an exchange with the node, on a wall
+  /// clock.
   ///
-  /// It is a diagnostic and never a cursor: it is what the sync surface of
-  /// phase 11 shows a reader who wants to know whether their notes are only on
-  /// this phone.
+  /// It is a diagnostic and never a cursor: it is what the sync surface shows a
+  /// reader who wants to know whether their notes are only on this phone. It
+  /// moves when the cursor does *and* when a live channel opens onto a log that
+  /// had nothing new in it — a device that is up to date exchanges nothing, and
+  /// a column that only moved on a pull would tell that reader their last sync
+  /// was a week ago because nothing has happened since.
   IntColumn get pulledAt =>
       integer().map(const InstantConverter()).nullable()();
 
