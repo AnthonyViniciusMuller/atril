@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
+import '../../account/widgets/account_section.dart';
 import '../../core/localization/localization.dart';
 import '../../federation/widgets/federation_section.dart';
 import '../../sync/widgets/sync_section.dart';
@@ -83,6 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // more than one.
                   subtitle: Text(l10n.settingsSignedInAs(reader.federatedId)),
                 ),
+              const AccountSection(),
               ListTile(
                 leading: const Icon(Icons.logout),
                 title: Text(l10n.settingsSignOut),

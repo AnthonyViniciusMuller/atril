@@ -2240,5 +2240,135 @@
   "migrationNameTaken": "Este nome de usuário já existe naquele servidor.",
   "@migrationNameTaken": {
     "description": "Erro mostrado quando o servidor de destino recusa a migração porque o nome local escolhido já pertence a outra pessoa lá."
+  },
+
+  "settingsDevices": "Seus aparelhos",
+  "@settingsDevices": {
+    "description": "Item da tela de configurações que leva à lista de dispositivos vinculados à conta. Também é o título dessa tela."
+  },
+
+  "settingsDevicesExplanation": "Quais aparelhos podem escrever na sua conta.",
+  "@settingsDevicesExplanation": {
+    "description": "Subtítulo do item das configurações que leva aos dispositivos. Uma frase dizendo o que o leitor vai encontrar lá."
+  },
+
+  "devicesExplanation": "Cada alteração feita na sua biblioteca nomeia o aparelho que a fez. É por isso que esta lista existe: sem ela, um histórico teria nomes que ninguém consegue resolver.",
+  "@devicesExplanation": {
+    "description": "Parágrafo de abertura da tela de dispositivos, dizendo por que a lista importa. RF11 e RN10: um relógio vetorial é indexado por identificador de dispositivo."
+  },
+
+  "devicesFailed": "Não foi possível ler os seus aparelhos. O servidor não respondeu.",
+  "@devicesFailed": {
+    "description": "Mensagem mostrada quando a leitura dos dispositivos falhou. A tela lê direto do servidor, então não há uma lista antiga para mostrar no lugar."
+  },
+
+  "devicesThisOne": "Este aparelho",
+  "@devicesThisOne": {
+    "description": "Marca na linha do aparelho em que a tela está sendo usada."
+  },
+
+  "devicesUnbound": "Desvinculado",
+  "@devicesUnbound": {
+    "description": "Estado de um aparelho que foi revogado. A palavra é deliberadamente \"desvinculado\" e não \"excluído\": a linha continua existindo, e é ela que dá nome ao identificador que aparece no histórico."
+  },
+
+  "devicesUnboundExplanation": "Não pode mais escrever. A linha fica, porque as alterações que ele fez continuam nomeando-o.",
+  "@devicesUnboundExplanation": {
+    "description": "Frase abaixo do estado de um aparelho revogado, explicando por que ele continua na lista."
+  },
+
+  "devicesLastSynced": "Última sincronização em {date}",
+  "@devicesLastSynced": {
+    "description": "Linha que diz quando um aparelho concluiu a última sincronização. É um diagnóstico: o que decide o que enviar é a posição no log, e não esta data.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "devicesNeverSynced": "Ainda não sincronizou.",
+  "@devicesNeverSynced": {
+    "description": "Linha mostrada no lugar da data de sincronização de um aparelho que nunca concluiu uma."
+  },
+
+  "devicesRename": "Renomear",
+  "@devicesRename": {
+    "description": "Rótulo da ação que muda o nome de um aparelho. É o único campo editável de um aparelho vinculado."
+  },
+
+  "devicesRenameTitle": "Renomear aparelho",
+  "@devicesRenameTitle": {
+    "description": "Título do diálogo em que o leitor digita o novo nome de um aparelho."
+  },
+
+  "devicesNameLabel": "Nome do aparelho",
+  "@devicesNameLabel": {
+    "description": "Rótulo do campo do novo nome de um aparelho, no diálogo de renomear."
+  },
+
+  "devicesNameInvalid": "Informe um nome.",
+  "@devicesNameInvalid": {
+    "description": "Erro mostrado no diálogo de renomear quando o nome está em branco ou é longo demais para a coluna do servidor."
+  },
+
+  "devicesRenamed": "Agora se chama {name}.",
+  "@devicesRenamed": {
+    "description": "Confirmação mostrada depois que um aparelho é renomeado. O parâmetro é o nome novo.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "devicesRenameFailed": "Não foi possível renomear este aparelho.",
+  "@devicesRenameFailed": {
+    "description": "Erro mostrado quando a renomeação de um aparelho falha no servidor."
+  },
+
+  "devicesRevoke": "Desvincular",
+  "@devicesRevoke": {
+    "description": "Rótulo da ação que retira de um aparelho o direito de escrever na conta."
+  },
+
+  "devicesRevokeTitle": "Desvincular {name}?",
+  "@devicesRevokeTitle": {
+    "description": "Título da confirmação de revogação de um aparelho. O parâmetro é o nome do aparelho.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "devicesRevokeExplanation": "Ele deixa de poder escrever e as sessões dele acabam. Nada do que ele já escreveu é apagado, e a linha dele fica na lista — é ela que dá nome ao aparelho no histórico das suas alterações.",
+  "@devicesRevokeExplanation": {
+    "description": "Corpo da confirmação de revogação de um aparelho. Diz o que a revogação alcança e por que a linha continua existindo."
+  },
+
+  "devicesRevoked": "{name} não pode mais escrever.",
+  "@devicesRevoked": {
+    "description": "Confirmação mostrada depois que um aparelho é desvinculado. O parâmetro é o nome do aparelho.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "devicesRevokeFailed": "Não foi possível desvincular este aparelho.",
+  "@devicesRevokeFailed": {
+    "description": "Erro mostrado quando a revogação de um aparelho falha no servidor."
+  },
+
+  "devicesCannotRevokeThisOne": "Um aparelho não se desvincula sozinho. Faça isso a partir de outro aparelho seu.",
+  "@devicesCannotRevokeThisOne": {
+    "description": "Erro mostrado quando o leitor tenta desvincular o próprio aparelho em que está. Fazê-lo encerraria a sessão atual e todas as futuras, sem nada na tela para desfazer o ato."
+  },
+
+  "devicesSave": "Salvar",
+  "@devicesSave": {
+    "description": "Rótulo do botão que confirma o novo nome no diálogo de renomear um aparelho."
   }
 }

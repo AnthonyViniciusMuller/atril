@@ -33,6 +33,7 @@ import 'package:go_router/go_router.dart';
 import '../data/services/api/session.dart';
 import '../ui/annotations/widgets/annotations_screen.dart';
 import '../ui/core/ui/adaptive_scaffold.dart';
+import '../ui/account/widgets/devices_screen.dart';
 import '../ui/core/ui/not_found_screen.dart';
 import '../ui/federation/widgets/known_servers_screen.dart';
 import '../ui/federation/widgets/migration_screen.dart';
@@ -239,6 +240,11 @@ GoRouter atrilRouter({
                     path: Routes.replicasSegment,
                     builder: (BuildContext context, GoRouterState state) =>
                         const ReplicasScreen(),
+                  ),
+                  GoRoute(
+                    path: Routes.devicesSegment,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const DevicesScreen(),
                   ),
                   GoRoute(
                     path: Routes.migrateSegment,

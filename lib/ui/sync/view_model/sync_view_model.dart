@@ -37,8 +37,7 @@ final class SyncViewModel extends ChangeNotifier {
   /// state of *one* running action, and there is one of these per refused
   /// change in a list. A single command would report the last one's outcome
   /// against every row.
-  Future<Result<void>> discard(String operationId) =>
-      sync.discard(operationId);
+  Future<Result<void>> discard(String operationId) => sync.discard(operationId);
 
   late final StreamSubscription<SyncState> _states;
 

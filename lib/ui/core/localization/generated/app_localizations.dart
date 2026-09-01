@@ -2408,6 +2408,138 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Este nome de usuário já existe naquele servidor.'**
   String get migrationNameTaken;
+
+  /// Item da tela de configurações que leva à lista de dispositivos vinculados à conta. Também é o título dessa tela.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Seus aparelhos'**
+  String get settingsDevices;
+
+  /// Subtítulo do item das configurações que leva aos dispositivos. Uma frase dizendo o que o leitor vai encontrar lá.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Quais aparelhos podem escrever na sua conta.'**
+  String get settingsDevicesExplanation;
+
+  /// Parágrafo de abertura da tela de dispositivos, dizendo por que a lista importa. RF11 e RN10: um relógio vetorial é indexado por identificador de dispositivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Cada alteração feita na sua biblioteca nomeia o aparelho que a fez. É por isso que esta lista existe: sem ela, um histórico teria nomes que ninguém consegue resolver.'**
+  String get devicesExplanation;
+
+  /// Mensagem mostrada quando a leitura dos dispositivos falhou. A tela lê direto do servidor, então não há uma lista antiga para mostrar no lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível ler os seus aparelhos. O servidor não respondeu.'**
+  String get devicesFailed;
+
+  /// Marca na linha do aparelho em que a tela está sendo usada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este aparelho'**
+  String get devicesThisOne;
+
+  /// Estado de um aparelho que foi revogado. A palavra é deliberadamente "desvinculado" e não "excluído": a linha continua existindo, e é ela que dá nome ao identificador que aparece no histórico.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desvinculado'**
+  String get devicesUnbound;
+
+  /// Frase abaixo do estado de um aparelho revogado, explicando por que ele continua na lista.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não pode mais escrever. A linha fica, porque as alterações que ele fez continuam nomeando-o.'**
+  String get devicesUnboundExplanation;
+
+  /// Linha que diz quando um aparelho concluiu a última sincronização. É um diagnóstico: o que decide o que enviar é a posição no log, e não esta data.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Última sincronização em {date}'**
+  String devicesLastSynced(String date);
+
+  /// Linha mostrada no lugar da data de sincronização de um aparelho que nunca concluiu uma.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ainda não sincronizou.'**
+  String get devicesNeverSynced;
+
+  /// Rótulo da ação que muda o nome de um aparelho. É o único campo editável de um aparelho vinculado.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Renomear'**
+  String get devicesRename;
+
+  /// Título do diálogo em que o leitor digita o novo nome de um aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Renomear aparelho'**
+  String get devicesRenameTitle;
+
+  /// Rótulo do campo do novo nome de um aparelho, no diálogo de renomear.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Nome do aparelho'**
+  String get devicesNameLabel;
+
+  /// Erro mostrado no diálogo de renomear quando o nome está em branco ou é longo demais para a coluna do servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Informe um nome.'**
+  String get devicesNameInvalid;
+
+  /// Confirmação mostrada depois que um aparelho é renomeado. O parâmetro é o nome novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Agora se chama {name}.'**
+  String devicesRenamed(String name);
+
+  /// Erro mostrado quando a renomeação de um aparelho falha no servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível renomear este aparelho.'**
+  String get devicesRenameFailed;
+
+  /// Rótulo da ação que retira de um aparelho o direito de escrever na conta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desvincular'**
+  String get devicesRevoke;
+
+  /// Título da confirmação de revogação de um aparelho. O parâmetro é o nome do aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Desvincular {name}?'**
+  String devicesRevokeTitle(String name);
+
+  /// Corpo da confirmação de revogação de um aparelho. Diz o que a revogação alcança e por que a linha continua existindo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ele deixa de poder escrever e as sessões dele acabam. Nada do que ele já escreveu é apagado, e a linha dele fica na lista — é ela que dá nome ao aparelho no histórico das suas alterações.'**
+  String get devicesRevokeExplanation;
+
+  /// Confirmação mostrada depois que um aparelho é desvinculado. O parâmetro é o nome do aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{name} não pode mais escrever.'**
+  String devicesRevoked(String name);
+
+  /// Erro mostrado quando a revogação de um aparelho falha no servidor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível desvincular este aparelho.'**
+  String get devicesRevokeFailed;
+
+  /// Erro mostrado quando o leitor tenta desvincular o próprio aparelho em que está. Fazê-lo encerraria a sessão atual e todas as futuras, sem nada na tela para desfazer o ato.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Um aparelho não se desvincula sozinho. Faça isso a partir de outro aparelho seu.'**
+  String get devicesCannotRevokeThisOne;
+
+  /// Rótulo do botão que confirma o novo nome no diálogo de renomear um aparelho.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Salvar'**
+  String get devicesSave;
 }
 
 class _AppLocalizationsDelegate

@@ -32,6 +32,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../data/repositories/account/account_repository.dart';
+import '../data/repositories/account/account_repository_impl.dart';
 import '../data/repositories/annotations/annotation_repository.dart';
 import '../data/repositories/annotations/annotation_repository_impl.dart';
 import '../data/repositories/auth/auth_repository.dart';
@@ -234,6 +236,16 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         // flavour names rather than the one it publishes, and nothing under
         // `data/` should have to import a flavour to know that.
         endpointFor: environment.endpointFor,
+      ),
+    ),
+
+    // The reader's account and the devices that may write as them. It answers
+    // from the node for the reason the federation does: none of it replicates,
+    // and none of it can be changed while the node cannot be reached.
+    Provider<AccountRepository>(
+      create: (BuildContext context) => AccountRepositoryImpl(
+        auth: context.read<AuthApi>(),
+        identity: database.identityDao,
       ),
     ),
 

@@ -855,5 +855,71 @@
   "@migrationFailed": {},
 
   "migrationNameTaken": "That username already exists on that server.",
-  "@migrationNameTaken": {}
+  "@migrationNameTaken": {},
+
+  "settingsDevices": "Your devices",
+  "@settingsDevices": {},
+
+  "settingsDevicesExplanation": "Which devices may write on your account.",
+  "@settingsDevicesExplanation": {},
+
+  "devicesExplanation": "Every change to your library names the device that made it. That is why this list exists: without it a history would carry names nobody can resolve.",
+  "@devicesExplanation": {},
+
+  "devicesFailed": "Your devices could not be read. The node did not answer.",
+  "@devicesFailed": {},
+
+  "devicesThisOne": "This device",
+  "@devicesThisOne": {},
+
+  "devicesUnbound": "Unbound",
+  "@devicesUnbound": {},
+
+  "devicesUnboundExplanation": "It may no longer write. The row stays, because the changes it made still name it.",
+  "@devicesUnboundExplanation": {},
+
+  "devicesLastSynced": "Last synchronized on {date}",
+  "@devicesLastSynced": {},
+
+  "devicesNeverSynced": "Has not synchronized yet.",
+  "@devicesNeverSynced": {},
+
+  "devicesRename": "Rename",
+  "@devicesRename": {},
+
+  "devicesRenameTitle": "Rename device",
+  "@devicesRenameTitle": {},
+
+  "devicesNameLabel": "Device name",
+  "@devicesNameLabel": {},
+
+  "devicesNameInvalid": "Enter a name.",
+  "@devicesNameInvalid": {},
+
+  "devicesRenamed": "It is now called {name}.",
+  "@devicesRenamed": {},
+
+  "devicesRenameFailed": "That device could not be renamed.",
+  "@devicesRenameFailed": {},
+
+  "devicesRevoke": "Unbind",
+  "@devicesRevoke": {},
+
+  "devicesRevokeTitle": "Unbind {name}?",
+  "@devicesRevokeTitle": {},
+
+  "devicesRevokeExplanation": "It stops being able to write and its sessions end. Nothing it already wrote is erased, and its row stays in the list — it is what gives the device a name in the history of your changes.",
+  "@devicesRevokeExplanation": {},
+
+  "devicesRevoked": "{name} may no longer write.",
+  "@devicesRevoked": {},
+
+  "devicesRevokeFailed": "That device could not be unbound.",
+  "@devicesRevokeFailed": {},
+
+  "devicesCannotRevokeThisOne": "A device cannot unbind itself. Do it from another of your devices.",
+  "@devicesCannotRevokeThisOne": {},
+
+  "devicesSave": "Save",
+  "@devicesSave": {}
 }

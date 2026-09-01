@@ -65,6 +65,16 @@ void main() {
     expect(find.text('See the state of the synchronization'), findsOneWidget);
   });
 
+  testWidgets('offers the reader their devices', (WidgetTester tester) async {
+    await pump(tester, FakeAuthRepository());
+
+    expect(find.text('Your devices'), findsOneWidget);
+    expect(
+      find.text('Which devices may write on your account.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('offers the federation, and says what is behind it', (
     WidgetTester tester,
   ) async {
@@ -150,6 +160,8 @@ void _storage() {
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
+    await tester.scrollUntilVisible(find.text(l10n.storageUsed('300 kB')), 200);
+
     expect(find.text(l10n.storageUsed('300 kB')), findsOneWidget);
     expect(find.text(l10n.storageKeptExplanationNative), findsOneWidget);
   });
@@ -165,6 +177,11 @@ void _storage() {
     await tester.pumpAndSettle();
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.scrollUntilVisible(
+      find.text(l10n.storageUsedOfQuota('500 MB', '2 GB')),
+      200,
+    );
 
     expect(
       find.text(l10n.storageUsedOfQuota('500 MB', '2 GB')),

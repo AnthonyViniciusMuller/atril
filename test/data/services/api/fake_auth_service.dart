@@ -300,15 +300,47 @@ final class FakeAuthService extends AuthServiceBase {
     );
   }
 
+  /// Every rename, as `(deviceId, name)`.
+  final List<(String, String)> renamed = <(String, String)>[];
+
+  /// Every device an unbinding was asked for, in order.
+  final List<String> unbound = <String>[];
+
   @override
   Future<UpdateDeviceResponse> updateDevice(
     ServiceCall call,
     UpdateDeviceRequest request,
-  ) async => _unimplemented();
+  ) async {
+    _authenticate(call);
+    renamed.add((request.deviceId, request.device.name));
+
+    final device = _device(request.deviceId)..name = request.device.name;
+
+    return UpdateDeviceResponse(device: device);
+  }
 
   @override
   Future<RevokeDeviceResponse> revokeDevice(
     ServiceCall call,
     RevokeDeviceRequest request,
-  ) async => _unimplemented();
+  ) async {
+    _authenticate(call);
+    unbound.add(request.deviceId);
+
+    // Deactivated and kept, as the node does it: every operation the device
+    // authored still names it.
+    _device(request.deviceId).active = false;
+
+    return RevokeDeviceResponse();
+  }
+
+  Device _device(String id) {
+    for (final device in devices) {
+      if (device.id == id) {
+        return device;
+      }
+    }
+
+    throw GrpcError.notFound('no such device');
+  }
 }

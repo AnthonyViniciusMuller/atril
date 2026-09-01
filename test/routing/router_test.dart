@@ -11,6 +11,7 @@ import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/session.dart';
 import 'package:atril/routing/router.dart';
 import 'package:atril/routing/routes.dart';
+import 'package:atril/ui/account/widgets/devices_screen.dart';
 import 'package:atril/ui/annotations/widgets/annotations_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/core/ui/not_found_screen.dart';
@@ -315,37 +316,43 @@ void main() {
     expect(find.byType(AnnotationsScreen), findsOneWidget);
   });
 
-  testWidgets('the federation screens are locations below the settings', (
-    WidgetTester tester,
-  ) async {
-    // Below and not beside: the shell has three destinations because three is
-    // what a reader navigates between, and closing this lands on the screen
-    // that led here — which on the web is what the back button does anyway.
-    final session = _holder();
-    await session.begin(_session());
+  testWidgets(
+    'the federation and account screens are locations below the settings',
+    (WidgetTester tester) async {
+      // Below and not beside: the shell has three destinations because three is
+      // what a reader navigates between, and closing this lands on the screen
+      // that led here — which on the web is what the back button does anyway.
+      final session = _holder();
+      await session.begin(_session());
 
-    final router = atrilRouter(session: session);
+      final router = atrilRouter(session: session);
 
-    addTearDown(router.dispose);
-    addTearDown(session.dispose);
+      addTearDown(router.dispose);
+      addTearDown(session.dispose);
 
-    await _pump(tester, router);
+      await _pump(tester, router);
 
-    router.go(Routes.servers);
-    await tester.pumpAndSettle();
+      router.go(Routes.servers);
+      await tester.pumpAndSettle();
 
-    expect(find.byType(KnownServersScreen), findsOneWidget);
+      expect(find.byType(KnownServersScreen), findsOneWidget);
 
-    router.go(Routes.replicas);
-    await tester.pumpAndSettle();
+      router.go(Routes.replicas);
+      await tester.pumpAndSettle();
 
-    expect(find.byType(ReplicasScreen), findsOneWidget);
+      expect(find.byType(ReplicasScreen), findsOneWidget);
 
-    router.go(Routes.migrate);
-    await tester.pumpAndSettle();
+      router.go(Routes.migrate);
+      await tester.pumpAndSettle();
 
-    expect(find.byType(MigrationScreen), findsOneWidget);
-  });
+      expect(find.byType(MigrationScreen), findsOneWidget);
+
+      router.go(Routes.devices);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DevicesScreen), findsOneWidget);
+    },
+  );
 
   test('the shell destinations are the branches, in order', () {
     // The navigation surface indexes into this list and the router builds its

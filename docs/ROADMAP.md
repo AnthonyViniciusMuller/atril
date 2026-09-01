@@ -1285,9 +1285,23 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       grew `AuthApi` for the one call UC16 needs from the identity slice, which is the same
       seam Quire names on its own side — the one place a controller of one slice translates for
       a use case of another
-- [ ] `feat: add device management` — the reader's devices, renaming one, and revoking one. A
+- [x] `feat: add device management` — the reader's devices, renaming one, and revoking one. A
       revoked device's row stays and so does its clock entry, or the history that names it stops
-      being readable, and the screen says *unbound* and not *deleted*
+      being readable, and the screen says *unbound* and not *deleted*. The unbound ones are
+      **asked for**, which the contract hides by default and which is the same argument one step
+      further out: the row is the only place an identifier a vector clock carries gets a name, so
+      a list that hid it would make the history it explains unreadable. Two things the plan did
+      not name. **A device cannot unbind itself, and this app is what refuses it**: the node
+      cannot tell that request apart from any other and would carry it out, ending this session
+      and every future one with nothing left on screen to undo the act — so the row says *this
+      device* and offers no control, which is quieter than an error the reader had to provoke.
+      And renaming this device **writes the local `bound_devices` row too**, because that name is
+      what the next binding sends: a name changed at the node alone would be two names for one
+      device, and the one this device kept would win the next time it signed in. The repository
+      is `AccountRepository` and it arrived one commit early — the migration needed `ListDevices`
+      before this screen did — which is also why UC06 and RF11 share one: both are `AuthService`,
+      both are served by the one node that authenticates the reader (RN08), and neither
+      replicates
 - [ ] `feat: add account settings` — UC06. Display name, address, password. Only the display name
       is writable directly; the address and the password are credentials in their own right and
       go through their own calls, which is C14

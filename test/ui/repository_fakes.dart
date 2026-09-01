@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:atril/config/environment.dart';
+import 'package:atril/data/repositories/account/account_repository.dart';
 import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/data/repositories/auth/auth_repository.dart';
 import 'package:atril/data/repositories/federation/federation_repository.dart';
@@ -30,6 +31,7 @@ import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/annotation.dart';
 import 'package:atril/domain/models/collection.dart';
+import 'package:atril/domain/models/device.dart';
 import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/domain/models/server.dart';
@@ -187,6 +189,94 @@ final class FakeAuthRepository implements AuthRepository {
     federatedId: '@$localName:quire-a.example',
     createdAt: DateTime.utc(2026),
   );
+}
+
+/// An [AccountRepository] that answers from memory.
+final class FakeAccountRepository implements AccountRepository {
+  /// The devices this node reports, which a test sets.
+  List<Device> bound = <Device>[];
+
+  /// The identifier this device writes under.
+  String? thisDevice = '11111111-1111-4111-8111-111111111111';
+
+  /// What the next call fails with, or `null` to let it answer.
+  Exception? refusal;
+
+  /// Every rename, as `(deviceId, name)`.
+  final List<(String, String)> renamed = <(String, String)>[];
+
+  /// Every device an unbinding was asked for, in order.
+  final List<String> unbound = <String>[];
+
+  @override
+  Future<Result<BoundDevices>> devices() async {
+    final refused = refusal;
+
+    return refused == null
+        ? Result<BoundDevices>.ok(
+            BoundDevices(devices: bound, thisDevice: thisDevice),
+          )
+        : Result<BoundDevices>.error(refused);
+  }
+
+  @override
+  Future<Result<Device>> renameDevice({
+    required String deviceId,
+    required String name,
+  }) async {
+    renamed.add((deviceId, name));
+
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<Device>.error(refused);
+    }
+
+    bound = <Device>[
+      for (final device in bound)
+        if (device.id == deviceId)
+          Device(
+            id: device.id,
+            name: name,
+            platform: device.platform,
+            active: device.active,
+            lastSyncedAt: device.lastSyncedAt,
+          )
+        else
+          device,
+    ];
+
+    return Result<Device>.ok(
+      bound.firstWhere((Device device) => device.id == deviceId),
+    );
+  }
+
+  @override
+  Future<Result<void>> revokeDevice(String deviceId) async {
+    final refused = refusal;
+
+    if (refused != null) {
+      return Result<void>.error(refused);
+    }
+
+    unbound.add(deviceId);
+
+    bound = <Device>[
+      for (final device in bound)
+        if (device.id == deviceId)
+          Device(
+            id: device.id,
+            name: device.name,
+            platform: device.platform,
+            active: false,
+            lastSyncedAt: device.lastSyncedAt,
+          )
+        else
+          device,
+    ];
+
+    return const Result<void>.ok(null);
+  }
 }
 
 /// A [FederationRepository] that answers from memory.
@@ -1176,6 +1266,7 @@ List<SingleChildWidget> repositoryProviders({
   ServerRepository? servers,
   AuthRepository? auth,
   FederationRepository? federation,
+  AccountRepository? accountRepository,
   LibraryRepository? library,
   ReadingRepository? reading,
   AnnotationRepository? annotations,
@@ -1189,6 +1280,9 @@ List<SingleChildWidget> repositoryProviders({
   Provider<AuthRepository>.value(value: auth ?? FakeAuthRepository()),
   Provider<FederationRepository>.value(
     value: federation ?? FakeFederationRepository(),
+  ),
+  Provider<AccountRepository>.value(
+    value: accountRepository ?? FakeAccountRepository(),
   ),
   Provider<LibraryRepository>.value(value: library ?? FakeLibraryRepository()),
   Provider<ReadingRepository>.value(value: reading ?? FakeReadingRepository()),

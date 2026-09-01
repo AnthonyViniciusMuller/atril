@@ -1385,6 +1385,87 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get migrationNameTaken =>
       'Este nome de usuário já existe naquele servidor.';
+
+  @override
+  String get settingsDevices => 'Seus aparelhos';
+
+  @override
+  String get settingsDevicesExplanation =>
+      'Quais aparelhos podem escrever na sua conta.';
+
+  @override
+  String get devicesExplanation =>
+      'Cada alteração feita na sua biblioteca nomeia o aparelho que a fez. É por isso que esta lista existe: sem ela, um histórico teria nomes que ninguém consegue resolver.';
+
+  @override
+  String get devicesFailed =>
+      'Não foi possível ler os seus aparelhos. O servidor não respondeu.';
+
+  @override
+  String get devicesThisOne => 'Este aparelho';
+
+  @override
+  String get devicesUnbound => 'Desvinculado';
+
+  @override
+  String get devicesUnboundExplanation =>
+      'Não pode mais escrever. A linha fica, porque as alterações que ele fez continuam nomeando-o.';
+
+  @override
+  String devicesLastSynced(String date) {
+    return 'Última sincronização em $date';
+  }
+
+  @override
+  String get devicesNeverSynced => 'Ainda não sincronizou.';
+
+  @override
+  String get devicesRename => 'Renomear';
+
+  @override
+  String get devicesRenameTitle => 'Renomear aparelho';
+
+  @override
+  String get devicesNameLabel => 'Nome do aparelho';
+
+  @override
+  String get devicesNameInvalid => 'Informe um nome.';
+
+  @override
+  String devicesRenamed(String name) {
+    return 'Agora se chama $name.';
+  }
+
+  @override
+  String get devicesRenameFailed => 'Não foi possível renomear este aparelho.';
+
+  @override
+  String get devicesRevoke => 'Desvincular';
+
+  @override
+  String devicesRevokeTitle(String name) {
+    return 'Desvincular $name?';
+  }
+
+  @override
+  String get devicesRevokeExplanation =>
+      'Ele deixa de poder escrever e as sessões dele acabam. Nada do que ele já escreveu é apagado, e a linha dele fica na lista — é ela que dá nome ao aparelho no histórico das suas alterações.';
+
+  @override
+  String devicesRevoked(String name) {
+    return '$name não pode mais escrever.';
+  }
+
+  @override
+  String get devicesRevokeFailed =>
+      'Não foi possível desvincular este aparelho.';
+
+  @override
+  String get devicesCannotRevokeThisOne =>
+      'Um aparelho não se desvincula sozinho. Faça isso a partir de outro aparelho seu.';
+
+  @override
+  String get devicesSave => 'Salvar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -2767,4 +2848,85 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get migrationNameTaken =>
       'Este nome de usuário já existe naquele servidor.';
+
+  @override
+  String get settingsDevices => 'Seus aparelhos';
+
+  @override
+  String get settingsDevicesExplanation =>
+      'Quais aparelhos podem escrever na sua conta.';
+
+  @override
+  String get devicesExplanation =>
+      'Cada alteração feita na sua biblioteca nomeia o aparelho que a fez. É por isso que esta lista existe: sem ela, um histórico teria nomes que ninguém consegue resolver.';
+
+  @override
+  String get devicesFailed =>
+      'Não foi possível ler os seus aparelhos. O servidor não respondeu.';
+
+  @override
+  String get devicesThisOne => 'Este aparelho';
+
+  @override
+  String get devicesUnbound => 'Desvinculado';
+
+  @override
+  String get devicesUnboundExplanation =>
+      'Não pode mais escrever. A linha fica, porque as alterações que ele fez continuam nomeando-o.';
+
+  @override
+  String devicesLastSynced(String date) {
+    return 'Última sincronização em $date';
+  }
+
+  @override
+  String get devicesNeverSynced => 'Ainda não sincronizou.';
+
+  @override
+  String get devicesRename => 'Renomear';
+
+  @override
+  String get devicesRenameTitle => 'Renomear aparelho';
+
+  @override
+  String get devicesNameLabel => 'Nome do aparelho';
+
+  @override
+  String get devicesNameInvalid => 'Informe um nome.';
+
+  @override
+  String devicesRenamed(String name) {
+    return 'Agora se chama $name.';
+  }
+
+  @override
+  String get devicesRenameFailed => 'Não foi possível renomear este aparelho.';
+
+  @override
+  String get devicesRevoke => 'Desvincular';
+
+  @override
+  String devicesRevokeTitle(String name) {
+    return 'Desvincular $name?';
+  }
+
+  @override
+  String get devicesRevokeExplanation =>
+      'Ele deixa de poder escrever e as sessões dele acabam. Nada do que ele já escreveu é apagado, e a linha dele fica na lista — é ela que dá nome ao aparelho no histórico das suas alterações.';
+
+  @override
+  String devicesRevoked(String name) {
+    return '$name não pode mais escrever.';
+  }
+
+  @override
+  String get devicesRevokeFailed =>
+      'Não foi possível desvincular este aparelho.';
+
+  @override
+  String get devicesCannotRevokeThisOne =>
+      'Um aparelho não se desvincula sozinho. Faça isso a partir de outro aparelho seu.';
+
+  @override
+  String get devicesSave => 'Salvar';
 }

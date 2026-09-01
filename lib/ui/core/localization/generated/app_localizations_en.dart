@@ -1379,4 +1379,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get migrationNameTaken =>
       'That username already exists on that server.';
+
+  @override
+  String get settingsDevices => 'Your devices';
+
+  @override
+  String get settingsDevicesExplanation =>
+      'Which devices may write on your account.';
+
+  @override
+  String get devicesExplanation =>
+      'Every change to your library names the device that made it. That is why this list exists: without it a history would carry names nobody can resolve.';
+
+  @override
+  String get devicesFailed =>
+      'Your devices could not be read. The node did not answer.';
+
+  @override
+  String get devicesThisOne => 'This device';
+
+  @override
+  String get devicesUnbound => 'Unbound';
+
+  @override
+  String get devicesUnboundExplanation =>
+      'It may no longer write. The row stays, because the changes it made still name it.';
+
+  @override
+  String devicesLastSynced(String date) {
+    return 'Last synchronized on $date';
+  }
+
+  @override
+  String get devicesNeverSynced => 'Has not synchronized yet.';
+
+  @override
+  String get devicesRename => 'Rename';
+
+  @override
+  String get devicesRenameTitle => 'Rename device';
+
+  @override
+  String get devicesNameLabel => 'Device name';
+
+  @override
+  String get devicesNameInvalid => 'Enter a name.';
+
+  @override
+  String devicesRenamed(String name) {
+    return 'It is now called $name.';
+  }
+
+  @override
+  String get devicesRenameFailed => 'That device could not be renamed.';
+
+  @override
+  String get devicesRevoke => 'Unbind';
+
+  @override
+  String devicesRevokeTitle(String name) {
+    return 'Unbind $name?';
+  }
+
+  @override
+  String get devicesRevokeExplanation =>
+      'It stops being able to write and its sessions end. Nothing it already wrote is erased, and its row stays in the list — it is what gives the device a name in the history of your changes.';
+
+  @override
+  String devicesRevoked(String name) {
+    return '$name may no longer write.';
+  }
+
+  @override
+  String get devicesRevokeFailed => 'That device could not be unbound.';
+
+  @override
+  String get devicesCannotRevokeThisOne =>
+      'A device cannot unbind itself. Do it from another of your devices.';
+
+  @override
+  String get devicesSave => 'Save';
 }

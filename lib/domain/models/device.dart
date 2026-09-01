@@ -7,6 +7,32 @@
 /// nobody can resolve cannot be explained to a reader or checked against RN10.
 library;
 
+/// The greatest length `identity.devices.name` holds, in characters as
+/// PostgreSQL counts a `varchar`.
+const int maxDeviceNameLength = 120;
+
+/// The stable code of a device name that is blank or too long.
+const String codeInvalidDeviceName = 'invalid_device_name';
+
+/// Why [name] is not a usable device name, or `null` when it is one.
+///
+/// It is `device.Name.Validate` on the other side, applied here so that a
+/// reader is told before a request travels. The blank check is the one
+/// `identity.devices_name_not_blank` makes, and it exists for a reason this
+/// screen makes visible: a device named nothing cannot be told from another in
+/// the list RF11 makes auditable.
+String? deviceNameViolation(String name) {
+  if (name.isEmpty) {
+    return 'it must not be empty';
+  }
+
+  if (name.runes.length > maxDeviceNameLength) {
+    return 'it must be at most $maxDeviceNameLength characters long';
+  }
+
+  return null;
+}
+
 /// One of the reader's devices.
 final class Device {
   /// The device, as a node reports it.

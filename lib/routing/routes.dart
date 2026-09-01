@@ -205,6 +205,13 @@ abstract final class Routes {
   /// Where a reader moves to another origin server (UC16).
   static const String migrate = '$settings/$migrateSegment';
 
+  /// The path segment the reader's devices are shown under, relative to
+  /// [settings].
+  static const String devicesSegment = 'devices';
+
+  /// Where the reader's devices are shown (RF11).
+  static const String devices = '$settings/$devicesSegment';
+
   /// The destinations that share the shell, in the order the navigation
   /// surface shows them.
   ///
