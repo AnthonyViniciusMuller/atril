@@ -1124,6 +1124,102 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Limpar os filtros'**
   String get libraryClearFilters;
+
+  /// Ação que abre o leitor a partir da tela de um livro. Rótulo curto de botão; é o verbo da UC04.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ler'**
+  String get readerOpen;
+
+  /// Ação que fecha o leitor e volta para a tela do livro. Diz para onde vai, e não apenas «voltar», porque o leitor pode ter chegado aqui de mais de um lugar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Voltar ao livro'**
+  String get readerBack;
+
+  /// Ação que abre o sumário do livro. É o nome que a própria editoração usa em português; «índice» seria o remissivo, no fim do volume.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sumário'**
+  String get readerContents;
+
+  /// Título mostrado quando o arquivo não traz documento de navegação. Não é falha: há livros publicados assim.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sem sumário'**
+  String get readerContentsEmptyTitle;
+
+  /// Corpo do estado sem sumário. Diz que a ausência é do arquivo e não do aplicativo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este arquivo não traz um sumário navegável.'**
+  String get readerContentsEmptyMessage;
+
+  /// Ação que volta uma página. Rótulo usado como dica do botão e como rótulo de acessibilidade.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Página anterior'**
+  String get readerPreviousPage;
+
+  /// Ação que avança uma página. Rótulo usado como dica do botão e como rótulo de acessibilidade.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Próxima página'**
+  String get readerNextPage;
+
+  /// Quanto do livro já foi percorrido, mostrado na barra inferior do leitor. O número vem do índice de localizações do próprio motor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{percent}% lido'**
+  String readerProgress(Object percent);
+
+  /// Mostrado enquanto o arquivo é lido e entregue ao motor. Um EPUB grande leva alguns segundos, e uma tela silenciosa nesse intervalo parece travada.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Abrindo o livro…'**
+  String get readerOpening;
+
+  /// Título mostrado ao abrir um livro cujo registro está aqui e cujos bytes não. É o estado comum de um livro ainda não baixado, e no navegador de todo livro que o leitor não pediu para guardar.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O arquivo não está neste dispositivo'**
+  String get readerNotOnDeviceTitle;
+
+  /// Corpo do estado sem arquivo, acompanhado da ação que faz o download. Diz o que se ganha com isso, e não apenas o que fazer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Baixe o arquivo para poder ler offline.'**
+  String get readerNotOnDeviceMessage;
+
+  /// Título mostrado ao tentar ler um livro que não é EPUB. O «ainda» é deliberado: o formato é importado, listado e sincronizado, e só a leitura falta.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este formato ainda não abre aqui'**
+  String get readerFormatTitle;
+
+  /// Corpo do estado de formato não suportado. Diz o que continua funcionando, porque o livro não está perdido — só não abre.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Por enquanto o Atril abre apenas EPUB. Este livro continua no seu acervo, sincronizado e com o progresso registrado.'**
+  String get readerFormatMessage;
+
+  /// Título mostrado quando o motor recusou o arquivo ou a leitura falhou por outro motivo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível abrir o livro'**
+  String get readerFailedTitle;
+
+  /// Ação que repete a tentativa de abrir o livro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Tentar de novo'**
+  String get readerRetry;
+
+  /// Ação que traz o arquivo do livro para este dispositivo. Rótulo curto de botão.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Baixar'**
+  String get readerDownload;
 }
 
 class _AppLocalizationsDelegate

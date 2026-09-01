@@ -125,6 +125,17 @@ abstract final class Routes {
   /// Where one work is edited.
   static String editEbook(String id) => '${ebook(id)}/$ebookEditSegment';
 
+  /// The path segment the reader is opened under, relative to
+  /// [ebookSegment].
+  ///
+  /// It is below the work and not beside it, so that closing the reader lands
+  /// on the book it came from — and so that a browser's back button does, which
+  /// is the same thing said twice on one target and once on five.
+  static const String readSegment = 'read';
+
+  /// Where one work is read (UC04).
+  static String readEbook(String id) => '${ebook(id)}/$readSegment';
+
   /// Everything the reader has marked, across every book.
   static const String annotations = '/annotations';
 

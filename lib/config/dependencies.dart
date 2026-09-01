@@ -34,6 +34,8 @@ import '../data/repositories/auth/auth_repository.dart';
 import '../data/repositories/auth/auth_repository_impl.dart';
 import '../data/repositories/library/library_repository.dart';
 import '../data/repositories/library/library_repository_impl.dart';
+import '../data/repositories/reading/reading_repository.dart';
+import '../data/repositories/reading/reading_repository_impl.dart';
 import '../data/repositories/server/server_repository.dart';
 import '../data/repositories/server/server_repository_impl.dart';
 import '../data/services/api/auth_api.dart';
@@ -48,6 +50,8 @@ import '../data/services/content/content_downloader.dart';
 import '../data/services/content/content_uploader.dart';
 import '../data/services/content/upload_queue.dart';
 import '../data/services/discovery/well_known.dart';
+import '../data/services/epub/epub_host.dart';
+import '../data/services/epub/host/host_factory.dart';
 import '../data/services/files/file_source.dart';
 import '../data/services/files/system_file_picker.dart';
 import '../data/services/local/database.dart';
@@ -257,6 +261,18 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
         budget: readStorageBudget,
       ),
     ),
+
+    Provider<ReadingRepository>(
+      create: (BuildContext context) =>
+          ReadingRepositoryImpl(library: database.libraryDao, blobs: blobs),
+    ),
+
+    // What gives the engine a DOM on this platform. It is a *factory* and not a
+    // host, because a host owns a webview and a book: one per reader screen,
+    // disposed with it. Which factory is decided by `host/host_factory.dart`,
+    // which is a conditional export on the web and a `defaultTargetPlatform`
+    // question between the two native hosts.
+    Provider<EpubHostFactory>(create: (_) => epubHostFactory()),
 
     // The platform's own file dialog, behind a port. It is one implementation
     // and not six: `file_selector` is itself the split, and what this app adds

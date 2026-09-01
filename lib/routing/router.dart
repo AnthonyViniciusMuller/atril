@@ -42,6 +42,7 @@ import '../ui/onboarding/widgets/password_reset_screen.dart';
 import '../ui/onboarding/widgets/recovery_screen.dart';
 import '../ui/onboarding/widgets/register_screen.dart';
 import '../ui/onboarding/widgets/server_selection_screen.dart';
+import '../ui/reader/widgets/reader_screen.dart';
 import '../ui/onboarding/widgets/sign_in_screen.dart';
 import '../ui/settings/widgets/settings_screen.dart';
 import '../utils/logging.dart';
@@ -164,6 +165,15 @@ GoRouter atrilRouter({
                         path: Routes.ebookEditSegment,
                         builder: (BuildContext context, GoRouterState state) =>
                             EbookEditScreen(
+                              ebookId:
+                                  state.pathParameters[Routes.ebookParameter] ??
+                                  '',
+                            ),
+                      ),
+                      GoRoute(
+                        path: Routes.readSegment,
+                        builder: (BuildContext context, GoRouterState state) =>
+                            ReaderScreen(
                               ebookId:
                                   state.pathParameters[Routes.ebookParameter] ??
                                   '',

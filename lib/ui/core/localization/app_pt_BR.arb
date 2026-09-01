@@ -1032,5 +1032,85 @@
   "libraryClearFilters": "Limpar os filtros",
   "@libraryClearFilters": {
     "description": "Ação que desfaz de uma vez a busca, o formato e a estante escolhidos. É um botão só porque quem está olhando para uma lista vazia não deveria ter que desfazer três coisas uma a uma para descobrir qual delas era o problema."
+  },
+
+  "readerOpen": "Ler",
+  "@readerOpen": {
+    "description": "Ação que abre o leitor a partir da tela de um livro. Rótulo curto de botão; é o verbo da UC04."
+  },
+
+  "readerBack": "Voltar ao livro",
+  "@readerBack": {
+    "description": "Ação que fecha o leitor e volta para a tela do livro. Diz para onde vai, e não apenas «voltar», porque o leitor pode ter chegado aqui de mais de um lugar."
+  },
+
+  "readerContents": "Sumário",
+  "@readerContents": {
+    "description": "Ação que abre o sumário do livro. É o nome que a própria editoração usa em português; «índice» seria o remissivo, no fim do volume."
+  },
+
+  "readerContentsEmptyTitle": "Sem sumário",
+  "@readerContentsEmptyTitle": {
+    "description": "Título mostrado quando o arquivo não traz documento de navegação. Não é falha: há livros publicados assim."
+  },
+
+  "readerContentsEmptyMessage": "Este arquivo não traz um sumário navegável.",
+  "@readerContentsEmptyMessage": {
+    "description": "Corpo do estado sem sumário. Diz que a ausência é do arquivo e não do aplicativo."
+  },
+
+  "readerPreviousPage": "Página anterior",
+  "@readerPreviousPage": {
+    "description": "Ação que volta uma página. Rótulo usado como dica do botão e como rótulo de acessibilidade."
+  },
+
+  "readerNextPage": "Próxima página",
+  "@readerNextPage": {
+    "description": "Ação que avança uma página. Rótulo usado como dica do botão e como rótulo de acessibilidade."
+  },
+
+  "readerProgress": "{percent}% lido",
+  "@readerProgress": {
+    "description": "Quanto do livro já foi percorrido, mostrado na barra inferior do leitor. O número vem do índice de localizações do próprio motor."
+  },
+
+  "readerOpening": "Abrindo o livro…",
+  "@readerOpening": {
+    "description": "Mostrado enquanto o arquivo é lido e entregue ao motor. Um EPUB grande leva alguns segundos, e uma tela silenciosa nesse intervalo parece travada."
+  },
+
+  "readerNotOnDeviceTitle": "O arquivo não está neste dispositivo",
+  "@readerNotOnDeviceTitle": {
+    "description": "Título mostrado ao abrir um livro cujo registro está aqui e cujos bytes não. É o estado comum de um livro ainda não baixado, e no navegador de todo livro que o leitor não pediu para guardar."
+  },
+
+  "readerNotOnDeviceMessage": "Baixe o arquivo para poder ler offline.",
+  "@readerNotOnDeviceMessage": {
+    "description": "Corpo do estado sem arquivo, acompanhado da ação que faz o download. Diz o que se ganha com isso, e não apenas o que fazer."
+  },
+
+  "readerFormatTitle": "Este formato ainda não abre aqui",
+  "@readerFormatTitle": {
+    "description": "Título mostrado ao tentar ler um livro que não é EPUB. O «ainda» é deliberado: o formato é importado, listado e sincronizado, e só a leitura falta."
+  },
+
+  "readerFormatMessage": "Por enquanto o Atril abre apenas EPUB. Este livro continua no seu acervo, sincronizado e com o progresso registrado.",
+  "@readerFormatMessage": {
+    "description": "Corpo do estado de formato não suportado. Diz o que continua funcionando, porque o livro não está perdido — só não abre."
+  },
+
+  "readerFailedTitle": "Não foi possível abrir o livro",
+  "@readerFailedTitle": {
+    "description": "Título mostrado quando o motor recusou o arquivo ou a leitura falhou por outro motivo."
+  },
+
+  "readerRetry": "Tentar de novo",
+  "@readerRetry": {
+    "description": "Ação que repete a tentativa de abrir o livro."
+  },
+
+  "readerDownload": "Baixar",
+  "@readerDownload": {
+    "description": "Ação que traz o arquivo do livro para este dispositivo. Rótulo curto de botão."
   }
 }

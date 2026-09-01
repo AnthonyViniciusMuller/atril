@@ -454,6 +454,22 @@ class _FileSection extends StatelessWidget {
                 child: Text(l10n.ebookCancelDownload),
               )
             else ...<Widget>[
+              // UC04, and the primary thing a reader came here to do. It is in
+              // this section rather than beside the title because what governs
+              // whether a book can be opened is exactly what this section is
+              // about — the file is here, or it is not — and an *open* button
+              // above a book that is on the node would be a button that fails.
+              //
+              // It is offered for an EPUB alone. The other four formats import,
+              // list, synchronize and carry a percentage, and a button that
+              // opened a screen to say *not this format* would be this app
+              // asking the reader to find that out for themselves.
+              if (state.onThisDevice && model.ebook?.format == EbookFormat.epub)
+                FilledButton.icon(
+                  onPressed: () => context.go(Routes.readEbook(model.ebookId)),
+                  icon: const Icon(Icons.menu_book_outlined),
+                  label: Text(l10n.readerOpen),
+                ),
               if (!state.onThisDevice)
                 FilledButton.icon(
                   onPressed: busy ? null : model.download.execute,

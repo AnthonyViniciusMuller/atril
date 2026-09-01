@@ -186,5 +186,53 @@
   "libraryAllFormats": "All formats",
   "libraryNoMatchesTitle": "Nothing found",
   "libraryNoMatchesMessage": "No book in your library matches what you asked for.",
-  "libraryClearFilters": "Clear the filters"
+  "libraryClearFilters": "Clear the filters",
+
+  "readerOpen": "Read",
+  "@readerOpen": {},
+
+  "readerBack": "Back to the book",
+  "@readerBack": {},
+
+  "readerContents": "Contents",
+  "@readerContents": {},
+
+  "readerContentsEmptyTitle": "No contents",
+  "@readerContentsEmptyTitle": {},
+
+  "readerContentsEmptyMessage": "This file carries no navigable contents.",
+  "@readerContentsEmptyMessage": {},
+
+  "readerPreviousPage": "Previous page",
+  "@readerPreviousPage": {},
+
+  "readerNextPage": "Next page",
+  "@readerNextPage": {},
+
+  "readerProgress": "{percent}% read",
+  "@readerProgress": {},
+
+  "readerOpening": "Opening the book…",
+  "@readerOpening": {},
+
+  "readerNotOnDeviceTitle": "The file is not on this device",
+  "@readerNotOnDeviceTitle": {},
+
+  "readerNotOnDeviceMessage": "Download the file to read it offline.",
+  "@readerNotOnDeviceMessage": {},
+
+  "readerFormatTitle": "This format does not open here yet",
+  "@readerFormatTitle": {},
+
+  "readerFormatMessage": "For now Atril opens EPUB only. This book stays in your library, synchronized, with its progress recorded.",
+  "@readerFormatMessage": {},
+
+  "readerFailedTitle": "The book could not be opened",
+  "@readerFailedTitle": {},
+
+  "readerRetry": "Try again",
+  "@readerRetry": {},
+
+  "readerDownload": "Download",
+  "@readerDownload": {}
 }

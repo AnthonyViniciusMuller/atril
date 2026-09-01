@@ -622,6 +622,59 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get libraryClearFilters => 'Limpar os filtros';
+
+  @override
+  String get readerOpen => 'Ler';
+
+  @override
+  String get readerBack => 'Voltar ao livro';
+
+  @override
+  String get readerContents => 'Sumário';
+
+  @override
+  String get readerContentsEmptyTitle => 'Sem sumário';
+
+  @override
+  String get readerContentsEmptyMessage =>
+      'Este arquivo não traz um sumário navegável.';
+
+  @override
+  String get readerPreviousPage => 'Página anterior';
+
+  @override
+  String get readerNextPage => 'Próxima página';
+
+  @override
+  String readerProgress(Object percent) {
+    return '$percent% lido';
+  }
+
+  @override
+  String get readerOpening => 'Abrindo o livro…';
+
+  @override
+  String get readerNotOnDeviceTitle => 'O arquivo não está neste dispositivo';
+
+  @override
+  String get readerNotOnDeviceMessage =>
+      'Baixe o arquivo para poder ler offline.';
+
+  @override
+  String get readerFormatTitle => 'Este formato ainda não abre aqui';
+
+  @override
+  String get readerFormatMessage =>
+      'Por enquanto o Atril abre apenas EPUB. Este livro continua no seu acervo, sincronizado e com o progresso registrado.';
+
+  @override
+  String get readerFailedTitle => 'Não foi possível abrir o livro';
+
+  @override
+  String get readerRetry => 'Tentar de novo';
+
+  @override
+  String get readerDownload => 'Baixar';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -1241,4 +1294,57 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get libraryClearFilters => 'Limpar os filtros';
+
+  @override
+  String get readerOpen => 'Ler';
+
+  @override
+  String get readerBack => 'Voltar ao livro';
+
+  @override
+  String get readerContents => 'Sumário';
+
+  @override
+  String get readerContentsEmptyTitle => 'Sem sumário';
+
+  @override
+  String get readerContentsEmptyMessage =>
+      'Este arquivo não traz um sumário navegável.';
+
+  @override
+  String get readerPreviousPage => 'Página anterior';
+
+  @override
+  String get readerNextPage => 'Próxima página';
+
+  @override
+  String readerProgress(Object percent) {
+    return '$percent% lido';
+  }
+
+  @override
+  String get readerOpening => 'Abrindo o livro…';
+
+  @override
+  String get readerNotOnDeviceTitle => 'O arquivo não está neste dispositivo';
+
+  @override
+  String get readerNotOnDeviceMessage =>
+      'Baixe o arquivo para poder ler offline.';
+
+  @override
+  String get readerFormatTitle => 'Este formato ainda não abre aqui';
+
+  @override
+  String get readerFormatMessage =>
+      'Por enquanto o Atril abre apenas EPUB. Este livro continua no seu acervo, sincronizado e com o progresso registrado.';
+
+  @override
+  String get readerFailedTitle => 'Não foi possível abrir o livro';
+
+  @override
+  String get readerRetry => 'Tentar de novo';
+
+  @override
+  String get readerDownload => 'Baixar';
 }

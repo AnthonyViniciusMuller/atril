@@ -621,4 +621,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryClearFilters => 'Clear the filters';
+
+  @override
+  String get readerOpen => 'Read';
+
+  @override
+  String get readerBack => 'Back to the book';
+
+  @override
+  String get readerContents => 'Contents';
+
+  @override
+  String get readerContentsEmptyTitle => 'No contents';
+
+  @override
+  String get readerContentsEmptyMessage =>
+      'This file carries no navigable contents.';
+
+  @override
+  String get readerPreviousPage => 'Previous page';
+
+  @override
+  String get readerNextPage => 'Next page';
+
+  @override
+  String readerProgress(Object percent) {
+    return '$percent% read';
+  }
+
+  @override
+  String get readerOpening => 'Opening the book…';
+
+  @override
+  String get readerNotOnDeviceTitle => 'The file is not on this device';
+
+  @override
+  String get readerNotOnDeviceMessage =>
+      'Download the file to read it offline.';
+
+  @override
+  String get readerFormatTitle => 'This format does not open here yet';
+
+  @override
+  String get readerFormatMessage =>
+      'For now Atril opens EPUB only. This book stays in your library, synchronized, with its progress recorded.';
+
+  @override
+  String get readerFailedTitle => 'The book could not be opened';
+
+  @override
+  String get readerRetry => 'Try again';
+
+  @override
+  String get readerDownload => 'Download';
 }

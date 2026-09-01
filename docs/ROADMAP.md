@@ -964,8 +964,31 @@ and they are recorded here because none of them is visible from the package's RE
       define anything. And `previous` versus `prev`, and the capital L in `addUnderLine`, are
       pinned by name: they are what a careful person gets wrong once, and getting them wrong is a
       target that quietly stops turning pages
-- [ ] `feat: add the reader chrome` — the page, the progress, the table of contents, and the
-      controls that get out of the way. Flutter widgets over the host, not inside it
+- [x] `feat: add the reader chrome` — the page, the progress, the table of contents, and the
+      controls that get out of the way. Flutter widgets over the host, not inside it: markup
+      inside the webview would be a second design system, outside the theme, outside the ARB and
+      unreachable by a widget test, drawn by the engine whose one job is somebody else's book.
+
+      A `ReadingRepository` lands with it, beside `LibraryRepository` rather than as four more
+      methods on it, because what each is *about* differs — the library is the collection, this
+      is one book, open, with one screen's lifetime. It reaches no node: the bytes come from the
+      blob store, and bringing them onto the device is the library's job and happens first.
+
+      **The three ways a book does not open are three sentences and not one.** The file is not on
+      this device — an offer, and the way out is the book's own screen, which already owns
+      downloading rather than a second progress bar here. The format is one this build does not
+      render — a fact that leaves the rest of the book's life intact, and no *try again*, since
+      trying cannot change what a file is. And anything else, which is the only one that
+      apologizes. A screen with one message for all three would say *something went wrong* about
+      a book that is merely not downloaded. The codes are pinned in a test, because a screen that
+      switched on a message string would break when somebody edited the ARB.
+
+      The chrome starts visible and clears on a tap, which is the opposite of what a reading app
+      usually does: a reader who has just opened a book needs the way back more than the four
+      lines the bar covers. The contents is flat with an indent rather than a tree of
+      disclosures, because a contents is read by looking down it. Keys turn pages on the desktop
+      and in a browser, handled in Flutter rather than in the page, since on Linux the page is a
+      texture and the events reach the Flutter view first
 - [ ] `feat: add reader settings` — font, size, line height, margins and the reading theme,
       applied through the host's own styling. Local and deliberately unsynchronized: they are
       about this screen on this device and the contract has no field for them
