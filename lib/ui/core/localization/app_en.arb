@@ -683,7 +683,7 @@
   "replicasExplanation": "Authorizing a server says it may keep a copy of your library. Only the servers named here receive anything.",
   "@replicasExplanation": {},
 
-  "replicasOutOfBand": "The permission is recorded on your own server. The protocol has no way to tell the other server that it is now a replica — that is arranged between whoever runs the two.",
+  "replicasOutOfBand": "The permission is recorded on your own server, which tells the other one the first time it has something to send. That server accepts only if it already knows yours: someone with an account there has to add your server under Known servers.",
   "@replicasOutOfBand": {},
 
   "replicasNone": "No server holds a copy of your data.",

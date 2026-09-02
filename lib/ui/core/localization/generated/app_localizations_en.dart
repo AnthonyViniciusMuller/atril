@@ -1165,7 +1165,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get replicasOutOfBand =>
-      'The permission is recorded on your own server. The protocol has no way to tell the other server that it is now a replica — that is arranged between whoever runs the two.';
+      'The permission is recorded on your own server, which tells the other one the first time it has something to send. That server accepts only if it already knows yours: someone with an account there has to add your server under Known servers.';
 
   @override
   String get replicasNone => 'No server holds a copy of your data.';

@@ -1898,9 +1898,9 @@
     "description": "Parágrafo de abertura da tela de réplicas autorizadas, dizendo o que uma autorização significa. RN03 e RF16."
   },
 
-  "replicasOutOfBand": "A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.",
+  "replicasOutOfBand": "A permissão fica registrada no seu servidor, que avisa o outro na primeira vez que tiver algo a enviar. Aquele servidor só aceita se já conhecer o seu: alguém com conta lá precisa adicionar o seu servidor em Servidores conhecidos.",
   "@replicasOutOfBand": {
-    "description": "Nota permanente na tela de réplicas, dizendo o que a autorização alcança e o que não alcança. É a correção C22: nada no contrato informa um nó de que ele é réplica, e a tela diz isso em vez de parecer ter funcionado."
+    "description": "Nota permanente na tela de réplicas, dizendo o que a autorização alcança e o que não alcança. Desde a correção C22 o servidor de origem admite o leitor no outro nó ao entregar; o que continua fora do protocolo é o outro nó precisar ter a origem no próprio catálogo, e a tela diz isso em vez de parecer ter funcionado."
   },
 
   "replicasNone": "Nenhum servidor guarda uma cópia dos seus dados.",

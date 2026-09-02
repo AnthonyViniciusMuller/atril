@@ -714,9 +714,14 @@ Recorded here because each one shapes a screen rather than a line of code.
   what the lookup was addressed to, what every federated identifier carries, and what
   `LoginResponse.User.origin_server_domain` answers with. The node's own id is a nullable
   `remote_id` that addresses nothing.
-- **C22**: a node cannot be told through the API that it is a replica. The replica-authorization
-  screen can grant the permission and cannot complete the federation; the roadmap says so where
-  it lands.
+- **C22**: settled in Quire on 2026-09-02 (`99fda3f`..`1d94973`), after phase 12 had shipped
+  around it. `FederationService` now carries `AdmitReplica` and `WithdrawReplica`, both
+  peer-facing and authenticated by the pinned certificate as `ReplicateOperations` is, so this
+  client never calls either. The origin admits the reader from its delivery pass, immediately
+  before it first offers their changes to a node, and the destination records the admission only
+  for an origin its own catalogue already names. What the replica-authorization screen tells the
+  reader changed with it: not that the other node cannot be told, but that it is told at
+  delivery and listens only if someone with an account there has added the reader's server.
 - **D10**: the browser is a client the specification never described, and 4.2.4 has to record
   that its transport is gRPC-Web translated by the gateway, not by the node.
 - **The download is not resumable, and there is nothing to make it so with.**

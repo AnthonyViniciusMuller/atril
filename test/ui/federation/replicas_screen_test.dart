@@ -1,9 +1,9 @@
 /// Who holds a copy, and the three things this screen has to say out loud.
 ///
-/// C22 is the first: the permission is written on the reader's own node and
-/// nothing in the contract can tell the other one that it is a replica, so the
-/// screen says so permanently rather than looking like a switch that started
-/// something. The second is that a withdrawn permission stays listed, because
+/// C22 is the first: the permission is written on the reader's own node, the
+/// origin carries it to the other one only at delivery, and that node listens
+/// only to an origin its own catalogue names, so the screen says so permanently
+/// rather than looking like a switch that started something. The second is that a withdrawn permission stays listed, because
 /// revoking does not reach into another operator's database and the record is
 /// what explains a peer that still has data. The third is that *what travels*
 /// is a choice with two sentences and not a box nobody reads.
@@ -89,16 +89,16 @@ void main() {
   testWidgets('says what the permission does not reach, always', (
     WidgetTester tester,
   ) async {
-    // C22. Nothing in the contract tells the other node that it is a replica,
-    // and a screen that granted the permission and said nothing would look
-    // like one where the copy is already flowing.
+    // C22. The other node is told at delivery and only listens to an origin
+    // it already knows, and a screen that granted the permission and said
+    // nothing would look like one where the copy is already flowing.
     final federation = FakeFederationRepository()
       ..catalogue = <KnownServer>[_origin, _peer];
 
     await _pump(tester, federation);
 
     expect(
-      find.textContaining('O protocolo não tem como avisar o outro servidor'),
+      find.textContaining('Aquele servidor só aceita se já conhecer o seu'),
       findsOneWidget,
     );
   });

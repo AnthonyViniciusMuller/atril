@@ -1588,9 +1588,10 @@ disproved rather than fixed — which is why they are recorded instead of delete
   selected renderer, because pruning the directory by hand means guessing which variants the
   engine can ask for at run time, and guessing wrong is a blank page on somebody else's browser.
   *Watch.*
-- **C22 is still open.** Nothing in the contract can tell a node that it is a replica, so the
-  authorization screen of phase 12 grants a permission it cannot act on. The wording landed with
-  that screen and is a paragraph rather than a caveat — the permission is on the reader's own
-  node and completing the federation is between the two operators — and it sits beside the grants
-  permanently, because a sentence that scrolled away would leave the claim it corrects standing.
-  Whoever writes the defence should read it as a first draft rather than as a decision.
+- ~~**C22 is still open.**~~ Settled in Quire on 2026-09-02: the origin admits the reader at the
+  node it authorized, from the delivery pass and through a peer-facing `AdmitReplica` this client
+  never calls. The note phase 12 put beside the grants stays, because the destination still
+  records the admission only for an origin its own catalogue names, but its wording changed from
+  *the other node cannot be told* to *it is told at delivery and listens only if someone there
+  has added your server*. The phase 12 entry above describes the screen as it was written;
+  [`architecture.md`](architecture.md) has the settled reading.

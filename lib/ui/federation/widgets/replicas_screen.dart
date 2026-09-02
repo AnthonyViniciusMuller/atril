@@ -1,12 +1,13 @@
 /// Who may hold a copy of the reader's library (UC15, RF16).
 ///
-/// **The screen states C22 rather than hiding it.** Nothing in the contract can
-/// tell a node that it is a replica: `AuthorizeReplica` writes a permission on
-/// the reader's *own* node, and the federation between the two operators is
-/// arranged out of band. A screen that granted the permission and said nothing
-/// would look like one where the copy is now flowing, and the reader would find
-/// out otherwise by never finding out at all. So the note is permanent and sits
-/// with the grants, not in a snackbar that scrolls away.
+/// **The screen states what the grant does not reach.** `AuthorizeReplica`
+/// writes a permission on the reader's *own* node; the origin carries it to the
+/// other node when it first has something to deliver (C22), and that node
+/// records it only if the origin is already in its catalogue — which someone
+/// with an account there has to arrange. A screen that granted the permission
+/// and said nothing would look like one where the copy is now flowing, and the
+/// reader would find out otherwise by never finding out at all. So the note is
+/// permanent and sits with the grants, not in a snackbar that scrolls away.
 ///
 /// **What travels is a choice and not a checkbox.** Metadata without the files
 /// is the cheap replica a reader is most likely to want on a node they do not
@@ -141,8 +142,9 @@ class _ReplicasScreenState extends State<ReplicasScreen> {
           ),
         ),
       // The standing truth, and not a message that scrolls away: the
-      // permission is on this reader's node and the other one has not been
-      // told anything (C22).
+      // permission is on this reader's node, the origin tells the other one at
+      // delivery, and the other one listens only to an origin it already
+      // knows (C22).
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         child: Row(

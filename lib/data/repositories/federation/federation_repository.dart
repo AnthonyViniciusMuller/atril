@@ -194,11 +194,13 @@ abstract interface class FederationRepository {
   /// UC15, RF16. Allows the node [serverId] to hold a copy, with the files or
   /// without them.
   ///
-  /// **It grants a permission it cannot complete.** C22: nothing in the
-  /// contract can tell a node that it is a replica, so what this writes is the
-  /// record on the reader's own node and the federation itself is arranged out
-  /// of band between the two operators. The screen says so rather than
-  /// appearing to have worked.
+  /// **It grants a permission the origin completes later.** C22: what this
+  /// writes is the record on the reader's own node, and the origin tells the
+  /// other node from its delivery pass, right before it first has something of
+  /// the reader's to offer it. The other node accepts that only if the origin
+  /// is already in its own catalogue — added there by one of its readers — and
+  /// that is the part still arranged out of band. The screen says so rather
+  /// than appearing to have worked.
   Future<Result<ReplicaAuthorization>> authorizeReplica({
     required String serverId,
     required bool replicatesFiles,

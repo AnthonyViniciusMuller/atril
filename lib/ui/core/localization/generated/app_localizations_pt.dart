@@ -1168,7 +1168,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get replicasOutOfBand =>
-      'A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.';
+      'A permissão fica registrada no seu servidor, que avisa o outro na primeira vez que tiver algo a enviar. Aquele servidor só aceita se já conhecer o seu: alguém com conta lá precisa adicionar o seu servidor em Servidores conhecidos.';
 
   @override
   String get replicasNone => 'Nenhum servidor guarda uma cópia dos seus dados.';
@@ -2790,7 +2790,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get replicasOutOfBand =>
-      'A permissão fica registrada no seu servidor. O protocolo não tem como avisar o outro servidor de que ele agora é uma réplica — isso é combinado entre quem opera os dois.';
+      'A permissão fica registrada no seu servidor, que avisa o outro na primeira vez que tiver algo a enviar. Aquele servidor só aceita se já conhecer o seu: alguém com conta lá precisa adicionar o seu servidor em Servidores conhecidos.';
 
   @override
   String get replicasNone => 'Nenhum servidor guarda uma cópia dos seus dados.';

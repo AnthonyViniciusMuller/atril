@@ -5,10 +5,13 @@
 /// and this is where that control is exercised: nothing leaves a node for a
 /// peer the reader has not named here.
 ///
-/// One thing this client cannot do, and phase 12 says so on the screen rather
-/// than appearing to have worked: **a node cannot be told through the API that
-/// it is a replica** (C22). [authorizeReplica] grants the permission on the
-/// origin node, and completing the federation is out of band.
+/// One thing this client does not do, because it is not its to do: **tell a
+/// node that it is a replica** (C22). [authorizeReplica] grants the permission
+/// on the origin node, and the origin carries it to the other node itself,
+/// through the peer-facing `AdmitReplica`, immediately before it first offers
+/// the reader's changes there. What remains out of band is that the other node
+/// records the admission only for an origin its own catalogue already names,
+/// and the screen says so rather than appearing to have worked.
 library;
 
 import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart';
