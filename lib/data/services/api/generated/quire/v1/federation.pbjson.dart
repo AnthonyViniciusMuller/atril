@@ -532,3 +532,95 @@ final $typed_data.Uint8List migrateHomeServerResponseDescriptor = $convert.base6
     'ChlNaWdyYXRlSG9tZVNlcnZlclJlc3BvbnNlEiIKBHVzZXIYASABKAsyDi5xdWlyZS52MS5Vc2'
     'VyUgR1c2VyEioKB2RldmljZXMYAiADKAsyEC5xdWlyZS52MS5EZXZpY2VSB2RldmljZXMSKwoH'
     'c2Vzc2lvbhgDIAEoCzIRLnF1aXJlLnYxLlNlc3Npb25SB3Nlc3Npb24=');
+
+@$core.Deprecated('Use replicatedReaderDescriptor instead')
+const ReplicatedReader$json = {
+  '1': 'ReplicatedReader',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'local_name', '3': 2, '4': 1, '5': 9, '10': 'localName'},
+    {'1': 'display_name', '3': 3, '4': 1, '5': 9, '10': 'displayName'},
+  ],
+};
+
+/// Descriptor for `ReplicatedReader`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List replicatedReaderDescriptor = $convert.base64Decode(
+    'ChBSZXBsaWNhdGVkUmVhZGVyEg4KAmlkGAEgASgJUgJpZBIdCgpsb2NhbF9uYW1lGAIgASgJUg'
+    'lsb2NhbE5hbWUSIQoMZGlzcGxheV9uYW1lGAMgASgJUgtkaXNwbGF5TmFtZQ==');
+
+@$core.Deprecated('Use replicatedDeviceDescriptor instead')
+const ReplicatedDevice$json = {
+  '1': 'ReplicatedDevice',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'platform', '3': 3, '4': 1, '5': 9, '10': 'platform'},
+  ],
+};
+
+/// Descriptor for `ReplicatedDevice`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List replicatedDeviceDescriptor = $convert.base64Decode(
+    'ChBSZXBsaWNhdGVkRGV2aWNlEg4KAmlkGAEgASgJUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEh'
+    'oKCHBsYXRmb3JtGAMgASgJUghwbGF0Zm9ybQ==');
+
+@$core.Deprecated('Use admitReplicaRequestDescriptor instead')
+const AdmitReplicaRequest$json = {
+  '1': 'AdmitReplicaRequest',
+  '2': [
+    {
+      '1': 'reader',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.quire.v1.ReplicatedReader',
+      '10': 'reader'
+    },
+    {
+      '1': 'devices',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.quire.v1.ReplicatedDevice',
+      '10': 'devices'
+    },
+    {'1': 'replicates_files', '3': 3, '4': 1, '5': 8, '10': 'replicatesFiles'},
+  ],
+};
+
+/// Descriptor for `AdmitReplicaRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List admitReplicaRequestDescriptor = $convert.base64Decode(
+    'ChNBZG1pdFJlcGxpY2FSZXF1ZXN0EjIKBnJlYWRlchgBIAEoCzIaLnF1aXJlLnYxLlJlcGxpY2'
+    'F0ZWRSZWFkZXJSBnJlYWRlchI0CgdkZXZpY2VzGAIgAygLMhoucXVpcmUudjEuUmVwbGljYXRl'
+    'ZERldmljZVIHZGV2aWNlcxIpChByZXBsaWNhdGVzX2ZpbGVzGAMgASgIUg9yZXBsaWNhdGVzRm'
+    'lsZXM=');
+
+@$core.Deprecated('Use admitReplicaResponseDescriptor instead')
+const AdmitReplicaResponse$json = {
+  '1': 'AdmitReplicaResponse',
+};
+
+/// Descriptor for `AdmitReplicaResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List admitReplicaResponseDescriptor =
+    $convert.base64Decode('ChRBZG1pdFJlcGxpY2FSZXNwb25zZQ==');
+
+@$core.Deprecated('Use withdrawReplicaRequestDescriptor instead')
+const WithdrawReplicaRequest$json = {
+  '1': 'WithdrawReplicaRequest',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
+  ],
+};
+
+/// Descriptor for `WithdrawReplicaRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List withdrawReplicaRequestDescriptor =
+    $convert.base64Decode(
+        'ChZXaXRoZHJhd1JlcGxpY2FSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAlSBnVzZXJJZA==');
+
+@$core.Deprecated('Use withdrawReplicaResponseDescriptor instead')
+const WithdrawReplicaResponse$json = {
+  '1': 'WithdrawReplicaResponse',
+};
+
+/// Descriptor for `WithdrawReplicaResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List withdrawReplicaResponseDescriptor =
+    $convert.base64Decode('ChdXaXRoZHJhd1JlcGxpY2FSZXNwb25zZQ==');

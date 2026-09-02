@@ -335,4 +335,25 @@ final class FakeFederationService extends FederationServiceBase {
 
     throw GrpcError.notFound('no such server');
   }
+
+  // The two calls a peer node makes (C22). The node authenticates them by
+  // the certificate its catalogue pinned and never by a token, so a device
+  // presenting a session is refused before a handler runs; this fake refuses
+  // the same way, because nothing in this client has any business reaching
+  // them and a test that did would be reporting a call that must not exist.
+  @override
+  Future<AdmitReplicaResponse> admitReplica(
+    ServiceCall call,
+    AdmitReplicaRequest request,
+  ) async {
+    throw GrpcError.unauthenticated('a device is not a peer');
+  }
+
+  @override
+  Future<WithdrawReplicaResponse> withdrawReplica(
+    ServiceCall call,
+    WithdrawReplicaRequest request,
+  ) async {
+    throw GrpcError.unauthenticated('a device is not a peer');
+  }
 }

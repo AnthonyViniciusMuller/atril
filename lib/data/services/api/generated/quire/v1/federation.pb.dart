@@ -1731,6 +1731,386 @@ class MigrateHomeServerResponse extends $pb.GeneratedMessage {
   $3.Session ensureSession() => $_ensure(2);
 }
 
+/// A reader as a replica holds them: the identifier every table of theirs
+/// hangs off, and the two names. No address and no password, which is what
+/// makes a replicated reader one this node does not authenticate (C03, RN08).
+class ReplicatedReader extends $pb.GeneratedMessage {
+  factory ReplicatedReader({
+    $core.String? id,
+    $core.String? localName,
+    $core.String? displayName,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (localName != null) result.localName = localName;
+    if (displayName != null) result.displayName = displayName;
+    return result;
+  }
+
+  ReplicatedReader._();
+
+  factory ReplicatedReader.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReplicatedReader.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReplicatedReader',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'localName')
+    ..aOS(3, _omitFieldNames ? '' : 'displayName')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReplicatedReader clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReplicatedReader copyWith(void Function(ReplicatedReader) updates) =>
+      super.copyWith((message) => updates(message as ReplicatedReader))
+          as ReplicatedReader;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReplicatedReader create() => ReplicatedReader._();
+  @$core.override
+  ReplicatedReader createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReplicatedReader getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReplicatedReader>(create);
+  static ReplicatedReader? _defaultInstance;
+
+  /// The reader's identifier on the origin, kept as it is. Every operation
+  /// and every row of the reader's names it, so a replica that minted another
+  /// would hold a history about somebody it cannot find.
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  /// The first half of @local_name:domain. The domain is the origin's, which
+  /// the destination knows from its own catalogue.
+  @$pb.TagNumber(2)
+  $core.String get localName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set localName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLocalName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLocalName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get displayName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set displayName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDisplayName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDisplayName() => $_clearField(3);
+}
+
+/// A device as a replica holds it: the identifier every vector clock entry is
+/// keyed by, and what the reader called it. C11 is why the identifier travels
+/// rather than being minted afresh.
+class ReplicatedDevice extends $pb.GeneratedMessage {
+  factory ReplicatedDevice({
+    $core.String? id,
+    $core.String? name,
+    $core.String? platform,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (name != null) result.name = name;
+    if (platform != null) result.platform = platform;
+    return result;
+  }
+
+  ReplicatedDevice._();
+
+  factory ReplicatedDevice.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReplicatedDevice.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReplicatedDevice',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..aOS(3, _omitFieldNames ? '' : 'platform')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReplicatedDevice clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReplicatedDevice copyWith(void Function(ReplicatedDevice) updates) =>
+      super.copyWith((message) => updates(message as ReplicatedDevice))
+          as ReplicatedDevice;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReplicatedDevice create() => ReplicatedDevice._();
+  @$core.override
+  ReplicatedDevice createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReplicatedDevice getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReplicatedDevice>(create);
+  static ReplicatedDevice? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get platform => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set platform($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPlatform() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPlatform() => $_clearField(3);
+}
+
+class AdmitReplicaRequest extends $pb.GeneratedMessage {
+  factory AdmitReplicaRequest({
+    ReplicatedReader? reader,
+    $core.Iterable<ReplicatedDevice>? devices,
+    $core.bool? replicatesFiles,
+  }) {
+    final result = create();
+    if (reader != null) result.reader = reader;
+    if (devices != null) result.devices.addAll(devices);
+    if (replicatesFiles != null) result.replicatesFiles = replicatesFiles;
+    return result;
+  }
+
+  AdmitReplicaRequest._();
+
+  factory AdmitReplicaRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AdmitReplicaRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AdmitReplicaRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..aOM<ReplicatedReader>(1, _omitFieldNames ? '' : 'reader',
+        subBuilder: ReplicatedReader.create)
+    ..pPM<ReplicatedDevice>(2, _omitFieldNames ? '' : 'devices',
+        subBuilder: ReplicatedDevice.create)
+    ..aOB(3, _omitFieldNames ? '' : 'replicatesFiles')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdmitReplicaRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdmitReplicaRequest copyWith(void Function(AdmitReplicaRequest) updates) =>
+      super.copyWith((message) => updates(message as AdmitReplicaRequest))
+          as AdmitReplicaRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AdmitReplicaRequest create() => AdmitReplicaRequest._();
+  @$core.override
+  AdmitReplicaRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AdmitReplicaRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AdmitReplicaRequest>(create);
+  static AdmitReplicaRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ReplicatedReader get reader => $_getN(0);
+  @$pb.TagNumber(1)
+  set reader(ReplicatedReader value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReader() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReader() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ReplicatedReader ensureReader() => $_ensure(0);
+
+  /// Every device the reader has bound, active or not: an operation authored
+  /// by a device since unbound is still an operation the replica has to be
+  /// able to attribute.
+  @$pb.TagNumber(2)
+  $pb.PbList<ReplicatedDevice> get devices => $_getList(1);
+
+  /// Whether the permission covers the e-book files as well as the metadata,
+  /// as the reader granted it.
+  @$pb.TagNumber(3)
+  $core.bool get replicatesFiles => $_getBF(2);
+  @$pb.TagNumber(3)
+  set replicatesFiles($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReplicatesFiles() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReplicatesFiles() => $_clearField(3);
+}
+
+class AdmitReplicaResponse extends $pb.GeneratedMessage {
+  factory AdmitReplicaResponse() => create();
+
+  AdmitReplicaResponse._();
+
+  factory AdmitReplicaResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AdmitReplicaResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AdmitReplicaResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdmitReplicaResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdmitReplicaResponse copyWith(void Function(AdmitReplicaResponse) updates) =>
+      super.copyWith((message) => updates(message as AdmitReplicaResponse))
+          as AdmitReplicaResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AdmitReplicaResponse create() => AdmitReplicaResponse._();
+  @$core.override
+  AdmitReplicaResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AdmitReplicaResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AdmitReplicaResponse>(create);
+  static AdmitReplicaResponse? _defaultInstance;
+}
+
+class WithdrawReplicaRequest extends $pb.GeneratedMessage {
+  factory WithdrawReplicaRequest({
+    $core.String? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  WithdrawReplicaRequest._();
+
+  factory WithdrawReplicaRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WithdrawReplicaRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WithdrawReplicaRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawReplicaRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawReplicaRequest copyWith(
+          void Function(WithdrawReplicaRequest) updates) =>
+      super.copyWith((message) => updates(message as WithdrawReplicaRequest))
+          as WithdrawReplicaRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WithdrawReplicaRequest create() => WithdrawReplicaRequest._();
+  @$core.override
+  WithdrawReplicaRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WithdrawReplicaRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WithdrawReplicaRequest>(create);
+  static WithdrawReplicaRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+}
+
+class WithdrawReplicaResponse extends $pb.GeneratedMessage {
+  factory WithdrawReplicaResponse() => create();
+
+  WithdrawReplicaResponse._();
+
+  factory WithdrawReplicaResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WithdrawReplicaResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WithdrawReplicaResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'quire.v1'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawReplicaResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WithdrawReplicaResponse copyWith(
+          void Function(WithdrawReplicaResponse) updates) =>
+      super.copyWith((message) => updates(message as WithdrawReplicaResponse))
+          as WithdrawReplicaResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WithdrawReplicaResponse create() => WithdrawReplicaResponse._();
+  @$core.override
+  WithdrawReplicaResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WithdrawReplicaResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WithdrawReplicaResponse>(create);
+  static WithdrawReplicaResponse? _defaultInstance;
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

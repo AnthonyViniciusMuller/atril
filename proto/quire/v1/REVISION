@@ -2,4 +2,4 @@
 # proto-sync`. It is provenance and not a pin: what CI enforces is that
 # the .proto files match Quire's main branch, not that this line is
 # current.
-901792d5f214b9fc24cbd70ee88033d978330355
+3f52ac86e9b2f76c30c0a4f9436088f7efe829fe

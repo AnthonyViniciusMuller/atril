@@ -157,6 +157,50 @@ class FederationServiceClient extends $grpc.Client {
     return $createUnaryCall(_$migrateHomeServer, request, options: options);
   }
 
+  /// C22 in docs/tcc-corrections.md. Addressed to the node a reader has just
+  /// authorized, by the reader's origin, and it is what makes UC15 reach the
+  /// other side: the permission is recorded on the origin, and the destination
+  /// checks one of its own before it accepts a single operation (RN03). Nothing
+  /// else in the contract could carry it — every other call here is addressed
+  /// by a reader's device to its own node, and a reader has no account on a
+  /// replica by construction (RN08, C03).
+  ///
+  /// Its caller is a peer node and not a device, so it is authenticated as
+  /// SyncService.ReplicateOperations is: by the certificate the catalogue
+  /// pinned rather than by a token. The destination records the origin as the
+  /// node its catalogue names for that certificate, never as anything the call
+  /// claims, and it therefore serves only an origin somebody on the destination
+  /// already added — a node anybody could fill with readers would be a node
+  /// whose readers' promises protected nothing.
+  ///
+  /// It carries what the destination has to store before it can hold anything
+  /// of the reader's: the reader without their address or password, which stay
+  /// with the node that authenticates them (C03), and the reader's devices,
+  /// because every operation names the device that authored it and a peer
+  /// that holds the reader and not their devices refuses the whole batch.
+  ///
+  /// It is a standing obligation and not a handshake. Calling it again for a
+  /// reader already admitted changes nothing but what it adds — a device bound
+  /// since — and is how a replica that missed one is caught up.
+  $grpc.ResponseFuture<$0.AdmitReplicaResponse> admitReplica(
+    $0.AdmitReplicaRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$admitReplica, request, options: options);
+  }
+
+  /// C22, the mirror. The origin tells the destination that the reader has
+  /// withdrawn the permission, so that a revoked replica stops accepting rather
+  /// than merely stops being sent things. The authorization is deactivated and
+  /// kept there as it is here, and what the destination already holds stays:
+  /// revoking reaches into nobody's database (RevokeReplica).
+  $grpc.ResponseFuture<$0.WithdrawReplicaResponse> withdrawReplica(
+    $0.WithdrawReplicaRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$withdrawReplica, request, options: options);
+  }
+
   // method descriptors
 
   static final _$discoverServer =
@@ -215,6 +259,16 @@ class FederationServiceClient extends $grpc.Client {
       '/quire.v1.FederationService/MigrateHomeServer',
       ($0.MigrateHomeServerRequest value) => value.writeToBuffer(),
       $0.MigrateHomeServerResponse.fromBuffer);
+  static final _$admitReplica =
+      $grpc.ClientMethod<$0.AdmitReplicaRequest, $0.AdmitReplicaResponse>(
+          '/quire.v1.FederationService/AdmitReplica',
+          ($0.AdmitReplicaRequest value) => value.writeToBuffer(),
+          $0.AdmitReplicaResponse.fromBuffer);
+  static final _$withdrawReplica =
+      $grpc.ClientMethod<$0.WithdrawReplicaRequest, $0.WithdrawReplicaResponse>(
+          '/quire.v1.FederationService/WithdrawReplica',
+          ($0.WithdrawReplicaRequest value) => value.writeToBuffer(),
+          $0.WithdrawReplicaResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('quire.v1.FederationService')
@@ -321,6 +375,24 @@ abstract class FederationServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.MigrateHomeServerRequest.fromBuffer(value),
         ($0.MigrateHomeServerResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.AdmitReplicaRequest, $0.AdmitReplicaResponse>(
+            'AdmitReplica',
+            admitReplica_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.AdmitReplicaRequest.fromBuffer(value),
+            ($0.AdmitReplicaResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.WithdrawReplicaRequest,
+            $0.WithdrawReplicaResponse>(
+        'WithdrawReplica',
+        withdrawReplica_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.WithdrawReplicaRequest.fromBuffer(value),
+        ($0.WithdrawReplicaResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.DiscoverServerResponse> discoverServer_Pre(
@@ -421,4 +493,22 @@ abstract class FederationServiceBase extends $grpc.Service {
 
   $async.Future<$0.MigrateHomeServerResponse> migrateHomeServer(
       $grpc.ServiceCall call, $0.MigrateHomeServerRequest request);
+
+  $async.Future<$0.AdmitReplicaResponse> admitReplica_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.AdmitReplicaRequest> $request) async {
+    return admitReplica($call, await $request);
+  }
+
+  $async.Future<$0.AdmitReplicaResponse> admitReplica(
+      $grpc.ServiceCall call, $0.AdmitReplicaRequest request);
+
+  $async.Future<$0.WithdrawReplicaResponse> withdrawReplica_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.WithdrawReplicaRequest> $request) async {
+    return withdrawReplica($call, await $request);
+  }
+
+  $async.Future<$0.WithdrawReplicaResponse> withdrawReplica(
+      $grpc.ServiceCall call, $0.WithdrawReplicaRequest request);
 }
