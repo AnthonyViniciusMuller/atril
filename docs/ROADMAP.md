@@ -1514,6 +1514,182 @@ The phase the thesis is actually about, and the one a demonstration ends on.
       workflow has never run, and the three desktop packages have never been built, both for want
       of a tag and of runners
 
+## Phase 14 — The review
+
+A pass over the finished plan rather than a feature. Four reviews were run over the tree on
+2026-09-02 — the synchronization subsystem, the data layer, the presentation layer with the
+EPUB hosts, and the delivery side — and every claim below was checked against the code before
+it was written down. Three of them are release blockers: the reader's page is mounted only
+after the book has opened, which is the moment both real hosts need it mounted; the schema
+upgrade re-creates four indexes that `IF NOT EXISTS` does not cover; and one delivery the
+replica cannot hold stalls synchronization at the same cursor forever. The rest is what a
+thirteen-phase codebase accumulates: a leak on an error path, a timestamp written on the wrong
+event, duplicated helpers, and the tests that would have caught each of these had they existed.
+
+Each entry is a commit, each commit carries its own test, and the box is ticked in the commit
+that lands it, as everywhere else in this file. The sub-sections are worked in parallel and
+merged in order, which is why each fix names the section it belongs to and touches no other.
+
+### The replica and the repositories
+
+- [ ] `fix: create indexes the upgrade can repeat` — `onUpgrade` calls `createAll` trusting
+      that every statement is `IF NOT EXISTS`; drift adds the clause to tables and views and not
+      to indexes, and all four indexes existed at version 1, so any real database moving to
+      version 5 fails to open with *index already exists*. The migration test upgrades an empty
+      database and never sees it. Issue the index statements with the clause, and test the
+      upgrade from a database that holds the version 1 schema *and* its indexes
+- [ ] `fix: import a work in one transaction` — `author.write` commits, and the cover and the
+      transfer row are written after it. A failure between the two leaves a work the node is
+      never owed: no upload, a duplicate on retry, and a release that removes the only copy. The
+      three steps join one transaction, and a test fails the bookkeeping after authoring and
+      asserts no row and no outbox entry remain
+- [ ] `fix: notice a download from the content watch` — `watchContent` recomputes *on this
+      device* only when a transfer or a pin changes, and a completed download writes neither, so
+      the book screen keeps saying the file is elsewhere until something unrelated moves. The
+      blob store announces what it commits and removes, the watches merge that in, and a test
+      downloads mid-stream and expects the flag to flip
+- [ ] `fix: measure the file before extracting its cover` — `_keepCoverOf` passes the row's
+      nullable size as zero, which `_describe` reads as *under the limit*, and a seeded work of
+      unknown size is read whole into memory on a phone. Ask the blob store for the size it has
+- [ ] `fix: refuse a refresh that lands after sign-out` — `end()` does not invalidate a refresh
+      in flight, so the late reply writes a live credential back and announces the device signed
+      in. A generation bumped by `end()` and checked before adopting, with a test whose refresher
+      completes after the sign-out
+- [ ] `fix: keep every failure inside the boundary` — three repositories catch `on Exception`
+      where the others catch `on Object`, so a `StateError` from a DAO reaches a view model; in
+      the federation repository it also skips the point-back and strands the device on the new
+      node. `reader()` returns a raw stream for the same reason. Standardise the catch, return
+      `Stream<Result<User?>>`, and test that an `Error` from below is a `Result`
+- [ ] `refactor: hoist the row mappers and the stream guard` — `library_repository_impl.dart` is
+      994 lines and two features, and three of its helpers are reached into or copied by the
+      annotation and reading repositories. The row mappers move to `data/model`, the guard
+      becomes an extension in `utils`, the bytes half becomes its own file, the reading
+      repository is handed the identity DAO instead of reaching through another one, and the
+      hand-rolled stream combinator gives way to `package:async`
+- [ ] `feat: reclaim the bytes of a deleted work` — a tombstoned work keeps its blob and its
+      pin, the kept list hides it and the budget counts it, so the space is shown and never
+      freed. A reclaim pass removes blobs no live work names once the transfer has retired
+
+### Synchronization
+
+- [ ] `fix: reject a delivery the replica cannot hold` — `_apply` catches `DeltaException`
+      alone; an operation violating a CHECK — an unknown format, a note with no text, a percent
+      past a hundred — throws out of the reconciler, the page aborts with the cursor unmoved, and
+      the scheduler reconnects into the same operation forever. `seed.dart` says the reconciler
+      rejects such a delivery, and it does not. Turn the constraint failure into a rejection,
+      and test each CHECK; add the missing test for `Change.restore` while in the author's tests
+- [ ] `fix: release the stream when a delivery fails` — a failure in `_handle` ends the channel
+      with the subscription still held and the controller still open, and `close()` returns
+      early because the commands sink is already null. Key `close()` on the subscription, as the
+      watch channel does, and test that a throwing reconciler leaves nothing subscribed
+- [ ] `fix: report a channel that ended before it was watched` — `done` returns a completed
+      future when the completer was nulled before the scheduler subscribed, so a transport that
+      fails during `open()` is an unhandled error and a clean end at once, and the status never
+      says failure. Keep the completer until the next `open()`
+- [ ] `fix: record an exchange only on evidence` — *last reached the node* is written right
+      after `open()`, and `open()` does not reach the node: gRPC dials lazily and the stream's
+      open only reads the database. A device whose node has been down a week says *just now*.
+      Record it on the first event received, a push answered, or a channel that settled
+- [ ] `fix: keep an offer's failure inside the scheduler` — on the web `offer()` is a push RPC
+      and rethrows the transport failure into `unawaited(nudge())` and out of `syncNow()`.
+      Catch it and publish it as the status
+- [ ] `fix: stand down a channel that was still opening` — a lifecycle or session event while
+      `open()` is pending closes nothing, and `_connect` goes on to publish *live* and wait on
+      a channel nobody wants. Re-check after `open()` returns, and test it
+- [ ] `fix: let the scheduler start twice` — the lifecycle listener is a `late final` assigned
+      in `onListen`, which a broadcast controller fires again after `stop()`. Make it nullable
+- [ ] `feat: prune the applied operations` — the table grows by one row per pulled operation
+      and nothing deletes one; the cursor guards every redelivery except a page re-read after a
+      crash, so rows older than a bounded window are dead weight. Prune when a channel settles
+- [ ] `fix: report a peer whose clock is far ahead` — `observe` returns whether the peer is
+      past `maxClockDrift` and documents that the caller's job is to report it; the reconciler
+      discards the answer. Log it once per device
+- [ ] `refactor: share the origin lookup and the revision reader` — three copies of the origin
+      domain lookup, four of the row-to-revision body, and a set that is only ever asked
+      whether it is empty
+- [ ] `test: cover the scheduler's backoff and syncNow` — the reset of the backoff by a channel
+      that lasted `settledFor`, `syncNow` clearing a running backoff, and a channel that fails
+      during `open()` have no test between them
+
+### The reader and the shell
+
+- [ ] `fix: mount the page before the book opens` — the body shows the spinner while `open`
+      runs and places `host.view()` only afterwards, and both real hosts complete `open()` from
+      a callback of the widget that `view()` builds. On the webview targets the open times out
+      after thirty seconds; on Linux it is refused at once. The widget test passes because its
+      fake opens synchronously. Mount the view always, layer the spinner and the refusal over
+      it, and give the test a host that opens only once its view has been built
+- [ ] `fix: silence a command that was disposed mid-run` — `Command` notifies in its `finally`
+      with no disposed flag, so leaving a screen while a command runs asserts in debug. Track
+      disposal and test it
+- [ ] `fix: tell the reader why the book did not open, in their language` — the refusal's
+      default branch renders the exception's diagnostic message, which the view model says is
+      never shown and the hosts write in English. Map the code to a message in the ARB files
+- [ ] `fix: announce a restore or a filing that failed` — the delete's *undo* discards the
+      result and reports success, and the shelves dialog checks only the last toggle after it
+      closes. Route the undo through a command and surface each toggle's failure where it
+      happened
+- [ ] `fix: drop a bridge message the host does not understand` — the CEF host decodes and
+      casts without a guard, `_request` hangs thirty seconds where `_call` refuses at once, a
+      second `readyToLoad` completes a completed completer, and the engine server sends
+      `no-cache` over bytes that cannot change while the process runs
+- [ ] `fix: keep the destination through onboarding` — the guard sends a signed-out device to
+      onboarding without remembering where it was going, and sends a signed-in device following
+      the password-reset link to the library with the token discarded. Carry the destination and
+      exempt the reset route, with router tests for both
+- [ ] `perf: rebuild the chrome and not the page` — one listenable wraps the whole scaffold and
+      every notification rebuilds the host's platform view; the adaptive shell does the same for
+      a badge count. Build the view once and scope the listeners
+- [ ] `fix: let the shelves grow with the system text` — fixed-height tiles overflow at large
+      text sizes, nothing under `lib/ui` carries semantics, and the progress bars say nothing to
+      a screen reader. Size from the text scaler, label the indicators, and test at 1.3× and 2×
+- [ ] `refactor: split the reader and the library screens` — nine widgets and four helpers in
+      one file, the menus and the grid in another, and a view model that mixes the position
+      debounce, the paint reconciliation and the mark commands. The paint diff becomes an object
+      with its own test
+- [ ] `perf: hand the desktop host one copy of the book` — base64, then JSON, then the script
+      source: three transient copies of the book beside the one the view model holds. Serve it
+      from the engine server under a one-shot path, or encode it once
+- [ ] `test: one fake per repository, and a contract they share` — eleven fakes in a file of
+      1400 lines, each reimplementing the filtering and the refusals of the real repository with
+      nothing asserting the two agree. Split them, and run the methods the screens depend on
+      against both
+
+### Delivery
+
+- [ ] `fix: cache the renderer that runs` — the worker precaches every file the build wrote,
+      including the symbol maps and three renderers a JavaScript build never loads, and
+      `addAll` is atomic, so one failed fetch of forty-five megabytes leaves the shell not
+      offline at all. Exclude what never loads and record the new size
+- [ ] `fix: stamp the tag's version on every artifact` — `msix:create` reads the pubspec and the
+      Flatpak metainfo carries a literal, so two of six artifacts ship `1.0.0` whatever the tag
+      says. Pass the derived version to both
+- [ ] `fix: name the application the same on every target` — Android, Linux and Windows show
+      `atril` where the other three show `Atril`
+- [ ] `fix: suffix the artifacts the same way` — Android puts *unsigned* before the target and
+      macOS and Windows after it
+- [ ] `build: strip libcef in every release bundle` — the strip lives only in the Flatpak
+      manifest, so `make build-linux` and the CI job still produce the 1.5 GB bundle, and the
+      pubspec still quotes the size of a file nothing was stripping. Strip at install in CMake
+      and correct the comment
+- [ ] `ci: build the android release` — the pull-request matrix builds debug, so the release
+      configuration and the shrinker run only in a workflow that has never run. The debug-key
+      fallback makes a release build safe on a runner with no keystore
+- [ ] `ci: pin the actions and enforce the lockfile` — two third-party actions run at mutable
+      tags beside the signing secrets, and `pub get` may resolve differently from the lockfile.
+      Pin to commits, add Dependabot for both ecosystems, and pass `--enforce-lockfile`
+- [ ] `ci: measure coverage and hold a floor` — `make coverage` runs nowhere, its filter keeps
+      the generated localizations, and nothing fails when a phase drops coverage
+- [ ] `fix: declare the percent placeholder` — three messages use `{percent}` without declaring
+      it, so the generated API takes an `Object` where everything else is typed. Declare it and
+      assert in the ARB test that every placeholder is
+- [ ] `ci: surface outdated dependencies` — a non-blocking `pub outdated` on every pull request
+- [ ] `ci: cache the pub cache on linux` — CEF is 658 MB and is fetched on every Linux job
+- [ ] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,
+      `cancel_subscriptions`, `close_sinks`, `avoid_dynamic_calls` and `only_throw_errors`, and
+      whatever they find. Landed last, after the other three sections, because it touches all of
+      them
+
 ## Open questions
 
 Recorded rather than answered, and each one should be settled before the phase that needs it.
