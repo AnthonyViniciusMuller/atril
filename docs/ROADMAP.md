@@ -1879,9 +1879,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       The reset route is exempt from the signed-in-leaves-onboarding rule for a different reason:
       the credential arrives in a mail client, and a reader who already has a session here is
       still a reader changing their password
-- [ ] `perf: rebuild the chrome and not the page` — one listenable wraps the whole scaffold and
-      every notification rebuilds the host's platform view; the adaptive shell does the same for
-      a badge count. Build the view once and scope the listeners
+- [x] `perf: rebuild the chrome and not the page` — the reader wrapped its whole scaffold in one
+      `ListenableBuilder` and called `host.view()` inside it, so **every page turn, every
+      selection and every mark that arrived by synchronization asked the framework for a new
+      platform view** — a webview on five targets, a CEF texture on the sixth — to move a
+      progress bar four pixels. The view is built once in the state and handed down; the
+      listeners moved inside the chrome, one for whether it is showing, one for the bar and one
+      for the row that follows the page, and the column inside the chrome is passed as the
+      builder's `child` because showing and hiding it does not change what is in it. The
+      adaptive shell had the same shape for a smaller reason: its listener sat above the
+      `Scaffold`, the navigation surface *and* the branch, so a number from the sync loop rebuilt
+      whichever screen the reader was on — the reader included. It subscribes inside the badge
+      now, which is the only thing that number changes. The test counts what the fake host's
+      `view()` was asked for across a chrome toggle, a page turn and a selection, and the answer
+      is once
 - [ ] `fix: let the shelves grow with the system text` — fixed-height tiles overflow at large
       text sizes, nothing under `lib/ui` carries semantics, and the progress bars say nothing to
       a screen reader. Size from the text scaler, label the indicators, and test at 1.3× and 2×

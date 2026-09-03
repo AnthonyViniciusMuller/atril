@@ -442,6 +442,34 @@ void main() {
       expect(find.text(_pt().readerContentsEmptyTitle), findsOneWidget);
     });
 
+    testWidgets('is built once, whatever the chrome does', (
+      WidgetTester tester,
+    ) async {
+      // The page is a platform view — a webview on five targets and a CEF
+      // texture on the sixth — and one listener over the whole scaffold meant
+      // every page turn, selection and mark that arrived by synchronization
+      // rebuilt it to move a progress bar.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      final int built = host.viewBuilds;
+
+      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 1);
+
+      host.moveTo(30);
+      host.select('epubcfi(/6/14!/4/10,/2/1:1,/3:4)', 'A terra é ingrata.');
+      await tester.pumpAndSettle();
+
+      expect(host.viewBuilds, built);
+    });
+
     testWidgets('closing the reader disposes the host', (
       WidgetTester tester,
     ) async {

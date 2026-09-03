@@ -142,18 +142,22 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
     super.dispose();
   }
 
+  /// The shell, with **no listener above the branch**.
+  ///
+  /// One `ListenableBuilder` used to wrap this whole subtree, so a number
+  /// arriving from the sync loop rebuilt the `Scaffold`, the navigation surface
+  /// and the destination inside it — which on the library is a shelf, and in
+  /// the reader is a webview. What that number changes is one badge, so the
+  /// badge is what subscribes.
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: _sync,
-    builder: (BuildContext context, Widget? _) => LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        if (constraints.maxWidth < compactWidth) {
-          return _bar(context);
-        }
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (BuildContext context, BoxConstraints constraints) {
+      if (constraints.maxWidth < compactWidth) {
+        return _bar(context);
+      }
 
-        return _rail(context, extended: constraints.maxWidth >= expandedWidth);
-      },
-    ),
+      return _rail(context, extended: constraints.maxWidth >= expandedWidth);
+    },
   );
 
   /// [icon], with the count of what has not left this device on it where
@@ -163,14 +167,20 @@ class _AdaptiveScaffoldState extends State<AdaptiveScaffold> {
   /// mark reporting that everything is fine, which is the state a reader
   /// already assumes and the one thing a badge must not be spent on.
   Widget _badged(Destination destination, Widget icon) {
-    if (!destination.badgesPendingChanges || _sync.state.isHandedOver) {
+    if (!destination.badgesPendingChanges) {
       return icon;
     }
 
-    // What is counted is everything this device holds and no node does, which
-    // includes what a node refused: both halves are still only here, and only
-    // the screen behind the badge has room to say why they differ.
-    return Badge.count(count: _sync.state.notHandedOver, child: icon);
+    return ListenableBuilder(
+      listenable: _sync,
+      builder: (BuildContext context, Widget? _) => _sync.state.isHandedOver
+          ? icon
+          // What is counted is everything this device holds and no node does,
+          // which includes what a node refused: both halves are still only
+          // here, and only the screen behind the badge has room to say why
+          // they differ.
+          : Badge.count(count: _sync.state.notHandedOver, child: icon),
+    );
   }
 
   /// Goes to the destination at [index].

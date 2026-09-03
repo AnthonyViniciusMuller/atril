@@ -80,6 +80,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
     at: widget.at,
   );
 
+  /// The host's view, built once and held.
+  ///
+  /// **It is the one widget on this screen that must not be rebuilt.** It is a
+  /// platform view — a webview on five targets and a CEF texture on the sixth —
+  /// and asking for a new one is asking the framework to consider replacing a
+  /// browser with a book in it. Everything else here is chrome over it, and
+  /// what a page turn or a selection changes is the chrome.
+  late final Widget _page = _model.host.view();
+
   @override
   void dispose() {
     _model.dispose();
@@ -127,29 +136,35 @@ class _ReaderScreenState extends State<ReaderScreen> {
     return KeyEventResult.ignored;
   }
 
+  /// The screen, with **no listener above the page**.
+  ///
+  /// One `ListenableBuilder` used to wrap the whole scaffold, so every page
+  /// turn, every selection and every mark that arrived by synchronization
+  /// rebuilt the platform view along with the four widgets that had actually
+  /// changed. The listeners are inside the chrome now, one per thing that
+  /// changes, and the page is built once above them.
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _model,
-      builder: (BuildContext context, Widget? _) => Scaffold(
-        // The book decides what colour a page is, so the scaffold behind it is
-        // black and never the theme's surface: a light strip down the side of a
-        // dark page is the app showing through its own reader.
-        backgroundColor: Colors.black,
-        body: Focus(
-          autofocus: true,
-          onKeyEvent: _onKey,
-          child: Stack(
-            children: <Widget>[
-              Positioned.fill(child: _ReaderBody(model: _model)),
-              _ReaderChrome(model: _model),
-              // Above the chrome and outside it, deliberately. A reader who
-              // has selected a passage has asked a question the app must
-              // answer, and a tap that hid the page controls should not take
-              // the answer away with them.
-              _SelectionActions(model: _model),
-            ],
-          ),
+    return Scaffold(
+      // The book decides what colour a page is, so the scaffold behind it is
+      // black and never the theme's surface: a light strip down the side of a
+      // dark page is the app showing through its own reader.
+      backgroundColor: Colors.black,
+      body: Focus(
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: _ReaderBody(model: _model, page: _page),
+            ),
+            _ReaderChrome(model: _model),
+            // Above the chrome and outside it, deliberately. A reader who
+            // has selected a passage has asked a question the app must
+            // answer, and a tap that hid the page controls should not take
+            // the answer away with them.
+            _SelectionActions(model: _model),
+          ],
         ),
       ),
     );
@@ -167,9 +182,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
 /// refusal at once. The spinner and the refusal are layers over the page now,
 /// and the page is underneath from the first frame.
 class _ReaderBody extends StatelessWidget {
-  const _ReaderBody({required this.model});
+  const _ReaderBody({required this.model, required this.page});
 
   final ReaderViewModel model;
+
+  /// The host's view, built once by the screen above.
+  final Widget page;
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +200,7 @@ class _ReaderBody extends StatelessWidget {
         GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: model.toggleChrome,
-          child: model.host.view(),
+          child: page,
         ),
         ListenableBuilder(
           listenable: model.open,
@@ -351,8 +369,50 @@ class _ReaderRefusal extends StatelessWidget {
 }
 
 /// The bar, the contents and the progress, over the page.
+///
+/// **It listens, rather than being rebuilt by something that does.** The
+/// listener used to sit above the whole scaffold, which put the platform view
+/// inside it: a page turn rebuilt the webview to move a progress bar four
+/// pixels. What changes here is the chrome, so the chrome is what subscribes —
+/// once for whether it is showing, and again inside the row that follows the
+/// page.
 class _ReaderChrome extends StatelessWidget {
   const _ReaderChrome({required this.model});
+
+  final ReaderViewModel model;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: model,
+    builder: (BuildContext context, Widget? chrome) => IgnorePointer(
+      ignoring: !model.chromeVisible,
+      child: AnimatedOpacity(
+        key: readerChromeKey,
+        opacity: model.chromeVisible ? 1 : 0,
+        duration: readerChromeFade,
+        child: chrome,
+      ),
+    ),
+    // Built once and handed to every rebuild: showing and hiding the chrome
+    // does not change what is in it.
+    child: Column(
+      children: <Widget>[
+        _ReaderBar(model: model),
+        const Spacer(),
+        _ReaderProgress(model: model),
+      ],
+    ),
+  );
+}
+
+/// Where the reader is, under the page.
+///
+/// The progress is a line and a sentence, not a slider. Dragging to a
+/// percentage is a gesture for a book somebody is skimming, and it would need a
+/// control that fights the page turn underneath it; what a reader wants here is
+/// to know where they are.
+class _ReaderProgress extends StatelessWidget {
+  const _ReaderProgress({required this.model});
 
   final ReaderViewModel model;
 
@@ -361,67 +421,48 @@ class _ReaderChrome extends StatelessWidget {
     final AppLocalizations l10n = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
 
-    return IgnorePointer(
-      ignoring: !model.chromeVisible,
-      child: AnimatedOpacity(
-        key: readerChromeKey,
-        opacity: model.chromeVisible ? 1 : 0,
-        duration: readerChromeFade,
-        child: Column(
-          children: <Widget>[
-            _ReaderBar(model: model),
-            const Spacer(),
-            // The progress is a line and a sentence, not a slider. Dragging to
-            // a percentage is a gesture for a book somebody is skimming, and it
-            // would need a control that fights the page turn underneath it;
-            // what a reader wants here is to know where they are.
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
+    return DecoratedBox(
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6)),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: <Widget>[
+              IconButton(
+                onPressed: model.turnBack.execute,
+                icon: const Icon(Icons.chevron_left),
+                color: Colors.white,
+                tooltip: l10n.readerPreviousPage,
               ),
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Row(
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: model,
+                  builder: (BuildContext context, Widget? _) => Column(
                     children: <Widget>[
-                      IconButton(
-                        onPressed: model.turnBack.execute,
-                        icon: const Icon(Icons.chevron_left),
-                        color: Colors.white,
-                        tooltip: l10n.readerPreviousPage,
+                      LinearProgressIndicator(
+                        value: model.progress,
+                        backgroundColor: Colors.white24,
                       ),
-                      Expanded(
-                        child: Column(
-                          children: <Widget>[
-                            LinearProgressIndicator(
-                              value: model.progress,
-                              backgroundColor: Colors.white24,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              l10n.readerProgress(
-                                (model.progress * 100).round(),
-                              ),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.readerProgress((model.progress * 100).round()),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white70,
                         ),
-                      ),
-                      IconButton(
-                        onPressed: model.turnForward.execute,
-                        icon: const Icon(Icons.chevron_right),
-                        color: Colors.white,
-                        tooltip: l10n.readerNextPage,
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+              IconButton(
+                onPressed: model.turnForward.execute,
+                icon: const Icon(Icons.chevron_right),
+                color: Colors.white,
+                tooltip: l10n.readerNextPage,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -435,7 +476,13 @@ class _ReaderBar extends StatelessWidget {
   final ReaderViewModel model;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: model,
+    builder: (BuildContext context, Widget? _) => _bar(context),
+  );
+
+  /// The bar as it stands, for whatever the model says now.
+  Widget _bar(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
     return DecoratedBox(
@@ -620,7 +667,13 @@ class _SelectionActions extends StatelessWidget {
   final ReaderViewModel model;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: model,
+    builder: (BuildContext context, Widget? _) => _actions(context),
+  );
+
+  /// The bar for the selection there is, or nothing where there is none.
+  Widget _actions(BuildContext context) {
     final EpubSelection? selection = model.selection;
 
     if (selection == null) {
