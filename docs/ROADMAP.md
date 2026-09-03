@@ -1981,9 +1981,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       the shell through, so a wrong guess costs offline for one file and never a page. The size
       notes in the Makefile and `architecture.md` now say what is cached rather than what is
       copied
-- [ ] `fix: stamp the tag's version on every artifact` — `msix:create` reads the pubspec and the
+- [x] `fix: stamp the tag's version on every artifact` — `msix:create` reads the pubspec and the
       Flatpak metainfo carries a literal, so two of six artifacts ship `1.0.0` whatever the tag
-      says. Pass the derived version to both
+      says. Pass the derived version to both. Checked against the package rather than assumed:
+      msix resolves its version as `--version`, then `msix_version`, then the pubspec's
+      `major.minor.patch` with a zero appended, and refuses anything that is not four numbers,
+      so **the workflow hands it `<tag>.0`** in both the signed and the test-certificate branch
+      and the pubspec keeps no `msix_version` — a laptop's `make package-windows` still packages
+      the pubspec's number, which is the right number for a package nobody tagged. **The
+      metainfo is rewritten in the Linux job and not templated**, because a software centre
+      reads that file and never the tag: a `sed` over the one `<release>` line, with the tag's
+      version and the run's UTC date, followed by a `grep` for exactly the line it should have
+      produced, since a substitution that matched nothing would be a Flatpak saying `1.0.0`
+      forever. The committed literal stays and says what it is. Two things were noticed and
+      left: neither the Linux bundle nor the web archive is versioned at all — `make
+      package-linux` and `make build-web` run without `--build-name`, which is invisible
+      because nothing in `lib/` reads the version — and a manual run's `0.0.0.0` passes msix's
+      own check but whether `MakeAppx` accepts a zero major is not something this machine can
+      answer. Nothing here was executed: both jobs run on hosts this machine is not
 - [ ] `fix: name the application the same on every target` — Android, Linux and Windows show
       `atril` where the other three show `Atril`
 - [ ] `fix: suffix the artifacts the same way` — Android puts *unsigned* before the target and

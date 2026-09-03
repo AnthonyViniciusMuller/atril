@@ -307,6 +307,10 @@ jobs:
             --build-name=${{ needs.version.outputs.name }} `
             --build-number=${{ needs.version.outputs.number }}
 
+      # `--build-name` reaches the executable and not the installer: msix reads
+      # `version:` from the pubspec, which says 1.0.0 whatever the tag says, so
+      # the derived version is handed to it as well. The format is four numbers,
+      # and the fourth is the zero msix itself appends to a pubspec version.
       - name: Package
         shell: pwsh
         env:
@@ -317,7 +321,8 @@ jobs:
           if ($env:CERTIFICATE) {
             $pfx = Join-Path $env:RUNNER_TEMP "atril.pfx"
             [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERTIFICATE))
-            dart run msix:create --certificate-path $pfx `
+            dart run msix:create --version "$v.0" `
+              --certificate-path $pfx `
               --certificate-password $env:CERTIFICATE_PASSWORD
             $name = "atril-$v-windows.msix"
           } else {
@@ -325,7 +330,7 @@ jobs:
             # a development install wants and is not a release. The name is what
             # says so, since the file is otherwise indistinguishable.
             Write-Host "no WINDOWS_CERTIFICATE_BASE64: signing with the msix test certificate"
-            dart run msix:create
+            dart run msix:create --version "$v.0"
             $name = "atril-$v-windows-unsigned.msix"
           }
           New-Item -ItemType Directory -Force artifacts | Out-Null
@@ -362,6 +367,18 @@ jobs:
 
       - name: Resolve dependencies
         run: flutter pub get
+
+      # The metainfo carries its release as a literal, because a software centre
+      # reads that file and never the tag. It is rewritten here from the version
+      # job's output so the two cannot disagree, and the rewrite is checked:
+      # a sed that matched nothing would be a Flatpak that says 1.0.0 forever.
+      - name: Stamp the version on the metainfo
+        run: |
+          v="${{ needs.version.outputs.name }}"
+          d="$(date -u +%F)"
+          f=packaging/linux/dev.quire.atril.metainfo.xml
+          sed -i -E "s|<release version=\"[^\"]*\" date=\"[^\"]*\"/>|<release version=\"$v\" date=\"$d\"/>|" "$f"
+          grep -Fq "<release version=\"$v\" date=\"$d\"/>" "$f"
 
       # A Flatpak is not signed by a certificate: what a repository is trusted
       # by is its GPG key, and a single-file bundle carries none. So this target

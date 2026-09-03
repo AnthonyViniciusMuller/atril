@@ -43,6 +43,10 @@
 
   <content_rating type="oars-1.1"/>
 
+  <!-- A literal, because a software centre reads this file and never the tag.
+       A tagged build rewrites the line from the tag in release.yml before the
+       Flatpak is built, so what is committed here is the last release somebody
+       stamped by hand and not necessarily the current one. -->
   <releases>
     <release version="1.0.0" date="2026-09-01"/>
   </releases>

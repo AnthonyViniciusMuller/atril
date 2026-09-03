@@ -430,10 +430,14 @@ flutter:
 # The Windows package. `dart run msix:create` reads this after
 # `flutter build windows --release` and wraps the bundle.
 #
-# There is deliberately no `msix_version` here: msix takes `major.minor.patch`
-# from the `version:` field above and appends a zero, so the installer's version
-# and the application's are one number in one place. And there is deliberately
-# no certificate: the release workflow passes `--certificate-path` when it has
+# There is deliberately no `msix_version` here. On a laptop msix takes
+# `major.minor.patch` from the `version:` field above and appends a zero, so a
+# local package and the application are one number in one place. A tagged build
+# is not a laptop: the release workflow derives its version from the tag and
+# hands it to every target, and for this one that is `--version` on
+# `msix:create`, because the pubspec still says 1.0.0 whatever the tag says —
+# phase 14 found the MSIX and the Flatpak both shipping that number. And there
+# is deliberately no certificate: the release workflow passes `--certificate-path` when it has
 # one, and when it does not the package is signed with the test certificate
 # this tool falls back to and the artifact is named so that nobody mistakes it
 # for a release.
