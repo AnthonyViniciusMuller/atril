@@ -153,6 +153,7 @@
   "ebookDeleted": "{title} was deleted.",
   "ebookDeleteUndo": "Undo",
   "ebookDeleteFailed": "This book could not be deleted.",
+  "ebookRestoreFailed": "{title} could not be brought back.",
   "ebookRestored": "{title} is back in your library.",
 
   "shelvesTitle": "Shelves",

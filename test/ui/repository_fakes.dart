@@ -897,7 +897,11 @@ final class FakeLibraryRepository implements LibraryRepository {
   Future<Result<void>> restoreEbook(String ebookId) async {
     restored.add(ebookId);
 
-    return const Result<void>.ok(null);
+    final refused = refusal;
+
+    return refused == null
+        ? const Result<void>.ok(null)
+        : Result<void>.error(refused);
   }
 
   /// The works this device keeps, which starts as every one it holds.

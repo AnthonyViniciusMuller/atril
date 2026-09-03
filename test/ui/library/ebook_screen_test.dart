@@ -351,6 +351,41 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(library.restored, <String>[_work]);
+      expect(
+        find.text(l10n.ebookRestored('Grande Sertão: Veredas')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('says so when the undo itself was refused', (
+      WidgetTester tester,
+    ) async {
+      // The undo runs after this screen has gone, and what it answered used to
+      // be discarded: a restore the node refused announced that the book was
+      // back, over a shelf that did not have it.
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, l10n.ebookDelete));
+      await tester.pumpAndSettle();
+
+      library.refusal = Exception('the replica would not write');
+
+      await tester.tap(find.text(l10n.ebookDeleteUndo));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(l10n.ebookRestoreFailed('Grande Sertão: Veredas')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l10n.ebookRestored('Grande Sertão: Veredas')),
+        findsNothing,
+      );
     });
   });
 
@@ -437,6 +472,42 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(library.filings, <(String, String, bool)>[(_work, 'b', false)]);
+    });
+
+    testWidgets('says a refused mark where the mark was made', (
+      WidgetTester tester,
+    ) async {
+      // Beside the list and while the dialog is open. The check that ran after
+      // it closed was both too late and unreliable: the command clears its
+      // result on the next toggle, so a refusal followed by a mark that worked
+      // was reported as a success.
+      final library = await pump(tester);
+
+      library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+      library.groupings.add(
+        Result<List<Collection>>.ok(<Collection>[
+          Collection(
+            id: 'b',
+            name: 'Para reler',
+            kind: CollectionKind.collection,
+            createdAt: DateTime.utc(2026),
+            revision: _revision,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(l10n.ebookShelvesEdit));
+      await tester.pumpAndSettle();
+
+      library.refusal = Exception('the replica would not write');
+
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+
+      // Still open, and saying so.
+      expect(find.text(l10n.ebookShelvesDialogTitle), findsOneWidget);
+      expect(find.text(l10n.ebookShelvesFailed), findsOneWidget);
     });
 
     testWidgets('says so when the reader has no shelves to choose from', (

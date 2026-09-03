@@ -515,6 +515,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get ebookDeleteFailed => 'Não foi possível excluir este livro.';
 
   @override
+  String ebookRestoreFailed(String title) {
+    return 'Não foi possível trazer $title de volta.';
+  }
+
+  @override
   String ebookRestored(String title) {
     return '$title voltou para o acervo.';
   }
@@ -2151,6 +2156,11 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get ebookDeleteFailed => 'Não foi possível excluir este livro.';
+
+  @override
+  String ebookRestoreFailed(String title) {
+    return 'Não foi possível trazer $title de volta.';
+  }
 
   @override
   String ebookRestored(String title) {

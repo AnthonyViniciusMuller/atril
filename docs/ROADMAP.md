@@ -1833,10 +1833,18 @@ merged in order, which is why each fix names the section it belongs to and touch
       failure that is not an `Exception` — a `TypeError` from a bridge answering an unexpected
       shape — becomes an `AppException` carrying it as its cause instead of escaping the
       `Command` as an unhandled error over a book that had merely failed to open
-- [ ] `fix: announce a restore or a filing that failed` — the delete's *undo* discards the
-      result and reports success, and the shelves dialog checks only the last toggle after it
-      closes. Route the undo through a command and surface each toggle's failure where it
-      happened
+- [x] `fix: announce a restore or a filing that failed` — the delete's *undo* awaited
+      `restoreEbook` and announced *the book is back* whatever it answered, over a shelf that did
+      not have it; and the shelves dialog checked `model.file.result` once, after it closed,
+      which is both too late and wrong — the command clears its result on the next run, so a
+      refusal followed by a mark that worked was reported as a success. **The undo is a
+      `Command0` on the view model and the filing's refusal is shown beside the list that raised
+      it**, while the dialog is still open, with the after-the-fact message kept as a second
+      chance for a reader who closed on it. The undo's command is the one place this sub-section
+      leans on another of its own fixes: it runs *after* the screen has gone, so the view model
+      that owns it is already disposed, and that is sound exactly because a disposed command now
+      finishes its action and keeps its result and only stops notifying. It also takes the
+      repository out of the widget, which is what the screen was reaching for before
 - [ ] `fix: drop a bridge message the host does not understand` — the CEF host decodes and
       casts without a guard, `_request` hangs thirty seconds where `_call` refuses at once, a
       second `readyToLoad` completes a completed completer, and the engine server sends

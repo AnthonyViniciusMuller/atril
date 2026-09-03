@@ -37,6 +37,7 @@ final class EbookViewModel extends ChangeNotifier {
       (EbookEdits edits) => library.editEbook(ebookId, edits),
     );
     delete = Command0<void>(library.deleteEbook.of(ebookId));
+    restore = Command0<void>(library.restoreEbook.of(ebookId));
     file = Command1<void, ({String collectionId, bool filed})>(
       (({String collectionId, bool filed}) change) => library.fileEbook(
         ebookId: ebookId,
@@ -75,6 +76,18 @@ final class EbookViewModel extends ChangeNotifier {
   /// It is a tombstone and never a removal, which is what makes the undo one
   /// operation carrying nothing rather than a record to rebuild.
   late final Command0<void> delete;
+
+  /// UC01, undo. Lifts the tombstone [delete] wrote.
+  ///
+  /// **It is run after this screen has gone**, which is the one thing worth
+  /// saying about it: the undo is offered in the message that follows the
+  /// deletion, and by then the reader is back on the shelf and this view model
+  /// has been disposed. That is safe because a `Command` disposed mid-run
+  /// finishes its action and keeps its result, and tells nobody — which is a
+  /// property this phase gave it. What it replaces is the screen reaching for
+  /// the repository itself and discarding what it answered, so an undo that
+  /// the node refused announced that the book was back.
+  late final Command0<void> restore;
 
   /// UC03. Files the work under a grouping, or takes it out of one.
   ///
@@ -156,6 +169,15 @@ final class EbookViewModel extends ChangeNotifier {
     unawaited(_content.cancel());
     unawaited(_shelves.cancel());
     unawaited(_allShelves.cancel());
+    // The commands are disposed with the model, `restore` included: it may be
+    // run after this point, and a disposed command runs and keeps its result.
+    save.dispose();
+    delete.dispose();
+    restore.dispose();
+    file.dispose();
+    keep.dispose();
+    release.dispose();
+    download.dispose();
     super.dispose();
   }
 

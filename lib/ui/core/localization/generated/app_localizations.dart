@@ -939,6 +939,12 @@ abstract class AppLocalizations {
   /// **'Não foi possível excluir este livro.'**
   String get ebookDeleteFailed;
 
+  /// Erro mostrado quando desfazer uma exclusão falhou. Nomeia o livro porque a mensagem aparece sobre a biblioteca, longe da tela dele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Não foi possível trazer {title} de volta.'**
+  String ebookRestoreFailed(String title);
+
   /// Confirmação mostrada depois de desfazer uma exclusão.
   ///
   /// In pt_BR, this message translates to:

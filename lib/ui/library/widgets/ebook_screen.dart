@@ -123,10 +123,6 @@ class _EbookScreenState extends State<EbookScreen> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
-    // Read before the screen goes away. The undo runs after this route has
-    // been left, so a callback holding this `context` would be holding a dead
-    // one.
-    final library = context.read<LibraryRepository>();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -166,11 +162,22 @@ class _EbookScreenState extends State<EbookScreen> {
         content: Text(l10n.ebookDeleted(work.title)),
         action: SnackBarAction(
           label: l10n.ebookDeleteUndo,
+          // Through the view model's command and not the repository, even
+          // though this runs after the screen has gone: a command carries the
+          // outcome, and what was here before discarded it and announced the
+          // book was back whether or not it was. A command disposed mid-run
+          // still runs and still keeps its result — it only stops notifying —
+          // which is what makes reading it here sound.
           onPressed: () async {
-            await library.restoreEbook(work.id);
+            await _model.restore.execute();
 
             messenger.showSnackBar(
-              SnackBar(content: Text(l10n.ebookRestored(work.title))),
+              SnackBar(
+                content: Text(switch (_model.restore.result) {
+                  Error<void>() => l10n.ebookRestoreFailed(work.title),
+                  _ => l10n.ebookRestored(work.title),
+                }),
+              ),
             );
           },
         ),
@@ -532,19 +539,44 @@ Future<void> _chooseShelves(BuildContext context, EbookViewModel model) async {
           width: 320,
           child: model.allCollections.isEmpty
               ? Text(l10n.ebookShelvesNone)
-              : ListView(
-                  shrinkWrap: true,
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    for (final shelf in model.allCollections)
-                      CheckboxListTile(
-                        value: model.isFiledUnder(shelf.id),
-                        title: Text(shelf.name),
-                        onChanged: model.file.running
-                            ? null
-                            : (bool? filed) => model.file.execute((
-                                collectionId: shelf.id,
-                                filed: filed ?? false,
-                              )),
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: <Widget>[
+                          for (final shelf in model.allCollections)
+                            CheckboxListTile(
+                              value: model.isFiledUnder(shelf.id),
+                              title: Text(shelf.name),
+                              onChanged: model.file.running
+                                  ? null
+                                  : (bool? filed) => model.file.execute((
+                                      collectionId: shelf.id,
+                                      filed: filed ?? false,
+                                    )),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Beside the marks it belongs to, and while the dialog is
+                    // still open. A message after the dialog closes arrives
+                    // after the reader has stopped looking at the list, and it
+                    // is not even reliable: the command clears its result on
+                    // the next toggle, so a refusal followed by a mark that
+                    // worked was announced as a success.
+                    if (model.file.result case Error<void>())
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          l10n.ebookShelvesFailed,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                        ),
                       ),
                   ],
                 ),
@@ -559,6 +591,9 @@ Future<void> _chooseShelves(BuildContext context, EbookViewModel model) async {
     ),
   );
 
+  // The last toggle, for a reader who closed the dialog on the refusal rather
+  // than reading it. It is a second chance to say the same thing and not the
+  // only one, which is what it used to be.
   if (model.file.result is Error<void>) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.ebookShelvesFailed)));
   }

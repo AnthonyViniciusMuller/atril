@@ -861,6 +861,17 @@
     "description": "Erro geral ao excluir um livro."
   },
 
+  "ebookRestoreFailed": "Não foi possível trazer {title} de volta.",
+  "@ebookRestoreFailed": {
+    "description": "Erro mostrado quando desfazer uma exclusão falhou. Nomeia o livro porque a mensagem aparece sobre a biblioteca, longe da tela dele.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Vidas Secas"
+      }
+    }
+  },
+
   "ebookRestored": "{title} voltou para o acervo.",
   "@ebookRestored": {
     "description": "Confirmação mostrada depois de desfazer uma exclusão.",

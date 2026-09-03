@@ -515,6 +515,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ebookDeleteFailed => 'This book could not be deleted.';
 
   @override
+  String ebookRestoreFailed(String title) {
+    return '$title could not be brought back.';
+  }
+
+  @override
   String ebookRestored(String title) {
     return '$title is back in your library.';
   }
