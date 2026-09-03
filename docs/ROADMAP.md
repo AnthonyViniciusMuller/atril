@@ -1754,9 +1754,15 @@ merged in order, which is why each fix names the section it belongs to and touch
       same evidence the exchange is recorded on: connected, and in the middle of nothing. A
       failure to prune is logged and no more — a table that did not shrink is not a reason to end
       a channel that is working. No column was added, so the schema is untouched
-- [ ] `fix: report a peer whose clock is far ahead` — `observe` returns whether the peer is
+- [x] `fix: report a peer whose clock is far ahead` — `observe` returns whether the peer is
       past `maxClockDrift` and documents that the caller's job is to report it; the reconciler
-      discards the answer. Log it once per device
+      discarded the answer, and it is the only caller. **It is a warning once per device**, held
+      in a set that lives as long as the reconciler, because the next operation from that peer
+      carries the same news and a line per operation is a log nobody reads. What the warning has
+      to convey is why it matters rather than that it happened: a device stamping that far ahead
+      wins *every* tie-break against this one, so a reader's edits keep losing to a wrong clock
+      and nothing on any screen would ever say so. The operation itself is applied exactly as any
+      other — the answer is about the clock and not about the change
 - [ ] `refactor: share the origin lookup and the revision reader` — three copies of the origin
       domain lookup, four of the row-to-revision body, and a set that is only ever asked
       whether it is empty

@@ -121,6 +121,9 @@ final class Reconciler {
   final AtrilDatabase _database;
   final HybridClock _clock;
 
+  /// The devices already reported for a clock too far ahead of this one.
+  final Set<String> _skewed = <String>{};
+
   /// Applies [operation] to the replica, and answers for it.
   ///
   /// The whole of it is one transaction: the record, the causal state the next
@@ -133,7 +136,9 @@ final class Reconciler {
     // because it is not part of the replica: what it guarantees is that the
     // next change this device stamps is stamped after everything it has seen,
     // and that holds whether or not the operation below is applied.
-    _clock.observe(operation.createdAt);
+    if (!_clock.observe(operation.createdAt)) {
+      _reportSkew(operation);
+    }
 
     return _database.transaction(() async {
       if (await _database.syncDao.hasApplied(operation.id)) {
@@ -638,6 +643,32 @@ final class Reconciler {
     }
 
     return _remembered(operation, key, recordId);
+  }
+
+  /// Reports a peer whose clock is further ahead than [maxClockDrift], once
+  /// for each device.
+  ///
+  /// [HybridClock.observe] answers whether it followed the instant, and it
+  /// documents that reporting the refusal is the caller's job — this is the
+  /// only caller. The operation is applied like any other: the answer is about
+  /// the *clock*, not about the change. What it costs while it lasts is real
+  /// and invisible from a screen, which is why it is a warning and not a fine:
+  /// every version that peer stamps beats this device's on the tie-break, so a
+  /// reader's edits keep quietly losing to a device whose clock is wrong.
+  ///
+  /// Once per device, because the next operation from it carries the same news
+  /// and a log that repeats itself per operation is a log nobody reads. The set
+  /// lives as long as this reconciler, which is as long as the app runs.
+  void _reportSkew(Operation operation) {
+    if (!_skewed.add(operation.deviceId.toLowerCase())) {
+      return;
+    }
+
+    _log.warning(
+      'the device ${operation.deviceId} is stamping changes more than '
+      '$maxClockDrift ahead of this one, and they will win every tie-break '
+      'against it until its clock is corrected: $operation',
+    );
   }
 
   Future<bool> _holdsWork(String id) async =>

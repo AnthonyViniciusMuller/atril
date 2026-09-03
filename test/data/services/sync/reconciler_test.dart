@@ -5,8 +5,10 @@ import 'package:atril/domain/crdt/hybrid_clock.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/operation.dart';
 import 'package:atril/domain/models/record_key.dart';
+import 'package:atril/utils/logging.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logging/logging.dart';
 
 const String _here = '11111111-1111-4111-8111-111111111111';
 const String _there = '22222222-2222-4222-8222-222222222222';
@@ -780,6 +782,80 @@ void main() {
       );
 
       expect(verdict.isRejected, isTrue);
+    });
+  });
+
+  group('a peer whose clock is far ahead', () {
+    late List<LogRecord> records;
+
+    setUp(() {
+      records = <LogRecord>[];
+
+      installLogging(level: Level.ALL, sink: records.add);
+    });
+
+    tearDown(resetLogging);
+
+    /// The reports about a clock, which are the only records that say *ahead*.
+    List<LogRecord> reports() => records
+        .where(
+          (LogRecord record) =>
+              record.level >= Level.WARNING && record.message.contains('ahead'),
+        )
+        .toList();
+
+    test('is reported once, and not once for every change it makes', () async {
+      // `observe` refuses to follow an instant that far past this device's
+      // wall clock and answers that it did not; the reconciler was throwing
+      // the answer away. What it costs is invisible from a screen — every
+      // version that peer stamps beats this device's on the tie-break — so
+      // somebody has to be told, and told once.
+      const Duration ahead = Duration(minutes: 30);
+      final reconciler = open().reconciler;
+
+      expect(
+        (await reconciler.reconcile(_import(at: ahead))).isApplied,
+        isTrue,
+      );
+
+      await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.collection,
+          targetId: _shelf,
+          delta: const <String, Object?>{fieldName: 'Para reler'},
+          counter: 2,
+          at: ahead,
+        ),
+      );
+
+      expect(reports(), hasLength(1));
+      expect(reports().single.message, contains(_here));
+    });
+
+    test('is reported for each device that is', () async {
+      const Duration ahead = Duration(minutes: 30);
+      final reconciler = open().reconciler;
+
+      await reconciler.reconcile(_import(at: ahead));
+      await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.collection,
+          targetId: _shelf,
+          delta: const <String, Object?>{fieldName: 'Para reler'},
+          device: _there,
+          at: ahead,
+        ),
+      );
+
+      expect(reports(), hasLength(2));
+    });
+
+    test('says nothing about a clock within the drift it allows', () async {
+      final reconciler = open().reconciler;
+
+      await reconciler.reconcile(_import(at: const Duration(minutes: 1)));
+
+      expect(reports(), isEmpty);
     });
   });
 
