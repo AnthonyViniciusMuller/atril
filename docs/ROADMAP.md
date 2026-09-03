@@ -1999,8 +1999,22 @@ merged in order, which is why each fix names the section it belongs to and touch
       because nothing in `lib/` reads the version — and a manual run's `0.0.0.0` passes msix's
       own check but whether `MakeAppx` accepts a zero major is not something this machine can
       answer. Nothing here was executed: both jobs run on hosts this machine is not
-- [ ] `fix: name the application the same on every target` — Android, Linux and Windows show
-      `atril` where the other three show `Atril`
+- [x] `fix: name the application the same on every target` — Android, Linux and Windows show
+      `atril` where the other three show `Atril`. **Four, not three: macOS was lowercase too**, and
+      the entry above was wrong about it. `PRODUCT_NAME = atril` is what `CFBundleName` expands
+      to, which is the application menu and the About panel, and it is also the name of the
+      bundle on disk, which is what Finder shows — so the fix there is the product name and not a
+      plist key, and it moves `atril.app` to `Atril.app` through the Xcode project, the shared
+      scheme and `packaging/macos/package.sh`, which named the path. iOS had `CFBundleName`
+      lowercase under a capitalised `CFBundleDisplayName`; it is capitalised for the same reason
+      even though the home screen never showed it. What deliberately **stays lowercase is every
+      name that is a file**: `atril` the executable on Linux and Windows, `atril.exe` in
+      `OriginalFilename`, `InternalName` beside it, `Exec=atril` in the desktop file and
+      `command: atril` in the Flatpak manifest, because the desktop file's `StartupWMClass` and
+      the manifest are matched by that name and a capital there is a launcher that finds nothing.
+      Nothing was compiled for this commit on this machine: the Linux release build of the strip
+      below is what exercises the GTK title, and Android, Windows, iOS and macOS are read and
+      left to the four CI jobs — the macOS rename being the one of the five that can fail there
 - [ ] `fix: suffix the artifacts the same way` — Android puts *unsigned* before the target and
       macOS and Windows after it
 - [ ] `build: strip libcef in every release bundle` — the strip lives only in the Flatpak

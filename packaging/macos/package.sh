@@ -15,7 +15,7 @@
 #                            Absent: the bundle is not notarized or stapled.
 set -euo pipefail
 
-app="build/macos/Build/Products/Release/atril.app"
+app="build/macos/Build/Products/Release/Atril.app"
 out="build/macos/packaged"
 
 if [[ ! -d $app ]]; then
