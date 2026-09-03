@@ -40,7 +40,7 @@ import '../../../utils/command.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
-import '../../core/themes/colors.dart';
+import 'mark_painter.dart';
 
 final _log = loggerFor('ui/reader');
 
@@ -81,12 +81,6 @@ AppException _failureOf(Object error, String op) => error is AppException
         op: op,
         cause: error,
       );
-
-/// How solid a mark is painted over the page.
-///
-/// A highlight a reader cannot read through is a highlight that hid the
-/// sentence it was about, which is the one thing it was for.
-const double readerMarkOpacity = 0.35;
 
 /// The state of the reader's screen.
 final class ReaderViewModel extends ChangeNotifier {
@@ -217,7 +211,7 @@ final class ReaderViewModel extends ChangeNotifier {
   EpubPosition? _position;
   EpubSelection? _selection;
   List<Annotation> _annotations = const <Annotation>[];
-  final Map<String, AnnotationKind?> _painted = <String, AnnotationKind?>{};
+  late final MarkPainter _painter = MarkPainter(host);
   bool _opened = false;
   bool _chromeVisible = true;
   bool _disposed = false;
@@ -394,7 +388,7 @@ final class ReaderViewModel extends ChangeNotifier {
         // drawn: a mark drawn into an engine with no book in it is a call that
         // fails for a reason nobody could act on.
         _opened = true;
-        _painted.clear();
+        _painter.forget();
         unawaited(_repaint());
 
         notifyListeners();
@@ -538,52 +532,20 @@ final class ReaderViewModel extends ChangeNotifier {
 
   /// Brings the page's paint in line with the list.
   ///
-  /// It draws what is not drawn, erases what is no longer in the list, and
-  /// redraws a mark whose kind changed — which is what happens when a highlight
-  /// is given words and becomes a note. Nothing here remembers a gesture: the
-  /// list is the truth, so a mark that arrived by synchronization is painted by
-  /// exactly the same code as one made on this device a second ago.
+  /// The diff itself is [MarkPainter]'s, which owns the one piece of state it
+  /// needs — what is on the page — and has its own test. What is left here is
+  /// when to run it and what to do when it fails, and the answer to the second
+  /// is a log line: the book is on screen and readable, what is missing is the
+  /// paint over it, and an error banner across a page because a highlight did
+  /// not draw would be worse than the thing it reports.
   Future<void> _repaint() async {
     if (!_opened || _disposed) {
       return;
     }
 
-    final Map<String, AnnotationKind?> wanted = <String, AnnotationKind?>{
-      for (final Annotation mark in _annotations)
-        // A bookmark is a position and covers no range, so there is nothing to
-        // paint over. It is shown in the chrome instead.
-        if (mark.kind != AnnotationKind.bookmark) mark.locator: mark.kind,
-    };
-
     try {
-      for (final String range in _painted.keys.toList()) {
-        if (wanted[range] != _painted[range]) {
-          await host.erase(range);
-        }
-      }
-
-      for (final MapEntry<String, AnnotationKind?> mark in wanted.entries) {
-        if (_painted[mark.key] != mark.value) {
-          await host.draw(
-            EpubMark(
-              cfiRange: mark.key,
-              color: mark.value == AnnotationKind.note
-                  ? atrilNote
-                  : atrilHighlight,
-              opacity: readerMarkOpacity,
-            ),
-          );
-        }
-      }
-
-      _painted
-        ..clear()
-        ..addAll(wanted);
+      await _painter.reconcile(_annotations);
     } on Object catch (error) {
-      // The paint is out of step with the list and the next emission will try
-      // again. What has been drawn so far is forgotten rather than assumed, so
-      // that the retry is a full redraw and not a diff against a lie.
-      _painted.clear();
       _log.warning('the marks in $ebookId could not be drawn', error);
     }
   }

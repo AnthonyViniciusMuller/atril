@@ -1912,10 +1912,21 @@ merged in order, which is why each fix names the section it belongs to and touch
       `Semantics(button:)` over a widget that is otherwise an unnamed tap target on top of
       somebody else's document; and Escape toggles the chrome, which was the one control
       reachable by nothing but a tap on the page
-- [ ] `refactor: split the reader and the library screens` — nine widgets and four helpers in
-      one file, the menus and the grid in another, and a view model that mixes the position
-      debounce, the paint reconciliation and the mark commands. The paint diff becomes an object
-      with its own test
+- [x] `refactor: split the reader and the library screens` — a pure move, with one thing lifted
+      out of it. `reader_screen.dart` was 913 lines and is 156: the body and its two refusals,
+      the chrome with the bar and the progress, the contents sheet, the selection's actions and
+      the note dialog are each a file, and what is left is the screen — the view model it owns,
+      the host's view built once, and the keyboard. `library_screen.dart` was 740 and is 186,
+      beside the shelf and its two shapes, the work's tile and card with the cover, the filter
+      row, the two menus and the body with its three emptinesses. The widgets that moved became
+      public, which is what a split costs in Dart and is also what the file names now say. The
+      lifted thing is **`MarkPainter`, which is the one part of the reader that is an algorithm
+      rather than a screen**: it owns the map of what is on the page, the diff against it is the
+      whole of the reconciliation, and a failure leaves it believing nothing is painted so that
+      the next emission is a full redraw and not a diff against a lie. It had needed a host, a
+      repository and a settings store to exist; it now needs a recorder, and its seven tests say
+      things the screen's tests could only imply — that a bookmark paints nothing, that a
+      highlight given words is erased and drawn again, that `forget` erases nothing
 - [ ] `perf: hand the desktop host one copy of the book` — base64, then JSON, then the script
       source: three transient copies of the book beside the one the view model holds. Serve it
       from the engine server under a one-shot path, or encode it once

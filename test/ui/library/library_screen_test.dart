@@ -9,6 +9,7 @@ import 'package:atril/domain/models/ebook.dart';
 import 'package:atril/domain/models/library_query.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
+import 'package:atril/ui/library/widgets/shelf.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
