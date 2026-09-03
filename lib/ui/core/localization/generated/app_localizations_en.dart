@@ -650,7 +650,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerNextPage => 'Next page';
 
   @override
-  String readerProgress(Object percent) {
+  String readerProgress(int percent) {
     return '$percent% read';
   }
 
@@ -718,7 +718,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerFontSize => 'Type size';
 
   @override
-  String readerFontSizeValue(Object percent) {
+  String readerFontSizeValue(int percent) {
     return '$percent%';
   }
 
@@ -756,7 +756,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryContinueElsewhere => 'On another device';
 
   @override
-  String libraryContinuePercent(Object percent) {
+  String libraryContinuePercent(int percent) {
     return '$percent%';
   }
 

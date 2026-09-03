@@ -1177,7 +1177,7 @@ abstract class AppLocalizations {
   ///
   /// In pt_BR, this message translates to:
   /// **'{percent}% lido'**
-  String readerProgress(Object percent);
+  String readerProgress(int percent);
 
   /// Quanto do livro já foi lido, como valor de uma barra de progresso para leitores de tela. É só o número e o sinal: o framework exige que este valor seja lido como número, então nenhuma palavra entra aqui.
   ///
@@ -1291,7 +1291,7 @@ abstract class AppLocalizations {
   ///
   /// In pt_BR, this message translates to:
   /// **'{percent}%'**
-  String readerFontSizeValue(Object percent);
+  String readerFontSizeValue(int percent);
 
   /// Rótulo do controle que afasta ou aproxima as linhas. É o termo tipográfico, e é o que um leitor brasileiro reconhece.
   ///
@@ -1363,7 +1363,7 @@ abstract class AppLocalizations {
   ///
   /// In pt_BR, this message translates to:
   /// **'{percent}%'**
-  String libraryContinuePercent(Object percent);
+  String libraryContinuePercent(int percent);
 
   /// Ação que grifa o trecho que o leitor acabou de selecionar na página. Aparece na barra que a seleção levanta, sobre o livro.
   ///

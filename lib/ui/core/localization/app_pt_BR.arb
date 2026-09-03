@@ -1082,7 +1082,13 @@
 
   "readerProgress": "{percent}% lido",
   "@readerProgress": {
-    "description": "Quanto do livro já foi percorrido, mostrado na barra inferior do leitor. O número vem do índice de localizações do próprio motor."
+    "description": "Quanto do livro já foi percorrido, mostrado na barra inferior do leitor. O número vem do índice de localizações do próprio motor.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "42"
+      }
+    }
   },
 
   "readingPercentValue": "{percent}%",
@@ -1183,7 +1189,13 @@
 
   "readerFontSizeValue": "{percent}%",
   "@readerFontSizeValue": {
-    "description": "O tamanho escolhido, mostrado ao lado do controle. É porcentagem porque o livro define o próprio corpo em unidades relativas."
+    "description": "O tamanho escolhido, mostrado ao lado do controle. É porcentagem porque o livro define o próprio corpo em unidades relativas.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "120"
+      }
+    }
   },
 
   "readerLineHeight": "Entrelinha",
@@ -1243,7 +1255,13 @@
 
   "libraryContinuePercent": "{percent}%",
   "@libraryContinuePercent": {
-    "description": "Quanto do livro foi percorrido, ao lado da barra na faixa de continuar lendo."
+    "description": "Quanto do livro foi percorrido, ao lado da barra na faixa de continuar lendo.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "42"
+      }
+    }
   },
 
   "readerHighlight": "Grifar",

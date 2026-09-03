@@ -2098,9 +2098,21 @@ merged in order, which is why each fix names the section it belongs to and touch
       `if: always()`, since the run that fails the floor is the one whose report somebody wants.
       The reviewer measured 86.5% at the branch point; the three sub-sections merged before this
       one are what moved it to 87.5. Verified by running it
-- [ ] `fix: declare the percent placeholder` — three messages use `{percent}` without declaring
+- [x] `fix: declare the percent placeholder` — three messages use `{percent}` without declaring
       it, so the generated API takes an `Object` where everything else is typed. Declare it and
-      assert in the ARB test that every placeholder is
+      assert in the ARB test that every placeholder is. **`int`, checked against the call sites
+      rather than assumed**: all three are fed a `.round()`, so the generated
+      `String readerProgress(int percent)` is what the callers were already passing — the two
+      `{percent}` messages that *were* declared, `ebookFileSending` and `ebookDownloading`, are
+      `String` and stay that way, because those are handed a formatted fraction and not a number.
+      An undeclared placeholder is not an error to `gen-l10n`; it silently widens the parameter to
+      `Object`, so the one kind of message that takes a number was the one kind whose argument
+      nothing type-checked. The assertion in `arb_test.dart` is what stops the fourth one:
+      `{name}` and `{name, plural, …}` both count as a use, and a **plural or select branch whose
+      body is one bare word** — `other{livros}` — is skipped, since it is text. Run over the
+      template it finds exactly the three the review named and nothing else across **460
+      messages**, and removing one declaration was checked to fail it. Verified: `make gen-l10n`,
+      the regenerated output committed, `make l10n-check`, the analyzer and 1,215 tests
 - [ ] `ci: surface outdated dependencies` — a non-blocking `pub outdated` on every pull request
 - [ ] `ci: cache the pub cache on linux` — CEF is 658 MB and is fetched on every Linux job
 - [ ] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,

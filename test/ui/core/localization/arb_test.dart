@@ -80,6 +80,52 @@ void main() {
     }
   });
 
+  test('every placeholder in the template is declared', () {
+    // An undeclared placeholder is not an error to `gen-l10n`: it generates the
+    // parameter as `Object`, so the one message that takes a number is the one
+    // message whose argument nothing type-checks, and a call passing the wrong
+    // thing compiles. Three did, until phase 14.
+    //
+    // `{name}` and `{name, plural, …}` are both a use of `name`. What is not is
+    // a plural or select *branch* whose body happens to be one bare word —
+    // `other{livros}` is text and not a placeholder — so a candidate directly
+    // preceded by a branch selector is skipped. Everything else that looks like
+    // an identifier in braces has to be declared.
+    final RegExp candidate = RegExp(r'\{\s*(\w+)\s*[,}]');
+    final RegExp selector = RegExp(
+      r'(?:=\d+|zero|one|two|few|many|other|male|female)\s*$',
+    );
+
+    for (final String message in messagesOf(template)) {
+      final Object? value = template[message];
+      if (value is! String) {
+        continue;
+      }
+
+      final attributes = template['@$message']! as Map<String, Object?>;
+      final Object? placeholders = attributes['placeholders'];
+      final Set<String> declared = placeholders is Map<String, Object?>
+          ? placeholders.keys.toSet()
+          : <String>{};
+
+      final Set<String> used = <String>{};
+      for (final RegExpMatch match in candidate.allMatches(value)) {
+        if (selector.hasMatch(value.substring(0, match.start))) {
+          continue;
+        }
+        used.add(match.group(1)!);
+      }
+
+      expect(
+        used.difference(declared),
+        isEmpty,
+        reason:
+            '$message uses a placeholder it does not declare, so the '
+            'generated parameter is an untyped Object',
+      );
+    }
+  });
+
   test('the translations are not left as the template', () {
     // A copied ARB whose values were never translated passes every other check
     // here. What is exempt is what is genuinely the same in both languages: a

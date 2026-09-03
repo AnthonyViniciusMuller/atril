@@ -651,7 +651,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get readerNextPage => 'Próxima página';
 
   @override
-  String readerProgress(Object percent) {
+  String readerProgress(int percent) {
     return '$percent% lido';
   }
 
@@ -719,7 +719,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get readerFontSize => 'Tamanho da letra';
 
   @override
-  String readerFontSizeValue(Object percent) {
+  String readerFontSizeValue(int percent) {
     return '$percent%';
   }
 
@@ -757,7 +757,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get libraryContinueElsewhere => 'Em outro dispositivo';
 
   @override
-  String libraryContinuePercent(Object percent) {
+  String libraryContinuePercent(int percent) {
     return '$percent%';
   }
 
@@ -2305,7 +2305,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get readerNextPage => 'Próxima página';
 
   @override
-  String readerProgress(Object percent) {
+  String readerProgress(int percent) {
     return '$percent% lido';
   }
 
@@ -2373,7 +2373,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get readerFontSize => 'Tamanho da letra';
 
   @override
-  String readerFontSizeValue(Object percent) {
+  String readerFontSizeValue(int percent) {
     return '$percent%';
   }
 
@@ -2411,7 +2411,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get libraryContinueElsewhere => 'Em outro dispositivo';
 
   @override
-  String libraryContinuePercent(Object percent) {
+  String libraryContinuePercent(int percent) {
     return '$percent%';
   }
 
