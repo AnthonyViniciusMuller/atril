@@ -96,7 +96,7 @@ final class WebviewEpubHost implements EpubHost {
       onTimeout: () => throw AppException(
         kind: ErrorKind.deadlineExceeded,
         message: 'the book did not open within ${epubOpenTimeout.inSeconds}s',
-        code: 'epub_open_timeout',
+        code: codeEpubOpenTimeout,
         op: opEpubHost,
       ),
     );

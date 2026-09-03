@@ -230,6 +230,18 @@
   "readerFailedTitle": "The book could not be opened",
   "@readerFailedTitle": {},
 
+  "readerFailedMessage": "The reader could not open this file. Try again; if it keeps happening, the file may be incomplete.",
+  "@readerFailedMessage": {},
+
+  "readerTimedOutMessage": "The reader did not answer in time. That usually happens with very large files, or just after the app has started.",
+  "@readerTimedOutMessage": {},
+
+  "readerFileBrokenMessage": "This file is an EPUB the reader could not display. It may be damaged or incomplete, and the book stays in your library.",
+  "@readerFileBrokenMessage": {},
+
+  "readerTooLargeMessage": "This file is too large to open on this device.",
+  "@readerTooLargeMessage": {},
+
   "readerRetry": "Try again",
   "@readerRetry": {},
 

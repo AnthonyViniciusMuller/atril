@@ -1104,6 +1104,26 @@
     "description": "Título mostrado quando o motor recusou o arquivo ou a leitura falhou por outro motivo."
   },
 
+  "readerFailedMessage": "O leitor não conseguiu abrir este arquivo. Tente de novo; se continuar, o arquivo pode estar incompleto.",
+  "@readerFailedMessage": {
+    "description": "Corpo padrão do estado de falha ao abrir um livro, quando o motivo não é nenhum dos que têm frase própria. Não repete a mensagem técnica do erro, que vai para o log."
+  },
+
+  "readerTimedOutMessage": "O leitor não respondeu a tempo. Isso costuma acontecer com arquivos muito grandes ou logo depois de abrir o aplicativo.",
+  "@readerTimedOutMessage": {
+    "description": "Corpo mostrado quando o motor não respondeu dentro do prazo de abertura. É a única falha em que tentar de novo costuma resolver."
+  },
+
+  "readerFileBrokenMessage": "Este arquivo é um EPUB que o leitor não conseguiu exibir. Ele pode estar corrompido ou incompleto, e o livro continua no seu acervo.",
+  "@readerFileBrokenMessage": {
+    "description": "Corpo mostrado quando o motor recusou o arquivo em si, e não o formato. Diz que o registro do livro não se perde."
+  },
+
+  "readerTooLargeMessage": "Este arquivo é grande demais para ser aberto neste dispositivo.",
+  "@readerTooLargeMessage": {
+    "description": "Corpo mostrado quando o arquivo passa do tamanho que esta versão consegue ler inteiro na memória."
+  },
+
   "readerRetry": "Tentar de novo",
   "@readerRetry": {
     "description": "Ação que repete a tentativa de abrir o livro."

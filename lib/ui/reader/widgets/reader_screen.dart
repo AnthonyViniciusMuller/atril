@@ -232,6 +232,18 @@ class _ReaderOpening extends StatelessWidget {
 }
 
 /// Why the book is not on screen, and what can be done about it.
+///
+/// **Every sentence here comes out of the ARB and none out of the exception.**
+/// `errors.dart` says what an [AppException]'s message is for: it is
+/// diagnostic, it names hosts and identifiers freely, it is written in the
+/// language whoever raised it happened to be writing in — the hosts write
+/// theirs in English — and it goes to the log. What a reader is shown is
+/// chosen from the code, which is exactly what a code is for: it survives a
+/// rewording on either side of the wire.
+///
+/// The codes are named constants and not literals, so that a failure this
+/// screen has a sentence for cannot be renamed where it is raised without the
+/// two going out of step visibly.
 class _ReaderRefusal extends StatelessWidget {
   const _ReaderRefusal({required this.model, required this.error});
 
@@ -244,6 +256,11 @@ class _ReaderRefusal extends StatelessWidget {
     final String? code = error is AppException
         ? (error as AppException).code
         : null;
+
+    final Widget retry = FilledButton(
+      onPressed: model.open.execute,
+      child: Text(l10n.readerRetry),
+    );
 
     final (String title, String message, Widget? action) = switch (code) {
       codeContentNotOnDevice => (
@@ -262,16 +279,36 @@ class _ReaderRefusal extends StatelessWidget {
         l10n.readerFormatMessage,
         null,
       ),
-      _ => (
-        l10n.readerFailedTitle,
-        error is AppException
-            ? (error as AppException).message
-            : error.toString(),
-        FilledButton(
-          onPressed: model.open.execute,
-          child: Text(l10n.readerRetry),
-        ),
+      // The same two sentences the book's own screen says, because it is the
+      // same event: another device deleted this work and the tombstone
+      // arrived. A second wording for one fact would be two explanations of
+      // one thing.
+      codeEbookNotFound => (
+        l10n.ebookNotFoundTitle,
+        l10n.ebookNotFoundMessage,
+        null,
       ),
+      // No retry on either of these: reading the same bytes again cannot make
+      // the file smaller or make the engine like it, and a button that does
+      // nothing is worse than none.
+      codeEbookTooLarge => (
+        l10n.readerFailedTitle,
+        l10n.readerTooLargeMessage,
+        null,
+      ),
+      codeEpubDisplayFailed => (
+        l10n.readerFailedTitle,
+        l10n.readerFileBrokenMessage,
+        null,
+      ),
+      // The one failure where trying again is the whole answer: a webview that
+      // had not come up, a CEF still starting.
+      codeEpubOpenTimeout => (
+        l10n.readerFailedTitle,
+        l10n.readerTimedOutMessage,
+        retry,
+      ),
+      _ => (l10n.readerFailedTitle, l10n.readerFailedMessage, retry),
     };
 
     // Opaque, like the spinner: it covers whatever the engine left on the page

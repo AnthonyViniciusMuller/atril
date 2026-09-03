@@ -82,7 +82,7 @@ final class ReadingRepositoryImpl implements ReadingRepository {
           AppException(
             kind: ErrorKind.notFound,
             message: 'this device does not hold the work $ebookId',
-            code: 'ebook_not_found',
+            code: codeEbookNotFound,
             op: opOpenBook,
           ),
         );
@@ -125,7 +125,7 @@ final class ReadingRepositoryImpl implements ReadingRepository {
           AppException(
             kind: ErrorKind.resourceExhausted,
             message: 'the file of $ebookId is too large for this build to open',
-            code: 'ebook_too_large',
+            code: codeEbookTooLarge,
             op: opOpenBook,
           ),
         );

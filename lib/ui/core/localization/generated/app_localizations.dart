@@ -1209,6 +1209,30 @@ abstract class AppLocalizations {
   /// **'Não foi possível abrir o livro'**
   String get readerFailedTitle;
 
+  /// Corpo padrão do estado de falha ao abrir um livro, quando o motivo não é nenhum dos que têm frase própria. Não repete a mensagem técnica do erro, que vai para o log.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O leitor não conseguiu abrir este arquivo. Tente de novo; se continuar, o arquivo pode estar incompleto.'**
+  String get readerFailedMessage;
+
+  /// Corpo mostrado quando o motor não respondeu dentro do prazo de abertura. É a única falha em que tentar de novo costuma resolver.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O leitor não respondeu a tempo. Isso costuma acontecer com arquivos muito grandes ou logo depois de abrir o aplicativo.'**
+  String get readerTimedOutMessage;
+
+  /// Corpo mostrado quando o motor recusou o arquivo em si, e não o formato. Diz que o registro do livro não se perde.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este arquivo é um EPUB que o leitor não conseguiu exibir. Ele pode estar corrompido ou incompleto, e o livro continua no seu acervo.'**
+  String get readerFileBrokenMessage;
+
+  /// Corpo mostrado quando o arquivo passa do tamanho que esta versão consegue ler inteiro na memória.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Este arquivo é grande demais para ser aberto neste dispositivo.'**
+  String get readerTooLargeMessage;
+
   /// Ação que repete a tentativa de abrir o livro.
   ///
   /// In pt_BR, this message translates to:

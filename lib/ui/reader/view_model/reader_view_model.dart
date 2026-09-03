@@ -56,6 +56,32 @@ final _log = loggerFor('ui/reader');
 /// once.
 const Duration readingPositionDebounce = Duration(seconds: 3);
 
+/// The operation an open reports a failure under.
+const String opReaderOpen = 'ui/reader: open';
+
+/// The operation a command against the host reports a failure under.
+const String opReaderCommand = 'ui/reader: command';
+
+/// [error] as the failure this layer carries, under [op].
+///
+/// The catches around the host are `on Object` and not `on Exception`, and
+/// that is the boundary rule rather than defensiveness: a bridge answering
+/// with a shape nobody expected raises a `TypeError`, which is an `Error` and
+/// not an `Exception`, and the narrower catch let it out of the `Command` —
+/// an unhandled error in the zone, over a book that had merely failed to open.
+/// The kind is read from the error rather than guessed at, so a
+/// `TimeoutException` from the host stays a deadline.
+AppException _failureOf(Object error, String op) => error is AppException
+    ? error
+    : AppException(
+        kind: AppException.kindOf(error),
+        // Diagnostic and never shown: the screen chooses its sentence from the
+        // kind and the code, which is what keeps this file free of language.
+        message: '$error', // l10n-ignore
+        op: op,
+        cause: error,
+      );
+
 /// How solid a mark is painted over the page.
 ///
 /// A highlight a reader cannot read through is a highlight that hid the
@@ -293,7 +319,7 @@ final class ReaderViewModel extends ChangeNotifier {
 
     try {
       await host.apply(style);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       _log.warning('the page could not be restyled', error);
     }
 
@@ -336,7 +362,7 @@ final class ReaderViewModel extends ChangeNotifier {
 
     switch (book) {
       case Error<EpubBook>(:final Exception error):
-        return Result<void>.error(error);
+        return _refused(error);
       case Ok<EpubBook>(:final EpubBook value):
         // The record is read alongside and its failure is not fatal: a chrome
         // with no title above a book that opened is worse than nothing to look
@@ -350,8 +376,8 @@ final class ReaderViewModel extends ChangeNotifier {
         try {
           await host.apply(_style);
           await host.open(value, at: at);
-        } on Exception catch (error) {
-          return Result<void>.error(error);
+        } on Object catch (error) {
+          return _refused(_failureOf(error, opReaderOpen));
         }
 
         // Asked for after the book is open, because that is when the engine has
@@ -375,6 +401,19 @@ final class ReaderViewModel extends ChangeNotifier {
 
         return const Result<void>.ok(null);
     }
+  }
+
+  /// Records why the book did not open, and hands the failure on.
+  ///
+  /// The log is the only place the diagnostic message goes. The screen chooses
+  /// its sentence from the code, for the reason `errors.dart` gives: the
+  /// message names identifiers, it is written in whatever language the layer
+  /// that raised it was written in — the hosts write English — and a reader
+  /// shown it would be reading somebody's debugging.
+  Result<void> _refused(Exception error) {
+    _log.warning('$ebookId did not open', error);
+
+    return Result<void>.error(error);
   }
 
   Future<Result<Annotation>> _highlight() => _mark(
@@ -540,7 +579,7 @@ final class ReaderViewModel extends ChangeNotifier {
       _painted
         ..clear()
         ..addAll(wanted);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       // The paint is out of step with the list and the next emission will try
       // again. What has been drawn so far is forgotten rather than assumed, so
       // that the retry is a full redraw and not a diff against a lie.
@@ -563,10 +602,10 @@ final class ReaderViewModel extends ChangeNotifier {
       await action();
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       _log.warning('the reader of $ebookId refused a command', error);
 
-      return Result<void>.error(error);
+      return Result<void>.error(_failureOf(error, opReaderCommand));
     }
   }
 

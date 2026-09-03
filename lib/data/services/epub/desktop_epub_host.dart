@@ -236,7 +236,7 @@ final class DesktopEpubHost implements EpubHost {
   Never _openTimedOut() => throw AppException(
     kind: ErrorKind.deadlineExceeded,
     message: 'the book did not open within ${epubOpenTimeout.inSeconds}s',
-    code: 'epub_open_timeout',
+    code: codeEpubOpenTimeout,
     op: opDesktopEpubHost,
   );
 
@@ -644,7 +644,7 @@ final class DesktopEpubHost implements EpubHost {
         const AppException(
           kind: ErrorKind.invalidArgument,
           message: 'the engine could not display this book',
-          code: 'epub_display_failed',
+          code: codeEpubDisplayFailed,
           op: opDesktopEpubHost,
         ),
       );

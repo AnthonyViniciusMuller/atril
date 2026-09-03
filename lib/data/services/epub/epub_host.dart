@@ -377,6 +377,20 @@ abstract interface class EpubHostFactory {
   EpubHost create();
 }
 
+/// The stable code of a book the engine never answered about.
+///
+/// It is a host that did not call back within [epubOpenTimeout] — a webview
+/// that never loaded, a CEF that never came up — and it is retryable, which is
+/// what separates it from the two below.
+const String codeEpubOpenTimeout = 'epub_open_timeout';
+
+/// The stable code of a file the engine refused to display.
+///
+/// The format is one this build renders and this particular file is not one it
+/// can: a zip that does not open, a spine that names nothing. Retrying reads
+/// the same bytes again.
+const String codeEpubDisplayFailed = 'epub_display_failed';
+
 /// How long a book gets to open before the reader is told it did not.
 ///
 /// A webview that never calls back leaves a reader looking at a spinner with

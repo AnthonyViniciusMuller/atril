@@ -34,6 +34,21 @@ const String codeContentNotOnDevice = 'content_not_on_device';
 /// shape of the promise the roadmap made.
 const String codeFormatNotReadable = 'format_not_readable';
 
+/// The stable code of a work this device no longer holds a row for.
+///
+/// Another device deleted it while this one was showing it, the tombstone
+/// arrived, and there is nothing to open. It is the same state the book's own
+/// screen names, and the reader is told the same thing here.
+const String codeEbookNotFound = 'ebook_not_found';
+
+/// The stable code of a file too large for this build to read whole.
+///
+/// epub.js reads a zip by seeking in it, so the file is held in memory while
+/// it is open, and the implementation names the size where this build stops.
+/// Retrying reads the same bytes again, so the refusal offers nothing to
+/// press.
+const String codeEbookTooLarge = 'ebook_too_large';
+
 /// Where one device stopped in one work, as a screen shows it.
 ///
 /// **Every device's position is its own row and its own answer.** RN01 asks for

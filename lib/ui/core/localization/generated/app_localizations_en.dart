@@ -670,6 +670,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerFailedTitle => 'The book could not be opened';
 
   @override
+  String get readerFailedMessage =>
+      'The reader could not open this file. Try again; if it keeps happening, the file may be incomplete.';
+
+  @override
+  String get readerTimedOutMessage =>
+      'The reader did not answer in time. That usually happens with very large files, or just after the app has started.';
+
+  @override
+  String get readerFileBrokenMessage =>
+      'This file is an EPUB the reader could not display. It may be damaged or incomplete, and the book stays in your library.';
+
+  @override
+  String get readerTooLargeMessage =>
+      'This file is too large to open on this device.';
+
+  @override
   String get readerRetry => 'Try again';
 
   @override

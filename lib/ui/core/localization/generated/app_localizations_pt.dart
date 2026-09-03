@@ -671,6 +671,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get readerFailedTitle => 'Não foi possível abrir o livro';
 
   @override
+  String get readerFailedMessage =>
+      'O leitor não conseguiu abrir este arquivo. Tente de novo; se continuar, o arquivo pode estar incompleto.';
+
+  @override
+  String get readerTimedOutMessage =>
+      'O leitor não respondeu a tempo. Isso costuma acontecer com arquivos muito grandes ou logo depois de abrir o aplicativo.';
+
+  @override
+  String get readerFileBrokenMessage =>
+      'Este arquivo é um EPUB que o leitor não conseguiu exibir. Ele pode estar corrompido ou incompleto, e o livro continua no seu acervo.';
+
+  @override
+  String get readerTooLargeMessage =>
+      'Este arquivo é grande demais para ser aberto neste dispositivo.';
+
+  @override
   String get readerRetry => 'Tentar de novo';
 
   @override
@@ -2291,6 +2307,22 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get readerFailedTitle => 'Não foi possível abrir o livro';
+
+  @override
+  String get readerFailedMessage =>
+      'O leitor não conseguiu abrir este arquivo. Tente de novo; se continuar, o arquivo pode estar incompleto.';
+
+  @override
+  String get readerTimedOutMessage =>
+      'O leitor não respondeu a tempo. Isso costuma acontecer com arquivos muito grandes ou logo depois de abrir o aplicativo.';
+
+  @override
+  String get readerFileBrokenMessage =>
+      'Este arquivo é um EPUB que o leitor não conseguiu exibir. Ele pode estar corrompido ou incompleto, e o livro continua no seu acervo.';
+
+  @override
+  String get readerTooLargeMessage =>
+      'Este arquivo é grande demais para ser aberto neste dispositivo.';
 
   @override
   String get readerRetry => 'Tentar de novo';

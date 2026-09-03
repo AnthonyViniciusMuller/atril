@@ -687,13 +687,20 @@ void main() {
   });
 
   group('a book that does not open', () {
+    /// The diagnostic message every failure in this group carries.
+    ///
+    /// It is what a host or a repository writes for the log — English, and
+    /// naming whatever it happened to know — and the point of the group is
+    /// that no reader ever sees it.
+    const String diagnostic = 'the bridge answered nothing at 127.0.0.1:41233';
+
     Future<void> pumpFailure(WidgetTester tester, String code) async {
       await tester.pumpWidget(
         _app(
           _FakeReading(
             failure: AppException(
               kind: ErrorKind.failedPrecondition,
-              message: 'no',
+              message: diagnostic,
               code: code,
               op: 'test',
             ),
@@ -731,7 +738,61 @@ void main() {
       await pumpFailure(tester, 'something_else');
 
       expect(find.text(_pt().readerFailedTitle), findsOneWidget);
+      expect(find.text(_pt().readerFailedMessage), findsOneWidget);
       expect(find.text(_pt().readerRetry), findsOneWidget);
+    });
+
+    testWidgets('never shows the exception\'s own words', (
+      WidgetTester tester,
+    ) async {
+      // `errors.dart` says what a message is: diagnostic, naming hosts and
+      // identifiers freely, written in whatever language the layer that raised
+      // it was written in — the hosts write English — and destined for the
+      // log. A reader shown one is reading somebody's debugging.
+      await pumpFailure(tester, 'something_else');
+
+      expect(find.text(diagnostic), findsNothing);
+      expect(find.textContaining('127.0.0.1'), findsNothing);
+    });
+
+    testWidgets('a file the engine refused says so, and offers no retry', (
+      WidgetTester tester,
+    ) async {
+      // The format is one this build renders and this file is not one it can.
+      // Reading the same bytes again cannot change that.
+      await pumpFailure(tester, codeEpubDisplayFailed);
+
+      expect(find.text(_pt().readerFileBrokenMessage), findsOneWidget);
+      expect(find.text(_pt().readerRetry), findsNothing);
+    });
+
+    testWidgets('an engine that did not answer is the one worth retrying', (
+      WidgetTester tester,
+    ) async {
+      await pumpFailure(tester, codeEpubOpenTimeout);
+
+      expect(find.text(_pt().readerTimedOutMessage), findsOneWidget);
+      expect(find.text(_pt().readerRetry), findsOneWidget);
+    });
+
+    testWidgets('a file too large says which limit it met', (
+      WidgetTester tester,
+    ) async {
+      await pumpFailure(tester, codeEbookTooLarge);
+
+      expect(find.text(_pt().readerTooLargeMessage), findsOneWidget);
+      expect(find.text(_pt().readerRetry), findsNothing);
+    });
+
+    testWidgets('a work another device deleted says what the shelf says', (
+      WidgetTester tester,
+    ) async {
+      // One event, one explanation. A second wording for a tombstone that
+      // arrived would be two accounts of one thing.
+      await pumpFailure(tester, codeEbookNotFound);
+
+      expect(find.text(_pt().ebookNotFoundTitle), findsOneWidget);
+      expect(find.text(_pt().ebookNotFoundMessage), findsOneWidget);
     });
 
     testWidgets('the three refusals are three different sentences', (

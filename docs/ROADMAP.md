@@ -1817,9 +1817,22 @@ merged in order, which is why each fix names the section it belongs to and touch
       kept: what is silenced is the announcement to a listener list that is gone, not the work.
       The test starts a run, disposes the command, completes the action and asserts the listener
       heard the start and nothing after it
-- [ ] `fix: tell the reader why the book did not open, in their language` — the refusal's
-      default branch renders the exception's diagnostic message, which the view model says is
-      never shown and the hosts write in English. Map the code to a message in the ARB files
+- [x] `fix: tell the reader why the book did not open, in their language` — the refusal's
+      default branch rendered `AppException.message`, which `errors.dart` calls diagnostic, which
+      names hosts and identifiers freely and which both hosts write in English: *the book did not
+      open within 30s* under a Portuguese title. **Every sentence now comes out of the ARB and is
+      chosen by the code**, which is what a code is for — it survives a rewording on either side
+      of the wire, and the message goes to the log where it was always meant to. Six branches and
+      not two: the file elsewhere and the unreadable format as before, a work another device
+      deleted borrowing the two sentences the book's own screen already says, a file past the
+      size this build reads whole, a file the engine refused, and a timeout. **Only the timeout
+      offers a retry**, because it is the only one where reading the same bytes again can end
+      differently. The codes those branch on were literals in four files and are now named
+      constants beside the two that already were. Folded in from the data review, since it is the
+      same boundary: the four `on Exception catch` clauses around the host are `on Object`, and a
+      failure that is not an `Exception` — a `TypeError` from a bridge answering an unexpected
+      shape — becomes an `AppException` carrying it as its cause instead of escaping the
+      `Command` as an unhandled error over a book that had merely failed to open
 - [ ] `fix: announce a restore or a filing that failed` — the delete's *undo* discards the
       result and reports success, and the shelves dialog checks only the last toggle after it
       closes. Route the undo through a command and surface each toggle's failure where it
