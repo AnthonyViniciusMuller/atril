@@ -98,12 +98,46 @@ void main() {
   });
 
   group('the encoding', () {
-    test('carries an instant as the microseconds a delta reads back', () {
+    test('carries an instant as the RFC 3339 text a delta reads back', () {
       final at = DateTime.utc(2026, 3, 14, 15, 9, 26);
       final changes = DeltaWriter()..instant(fieldCreatedAt, at);
 
-      expect(changes.fields[fieldCreatedAt], at.microsecondsSinceEpoch);
+      expect(changes.fields[fieldCreatedAt], '2026-03-14T15:09:26.000Z');
       expect(changes.delta.instant(fieldCreatedAt), at);
+    });
+
+    test('carries an instant the node can decode', () {
+      // The node reads these two fields into a Go `time.Time` through
+      // `encoding/json`, which admits RFC 3339 and nothing else. A number here
+      // is an operation rejected for ever, and a rejection is not retried.
+      final changes = DeltaWriter()
+        ..instant(fieldCreatedAt, DateTime.utc(2026, 3, 14, 15, 9, 26))
+        ..instant(fieldImportedAt, DateTime(2026, 3, 14, 15, 9, 26));
+
+      for (final field in <String>[fieldCreatedAt, fieldImportedAt]) {
+        expect(changes.fields[field], isA<String>());
+        expect(changes.fields[field], endsWith('Z'));
+      }
+    });
+
+    test('refuses an instant that is not RFC 3339 text', () {
+      const asNumber = Delta(<String, Object?>{fieldCreatedAt: 1773500966000000});
+      const asNonsense = Delta(<String, Object?>{fieldCreatedAt: 'yesterday'});
+
+      expect(
+        () => asNumber.instant(fieldCreatedAt),
+        throwsA(isA<DeltaException>()),
+      );
+      expect(
+        () => asNonsense.instant(fieldCreatedAt),
+        throwsA(isA<DeltaException>()),
+      );
+    });
+
+    test('reads a cleared instant as cleared', () {
+      const cleared = Delta(<String, Object?>{fieldCreatedAt: null});
+
+      expect(cleared.instant(fieldCreatedAt), isNull);
     });
 
     test('carries a number a delta reads back', () {

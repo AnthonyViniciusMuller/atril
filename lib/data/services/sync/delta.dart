@@ -2,12 +2,13 @@
 ///
 /// A delta names a record's fields as the schema and the contract both name
 /// them — `title`, `locator`, `ebook_id` — and carries their values in the form
-/// the column holds: a kind is `note` and not the contract's enumerator, an
-/// instant is microseconds, extra metadata is an object. That is the same
-/// principle `TargetEntity` follows and for the same reason: one vocabulary
-/// travels through the contract, the node's schema and this device's, and a
-/// second one would have to be translated at every hop. The specification says
-/// nothing about the shape of `carga_delta` at all, which is C19.
+/// the node decodes them from: a kind is `note` and not the contract's
+/// enumerator, an instant is RFC 3339 text, extra metadata is an object. That
+/// is the same principle `TargetEntity` follows and for the same reason: one
+/// vocabulary travels through the contract, the node's schema and this
+/// device's, and a second one would have to be translated at every hop. The
+/// specification says nothing about the shape of `carga_delta` at all, which is
+/// C19.
 ///
 /// The names below are `internal/sync/infra/service/records`' own, spelled once
 /// here so that the reconciler and the operation author cannot spell them two
@@ -16,7 +17,7 @@
 ///
 /// The file has two halves and they are the two directions a delta travels.
 /// [Delta] reads one that arrived; [DeltaWriter] writes one this device is
-/// authoring. They agree on the encoding — an instant is microseconds either
+/// authoring. They agree on the encoding — an instant is RFC 3339 text either
 /// way — because a value written in one shape and read in another is a field
 /// that survives the wire and not the round trip.
 library;
@@ -221,13 +222,32 @@ extension type const Delta(Map<String, Object?> fields) {
     return value;
   }
 
-  /// The instant [field] claims, as the microseconds the wire carries.
+  /// The instant [field] claims, as the RFC 3339 text the wire carries, or
+  /// `null` where it is cleared.
+  ///
+  /// The node decodes these two fields into a Go `time.Time` through
+  /// `encoding/json`, which reads RFC 3339 and nothing else. An instant sent in
+  /// any other shape is refused by `sync/records: decode` as a field the change
+  /// cannot fill, and a refusal is final — the operation is answered for and
+  /// never retried, so the work it created reaches no other device.
   DateTime? instant(String field) {
-    final micros = integer(field);
+    final value = fields[field];
 
-    return micros == null
-        ? null
-        : DateTime.fromMicrosecondsSinceEpoch(micros, isUtc: true);
+    if (value == null) {
+      return null;
+    }
+
+    if (value is! String) {
+      throw DeltaException(field, 'is not an instant');
+    }
+
+    final parsed = DateTime.tryParse(value);
+
+    if (parsed == null) {
+      throw DeltaException(field, 'is not an instant this device can read');
+    }
+
+    return parsed.toUtc();
   }
 
   /// The object [field] claims, still encoded, or `null` where it is cleared.
@@ -355,14 +375,15 @@ final class DeltaWriter {
 
   /// Claims [field] as an instant, or as cleared where it is `null`.
   ///
-  /// It travels as the microseconds [Delta.instant] reads back, and in UTC,
-  /// because the value is compared against instants stamped on other devices in
-  /// other zones.
+  /// It travels as the RFC 3339 text [Delta.instant] reads back, which is what
+  /// the node's reconciler decodes an instant from, and in UTC, because the
+  /// value is compared against instants stamped on other devices in other
+  /// zones.
   void instant(String field, DateTime? value, {Object? current = _unstated}) =>
       _claim(
         field,
-        value?.toUtc().microsecondsSinceEpoch,
-        current is DateTime ? current.toUtc().microsecondsSinceEpoch : current,
+        _rfc3339(value),
+        current is DateTime ? _rfc3339(current) : current,
       );
 
   /// Claims [field] as an object, or as cleared where it is `null`.
@@ -389,6 +410,12 @@ final class DeltaWriter {
   @override
   String toString() => 'DeltaWriter(${_fields.keys.join(', ')})';
 }
+
+/// [value] as the RFC 3339 text an instant travels as, in UTC.
+///
+/// `toIso8601String` on a UTC instant is RFC 3339 already, down to the `Z` the
+/// node's parser needs to read it as an offset and not as a local wall clock.
+String? _rfc3339(DateTime? value) => value?.toUtc().toIso8601String();
 
 /// The stand-in for a current value nobody passed.
 ///
