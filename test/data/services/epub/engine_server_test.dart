@@ -195,6 +195,83 @@ void main() {
     });
   });
 
+  group('a book on offer', () {
+    // The book crosses to the engine over this socket rather than through the
+    // source of a script. Three transient copies of a whole file, each larger
+    // than the file, is what the other way cost.
+    Uint8List bytes() =>
+        Uint8List.fromList(<int>[for (int i = 0; i < 1024; i++) i % 256]);
+
+    test('is served whole, at the url it was offered under', () async {
+      final Uint8List book = bytes();
+      final String url = server.offer(book);
+
+      expect(url, startsWith(server.origin));
+
+      final HttpClientResponse response = await get(Uri.parse(url).path);
+
+      expect(response.statusCode, HttpStatus.ok);
+      expect(response.headers.contentType?.mimeType, 'application/epub+zip');
+      expect(<int>[
+        for (final List<int> chunk in await response.toList()) ...chunk,
+      ], book);
+    });
+
+    test('answers once and never again', () async {
+      // A URL that stops working after it has been read is one a page that
+      // outlived the reader who opened it cannot replay.
+      final String url = server.offer(bytes());
+
+      expect((await get(Uri.parse(url).path)).statusCode, HttpStatus.ok);
+
+      final HttpClientResponse again = await get(Uri.parse(url).path);
+
+      expect(again.statusCode, HttpStatus.notFound);
+
+      await again.drain<void>();
+    });
+
+    test('is not guessable, and an invented path is not a book', () async {
+      final String url = server.offer(bytes());
+      final HttpClientResponse response = await get('/book/deadbeef');
+
+      expect(response.statusCode, HttpStatus.notFound);
+      expect(Uri.parse(url).path, isNot('/book/deadbeef'));
+
+      await response.drain<void>();
+      server.withdraw(url);
+    });
+
+    test('withdrawn, it is not held for the life of the process', () async {
+      // A reader who closed the screen before the page came up. The book is a
+      // whole file in memory, and nothing else would ever remove it.
+      final String url = server.offer(bytes());
+
+      server.withdraw(url);
+
+      final HttpClientResponse response = await get(Uri.parse(url).path);
+
+      expect(response.statusCode, HttpStatus.notFound);
+
+      await response.drain<void>();
+    });
+
+    test('does not shadow the engine it is served beside', () async {
+      // Two namespaces on one origin: the engine's paths are what the host
+      // page's relative script tags resolve to, and none of them starts where
+      // a book does.
+      final String url = server.offer(bytes());
+
+      expect(Uri.parse(url).path, startsWith('/book/'));
+      expect(
+        engineAssetsByPath().keys.any((String it) => it.startsWith('book/')),
+        isFalse,
+      );
+
+      server.withdraw(url);
+    });
+  });
+
   group('the asset a host loads', () {
     test('is read whole, with its offset respected', () async {
       // `rootBundle.load` can hand back a view into a larger buffer, and a

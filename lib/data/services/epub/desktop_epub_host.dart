@@ -224,6 +224,14 @@ final class DesktopEpubHost implements EpubHost {
   Completer<void>? _opened;
   Completer<List<EpubChapter>>? _chapters;
   EpubBook? _book;
+
+  /// The URL the book was offered at, so a host that is closed before the page
+  /// fetched it can take the offer back.
+  String? _offered;
+
+  /// Whether a book has been handed to the engine.
+  bool _sent = false;
+
   String? _initialCfi;
 
   EpubStyle _style = const EpubStyle();
@@ -248,6 +256,7 @@ final class DesktopEpubHost implements EpubHost {
     }
 
     _book = book;
+    _sent = false;
     final Completer<void> opened = Completer<void>();
     _opened = opened;
     _chapters = Completer<List<EpubChapter>>();
@@ -348,7 +357,7 @@ final class DesktopEpubHost implements EpubHost {
   Future<void> apply(EpubStyle style) async {
     _style = style;
 
-    if (_disposed || _webview.value == null || _book == null) {
+    if (_disposed || _webview.value == null || !_sent) {
       return;
     }
 
@@ -377,6 +386,17 @@ final class DesktopEpubHost implements EpubHost {
     }
 
     _pending.clear();
+
+    final String? offered = _offered;
+
+    if (offered != null) {
+      // A book nobody fetched — a reader who closed the screen while the page
+      // was still coming up — is taken back rather than left on the server for
+      // the life of the process.
+      (await EngineServer.shared()).withdraw(offered);
+      _offered = null;
+    }
+
     await _webview.value?.dispose();
     _webview.dispose();
     await _positions.close();
@@ -385,10 +405,17 @@ final class DesktopEpubHost implements EpubHost {
 
   /// Hands the book to the engine.
   ///
-  /// The bytes go as base64 for the reason the package's native path uses it: a
-  /// decimal array literal spliced into a script is roughly three times the
-  /// size, and this crosses a process boundary. The glue accepts either and
-  /// calls `atob` on a string.
+  /// **The page fetches it; nothing splices a book into a script.** The bytes
+  /// were base64-encoded, then JSON-encoded, then interpolated into the source
+  /// of the call — three transient copies of a whole book, each larger than the
+  /// file, beside the one the view model already holds. They are offered on the
+  /// loopback socket that is already serving the engine instead, at a path that
+  /// answers once, and what crosses the bridge is a URL.
+  ///
+  /// **The engine is untouched.** It is the same glue function, called by the
+  /// same name with the same options: `loadBook` takes a byte array as it is
+  /// and normalizes a string to one, so this is an argument it already
+  /// accepted. What changed is how this host gets a book to it.
   Future<void> _sendBook() async {
     final EpubBook? book = _book;
 
@@ -396,34 +423,53 @@ final class DesktopEpubHost implements EpubHost {
       return;
     }
 
-    final EpubPalette palette = epubPaletteOf(_style.theme, _brightness);
+    final EngineServer server = await EngineServer.shared();
+    final String url = server.offer(book.bytes);
 
-    await _call(EpubGlue.loadBook, <Object?>[
-      base64.encode(book.bytes),
-      <String, Object?>{
-        'cfi': _initialCfi ?? '',
-        'manager': 'continuous',
-        'flow': 'paginated',
-        'spread': _style.spread == EpubSpread.none ? 'none' : 'auto',
-        'snap': true,
-        // False here for the reason it is false in the other host: a reader's
-        // library holds files they were given, and a book whose scripts run is
-        // a book running code inside this application.
-        'allowScriptedContent': false,
-        'direction': 'ltr',
-        'useCustomSwipe': false,
-        'backgroundColor': '',
-        'foregroundColor': '',
-        'fontSize': (epubBaseFontSizePx * _style.fontSize / 100).round(),
-        'clearSelectionOnPageChange': true,
-        'selectAnnotationRange': false,
-        'customCss': _css(palette),
-        // The selection-polling fallbacks are for iOS's iframes. CEF fires
-        // `selectionchange` like any other Chromium, and polling it would be
-        // work done on every frame to answer a question the browser answers.
-        'usePolling': false,
-      },
-    ]);
+    _offered = url;
+    _sent = true;
+    // Dropped here: the engine has been told where to find it, and a book kept
+    // in this object for nothing is what this whole change is about.
+    _book = null;
+
+    final EpubPalette palette = epubPaletteOf(_style.theme, _brightness);
+    final Map<String, Object?> options = <String, Object?>{
+      'cfi': _initialCfi ?? '',
+      'manager': 'continuous',
+      'flow': 'paginated',
+      'spread': _style.spread == EpubSpread.none ? 'none' : 'auto',
+      'snap': true,
+      // False here for the reason it is false in the other host: a reader's
+      // library holds files they were given, and a book whose scripts run is
+      // a book running code inside this application.
+      'allowScriptedContent': false,
+      'direction': 'ltr',
+      'useCustomSwipe': false,
+      'backgroundColor': '',
+      'foregroundColor': '',
+      'fontSize': (epubBaseFontSizePx * _style.fontSize / 100).round(),
+      'clearSelectionOnPageChange': true,
+      'selectAnnotationRange': false,
+      'customCss': _css(palette),
+      // The selection-polling fallbacks are for iOS's iframes. CEF fires
+      // `selectionchange` like any other Chromium, and polling it would be
+      // work done on every frame to answer a question the browser answers.
+      'usePolling': false,
+    };
+
+    await _evaluate('''
+        fetch(${jsonEncode(url)})
+          .then(function (response) { return response.arrayBuffer(); })
+          .then(function (bytes) {
+            ${EpubGlue.loadBook}(new Uint8Array(bytes), ${jsonEncode(options)});
+          })
+          .catch(function (error) {
+            $epubBridgeChannel(JSON.stringify({
+              handler: 'displayError',
+              args: [String(error)]
+            }));
+          });
+      ''');
   }
 
   Future<void> _applyToEngine() async {

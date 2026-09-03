@@ -1927,9 +1927,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       repository and a settings store to exist; it now needs a recorder, and its seven tests say
       things the screen's tests could only imply — that a bookmark paints nothing, that a
       highlight given words is erased and drawn again, that `forget` erases nothing
-- [ ] `perf: hand the desktop host one copy of the book` — base64, then JSON, then the script
-      source: three transient copies of the book beside the one the view model holds. Serve it
-      from the engine server under a one-shot path, or encode it once
+- [x] `perf: hand the desktop host one copy of the book` — base64, then JSON, then the source of
+      the call: **three transient copies of a whole book, each larger than the file**, beside the
+      one the view model holds — for a format whose files run to tens of megabytes, on the target
+      that already carries a browser engine. The book is offered on the loopback socket that is
+      already serving the engine, at an unguessable path that answers once, and what crosses the
+      bridge is a URL the page fetches. The alternative the plan allowed — encoding once — was
+      declined because it still puts the book in a string in a script. **The engine is not
+      touched**: it is the same glue function called by the same name with the same options, and
+      `loadBook` takes a byte array as it is, so a fetch feeding it one is an argument it already
+      accepted. The offer is withdrawn when a host is disposed, since a reader who closed the
+      screen before the page came up would otherwise leave a whole file on the server for the
+      life of the process; and the host drops its own reference once the page has been told where
+      to look, which is the fourth copy and the one nobody had counted. None of this was
+      exercised against CEF here — the server half is, and it is the half this project wrote
 - [ ] `test: one fake per repository, and a contract they share` — eleven fakes in a file of
       1400 lines, each reimplementing the filtering and the refusals of the real repository with
       nothing asserting the two agree. Split them, and run the methods the screens depend on

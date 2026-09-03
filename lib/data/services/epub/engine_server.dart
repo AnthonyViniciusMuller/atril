@@ -26,6 +26,7 @@ library;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/services.dart';
 
@@ -52,6 +53,39 @@ final class EngineServer {
   /// The URL of the page a host should open.
   String get hostPageUrl =>
       '$origin/${EpubEngine.hostPage.substring(EpubEngine.assetRoot.length + 1)}';
+
+  /// The books on offer, by the path each was offered under.
+  final Map<String, Uint8List> _books = <String, Uint8List>{};
+
+  /// A URL the page can fetch [bytes] from, once.
+  ///
+  /// **It is how a book crosses to the engine without being copied three
+  /// times.** The other way — the one this replaced — was base64 into a
+  /// string, that string into JSON, and the JSON into the source of a script:
+  /// three transient copies of a whole book beside the one the view model
+  /// holds, each of them larger than the file. A fetch over the loopback
+  /// socket that is already serving the engine costs the copy the socket
+  /// makes and nothing else, and the page does the decoding it was going to do
+  /// anyway.
+  ///
+  /// The path is unguessable and the entry is removed the first time it is
+  /// read. Neither is what keeps a book private — the server binds the
+  /// loopback address and answers nobody else — but a URL that stops working
+  /// once it has been used is one that cannot be replayed by a page that
+  /// outlived the reader who opened it.
+  String offer(Uint8List bytes) {
+    final String path =
+        '$_bookPathPrefix/${_random.nextInt(1 << 32).toRadixString(16)}'
+        '${_random.nextInt(1 << 32).toRadixString(16)}';
+
+    _books[path] = bytes;
+
+    return '$origin$path';
+  }
+
+  /// Takes back an offer nobody read, so a book that never loaded is not held
+  /// for the life of the process.
+  void withdraw(String url) => _books.remove(Uri.parse(url).path);
 
   /// The one server, started if it is not running.
   ///
@@ -95,6 +129,25 @@ final class EngineServer {
     final Map<String, String> assets = engineAssetsByPath();
 
     await for (final HttpRequest request in _server) {
+      // A book, before the engine: it is the one thing served here that is not
+      // an asset, and it is read once and forgotten.
+      final Uint8List? book = request.method == 'GET'
+          ? _books.remove(request.uri.path)
+          : null;
+
+      if (book != null) {
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType('application', 'epub+zip')
+          // Never cached: it is offered once, at a path that will not answer
+          // again, and it is the reader's own file.
+          ..headers.set(HttpHeaders.cacheControlHeader, 'no-store')
+          ..add(book);
+
+        await request.response.close();
+        continue;
+      }
+
       // Only what the engine is. The map is the closure `engine.dart` pins, so
       // a request for anything else is not a file this server has decided to
       // withhold — it is a file that is not part of the engine, and answering
@@ -146,9 +199,20 @@ final class EngineServer {
   /// application calls it, because the engine's lifetime is the process's.
   Future<void> close() async {
     _starting = null;
+    _books.clear();
     await _server.close(force: true);
   }
 }
+
+/// Where a book on offer is served from, under the engine's own origin.
+///
+/// It is a prefix no engine asset has, so the two namespaces cannot collide:
+/// the assets are served under the paths the host page's relative `src`
+/// attributes resolve to, and none of them starts here.
+const String _bookPathPrefix = '/book';
+
+/// Where the unguessable half of a book's path comes from.
+final Random _random = Random.secure();
 
 /// How long a host may keep an engine asset without asking again.
 ///
