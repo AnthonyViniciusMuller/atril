@@ -40,6 +40,7 @@ import 'tables/library.dart';
 import 'tables/pins.dart';
 import 'tables/reading.dart';
 import 'tables/records.dart';
+import 'tables/revision.dart';
 import 'tables/sync.dart';
 import 'tables/transfers.dart';
 

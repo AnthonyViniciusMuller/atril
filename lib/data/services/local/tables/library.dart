@@ -37,7 +37,7 @@ const List<String> ebookFormats = <String>[
 const List<String> collectionKinds = <String>['collection', 'category'];
 
 /// A work in the reader's collection.
-@DataClassName('EbookRow')
+@DataClassName('EbookRow', implementing: <Type>[HasRevision])
 // Spelled in SQL rather than by column so that the statement can carry
 // `IF NOT EXISTS`, which the generated form does not and the upgrade needs —
 // see `known_servers_origin`.
@@ -106,7 +106,7 @@ class Ebooks extends Table with RevisionColumns {
 }
 
 /// A grouping the reader defined over their collection.
-@DataClassName('CollectionRow')
+@DataClassName('CollectionRow', implementing: <Type>[HasRevision])
 class Collections extends Table with RevisionColumns {
   /// The identifier the device that created the grouping minted.
   TextColumn get id => text().withLength(min: 36, max: 36)();
@@ -151,7 +151,7 @@ class Collections extends Table with RevisionColumns {
 /// means a deletion of a pair this device has never held is still written,
 /// tombstone and all — dropping it would file the work again the moment this
 /// device heard about the filing the deletion undid.
-@DataClassName('EbookCollectionRow')
+@DataClassName('EbookCollectionRow', implementing: <Type>[HasRevision])
 @TableIndex.sql(
   'CREATE INDEX IF NOT EXISTS ebook_collections_collection '
   'ON ebook_collections (collection_id)',

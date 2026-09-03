@@ -12,7 +12,30 @@ library;
 
 import 'package:drift/drift.dart';
 
+import '../../../../domain/crdt/vector_clock.dart';
 import '../converters.dart';
+
+/// The four columns of [RevisionColumns], as a type.
+///
+/// drift generates one unrelated class per table, so what the four replicated
+/// rows share is a shape and not a supertype — and the reconciler, which reads
+/// them generically, had four identical bodies to turn a row into a
+/// `Revision`. Declaring it here and naming it in each table's
+/// `@DataClassName` is what makes the shape a type: nothing about the schema
+/// changes, and the merge is read off a row by one function.
+abstract interface class HasRevision {
+  /// The causal version of the record.
+  VectorClock get vectorClock;
+
+  /// The first half of the tie-break.
+  DateTime get updatedAt;
+
+  /// The second half: the device whose write the record reflects.
+  String get deviceId;
+
+  /// Whether the record is a tombstone.
+  bool get deleted;
+}
 
 /// `vector_clock`, `updated_at`, `device_id` and `deleted`, spelled once.
 ///

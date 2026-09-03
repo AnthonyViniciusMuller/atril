@@ -35,6 +35,7 @@ import '../../../domain/models/record_key.dart';
 import '../../../utils/logging.dart';
 import '../local/database.dart';
 import '../local/tables/library.dart';
+import '../local/tables/revision.dart';
 import '../local/tables/reading.dart';
 import 'delta.dart';
 
@@ -281,7 +282,7 @@ final class Reconciler {
       );
     }
 
-    if (!operation.revision.supersedes(_revisionOfEbook(existing))) {
+    if (!operation.revision.supersedes(revisionOf(existing))) {
       return const Verdict.superseded();
     }
 
@@ -346,7 +347,7 @@ final class Reconciler {
       );
     }
 
-    if (!operation.revision.supersedes(_revisionOfCollection(existing))) {
+    if (!operation.revision.supersedes(revisionOf(existing))) {
       return const Verdict.superseded();
     }
 
@@ -423,7 +424,7 @@ final class Reconciler {
       );
     }
 
-    if (!operation.revision.supersedes(_revisionOfAnnotation(existing))) {
+    if (!operation.revision.supersedes(revisionOf(existing))) {
       return const Verdict.superseded();
     }
 
@@ -515,7 +516,7 @@ final class Reconciler {
       return _remembered(operation, key, operation.targetId.toLowerCase());
     }
 
-    if (!operation.revision.supersedes(_revisionOfFiling(existing))) {
+    if (!operation.revision.supersedes(revisionOf(existing))) {
       return const Verdict.superseded();
     }
 
@@ -684,35 +685,20 @@ final class Reconciler {
             ..limit(1))
           .getSingleOrNull() !=
       null;
-
-  Revision _revisionOfEbook(EbookRow row) => Revision(
-    vectorClock: row.vectorClock,
-    updatedAt: row.updatedAt,
-    deviceId: row.deviceId,
-    deleted: row.deleted,
-  );
-
-  Revision _revisionOfCollection(CollectionRow row) => Revision(
-    vectorClock: row.vectorClock,
-    updatedAt: row.updatedAt,
-    deviceId: row.deviceId,
-    deleted: row.deleted,
-  );
-
-  Revision _revisionOfAnnotation(AnnotationRow row) => Revision(
-    vectorClock: row.vectorClock,
-    updatedAt: row.updatedAt,
-    deviceId: row.deviceId,
-    deleted: row.deleted,
-  );
-
-  Revision _revisionOfFiling(EbookCollectionRow row) => Revision(
-    vectorClock: row.vectorClock,
-    updatedAt: row.updatedAt,
-    deviceId: row.deviceId,
-    deleted: row.deleted,
-  );
 }
+
+/// The version [row] currently holds, whichever replicated table it came from.
+///
+/// The four rows carry the same four columns and drift generates four
+/// unrelated classes for them, so this was the same body written four times.
+/// `HasRevision` is what the tables declare to make the shape a type; nothing
+/// about the schema changes and the merge reads a row through one function.
+Revision revisionOf(HasRevision row) => Revision(
+  vectorClock: row.vectorClock,
+  updatedAt: row.updatedAt,
+  deviceId: row.deviceId,
+  deleted: row.deleted,
+);
 
 /// A nullable text column: absent where the delta does not claim the field,
 /// and null where it clears it.

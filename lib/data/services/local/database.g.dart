@@ -2165,7 +2165,7 @@ class $EbooksTable extends Ebooks with TableInfo<$EbooksTable, EbookRow> {
       const InstantConverter();
 }
 
-class EbookRow extends DataClass implements Insertable<EbookRow> {
+class EbookRow extends DataClass implements Insertable<EbookRow>, HasRevision {
   /// The causal version of the record, as the JSON object the node stores in
   /// `jsonb`. The reconciler consults it first and consults nothing else unless
   /// it reports two versions concurrent.
@@ -2934,7 +2934,8 @@ class $CollectionsTable extends Collections
       const InstantConverter();
 }
 
-class CollectionRow extends DataClass implements Insertable<CollectionRow> {
+class CollectionRow extends DataClass
+    implements Insertable<CollectionRow>, HasRevision {
   /// The causal version of the record, as the JSON object the node stores in
   /// `jsonb`. The reconciler consults it first and consults nothing else unless
   /// it reports two versions concurrent.
@@ -3509,7 +3510,7 @@ class $EbookCollectionsTable extends EbookCollections
 }
 
 class EbookCollectionRow extends DataClass
-    implements Insertable<EbookCollectionRow> {
+    implements Insertable<EbookCollectionRow>, HasRevision {
   /// The causal version of the record, as the JSON object the node stores in
   /// `jsonb`. The reconciler consults it first and consults nothing else unless
   /// it reports two versions concurrent.
@@ -4346,7 +4347,8 @@ class $AnnotationsTable extends Annotations
       const InstantConverter();
 }
 
-class AnnotationRow extends DataClass implements Insertable<AnnotationRow> {
+class AnnotationRow extends DataClass
+    implements Insertable<AnnotationRow>, HasRevision {
   /// The causal version of the record, as the JSON object the node stores in
   /// `jsonb`. The reconciler consults it first and consults nothing else unless
   /// it reports two versions concurrent.
@@ -5968,10 +5970,13 @@ class NodeCursorRow extends DataClass implements Insertable<NodeCursorRow> {
   ///
   /// It is a diagnostic and never a cursor: it is what the sync surface shows a
   /// reader who wants to know whether their notes are only on this phone. It
-  /// moves when the cursor does *and* when a live channel opens onto a log that
-  /// had nothing new in it — a device that is up to date exchanges nothing, and
-  /// a column that only moved on a pull would tell that reader their last sync
-  /// was a week ago because nothing has happened since.
+  /// moves when the cursor does *and* whenever this device has evidence the
+  /// node answered — an event received, a push answered for, a channel that
+  /// stayed up. A device that is up to date exchanges no operations, and a
+  /// column that only moved on a pull would tell that reader their last sync
+  /// was a week ago because nothing has happened since; a column that moved
+  /// when a channel *opened* would lie the other way, because opening one
+  /// reaches nobody.
   final DateTime? pulledAt;
   const NodeCursorRow({
     required this.serverDomain,
@@ -6225,7 +6230,8 @@ class AppliedOperationRow extends DataClass
   final String id;
 
   /// When this device applied it, on a wall clock. It is a diagnostic, and it
-  /// is what a later phase would prune by.
+  /// is what the pruning of a settled channel forgets by — see
+  /// `appliedOperationsWindow`.
   final DateTime appliedAt;
   const AppliedOperationRow({required this.id, required this.appliedAt});
   @override

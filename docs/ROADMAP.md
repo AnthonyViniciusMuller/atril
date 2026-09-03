@@ -1763,9 +1763,18 @@ merged in order, which is why each fix names the section it belongs to and touch
       wins *every* tie-break against this one, so a reader's edits keep losing to a wrong clock
       and nothing on any screen would ever say so. The operation itself is applied exactly as any
       other — the answer is about the clock and not about the change
-- [ ] `refactor: share the origin lookup and the revision reader` — three copies of the origin
-      domain lookup, four of the row-to-revision body, and a set that is only ever asked
-      whether it is empty
+- [x] `refactor: share the origin lookup and the revision reader` — three copies of the origin
+      domain lookup, four of the row-to-revision body, and a set that was only ever asked whether
+      it is empty. The lookup becomes `origin.dart`, an extension on the database taking the one
+      thing that ever differed between the copies — the operation the refusal is reported under —
+      and the three refusals become one sentence. **The four revision bodies needed a type before
+      they could become one function**: drift generates four unrelated classes for four tables
+      carrying the same mixin, so `HasRevision` is declared beside `RevisionColumns` and named in
+      each `@DataClassName(implementing: ...)`. That is a change to what is generated and not to
+      the schema — no column, no version, no migration — and `database.dart` had to import the
+      interface for the generated part to see it. The set of offered identifiers is a `bool`: the
+      verdicts name the operations they answer for, so the only question it was ever asked is
+      whether another batch may go out
 - [ ] `test: cover the scheduler's backoff and syncNow` — the reset of the backoff by a channel
       that lasted `settledFor`, `syncNow` clearing a running backoff, and a channel that fails
       during `open()` have no test between them

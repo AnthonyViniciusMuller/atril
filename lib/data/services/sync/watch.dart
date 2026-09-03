@@ -33,11 +33,11 @@ library;
 
 import 'dart:async';
 
-import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../api/sync_api.dart';
 import '../local/database.dart';
 import 'live_channel.dart';
+import 'origin.dart';
 import 'pull.dart';
 import 'push.dart';
 
@@ -93,7 +93,7 @@ final class WatchChannel implements SyncChannel {
       return;
     }
 
-    _node = await _originDomain();
+    _node = await database.originDomain(op: opWatchOpen);
 
     final cursor = await database.syncDao.cursor(_node);
 
@@ -216,21 +216,5 @@ final class WatchChannel implements SyncChannel {
 
     _log.info('the watch ended: $error');
     ended.completeError(error, trace ?? StackTrace.current);
-  }
-
-  /// The node whose log this device is watching.
-  Future<String> _originDomain() async {
-    final origin = await database.identityDao.originServer();
-
-    if (origin == null) {
-      throw const AppException(
-        kind: ErrorKind.failedPrecondition,
-        message: 'this device is not signed in at any node and cannot watch',
-        code: 'no_origin_server',
-        op: opWatchOpen,
-      );
-    }
-
-    return origin.domain;
   }
 }

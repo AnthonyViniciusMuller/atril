@@ -26,10 +26,10 @@
 /// 12 gives it more.
 library;
 
-import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../api/sync_api.dart';
 import '../local/database.dart';
+import 'origin.dart';
 import 'reconciler.dart';
 
 final _log = loggerFor('data/sync');
@@ -129,7 +129,7 @@ final class OperationPuller {
     _running = true;
 
     try {
-      final node = await _originDomain();
+      final node = await database.originDomain(op: opPullRun);
 
       var cursor = await database.syncDao.cursor(node);
       var received = 0;
@@ -200,22 +200,5 @@ final class OperationPuller {
     } finally {
       _running = false;
     }
-  }
-
-  /// The node whose log this device is reading, by the domain it addresses it
-  /// at.
-  Future<String> _originDomain() async {
-    final origin = await database.identityDao.originServer();
-
-    if (origin == null) {
-      throw const AppException(
-        kind: ErrorKind.failedPrecondition,
-        message: 'this device is not signed in at any node and cannot pull',
-        code: 'no_origin_server',
-        op: opPullRun,
-      );
-    }
-
-    return origin.domain;
   }
 }

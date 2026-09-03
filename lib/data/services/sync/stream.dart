@@ -36,11 +36,11 @@ library;
 
 import 'dart:async';
 
-import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import '../api/sync_api.dart';
 import '../local/database.dart';
 import 'live_channel.dart';
+import 'origin.dart';
 import 'push.dart';
 import 'reconciler.dart';
 
@@ -96,7 +96,11 @@ final class SyncStream implements SyncChannel {
   Completer<void>? _settled;
   String _node = '';
   int _cursor = 0;
-  final Set<String> _offered = <String>{};
+
+  /// Whether a batch is in flight. It was the identifiers of that batch, and
+  /// nothing ever asked which they were: the verdicts name them, and what this
+  /// has to answer is whether another batch may go out.
+  bool _offering = false;
 
   @override
   bool get isOpen => _live;
@@ -116,7 +120,7 @@ final class SyncStream implements SyncChannel {
       return;
     }
 
-    _node = await _originDomain();
+    _node = await database.originDomain(op: opStreamOpen);
     _cursor = await database.syncDao.cursor(_node);
 
     final commands = StreamController<SyncCommand>();
@@ -125,6 +129,7 @@ final class SyncStream implements SyncChannel {
 
     _commands = commands;
     _live = true;
+    _offering = false;
     _ended = ended;
 
     // Nobody is listening yet, and the channel can end before anybody is: the
@@ -135,7 +140,6 @@ final class SyncStream implements SyncChannel {
     unawaited(ended.future.catchError((Object _) {}));
 
     _settled = settled;
-    _offered.clear();
 
     // The cursor, first and exactly once. A stream that began with a push
     // would be a device asking the node to store changes without saying where
@@ -185,7 +189,7 @@ final class SyncStream implements SyncChannel {
   Future<void> offer() async {
     final commands = _commands;
 
-    if (!_live || commands == null || _offered.isNotEmpty) {
+    if (!_live || commands == null || _offering) {
       return;
     }
 
@@ -199,7 +203,7 @@ final class SyncStream implements SyncChannel {
       return;
     }
 
-    _offered.addAll(batch.map((operation) => operation.id));
+    _offering = true;
 
     commands.add(SyncPush(batch));
   }
@@ -293,7 +297,7 @@ final class SyncStream implements SyncChannel {
       case SyncVerdicts(:final results):
         final settlement = await settle(database, results);
 
-        _offered.clear();
+        _offering = false;
 
         if (!settlement.movedTheQueue) {
           // The head of the outbox did not move, so the next batch would be
@@ -332,7 +336,7 @@ final class SyncStream implements SyncChannel {
     // the completer stays until the next open so that a caller arriving after
     // the fact is told what ended it.
     _live = false;
-    _offered.clear();
+    _offering = false;
 
     if (ended == null || ended.isCompleted) {
       return;
@@ -347,21 +351,5 @@ final class SyncStream implements SyncChannel {
 
     _log.info('the sync stream ended: $error');
     ended.completeError(error, trace ?? StackTrace.current);
-  }
-
-  /// The node whose log this stream is held against.
-  Future<String> _originDomain() async {
-    final origin = await database.identityDao.originServer();
-
-    if (origin == null) {
-      throw const AppException(
-        kind: ErrorKind.failedPrecondition,
-        message: 'this device is not signed in at any node and cannot sync',
-        code: 'no_origin_server',
-        op: opStreamOpen,
-      );
-    }
-
-    return origin.domain;
   }
 }

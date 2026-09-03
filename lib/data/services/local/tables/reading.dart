@@ -29,7 +29,7 @@ import 'revision.dart';
 const List<String> annotationKinds = <String>['note', 'highlight', 'bookmark'];
 
 /// Something the reader wrote, and the passage it is attached to.
-@DataClassName('AnnotationRow')
+@DataClassName('AnnotationRow', implementing: <Type>[HasRevision])
 // In SQL for the clause, as every index in this schema is — see
 // `known_servers_origin`.
 @TableIndex.sql(
