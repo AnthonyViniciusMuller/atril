@@ -168,9 +168,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # The one release build here, and the exception is argued below
+          # rather than in the matrix.
           - target: android
             os: ubuntu-latest
-            command: flutter build apk --debug
+            command: flutter build apk --release
           - target: web
             os: ubuntu-latest
             # Through the make target rather than `flutter build web`, because
@@ -223,8 +225,16 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      # Debug builds throughout: what is being checked is that the platform
-      # embedder still compiles and links, and a release build adds tree
-      # shaking and signing to that without adding coverage of it.
+      # Debug builds on five of the six: what is being checked is that the
+      # platform embedder still compiles and links, and a release build adds
+      # tree shaking and signing to that without adding coverage of it.
+      #
+      # Android is the exception, because there the release configuration is
+      # itself something this repository wrote and nothing exercised. R8 runs
+      # only in release, and `android/app/build.gradle.kts` picks a signing
+      # config there — falling back to the debug key, announcing it, which is
+      # what makes a release build safe on a runner with no keystore. Both of
+      # those ran nowhere until now: the workflow that builds release Android
+      # is `release.yml`, and it has never run.
       - name: Build
         run: ${{ matrix.command }}

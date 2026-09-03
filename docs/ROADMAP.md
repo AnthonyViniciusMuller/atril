@@ -2045,9 +2045,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       figure was read off the Flatpak's `/app` tree and not off `build/linux/x64/release/bundle`,
       which is what the pubspec and `architecture.md` now quote. Verified by
       `flutter build linux --release` from a deleted `build/linux`
-- [ ] `ci: build the android release` — the pull-request matrix builds debug, so the release
+- [x] `ci: build the android release` — the pull-request matrix builds debug, so the release
       configuration and the shrinker run only in a workflow that has never run. The debug-key
-      fallback makes a release build safe on a runner with no keystore
+      fallback makes a release build safe on a runner with no keystore. **Android alone moves to
+      `--release`, and the other five stay on debug deliberately**: on those, a release build
+      adds tree shaking and signing to a check that is about whether the platform embedder still
+      compiles and links, which is coverage of the toolchain rather than of this repository. On
+      Android it is the opposite — `build.gradle.kts` is the one release configuration phase 13
+      *wrote*, R8 runs only in that mode, and the signing branch that falls back to the debug key
+      and announces it exists precisely so a runner with no keystore can take this path. Both had
+      run nowhere: the only workflow that built a release APK is `release.yml`, and that has
+      never run. `JAVA_TOOL_OPTIONS` is left exactly as it was — the `-Xlog:disable` this
+      project needs is a local distrobox workaround and belongs to `release.yml`, not here. Not
+      executed: an Android build needs the SDK and a runner, and this machine has neither ready
+      — what is verified is that the workflow file still parses
 - [ ] `ci: pin the actions and enforce the lockfile` — two third-party actions run at mutable
       tags beside the signing secrets, and `pub get` may resolve differently from the lockfile.
       Pin to commits, add Dependabot for both ecosystems, and pass `--enforce-lockfile`

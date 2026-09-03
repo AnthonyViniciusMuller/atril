@@ -25,11 +25,14 @@ iOS, web, Linux, macOS and Windows. What that means in practice:
   right to hold a copy, moving an account to a different node with its devices and its history,
   device management, and account settings and deletion.
 
-Two things the status does not claim. The **release workflow has never run** — it wants a tag,
-three runners and signing secrets this repository does not have — and the **Flatpak, the signed
-`.app` and the MSIX have not been built**, for the same reason. What has been built on this
-machine is the Linux bundle and the web output; the other four are built by
-[`ci.yml`](.github/workflows/ci.yml) on every push.
+Two things the status does not claim, and both are still true after the phase 14 review. The
+**release workflow has never run** — it wants a tag, three runners and signing secrets this
+repository does not have — and the **Flatpak, the signed `.app` and the MSIX have not been
+built**, for the same reason. So every fix that phase made to `release.yml` is a fix nothing has
+executed. What has been built on this machine is the Linux bundle and the web output; the other
+four are built by [`ci.yml`](.github/workflows/ci.yml) on every push, which now builds **Android
+in release** — the one target where the release configuration is this repository's own work
+rather than the toolchain's, and it was running nowhere.
 
 ## Getting started
 
