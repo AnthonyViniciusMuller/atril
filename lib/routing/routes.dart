@@ -84,6 +84,22 @@ abstract final class Routes {
   /// The value [doneParameter] carries after a password reset.
   static const String passwordWasReset = 'password-reset';
 
+  /// The query parameter the onboarding redirect carries a destination in.
+  ///
+  /// A device sent to onboarding was going somewhere — a book someone shared,
+  /// a screen it was on when its credential expired — and the location is the
+  /// only thing that remembers it across a sign-in. It is validated before it
+  /// is honoured: it comes from the address bar, and an absolute URL admitted
+  /// here would be this app forwarding a reader to somebody else's site.
+  static const String fromParameter = 'from';
+
+  /// [location] with [destination] recorded on it, for the guard to honour
+  /// once this device has a session.
+  static String onboardingFrom(String destination) => Uri(
+    path: onboarding,
+    queryParameters: <String, String>{fromParameter: destination},
+  ).toString();
+
   /// The reader's collection, and where a signed-in device starts.
   static const String library = '/library';
 

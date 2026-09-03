@@ -84,11 +84,13 @@ GoRouter atrilRouter({
   Listenable? refresh,
   String initialLocation = Routes.library,
 }) {
+  final _Deflected deflected = _Deflected();
+
   return GoRouter(
     initialLocation: initialLocation,
     refreshListenable: refresh ?? SignalOf<bool>(session.signedIn),
     redirect: (BuildContext context, GoRouterState state) =>
-        _guard(session, state),
+        _guard(session, state, deflected),
     errorBuilder: (BuildContext context, GoRouterState state) =>
         NotFoundScreen(location: state.uri.toString()),
     routes: <RouteBase>[
@@ -275,8 +277,27 @@ GoRouter atrilRouter({
   );
 }
 
+/// Where a signed-out device was going before it was sent to onboarding.
+///
+/// **It exists because the location cannot carry it the whole way.** The
+/// redirect writes the destination onto `/onboarding` as a query parameter,
+/// which is what a browser reload restores and what makes the deflection
+/// visible; but a reader then walks from the server selection to the sign-in
+/// screen and on to registration, and each of those is a `go` to a bare path
+/// that keeps no query. Teaching four onboarding screens to forward a
+/// parameter none of them is about would be four screens knowing about the
+/// guard. This is the guard remembering its own deflection instead, for as long
+/// as the sign-in it caused takes.
+final class _Deflected {
+  String? destination;
+}
+
 /// Where [state] should go instead, or `null` to let it through.
-Future<String?> _guard(SessionHolder session, GoRouterState state) async {
+Future<String?> _guard(
+  SessionHolder session,
+  GoRouterState state,
+  _Deflected deflected,
+) async {
   final signedIn = await session.isSignedIn;
 
   // A prefix and not an equality: phase 6 hangs registration, login and
@@ -285,18 +306,66 @@ Future<String?> _guard(SessionHolder session, GoRouterState state) async {
   final onboarding = state.matchedLocation.startsWith(Routes.onboarding);
 
   if (!signedIn && !onboarding) {
-    _log.fine('no session; ${state.matchedLocation} redirects to onboarding');
+    final destination = state.uri.toString();
 
-    return Routes.onboarding;
+    _log.fine('no session; ${state.matchedLocation} redirects to onboarding');
+    deflected.destination = destination;
+
+    return Routes.onboardingFrom(destination);
   }
 
   if (signedIn && onboarding) {
+    // The one onboarding screen a signed-in device is entitled to be on. The
+    // credential arrives in a mail client, as often as not on another device,
+    // and a reader who already has a session on this one is still a reader
+    // changing their password — sending them to the library discards the token
+    // in the link and leaves them at the screen they came from.
+    if (state.matchedLocation == Routes.resetPassword) {
+      return null;
+    }
+
+    final wanted =
+        _localPath(state.uri.queryParameters[Routes.fromParameter]) ??
+        _localPath(deflected.destination);
+
+    deflected.destination = null;
+
     _log.fine('a session exists; ${state.matchedLocation} redirects away');
 
-    return Routes.library;
+    return wanted ?? Routes.library;
   }
 
   return null;
+}
+
+/// [destination] if it is a location inside this app, and `null` otherwise.
+///
+/// The value reaches here from the address bar, so what it is allowed to be is
+/// stated rather than assumed: one leading slash and no scheme and no
+/// authority. `https://elsewhere.example` would be this app forwarding a reader
+/// who has just typed their password to somebody else's site, and `//host/path`
+/// is the same thing spelled so that it looks like a path.
+///
+/// A destination inside onboarding is refused too, for a duller reason: it is
+/// the location the guard is redirecting *away* from, and honouring it would be
+/// a loop.
+String? _localPath(String? destination) {
+  if (destination == null ||
+      !destination.startsWith('/') ||
+      destination.startsWith('//')) {
+    return null;
+  }
+
+  final Uri? parsed = Uri.tryParse(destination);
+
+  if (parsed == null ||
+      parsed.hasScheme ||
+      parsed.hasAuthority ||
+      parsed.path.startsWith(Routes.onboarding)) {
+    return null;
+  }
+
+  return destination;
 }
 
 /// A [Listenable] that fires whenever [stream] emits.

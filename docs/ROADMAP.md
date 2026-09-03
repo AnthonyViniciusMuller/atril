@@ -1863,10 +1863,22 @@ merged in order, which is why each fix names the section it belongs to and touch
       lifetime now, and it cannot outlive what it describes — the port is chosen at bind time, so
       the next run is a different origin. The completed-`readyToLoad` guard landed with the mount
       fix above, since that is where the completer moved
-- [ ] `fix: keep the destination through onboarding` — the guard sends a signed-out device to
-      onboarding without remembering where it was going, and sends a signed-in device following
-      the password-reset link to the library with the token discarded. Carry the destination and
-      exempt the reset route, with router tests for both
+- [x] `fix: keep the destination through onboarding` — a device whose credential expired while
+      it was reading, and a book somebody shared as a link, both arrived at the library after
+      signing in: the guard deflected to `/onboarding` and remembered nothing. **The destination
+      is carried and honoured, and it is validated as a local path before it is** — it reaches
+      the guard from the address bar, and an absolute URL admitted there would be this app
+      forwarding a reader who has just typed their password to somebody else's site, with
+      `//host/path` the same thing spelled to look like a path. The plan asked for a query
+      parameter and that alone does not work, which is worth recording: the redirect writes
+      `?from=` onto `/onboarding`, but a reader then walks to the sign-in screen and on to
+      registration, and every one of those hops is a `go` to a bare path that keeps no query. So
+      the parameter is what a browser reload restores and the guard **also remembers its own
+      deflection** for the length of the sign-in it caused — which is the guard knowing about
+      itself, rather than four onboarding screens forwarding a parameter none of them is about.
+      The reset route is exempt from the signed-in-leaves-onboarding rule for a different reason:
+      the credential arrives in a mail client, and a reader who already has a session here is
+      still a reader changing their password
 - [ ] `perf: rebuild the chrome and not the page` — one listenable wraps the whole scaffold and
       every notification rebuilds the host's platform view; the adaptive shell does the same for
       a badge count. Build the view once and scope the listeners

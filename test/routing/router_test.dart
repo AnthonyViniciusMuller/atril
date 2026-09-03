@@ -22,6 +22,7 @@ import 'package:atril/ui/federation/widgets/migration_screen.dart';
 import 'package:atril/ui/federation/widgets/replicas_screen.dart';
 import 'package:atril/ui/library/widgets/ebook_screen.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
+import 'package:atril/ui/onboarding/widgets/password_reset_screen.dart';
 import 'package:atril/ui/onboarding/widgets/register_screen.dart';
 import 'package:atril/ui/onboarding/widgets/server_selection_screen.dart';
 import 'package:atril/ui/settings/widgets/settings_screen.dart';
@@ -156,6 +157,107 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ServerSelectionScreen), findsOneWidget);
+    });
+
+    testWidgets('remembers where a device with no session was going', (
+      WidgetTester tester,
+    ) async {
+      // A link somebody shared, or the screen a reader was on when their
+      // credential expired. Sending them to the library after they sign in
+      // throws away the one thing they asked for.
+      const String wanted = '/library/aaaaaaaa-1111-4111-8111-111111111111';
+      final session = _holder();
+      final router = atrilRouter(session: session, initialLocation: wanted);
+
+      addTearDown(router.dispose);
+      addTearDown(session.dispose);
+
+      await _pump(tester, router);
+      expect(find.byType(ServerSelectionScreen), findsOneWidget);
+
+      await session.begin(_session());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EbookScreen), findsOneWidget);
+      expect(find.byType(LibraryScreen), findsNothing);
+    });
+
+    testWidgets('remembers it across the screens onboarding is made of', (
+      WidgetTester tester,
+    ) async {
+      // The parameter on `/onboarding` does not survive this: the server
+      // selection goes to the sign-in screen with a bare path, as every screen
+      // below the prefix goes to the next. The guard remembers its own
+      // deflection for exactly this reason.
+      const String wanted = '/library/aaaaaaaa-1111-4111-8111-111111111111';
+      final session = _holder();
+      final router = atrilRouter(session: session, initialLocation: wanted);
+
+      addTearDown(router.dispose);
+      addTearDown(session.dispose);
+
+      await _pump(tester, router);
+
+      router.go(Routes.signIn);
+      await tester.pumpAndSettle();
+
+      await session.begin(_session());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EbookScreen), findsOneWidget);
+    });
+
+    testWidgets('refuses a destination that is not a location of this app', (
+      WidgetTester tester,
+    ) async {
+      // It arrives in the address bar, so what it is allowed to be is stated
+      // rather than assumed: honouring an absolute URL would be this app
+      // forwarding a reader who has just typed their password somewhere else.
+      final session = _holder();
+      await session.begin(_session());
+
+      final router = atrilRouter(
+        session: session,
+        initialLocation: Uri(
+          path: Routes.onboarding,
+          queryParameters: <String, String>{
+            Routes.fromParameter: 'https://elsewhere.example/library',
+          },
+        ).toString(),
+      );
+
+      addTearDown(router.dispose);
+      addTearDown(session.dispose);
+
+      await _pump(tester, router);
+
+      expect(find.byType(LibraryScreen), findsOneWidget);
+    });
+
+    testWidgets('lets a signed-in device follow a password reset link', (
+      WidgetTester tester,
+    ) async {
+      // The credential arrives in a mail client, as often as not on another
+      // device. A reader who already has a session here is still a reader
+      // changing their password, and the library discards the token.
+      final session = _holder();
+      await session.begin(_session());
+
+      final router = atrilRouter(
+        session: session,
+        initialLocation: Uri(
+          path: Routes.resetPassword,
+          queryParameters: <String, String>{Routes.tokenParameter: 'a-token'},
+        ).toString(),
+      );
+
+      addTearDown(router.dispose);
+      addTearDown(session.dispose);
+
+      await _pump(tester, router);
+
+      expect(find.byType(PasswordResetScreen), findsOneWidget);
+      expect(find.byType(LibraryScreen), findsNothing);
     });
 
     testWidgets('treats every location below onboarding as onboarding', (
