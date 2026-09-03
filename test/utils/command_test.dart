@@ -130,6 +130,28 @@ void main() {
       expect(notifications, 1);
     });
 
+    test('disposed while running does not notify', () async {
+      // Leaving a screen while a command runs is the ordinary case: the book is
+      // still opening, the file is still downloading. The view model disposes
+      // the command, the action finishes, and a notification then would be a
+      // `ChangeNotifier` asserting in debug on a listener list that is gone.
+      final gate = Completer<Result<int>>();
+      final command = Command0<int>(() => gate.future);
+
+      var notifications = 0;
+      command.addListener(() => notifications++);
+
+      final run = command.execute();
+      expect(notifications, 1);
+
+      command.dispose();
+      gate.complete(const Result<int>.ok(1));
+
+      await expectLater(run, completes);
+      expect(notifications, 1);
+      expect(command.running, isFalse);
+    });
+
     test('an action that throws leaves the command runnable again', () async {
       // Throwing across the boundary is a bug rather than a failure, so the
       // exception is not swallowed — but the command must not be left running,

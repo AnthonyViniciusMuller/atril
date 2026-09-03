@@ -35,6 +35,7 @@ typedef CommandAction1<T, A> = Future<Result<T>> Function(A argument);
 /// the last run, and the notification around both.
 abstract class Command<T> extends ChangeNotifier {
   bool _running = false;
+  bool _disposed = false;
   Result<T>? _result;
 
   /// Whether the action is running. A control bound to a command that is
@@ -77,6 +78,12 @@ abstract class Command<T> extends ChangeNotifier {
   /// command not running, with no result, and the exception continues out of
   /// `execute` — deliberately: it is a broken layer boundary, and swallowing
   /// it here would turn a bug in the app into a button that does nothing.
+  ///
+  /// A command disposed while its action is in flight finishes the action and
+  /// keeps the result, but tells nobody: the view model that owned it has gone,
+  /// and `ChangeNotifier` asserts on a notification after disposal. Leaving a
+  /// screen while its book opens or its file downloads is the ordinary case
+  /// and not a bug to assert on.
   Future<void> _execute(CommandAction0<T> action) async {
     if (_running) {
       return;
@@ -84,14 +91,26 @@ abstract class Command<T> extends ChangeNotifier {
 
     _running = true;
     _result = null;
-    notifyListeners();
+    _notify();
 
     try {
       _result = await action();
     } finally {
       _running = false;
+      _notify();
+    }
+  }
+
+  void _notify() {
+    if (!_disposed) {
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
 

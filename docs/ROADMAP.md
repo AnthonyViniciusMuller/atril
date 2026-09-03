@@ -1807,9 +1807,16 @@ merged in order, which is why each fix names the section it belongs to and touch
       its view's `initState` has run, as the real ones do, and a new test holds the file open and
       looks at the first frame: the page is there under the spinner before the host has been
       asked. Neither real host was run on a device here
-- [ ] `fix: silence a command that was disposed mid-run` — `Command` notifies in its `finally`
-      with no disposed flag, so leaving a screen while a command runs asserts in debug. Track
-      disposal and test it
+- [x] `fix: silence a command that was disposed mid-run` — `Command` notified in its `finally`
+      with no disposed flag, so leaving a screen while a command ran — the reader while its book
+      opened, the book screen while its file downloaded — reached `ChangeNotifier`'s
+      `notifyListeners` after `dispose()`, which asserts in debug. **The command tracks its own
+      disposal and both notifications go through a guard**, the one before the action as well as
+      the one after, because a command disposed between `execute()` and its first `await` is the
+      same case one frame earlier. The action still runs to its end and the result is still
+      kept: what is silenced is the announcement to a listener list that is gone, not the work.
+      The test starts a run, disposes the command, completes the action and asserts the listener
+      heard the start and nothing after it
 - [ ] `fix: tell the reader why the book did not open, in their language` — the refusal's
       default branch renders the exception's diagnostic message, which the view model says is
       never shown and the hosts write in English. Map the code to a message in the ARB files
