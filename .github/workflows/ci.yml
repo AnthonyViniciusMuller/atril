@@ -150,8 +150,28 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Unit and widget tests
-        run: flutter test
+      # `flutter test --coverage` and then a floor, through the make target, so
+      # that the report CI publishes is filtered exactly as a laptop's is. It
+      # replaces a plain `flutter test` rather than following one: the same
+      # tests run, and running them twice to measure the second pass would
+      # double the longest step in this job.
+      #
+      # The floor is a ratchet. It fails a phase that drops coverage, which is
+      # the only thing a number nobody compares cannot do; raising it is a
+      # decision that belongs in a diff, like the Android minSdk pin.
+      - name: Unit and widget tests, with a coverage floor
+        run: make coverage-check
+
+      # The report itself, so that a red floor can be read rather than guessed
+      # at. `if: always()` because the run that fails the floor is exactly the
+      # run whose report somebody wants.
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
 
   # Six targets, and a commit that builds on five is not done. Each one is a
   # job rather than a step so that a failure names the platform it belongs to.

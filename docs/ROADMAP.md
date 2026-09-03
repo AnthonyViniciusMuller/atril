@@ -2080,8 +2080,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       **run here rather than assumed**: `flutter pub get --enforce-lockfile` exits 0 in this
       worktree, path `dependency_overrides` and all, which was the thing worth checking before
       making it a gate. Verified locally: the resolve, and that all three YAML files parse
-- [ ] `ci: measure coverage and hold a floor` — `make coverage` runs nowhere, its filter keeps
-      the generated localizations, and nothing fails when a phase drops coverage
+- [x] `ci: measure coverage and hold a floor` — `make coverage` runs nowhere, its filter keeps
+      the generated localizations, and nothing fails when a phase drops coverage. The filter
+      grows `lib/ui/core/localization/generated/`, which is the third generator and the only one
+      whose output the old two patterns missed — it is neither under `data/services/api/generated`
+      nor named `.g.dart`, so 2,500 lines of `gen-l10n` output were being counted as this
+      project's tested code. **The floor is 85%, and it is a ratchet rather than a target**: the
+      tree measures **87.5% of 9,266 lines across 174 files** with the three generators excluded,
+      so 85 leaves two and a half points of room for a phase that adds code before it adds tests
+      and still turns red on a real drop. Raising it is a decision that belongs in a diff, which
+      is why it is `COVERAGE_FLOOR ?=` in the Makefile and not a literal in the workflow. The
+      check is `tool/check_coverage.dart` — lcov's `LF`/`LH` records summed, and **an empty
+      report is a failure**, because a filter that matched everything would otherwise be the
+      greenest build this project ever had. In CI it **replaces** `flutter test` rather than
+      following it: `--coverage` runs the same tests, and running them twice to measure the
+      second pass would double the longest step in the job. The report is uploaded on
+      `if: always()`, since the run that fails the floor is the one whose report somebody wants.
+      The reviewer measured 86.5% at the branch point; the three sub-sections merged before this
+      one are what moved it to 87.5. Verified by running it
 - [ ] `fix: declare the percent placeholder` — three messages use `{percent}` without declaring
       it, so the generated API takes an `Object` where everything else is typed. Declare it and
       assert in the ARB test that every placeholder is

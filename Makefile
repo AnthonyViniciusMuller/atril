@@ -268,17 +268,31 @@ test:
 	$(FLUTTER) test
 
 # Generated code is not this project's code, and a percentage that counts it
-# measures protoc and drift. lcov.info is a flat list of per-file records, so
-# dropping one means dropping its SF: line and everything after it up to the
-# next one.
+# measures protoc, drift and gen-l10n. lcov.info is a flat list of per-file
+# records, so dropping one means dropping its SF: line and everything after it
+# up to the next one.
+L10N_GEN_DIR := lib/ui/core/localization/generated
+
 ## coverage: the tests with an lcov report, generated code excluded
 .PHONY: coverage
 coverage:
 	$(FLUTTER) test --coverage
-	@awk '/^SF:/ { skip = index($$0, "$(GEN_DIR)/") > 0 || /\.g\.dart$$/ } !skip' \
+	@awk '/^SF:/ { skip = index($$0, "$(GEN_DIR)/") > 0 \
+		|| index($$0, "$(L10N_GEN_DIR)/") > 0 || /\.g\.dart$$/ } !skip' \
 		coverage/lcov.info > coverage/lcov.info.filtered
 	@mv coverage/lcov.info.filtered coverage/lcov.info
 	@echo "coverage/lcov.info written, without the generated code"
+
+# The floor is a ratchet and not a target: it is set just under what the tree
+# measures, so that a phase which drops coverage is a red build and a phase
+# which raises it is a reason to raise this number. CI runs this target rather
+# than `coverage`, so the report and the check are one step.
+COVERAGE_FLOOR ?= 85
+
+## coverage-check: fail when the line coverage is under COVERAGE_FLOOR percent
+.PHONY: coverage-check
+coverage-check: coverage
+	$(DART) run tool/check_coverage.dart coverage/lcov.info $(COVERAGE_FLOOR)
 
 # --- running -----------------------------------------------------------------
 
