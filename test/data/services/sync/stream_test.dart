@@ -20,6 +20,7 @@ import 'package:atril/data/services/sync/stream.dart';
 import 'package:atril/domain/crdt/hybrid_clock.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/operation.dart';
+import 'package:drift/drift.dart' show LazyDatabase;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
@@ -81,6 +82,12 @@ final class _StreamingNode extends FakeSyncService {
   /// What the cursor was when a confirmation arrived, asked of the device's
   /// own database. It is how *after the write commits* is made observable.
   void Function(int position)? onAck;
+
+  /// Whether the device closed the outbound half of the call.
+  ///
+  /// It is the node's own view of whether a stream was released, which is the
+  /// only place a subscription this device forgot to cancel is visible.
+  bool hungUp = false;
 
   @override
   Stream<pb.SyncResponse> sync(
@@ -166,7 +173,11 @@ final class _StreamingNode extends FakeSyncService {
         drain();
       },
       onError: out.addError,
-      onDone: out.close,
+      onDone: () {
+        hungUp = true;
+
+        out.close();
+      },
     );
 
     out.onCancel = subscription.cancel;
@@ -370,6 +381,51 @@ void main() {
 
     await expectLater(ended, completes);
     expect(stream.isOpen, isFalse);
+  });
+
+  test('releases the stream when a delivery fails', () async {
+    // A failure while applying a delivery ends the channel, and what has to end
+    // with it is the subscription and the outbound half. A close keyed on the
+    // sink returned here without cancelling either, because ending had already
+    // released the sink — so the device held a call it was no longer serving,
+    // and the node is what notices.
+    //
+    // The reconciler is given a replica that will not open, so applying
+    // anything at all fails; the cursor and the outbox are the stream's own,
+    // working, database.
+    final broken = AtrilDatabase(
+      LazyDatabase(() async => throw StateError('the replica will not open')),
+    );
+
+    // Closing it would raise the same refusal again, from a tear-down this
+    // test has already made its point in.
+    addTearDown(() async => broken.close().catchError((Object _) {}));
+
+    stream = SyncStream(
+      database: database,
+      api: SyncApi(connection: connection, session: session),
+      reconciler: Reconciler(broken, HybridClock(wall: () => _at)),
+      now: () => _at,
+    );
+
+    await stream.open();
+
+    final ended = expectLater(stream.done, throwsA(isA<Object>()));
+
+    // The node holds an operation and hands it over when this device pushes,
+    // which is what makes the failure happen after the stream is open rather
+    // than while it is opening.
+    logged(1);
+    await owe(1);
+    await stream.offer();
+
+    await ended;
+
+    expect(stream.isOpen, isFalse);
+
+    await stream.close();
+
+    expect(node.hungUp, isTrue);
   });
 
   test('carries what ended it', () async {

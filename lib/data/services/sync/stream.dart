@@ -83,8 +83,15 @@ final class SyncStream implements SyncChannel {
 
   final DateTime Function() _now;
 
+  // The two halves of the call, and whether it is still being served. They
+  // are separate because they are released at different moments: ending the
+  // channel stops it being served, and only a close hangs it up — a delivery
+  // that failed does the first and cannot do the second, and a close that
+  // asked *is there still a sink* would find one already released and leave
+  // the call open behind it.
   StreamController<SyncCommand>? _commands;
   StreamSubscription<SyncEvent>? _events;
+  bool _live = false;
   Completer<void>? _ended;
   Completer<void>? _settled;
   String _node = '';
@@ -92,7 +99,7 @@ final class SyncStream implements SyncChannel {
   final Set<String> _offered = <String>{};
 
   @override
-  bool get isOpen => _commands != null;
+  bool get isOpen => _live;
 
   /// Where this device's cursor into the node's log stands.
   int get cursor => _cursor;
@@ -117,6 +124,7 @@ final class SyncStream implements SyncChannel {
     final settled = Completer<void>();
 
     _commands = commands;
+    _live = true;
     _ended = ended;
     _settled = settled;
     _offered.clear();
@@ -162,7 +170,7 @@ final class SyncStream implements SyncChannel {
   Future<void> offer() async {
     final commands = _commands;
 
-    if (commands == null || _offered.isNotEmpty) {
+    if (!_live || commands == null || _offered.isNotEmpty) {
       return;
     }
 
@@ -192,19 +200,34 @@ final class SyncStream implements SyncChannel {
   /// node is given [streamCloseGrace] to end the stream itself. Only after that
   /// is the call hung up. The order is the whole of what makes a close graceful
   /// rather than a discarded acknowledgement — see [streamCloseGrace].
+  ///
+  /// **What it asks is whether anything is still held**, and never whether the
+  /// channel is still being served. A delivery that failed ends the channel
+  /// and stops it being served while the call is still open, and a close that
+  /// read that as *already closed* would leave the subscription subscribed and
+  /// the node holding a stream nobody is on the other end of.
   @override
   Future<void> close() async {
     final commands = _commands;
     final events = _events;
     final settled = _settled;
 
-    if (commands == null) {
+    if (commands == null && events == null) {
       return;
     }
 
     _end();
 
-    await commands.close();
+    _commands = null;
+    _events = null;
+
+    // The half-close is sent and not waited on. What it has to do is reach the
+    // node, and what says it arrived is the node ending the stream — which is
+    // the wait below. Waiting on the sink itself would hang a close whose
+    // transport had already failed, because a request stream nobody is reading
+    // any more never finishes closing.
+    unawaited(commands?.close());
+
     await settled?.future.timeout(
       streamCloseGrace,
       onTimeout: () => _log.info('the node did not end the stream; hanging up'),
@@ -273,7 +296,7 @@ final class SyncStream implements SyncChannel {
   void _send(SyncCommand command) {
     final commands = _commands;
 
-    if (commands == null || commands.isClosed) {
+    if (!_live || commands == null || commands.isClosed) {
       return;
     }
 
@@ -283,7 +306,9 @@ final class SyncStream implements SyncChannel {
   void _end({Object? error, StackTrace? trace}) {
     final ended = _ended;
 
-    _commands = null;
+    // What ends here is the *serving* of the channel. The call itself is hung
+    // up by [close], which is the only place that releases either half.
+    _live = false;
     _ended = null;
     _offered.clear();
 

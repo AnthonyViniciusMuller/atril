@@ -1678,10 +1678,19 @@ merged in order, which is why each fix names the section it belongs to and touch
       in Dart before the statement is built, so `InvalidDataException` is the same fact and is
       caught too. The transaction survives a failed statement, which the test proves by applying
       the next operation of the same batch
-- [ ] `fix: release the stream when a delivery fails` — a failure in `_handle` ends the channel
-      with the subscription still held and the controller still open, and `close()` returns
-      early because the commands sink is already null. Key `close()` on the subscription, as the
-      watch channel does, and test that a throwing reconciler leaves nothing subscribed
+- [x] `fix: release the stream when a delivery fails` — a failure in `_handle` ended the channel
+      with the subscription still held and the controller still open, and `close()` returned
+      early because the commands sink was already null. **Being served and being held are now
+      two different questions**: `_live` says whether the channel is serving and is what ending
+      clears, and the sink and the subscription are resources only `close` releases. Keying the
+      close on the subscription alone was not enough, which the test found: ending had already
+      dropped the sink, so nothing hung up the outbound half and the node never learnt the
+      device had gone. The other thing the test found is that **the half-close cannot be waited
+      on** — a request stream whose transport has already failed never finishes closing, and
+      awaiting it hung `close()` for the full timeout after every failed channel. It is sent,
+      and what says it arrived is the node ending the stream, which is the wait that was already
+      there. The fake node now records that the device hung up, because the leak is only visible
+      from the other end
 - [ ] `fix: report a channel that ended before it was watched` — `done` returns a completed
       future when the completer was nulled before the scheduler subscribed, so a transport that
       fails during `open()` is an unhandled error and a clean end at once, and the status never
