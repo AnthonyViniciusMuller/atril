@@ -20,6 +20,8 @@
 /// be a gesture that runs a query that is already running.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -55,6 +57,24 @@ const double coverExtent = 180;
 
 /// The proportions of a cover, which are roughly those of a paperback.
 const double coverAspect = 2 / 3;
+
+/// How much room the two lines under a cover need at the ordinary text size.
+///
+/// A title over two lines and an author over one, in `bodyMedium` and
+/// `bodySmall`. It is the part of a grid cell that grows when a reader turns
+/// their type size up, and reserving it is what a fixed `childAspectRatio`
+/// could not do: at 200% the same cell had a cover of the same height and half
+/// the text hanging out of the bottom of it.
+const double coverLabelHeight = 56;
+
+/// The gap between a cover and the lines under it, which is not text.
+const double coverLabelGap = 8;
+
+/// How much padding the grid has around it, per side.
+const double shelfPadding = 16;
+
+/// The gap between two cells, in both directions.
+const double shelfSpacing = 16;
 
 /// The library screen.
 class LibraryScreen extends StatefulWidget {
@@ -511,20 +531,42 @@ class _Shelf extends StatelessWidget {
             itemBuilder: (BuildContext context, int index) =>
                 _WorkTile(work: works[index]),
           )
-        : GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: coverExtent,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              // Room for the cover and for the two lines under it.
-              childAspectRatio: 0.52,
-            ),
-            itemCount: works.length,
-            itemBuilder: (BuildContext context, int index) =>
-                _WorkCard(work: works[index]),
-          ),
+        : _grid(context, constraints),
   );
+
+  /// The shelf as a grid, with a cell tall enough for what is in it.
+  ///
+  /// **The height is computed rather than declared as a ratio.** A cell is a
+  /// cover, whose height follows its width, plus two lines of text, whose
+  /// height follows the reader's type size — and one number cannot be right for
+  /// both. `childAspectRatio: 0.52` was right at 100% and overflowed at 130%.
+  ///
+  /// The columns are counted here the way the delegate counts them, so that the
+  /// width this arithmetic is about is the width a cell actually gets.
+  Widget _grid(BuildContext context, BoxConstraints constraints) {
+    final available = constraints.maxWidth - shelfPadding * 2;
+    // At least one, for a window narrower than a single cover: the delegate
+    // refuses a count of zero, and a shelf is still a shelf at 200 pixels.
+    final columns = math.max(
+      1,
+      (available / (coverExtent + shelfSpacing)).ceil(),
+    );
+    final cellWidth = (available - shelfSpacing * (columns - 1)) / columns;
+    final labels = MediaQuery.textScalerOf(context).scale(coverLabelHeight);
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(shelfPadding),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        mainAxisSpacing: shelfSpacing,
+        crossAxisSpacing: shelfSpacing,
+        mainAxisExtent: cellWidth / coverAspect + coverLabelGap + labels,
+      ),
+      itemCount: works.length,
+      itemBuilder: (BuildContext context, int index) =>
+          _WorkCard(work: works[index]),
+    );
+  }
 }
 
 /// One work, in the narrow shape.
@@ -577,7 +619,7 @@ class _WorkCard extends StatelessWidget {
               child: _Cover(work: work),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: coverLabelGap),
           Text(
             work.title,
             style: theme.textTheme.bodyMedium,

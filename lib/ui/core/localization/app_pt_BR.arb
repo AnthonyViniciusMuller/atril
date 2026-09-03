@@ -1085,6 +1085,27 @@
     "description": "Quanto do livro já foi percorrido, mostrado na barra inferior do leitor. O número vem do índice de localizações do próprio motor."
   },
 
+  "readingPercentValue": "{percent}%",
+  "@readingPercentValue": {
+    "description": "Quanto do livro já foi lido, como valor de uma barra de progresso para leitores de tela. É só o número e o sinal: o framework exige que este valor seja lido como número, então nenhuma palavra entra aqui.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+
+  "readingProgressLabel": "Progresso da leitura",
+  "@readingProgressLabel": {
+    "description": "Nome da barra de progresso para quem usa leitor de tela. É o que a barra mede; quanto já foi lido vai à parte, como valor."
+  },
+
+  "readerToggleChrome": "Mostrar ou ocultar os controles",
+  "@readerToggleChrome": {
+    "description": "Descrição, para leitores de tela, do toque sobre a página. A página em si é do motor de leitura e não tem rótulo nenhum."
+  },
+
   "readerOpening": "Abrindo o livro…",
   "@readerOpening": {
     "description": "Mostrado enquanto o arquivo é lido e entregue ao motor. Um EPUB grande leva alguns segundos, e uma tela silenciosa nesse intervalo parece travada."

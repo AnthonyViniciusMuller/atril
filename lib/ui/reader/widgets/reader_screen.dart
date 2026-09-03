@@ -133,6 +133,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
       return KeyEventResult.handled;
     }
 
+    // Escape is what a tap is, for somebody who is not tapping. Every other
+    // way to clear the chrome is a gesture on the page, which is a keyboard
+    // reader's one unreachable control — and on a desktop the page is where
+    // the whole window is.
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      _model.toggleChrome();
+
+      return KeyEventResult.handled;
+    }
+
     return KeyEventResult.ignored;
   }
 
@@ -197,10 +207,21 @@ class _ReaderBody extends StatelessWidget {
         // The host's own view, and a tap target over it. The gesture is here
         // and not inside the page because a tap inside the webview is the
         // book's — a reader following a footnote should follow it.
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
+        //
+        // The `Semantics` is what makes that gesture exist for a screen
+        // reader. Everything inside the view belongs to the engine and is
+        // announced — or not — by whatever the platform's webview does with
+        // it; this one control is the app's, and without a label it is a tap
+        // target with no name on top of somebody else's document.
+        Semantics(
+          button: true,
+          label: AppLocalizations.of(context).readerToggleChrome,
           onTap: model.toggleChrome,
-          child: page,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: model.toggleChrome,
+            child: page,
+          ),
         ),
         ListenableBuilder(
           listenable: model.open,
@@ -443,6 +464,17 @@ class _ReaderProgress extends StatelessWidget {
                       LinearProgressIndicator(
                         value: model.progress,
                         backgroundColor: Colors.white24,
+                        // The bar is the only thing on this screen that says
+                        // where the reader is, and to a screen reader it said
+                        // nothing at all. The value is the same sentence the
+                        // line under it shows: one number, one wording.
+                        semanticsLabel: l10n.readingProgressLabel,
+                        // The bare percentage and not the sentence beside it:
+                        // the framework reads this value as a number and
+                        // refuses one carrying a word.
+                        semanticsValue: l10n.readingPercentValue(
+                          (model.progress * 100).round(),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(

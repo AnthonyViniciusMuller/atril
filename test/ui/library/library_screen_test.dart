@@ -84,6 +84,54 @@ void main() {
     l10n = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
+  for (final double scale in <double>[1.3, 2.0]) {
+    for (final double width in <double>[400, 900]) {
+      testWidgets('lays a shelf of ${width}px out at ${scale}x text', (
+        WidgetTester tester,
+      ) async {
+        // `childAspectRatio: 0.52` was a cell that fitted a cover and two
+        // lines at 100% and half of the second line at 130%. Nothing in this
+        // suite had ever set a text size, which is why it went unnoticed
+        // through five phases.
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+        final harness = await pump(tester, width: width);
+
+        harness.library.works.add(
+          Result<List<Ebook>>.ok(<Ebook>[
+            _work('Grande Sertão: Veredas', author: 'Guimarães Rosa'),
+            _work('Os Sertões', author: 'Euclides da Cunha', id: 'b'),
+            _work('Iracema', author: 'José de Alencar', id: 'c'),
+          ]),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Os Sertões'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        if (width < gridWidth) {
+          return;
+        }
+
+        // The stronger half of the claim, and the one an overflow check
+        // misses: the cover is an `Expanded` above the two lines, so a cell
+        // that reserved too little for the text did not overflow — it took the
+        // room out of the cover and squashed a paperback into a postcard. The
+        // cell reserves the labels, so the cover keeps its proportions.
+        final Size cell = tester.getSize(find.byType(InkWell).first);
+        final Size cover = tester.getSize(find.byType(AspectRatio).first);
+
+        expect(cover.width / cover.height, closeTo(coverAspect, 0.01));
+        // And it is the cell's full width. `AspectRatio` keeps its proportions
+        // by narrowing when it is given too little height, so a cell that
+        // reserved too little for the text did not overflow and did not
+        // distort — it left a paperback floating in a column of white.
+        expect(cover.width, closeTo(cell.width, 0.5));
+      });
+    }
+  }
+
   testWidgets('waits without claiming the collection is empty', (
     WidgetTester tester,
   ) async {

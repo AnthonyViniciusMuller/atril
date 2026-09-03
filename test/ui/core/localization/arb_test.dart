@@ -103,6 +103,11 @@ void main() {
       // precedes it — is `intl`'s placement rather than a translator's word.
       'readerFontSizeValue',
       'libraryContinuePercent',
+      // The value a screen reader is given for a progress bar, which the
+      // framework insists on being able to read as a number: it is the same
+      // sign and the same placement in both languages, and there is no room in
+      // it for a word that could differ.
+      'readingPercentValue',
       // Two placeholders and a separator, and nothing of either language: the
       // title is the book's own and the date is `MaterialLocalizations`'.
       'annotationsFromBook',

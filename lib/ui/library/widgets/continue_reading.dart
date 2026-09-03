@@ -25,14 +25,29 @@ import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../routing/routes.dart';
 import '../../core/localization/localization.dart';
 
-/// How tall the strip is.
+/// How tall the strip is at the system's ordinary text size.
 ///
 /// Enough for a title, a device and a progress bar, and no more: this is a way
 /// back into a book somebody is already reading, and a band that took a third
 /// of the shelf would be one the reader scrolls past every time.
+///
+/// It is a floor and not the height. What is in the card is four lines of text
+/// and a bar, so a reader who has turned their type size up needs a taller
+/// band — and a fixed one is where a `RenderFlex` overflow comes from, which is
+/// this app telling somebody with poor eyesight that their setting is
+/// unsupported.
 const double continueReadingHeight = 116;
 
-/// How wide one card is.
+/// How much of [continueReadingHeight] is padding rather than text.
+///
+/// The card's own padding and the progress bar under it: the part of the band
+/// that is the same height whatever the reader has set their type size to.
+const double continueReadingPadding = 36;
+
+/// How wide one card is at the ordinary text size.
+///
+/// It widens with the type size too, up to half again: a title at 200% in a
+/// 240-pixel card is two words and an ellipsis.
 const double continueReadingCardWidth = 240;
 
 /// The strip of places to carry on from.
@@ -63,7 +78,14 @@ class ContinueReading extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: continueReadingHeight,
+          // The band grows with the reader's type size, because everything in
+          // it is text. The bar and the padding do not, which is why the
+          // scaler is applied to the height rather than the height being
+          // multiplied by it.
+          height:
+              continueReadingPadding +
+              MediaQuery.textScalerOf(context)
+                  .scale(continueReadingHeight - continueReadingPadding),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -91,7 +113,9 @@ class _PlaceCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return SizedBox(
-      width: continueReadingCardWidth,
+      width:
+          continueReadingCardWidth *
+          MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.5),
       child: Card(
         clipBehavior: Clip.antiAlias,
         margin: EdgeInsets.zero,
@@ -145,7 +169,19 @@ class _PlaceCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                LinearProgressIndicator(value: place.fraction, minHeight: 3),
+                LinearProgressIndicator(
+                  value: place.fraction,
+                  minHeight: 3,
+                  // A bar says nothing to a screen reader without these: the
+                  // label is what it is a bar *of*, and the value is the one
+                  // fact it carries. The percentage is the same sentence the
+                  // card shows, which is deliberate — two wordings for one
+                  // number would be two answers to *how far in am I*.
+                  semanticsLabel: l10n.readingProgressLabel,
+                  semanticsValue: l10n.readingPercentValue(
+                    (place.percent ?? 0).round(),
+                  ),
+                ),
               ],
             ),
           ),

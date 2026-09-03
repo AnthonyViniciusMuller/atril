@@ -213,6 +213,21 @@
   "readerProgress": "{percent}% read",
   "@readerProgress": {},
 
+  "readingPercentValue": "{percent}%",
+  "@readingPercentValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+
+  "readingProgressLabel": "Reading progress",
+  "@readingProgressLabel": {},
+
+  "readerToggleChrome": "Show or hide the controls",
+  "@readerToggleChrome": {},
+
   "readerOpening": "Opening the book…",
   "@readerOpening": {},
 

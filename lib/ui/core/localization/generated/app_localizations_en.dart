@@ -655,6 +655,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String readingPercentValue(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readingProgressLabel => 'Reading progress';
+
+  @override
+  String get readerToggleChrome => 'Show or hide the controls';
+
+  @override
   String get readerOpening => 'Opening the book…';
 
   @override

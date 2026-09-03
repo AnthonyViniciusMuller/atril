@@ -1893,9 +1893,25 @@ merged in order, which is why each fix names the section it belongs to and touch
       now, which is the only thing that number changes. The test counts what the fake host's
       `view()` was asked for across a chrome toggle, a page turn and a selection, and the answer
       is once
-- [ ] `fix: let the shelves grow with the system text` — fixed-height tiles overflow at large
-      text sizes, nothing under `lib/ui` carries semantics, and the progress bars say nothing to
-      a screen reader. Size from the text scaler, label the indicators, and test at 1.3× and 2×
+- [x] `fix: let the shelves grow with the system text` — three fixed numbers and no test in the
+      suite had ever set a text size, which is why they survived five phases. The continue-reading
+      band was 116 pixels holding four lines and a bar; it is now that height with the text part
+      scaled, and the card widens with the type up to half again, because a title at 200% in a
+      240-pixel card is two words and an ellipsis. The shelf's `childAspectRatio: 0.52` was the
+      more interesting one: **a cell is a cover, whose height follows its width, plus two lines,
+      whose height follows the reader's type size, and one ratio cannot be right for both.** The
+      grid counts its own columns the way the delegate does and gives each cell a computed
+      `mainAxisExtent`. The failure it fixes is *not* an overflow, which is why the obvious test
+      would have passed: the cover is an `Expanded`, so a cell that reserved too little for the
+      text took the room out of the cover, and `AspectRatio` kept its proportions by narrowing —
+      a paperback floating in a column of white rather than a yellow-and-black stripe. The test
+      pins the cover to the cell's full width at 1.3× and 2×, and fails if the reserve stops
+      following the scaler. **Semantics arrived at the same time and this app had none.** Both
+      progress bars carry a label and a value, and the value is a bare percentage because the
+      framework refuses to read one with a word in it as a number; the reader's page is a
+      `Semantics(button:)` over a widget that is otherwise an unnamed tap target on top of
+      somebody else's document; and Escape toggles the chrome, which was the one control
+      reachable by nothing but a tap on the page
 - [ ] `refactor: split the reader and the library screens` — nine widgets and four helpers in
       one file, the menus and the grid in another, and a view model that mixes the position
       debounce, the paint reconciliation and the mark commands. The paint diff becomes an object

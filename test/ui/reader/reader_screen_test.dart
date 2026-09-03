@@ -8,7 +8,6 @@
 library;
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:atril/data/repositories/annotations/annotation_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
@@ -23,6 +22,7 @@ import 'package:atril/ui/reader/widgets/reader_screen.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -364,6 +364,63 @@ void main() {
         expect(_chromeOpacity(tester), 1);
       },
     );
+
+    testWidgets('escape clears the chrome and brings it back', (
+      WidgetTester tester,
+    ) async {
+      // The tap is on the page, which is the one control a reader working
+      // from the keyboard cannot reach — and on a desktop the page is most of
+      // the window.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 0);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 1);
+    });
+
+    testWidgets('says what the page and the progress are', (
+      WidgetTester tester,
+    ) async {
+      // Everything inside the view belongs to the engine; the tap over it is
+      // the app's, and without a label it is an unnamed target on top of
+      // somebody else's document. The bar said nothing at all.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(42.4);
+      await tester.pumpAndSettle();
+
+      final Semantics page = tester.widget<Semantics>(
+        find
+            .ancestor(
+              of: find.byKey(const Key('the page')),
+              matching: find.byType(Semantics),
+            )
+            .first,
+      );
+
+      expect(page.properties.button, isTrue);
+      expect(page.properties.label, _pt().readerToggleChrome);
+
+      final LinearProgressIndicator bar = tester
+          .widget<LinearProgressIndicator>(
+            find.byType(LinearProgressIndicator),
+          );
+
+      expect(bar.semanticsLabel, _pt().readingProgressLabel);
+      expect(bar.semanticsValue, _pt().readingPercentValue(42));
+    });
 
     testWidgets('the controls turn the page', (WidgetTester tester) async {
       final _FakeHost host = _FakeHost();

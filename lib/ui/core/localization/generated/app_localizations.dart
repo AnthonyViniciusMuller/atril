@@ -1179,6 +1179,24 @@ abstract class AppLocalizations {
   /// **'{percent}% lido'**
   String readerProgress(Object percent);
 
+  /// Quanto do livro já foi lido, como valor de uma barra de progresso para leitores de tela. É só o número e o sinal: o framework exige que este valor seja lido como número, então nenhuma palavra entra aqui.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'{percent}%'**
+  String readingPercentValue(int percent);
+
+  /// Nome da barra de progresso para quem usa leitor de tela. É o que a barra mede; quanto já foi lido vai à parte, como valor.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Progresso da leitura'**
+  String get readingProgressLabel;
+
+  /// Descrição, para leitores de tela, do toque sobre a página. A página em si é do motor de leitura e não tem rótulo nenhum.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mostrar ou ocultar os controles'**
+  String get readerToggleChrome;
+
   /// Mostrado enquanto o arquivo é lido e entregue ao motor. Um EPUB grande leva alguns segundos, e uma tela silenciosa nesse intervalo parece travada.
   ///
   /// In pt_BR, this message translates to:

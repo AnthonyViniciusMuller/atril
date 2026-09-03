@@ -60,7 +60,67 @@ Widget _app(List<ReadingPlace> places) => MaterialApp(
 
 AppLocalizations _pt() => lookupAppLocalizations(const Locale('pt', 'BR'));
 
+/// Runs [body] with the system text size set to [scale].
+///
+/// A reader who has turned their type up is the case a fixed height gets
+/// wrong, and nothing in this suite had ever set one.
+Future<void> atTextScale(
+  WidgetTester tester,
+  double scale,
+  Future<void> Function() body,
+) async {
+  tester.platformDispatcher.textScaleFactorTestValue = scale;
+  addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+  await body();
+}
+
 void main() {
+  for (final double scale in <double>[1.3, 2.0]) {
+    testWidgets('lays out with the system text at ${scale}x', (
+      WidgetTester tester,
+    ) async {
+      // The band was 116 pixels whatever the reader had set, and what is in it
+      // is four lines of text and a bar. An overflow here is this app telling
+      // somebody with poor eyesight that their setting is unsupported.
+      await atTextScale(tester, scale, () async {
+        await tester.pumpWidget(
+          _app(<ReadingPlace>[
+            _place(id: 'a', title: 'Grande Sertão: Veredas', here: true),
+            _place(id: 'b', title: 'Os Sertões', here: false, percent: 60),
+          ]),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(LinearProgressIndicator), findsNWidgets(2));
+      });
+    });
+  }
+
+  testWidgets('tells a screen reader what its bar measures', (
+    WidgetTester tester,
+  ) async {
+    // A bar with no label is a rectangle. The value is the same percentage the
+    // card shows, because two wordings for one number would be two answers to
+    // the same question.
+    await tester.pumpWidget(
+      _app(<ReadingPlace>[
+        _place(id: 'a', title: 'Os Sertões', here: true, percent: 42),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    final LinearProgressIndicator bar = tester
+        .widgetList<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        )
+        .first;
+
+    expect(bar.semanticsLabel, _pt().readingProgressLabel);
+    expect(bar.semanticsValue, _pt().readingPercentValue(42));
+  });
+
   testWidgets('shows nothing at all when nothing has been read', (
     WidgetTester tester,
   ) async {

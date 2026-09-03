@@ -656,6 +656,17 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String readingPercentValue(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readingProgressLabel => 'Progresso da leitura';
+
+  @override
+  String get readerToggleChrome => 'Mostrar ou ocultar os controles';
+
+  @override
   String get readerOpening => 'Abrindo o livro…';
 
   @override
@@ -2297,6 +2308,17 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String readerProgress(Object percent) {
     return '$percent% lido';
   }
+
+  @override
+  String readingPercentValue(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get readingProgressLabel => 'Progresso da leitura';
+
+  @override
+  String get readerToggleChrome => 'Mostrar ou ocultar os controles';
 
   @override
   String get readerOpening => 'Abrindo o livro…';
