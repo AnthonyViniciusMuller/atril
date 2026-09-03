@@ -1775,9 +1775,17 @@ merged in order, which is why each fix names the section it belongs to and touch
       interface for the generated part to see it. The set of offered identifiers is a `bool`: the
       verdicts name the operations they answer for, so the only question it was ever asked is
       whether another batch may go out
-- [ ] `test: cover the scheduler's backoff and syncNow` — the reset of the backoff by a channel
+- [x] `test: cover the scheduler's backoff and syncNow` — the reset of the backoff by a channel
       that lasted `settledFor`, `syncNow` clearing a running backoff, and a channel that fails
-      during `open()` have no test between them
+      during `open()` had no test between them; each has one now, and the third made the fake
+      channel attach the same no-op handler to its own completer that both real channels do,
+      because a channel ending before the loop subscribes is the whole case being tested.
+      **`fake_async` is deliberately not used**, which the plan suggested: these tests drive a
+      real in-memory replica, and a zone that fakes every timer does not advance sqlite's
+      futures, so the loop would deadlock rather than run fast. What the tests needed instead was
+      a *wall clock* they could move, since `lasted` is measured against it and nothing else, and
+      that is the clock the exchange tests already grew. The waits stay real and short —
+      twenty milliseconds — and are polled for rather than slept through
 
 ### The reader and the shell
 

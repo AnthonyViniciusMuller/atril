@@ -78,6 +78,10 @@ final class _FakeChannel implements SyncChannel {
   /// the window a lifecycle or session event can arrive in.
   Completer<void>? opening;
 
+  /// What the channel ends with while it is still opening, which is a
+  /// transport that failed before anybody had asked what would end it.
+  Object? endsWhileOpening;
+
   Completer<void>? _done;
 
   @override
@@ -95,7 +99,20 @@ final class _FakeChannel implements SyncChannel {
       throw refusal;
     }
 
-    _done = Completer<void>();
+    final done = Completer<void>();
+
+    _done = done;
+
+    // As both real channels do, and for the reason they do it: nothing is
+    // listening between here and the loop's own subscription, and a future
+    // completed with an error and no listener is an unhandled error.
+    unawaited(done.future.catchError((Object _) {}));
+
+    final ending = endsWhileOpening;
+
+    if (ending != null) {
+      done.completeError(ending);
+    }
   }
 
   @override
@@ -629,6 +646,110 @@ void main() {
       await database.syncDao.hasApplied('00000009-1111-4111-8111-111111111111'),
       isFalse,
     );
+  });
+
+  test('forgets the backoff after a channel that lasted', () async {
+    // The backoff is reset by a channel that *lasted*, not by one that opened:
+    // gRPC dials lazily, so a stream that failed before the node ever answered
+    // and one that opened and was closed a moment later are the same two
+    // events in the same order, and how long it stayed up is the only evidence
+    // this layer has.
+    channel.refusesToOpen = const AppException(
+      kind: ErrorKind.unavailable,
+      message: 'the node is not answering',
+    );
+
+    await scheduler.start();
+    await until(
+      () =>
+          scheduler.status.activity == SyncActivity.waiting &&
+          scheduler.status.attempt >= 2,
+    );
+
+    expect(scheduler.status.retryIn, greaterThan(scheduler.firstDelay));
+
+    channel.refusesToOpen = null;
+
+    await until(() => channel.isOpen);
+
+    // It stayed up for a minute, and then the node hung up.
+    clock.at = _at.add(const Duration(minutes: 1));
+
+    channel.endWith(
+      const AppException(kind: ErrorKind.unavailable, message: 'hung up'),
+    );
+
+    await until(
+      () =>
+          scheduler.status.activity == SyncActivity.waiting &&
+          scheduler.status.retryIn == scheduler.firstDelay,
+      what: 'the backoff was not forgotten by a channel that lasted',
+    );
+
+    expect(scheduler.status.attempt, 1);
+  });
+
+  test('clears a running backoff when a reader asks', () async {
+    // The one way `syncNow` differs from `nudge`, and it is the right one: a
+    // reader tapping *synchronize now* is telling this device something it
+    // could not have known, and making them wait out the backoff anyway would
+    // be the app disbelieving them. The wait is a minute here so that *at
+    // once* is not something the test could have got by accident.
+    final loop = SyncScheduler(
+      database: database,
+      channel: channel,
+      session: session,
+      reachability: reachability,
+      uploads: UploadQueue(
+        database: database,
+        uploader: ContentUploader(
+          api: LibraryApi(connection: connection, session: session),
+          blobs: MemoryBlobStore(),
+        ),
+      ),
+      foreground: foreground.stream,
+      firstDelay: const Duration(minutes: 1),
+      longestDelay: const Duration(minutes: 1),
+      now: clock.read,
+    );
+
+    addTearDown(loop.dispose);
+
+    channel.refusesToOpen = const AppException(
+      kind: ErrorKind.unavailable,
+      message: 'the node is not answering',
+    );
+
+    await loop.start();
+    await until(() => loop.status.activity == SyncActivity.waiting);
+
+    channel.refusesToOpen = null;
+
+    await loop.syncNow();
+
+    await until(
+      () => channel.isOpen,
+      what: 'the reader asked and the loop waited out the backoff anyway',
+    );
+  });
+
+  test('reports a channel that failed while it was opening', () async {
+    // The open returns and the channel is already over: a transport that
+    // failed before the loop had subscribed to what would end it. The loop
+    // has to read that as a failure rather than as a channel it is serving.
+    channel.endsWhileOpening = const AppException(
+      kind: ErrorKind.unavailable,
+      message: 'the node hung up while dialling',
+    );
+
+    await scheduler.start();
+
+    await until(() => scheduler.status.failure != null);
+
+    expect(scheduler.status.failure?.kind, ErrorKind.unavailable);
+
+    // And it goes on trying, rather than sitting on a channel that is gone.
+    await until(() => channel.opens >= 2);
   });
 
   test('stops, and closes what it had open', () async {
