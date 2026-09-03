@@ -460,15 +460,22 @@ final class LibraryRepositoryImpl implements LibraryRepository {
     }
 
     final format = EbookFormat.parse(work.format);
-    final described = format == null
-        ? null
-        : await _describe(
-            format,
-            StoredBlob(
-              contentHash: work.contentHash,
-              sizeBytes: work.sizeBytes ?? 0,
-            ),
-          );
+
+    // The store is asked how long the file is, and the row is not. A work that
+    // arrived by synchronization may carry no size at all, and passing that
+    // absence as zero read as *under the limit* — which is a book of unknown
+    // length read whole into memory on a phone. A file the store does not
+    // hold has no cover to extract either.
+    final size = await blobs.sizeOf(work.contentHash);
+
+    if (format == null || size == null) {
+      return;
+    }
+
+    final described = await _describe(
+      format,
+      StoredBlob(contentHash: work.contentHash, sizeBytes: size),
+    );
 
     if (described?.cover case final EpubCover cover) {
       await library.saveCover(

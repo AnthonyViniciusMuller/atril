@@ -89,6 +89,7 @@ Future<LibraryRepository> _repository(
   int? quota,
   LibraryDao? library,
   LibraryApi? api,
+  BlobStore? store,
 }) async {
   if (bound) {
     await database.identityDao.bindDevice(
@@ -103,6 +104,8 @@ Future<LibraryRepository> _repository(
 
   blobs = MemoryBlobStore();
 
+  final BlobStore bytes = store ?? blobs;
+
   return LibraryRepositoryImpl(
     library: library ?? database.libraryDao,
     author: OperationAuthor(
@@ -111,8 +114,8 @@ Future<LibraryRepository> _repository(
       reconciler: Reconciler(database, clock),
       mint: _nextId,
     ),
-    blobs: blobs,
-    downloads: ContentDownloader(api: api ?? _api(), blobs: blobs),
+    blobs: bytes,
+    downloads: ContentDownloader(api: api ?? _api(), blobs: bytes),
     transfers: database.transfersDao,
     keepsByDefault: keepsByDefault,
     budget: (BlobStore store) async =>
@@ -121,7 +124,7 @@ Future<LibraryRepository> _repository(
       database: database,
       // The queue is never run in these tests. What is being checked is that
       // an import leaves the node owed a file, which is a row and not a call.
-      uploader: ContentUploader(api: _api(), blobs: blobs),
+      uploader: ContentUploader(api: _api(), blobs: bytes),
       now: () => _at,
     ),
     mint: _nextId,
@@ -185,6 +188,49 @@ final class _FlakyLibraryDao extends LibraryDao {
       bytes: bytes,
     );
   }
+}
+
+/// A store that says its files are as long as it is told, and counts the reads.
+///
+/// It is how a test reaches the metadata size limit without putting sixty-four
+/// megabytes through it, and how it knows whether the file was opened at all.
+final class _MeasuredStore implements BlobStore {
+  _MeasuredStore(this._inner, {required this.reported});
+
+  final MemoryBlobStore _inner;
+  final int reported;
+
+  /// How many times the bytes were asked for.
+  int reads = 0;
+
+  @override
+  Future<int?> sizeOf(String contentHash) async =>
+      await _inner.contains(contentHash) ? reported : null;
+
+  @override
+  Stream<Uint8List> read(String contentHash, {int from = 0}) {
+    reads++;
+
+    return _inner.read(contentHash, from: from);
+  }
+
+  @override
+  Future<bool> contains(String contentHash) => _inner.contains(contentHash);
+
+  @override
+  Future<BlobWrite> beginWrite() => _inner.beginWrite();
+
+  @override
+  Future<bool> remove(String contentHash) => _inner.remove(contentHash);
+
+  @override
+  Future<List<String>> digests() => _inner.digests();
+
+  @override
+  Future<int> usedBytes() => _inner.usedBytes();
+
+  @override
+  Stream<String> get changes => _inner.changes;
 }
 
 /// A one-pixel cover, which is a picture as far as this app cares.
@@ -1451,6 +1497,49 @@ void main() {
         await emptied;
       },
     );
+  });
+
+  group('the cover of a downloaded work', () {
+    test('is not read out of a file larger than this app will open', () async {
+      // The row of a work that arrived by synchronization may carry no size,
+      // and the absence used to be passed as zero — which `_describe` read as
+      // *under the limit*, and a book of unknown length was read whole into
+      // memory on a phone. The store is what knows how long the file is.
+      final database = _open();
+      final inner = MemoryBlobStore();
+      final store = _MeasuredStore(inner, reported: metadataSizeLimit + 1);
+      final repository = await _repository(database, store: store);
+      final id = _id('aaaa', 1);
+
+      await inner.put(_hashOf(1), Stream<List<int>>.value(_epub));
+      // No size on the row, which is what `_work` writes by default.
+      await _work(database, id: id, title: 'Enorme');
+
+      final result = await repository.downloadEbook(id);
+
+      expect(result, isA<Ok<EbookContent>>());
+      expect(store.reads, 0);
+      expect(((await repository.cover(id)) as Ok<EpubCover?>).value, isNull);
+    });
+
+    test('is read when the store says the file is small enough', () async {
+      final database = _open();
+      final inner = MemoryBlobStore();
+      final store = _MeasuredStore(inner, reported: _epub.length);
+      final repository = await _repository(database, store: store);
+      final id = _id('aaaa', 1);
+
+      await inner.put(_hashOf(1), Stream<List<int>>.value(_epub));
+      await _work(database, id: id, title: 'Pequeno');
+
+      await repository.downloadEbook(id);
+
+      expect(store.reads, 1);
+      expect(
+        ((await repository.cover(id)) as Ok<EpubCover?>).value?.bytes,
+        _coverBytes,
+      );
+    });
   });
 
   group('a search', () {

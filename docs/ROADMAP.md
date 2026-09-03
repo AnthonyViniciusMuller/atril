@@ -1580,9 +1580,18 @@ merged in order, which is why each fix names the section it belongs to and touch
       a loopback port and watches the flag go from `false` to `true`; with the old watch it
       never does. The web store is compile-checked by `flutter build web`; the other five
       targets could not be built here
-- [ ] `fix: measure the file before extracting its cover` — `_keepCoverOf` passes the row's
+- [x] `fix: measure the file before extracting its cover` — `_keepCoverOf` passes the row's
       nullable size as zero, which `_describe` reads as *under the limit*, and a seeded work of
-      unknown size is read whole into memory on a phone. Ask the blob store for the size it has
+      unknown size is read whole into memory on a phone. Ask the blob store for the size it has.
+      `BlobStore.sizeOf` already existed — the downloader uses it to skip a fetch — so nothing
+      was added to the interface. **The store's measure replaces the row's entirely**, not only
+      where the row is null: the row says what the importing device counted and the store says
+      what this device holds, and the second is the one about to be read. A digest the store
+      does not hold ends the extraction as well, since there is no file to open. The test wraps
+      the memory store in one that reports a length past `metadataSizeLimit` and counts the
+      reads, seeds a work with no size over it, downloads — which the downloader answers from
+      the store without a node — and asserts the bytes were never asked for and no cover was
+      saved; a second test with a true length asserts the cover still is
 - [ ] `fix: refuse a refresh that lands after sign-out` — `end()` does not invalidate a refresh
       in flight, so the late reply writes a live credential back and announces the device signed
       in. A generation bumped by `end()` and checked before adopting, with a test whose refresher
