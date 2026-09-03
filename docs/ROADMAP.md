@@ -1789,12 +1789,24 @@ merged in order, which is why each fix names the section it belongs to and touch
 
 ### The reader and the shell
 
-- [ ] `fix: mount the page before the book opens` — the body shows the spinner while `open`
-      runs and places `host.view()` only afterwards, and both real hosts complete `open()` from
-      a callback of the widget that `view()` builds. On the webview targets the open times out
-      after thirty seconds; on Linux it is refused at once. The widget test passes because its
-      fake opens synchronously. Mount the view always, layer the spinner and the refusal over
-      it, and give the test a host that opens only once its view has been built
+- [x] `fix: mount the page before the book opens` — the body showed the spinner while `open`
+      ran and placed `host.view()` only afterwards, and both real hosts complete `open()` from a
+      callback of the widget `view()` builds: the webview's `onEpubLoaded`, and on Linux the
+      glue's `readyToLoad`, whose completer was created in the view's `initState`. So on five
+      targets every book timed out after thirty seconds, on Linux `_sendBook` threw
+      `epub_not_ready` at once, and the widget test passed because its fake opened synchronously.
+      **The view is mounted from the first frame and the spinner and the refusal are opaque
+      layers over it**, in a `Stack`: the tap that toggles the chrome still reaches the page, and
+      the refusal is opaque so that a tap on it cannot hide the way back under a message that
+      says the book is not coming. Two things moved in the desktop host on the way. Its `_ready`
+      is created with the host and awaited under the open deadline, so an `open()` that arrives
+      before the view is mounted waits instead of refusing and a CEF that never comes up is a
+      timeout rather than a future nobody completes; and the host is handed the webview *before*
+      the readiness event is dispatched, because the old order let `readyToLoad` race the
+      assignment `_sendBook` refuses without. The test's fake host completes `open()` only once
+      its view's `initState` has run, as the real ones do, and a new test holds the file open and
+      looks at the first frame: the page is there under the spinner before the host has been
+      asked. Neither real host was run on a device here
 - [ ] `fix: silence a command that was disposed mid-run` — `Command` notifies in its `finally`
       with no disposed flag, so leaving a screen while a command runs asserts in debug. Track
       disposal and test it

@@ -156,7 +156,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 }
 
-/// The page, or what is standing in for it.
+/// The page, with whatever is standing in front of it.
+///
+/// **The host's view is mounted before the book is open, always.** Both real
+/// hosts complete `open()` from a callback of the widget `view()` builds — the
+/// webview's `onEpubLoaded`, the CEF view's `readyToLoad` — so a body that
+/// showed a spinner *instead of* the view until `open` had completed was a body
+/// waiting on an event only the widget it withheld could raise. On the webview
+/// targets that was the thirty-second timeout on every book; on Linux it was a
+/// refusal at once. The spinner and the refusal are layers over the page now,
+/// and the page is underneath from the first frame.
 class _ReaderBody extends StatelessWidget {
   const _ReaderBody({required this.model});
 
@@ -164,26 +173,32 @@ class _ReaderBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: model.open,
-      builder: (BuildContext context, Widget? _) {
-        if (model.open.running) {
-          return const _ReaderOpening();
-        }
-
-        if (model.open.result case Error<void>(:final Exception error)) {
-          return _ReaderRefusal(model: model, error: error);
-        }
-
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
         // The host's own view, and a tap target over it. The gesture is here
         // and not inside the page because a tap inside the webview is the
         // book's — a reader following a footnote should follow it.
-        return GestureDetector(
+        GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: model.toggleChrome,
           child: model.host.view(),
-        );
-      },
+        ),
+        ListenableBuilder(
+          listenable: model.open,
+          builder: (BuildContext context, Widget? _) {
+            if (model.open.running) {
+              return const _ReaderOpening();
+            }
+
+            if (model.open.result case Error<void>(:final Exception error)) {
+              return _ReaderRefusal(model: model, error: error);
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
     );
   }
 }
@@ -259,32 +274,38 @@ class _ReaderRefusal extends StatelessWidget {
       ),
     };
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: Colors.white70),
-              ),
-              if (action != null) ...<Widget>[
-                const SizedBox(height: 20),
-                action,
+    // Opaque, like the spinner: it covers whatever the engine left on the page
+    // and takes the tap that would otherwise hide the chrome — and with it the
+    // way back — under a message that says the book is not coming.
+    return ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white70),
+                ),
+                if (action != null) ...<Widget>[
+                  const SizedBox(height: 20),
+                  action,
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

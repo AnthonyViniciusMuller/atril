@@ -33,11 +33,19 @@ import '../repository_fakes.dart';
 const String _id = 'aaaaaaaa-1111-4111-8111-111111111111';
 
 /// A host that renders a label instead of a book.
+///
+/// **It opens only once its view has been built**, which is what both real
+/// hosts do: the webview completes `open()` from the viewer's `onEpubLoaded`
+/// and the CEF host from the page's `readyToLoad`, and neither of those fires
+/// for a widget nobody mounted. A fake that opened synchronously is how the
+/// screen shipped a spinner in front of the one widget the spinner was waiting
+/// on, so this one insists on the ordering the real ones have.
 final class _FakeHost implements EpubHost {
   final StreamController<EpubPosition> _positions =
       StreamController<EpubPosition>.broadcast();
   final StreamController<EpubSelection> _selections =
       StreamController<EpubSelection>.broadcast();
+  final Completer<void> _viewed = Completer<void>();
 
   List<EpubChapter> contents = const <EpubChapter>[];
   final List<String> visited = <String>[];
@@ -45,14 +53,24 @@ final class _FakeHost implements EpubHost {
   int turnsBack = 0;
   bool disposed = false;
 
+  /// How many times the view was built.
+  int viewBuilds = 0;
+
   @override
-  Widget view() => const Placeholder(key: Key('the page'));
+  Widget view() => _FakePage(host: this);
 
   /// Where the book was opened, or `null` where nothing said.
   String? openedAt;
 
+  /// Whether [open] has been asked for.
+  bool openAsked = false;
+
   @override
-  Future<void> open(EpubBook book, {String? at}) async => openedAt = at;
+  Future<void> open(EpubBook book, {String? at}) async {
+    openAsked = true;
+    await _viewed.future;
+    openedAt = at;
+  }
 
   @override
   Stream<EpubPosition> get positions => _positions.stream;
@@ -114,6 +132,34 @@ final class _FakeHost implements EpubHost {
   );
 }
 
+/// The page the fake host draws, which tells the host it has been built.
+class _FakePage extends StatefulWidget {
+  const _FakePage({required this.host});
+
+  final _FakeHost host;
+
+  @override
+  State<_FakePage> createState() => _FakePageState();
+}
+
+class _FakePageState extends State<_FakePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    if (!widget.host._viewed.isCompleted) {
+      widget.host._viewed.complete();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    widget.host.viewBuilds++;
+
+    return const Placeholder(key: Key('the page'));
+  }
+}
+
 final class _FakeHosts implements EpubHostFactory {
   _FakeHosts(this.host);
 
@@ -124,16 +170,28 @@ final class _FakeHosts implements EpubHostFactory {
 }
 
 final class _FakeReading implements ReadingRepository {
-  _FakeReading({this.failure});
+  _FakeReading({this.failure, this.gate});
 
   final Exception? failure;
 
+  /// What [openBook] waits on before answering, for a test that wants to look
+  /// at the screen while the file is still being read.
+  final Completer<void>? gate;
+
   @override
-  Future<Result<EpubBook>> openBook(String ebookId) async => failure != null
-      ? Result<EpubBook>.error(failure!)
-      : Result<EpubBook>.ok(
-          EpubBook(ebookId: ebookId, bytes: Uint8List(4), title: 'Os Sertões'),
-        );
+  Future<Result<EpubBook>> openBook(String ebookId) async {
+    await gate?.future;
+
+    return failure != null
+        ? Result<EpubBook>.error(failure!)
+        : Result<EpubBook>.ok(
+            EpubBook(
+              ebookId: ebookId,
+              bytes: Uint8List(4),
+              title: 'Os Sertões',
+            ),
+          );
+  }
 
   /// Every position the screen recorded, in order.
   final List<({String locator, double? percent})> saved =
@@ -232,6 +290,36 @@ void main() {
       await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
       await tester.pumpAndSettle();
 
+      expect(find.byKey(const Key('the page')), findsOneWidget);
+    });
+
+    testWidgets('mounts the page before the book has opened', (
+      WidgetTester tester,
+    ) async {
+      // The one ordering both real hosts need: `open()` completes from a
+      // callback of the widget `view()` builds, so a screen that withheld the
+      // view until `open` had completed was waiting on an event only the
+      // widget it withheld could raise.
+      final _FakeHost host = _FakeHost();
+      final Completer<void> file = Completer<void>();
+
+      await tester.pumpWidget(_app(_FakeReading(gate: file), _FakeHosts(host)));
+      await tester.pump();
+
+      // The file is still being read, so the host has not been asked yet —
+      // and the page is already there, under the spinner.
+      expect(host.openAsked, isFalse);
+      expect(find.byKey(const Key('the page')), findsOneWidget);
+      expect(find.text(_pt().readerOpening), findsOneWidget);
+
+      file.complete();
+      await tester.pumpAndSettle();
+
+      // And the spinner has gone once the host, having been given its view,
+      // has opened.
+      expect(host.openedAt, isNull);
+      expect(host.openAsked, isTrue);
+      expect(find.text(_pt().readerOpening), findsNothing);
       expect(find.byKey(const Key('the page')), findsOneWidget);
     });
 

@@ -178,7 +178,15 @@ final class DesktopEpubHost implements EpubHost {
   final Map<int, Completer<Object?>> _pending = <int, Completer<Object?>>{};
   int _nextRequest = 1;
 
-  Completer<void>? _ready;
+  /// Completed when the glue has announced itself, which is after the view has
+  /// been built and CEF has loaded the page.
+  ///
+  /// It exists from construction and not from the view's `initState`, so that
+  /// an `open()` which arrives before the view is mounted waits for it rather
+  /// than finding nothing to wait on and refusing at once. The screen mounts
+  /// the view from its first frame, and this is what makes the host not depend
+  /// on that ordering.
+  final Completer<void> _ready = Completer<void>();
   Completer<void>? _opened;
   Completer<List<EpubChapter>>? _chapters;
   EpubBook? _book;
@@ -206,7 +214,8 @@ final class DesktopEpubHost implements EpubHost {
     }
 
     _book = book;
-    _opened = Completer<void>();
+    final Completer<void> opened = Completer<void>();
+    _opened = opened;
     _chapters = Completer<List<EpubChapter>>();
 
     // The page is loaded once per host and the book is handed to it over the
@@ -214,19 +223,22 @@ final class DesktopEpubHost implements EpubHost {
     // other host does — a webview whose source changed under it — and it is
     // also what keeps the engine's own state, its location index included, from
     // being rebuilt for a reader who went back to a book they had open.
-    await _ready?.future;
+    //
+    // The wait for the page is under the same deadline as the wait for the
+    // book: a view that is never mounted, or a CEF that never comes up, is a
+    // book that did not open and not a future nobody completes.
+    await _ready.future.timeout(epubOpenTimeout, onTimeout: _openTimedOut);
     await _sendBook();
 
-    return _opened!.future.timeout(
-      epubOpenTimeout,
-      onTimeout: () => throw AppException(
-        kind: ErrorKind.deadlineExceeded,
-        message: 'the book did not open within ${epubOpenTimeout.inSeconds}s',
-        code: 'epub_open_timeout',
-        op: opDesktopEpubHost,
-      ),
-    );
+    return opened.future.timeout(epubOpenTimeout, onTimeout: _openTimedOut);
   }
+
+  Never _openTimedOut() => throw AppException(
+    kind: ErrorKind.deadlineExceeded,
+    message: 'the book did not open within ${epubOpenTimeout.inSeconds}s',
+    code: 'epub_open_timeout',
+    op: opDesktopEpubHost,
+  );
 
   @override
   Stream<EpubPosition> get positions => _positions.stream;
@@ -538,7 +550,9 @@ final class DesktopEpubHost implements EpubHost {
   void _onHandler(String handler, List<Object?> args) {
     switch (handler) {
       case 'readyToLoad':
-        _ready?.complete();
+        if (!_ready.isCompleted) {
+          _ready.complete();
+        }
       case 'rendered':
         if (_opened?.isCompleted == false) {
           _opened!.complete();
@@ -683,8 +697,6 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
   /// Brings up CEF, the engine's server and the bridge, in that order.
   Future<void> _start() async {
     try {
-      widget.host._ready = Completer<void>();
-
       // The manager is a singleton and initializing it twice is not an error,
       // but it is a round trip to the platform, so a second reader screen waits
       // on the first rather than asking again.
@@ -707,19 +719,24 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
         ),
       });
 
-      // Last, and deliberately: the glue announces itself on this event, and
-      // the announcement is what asks for the book. Dispatching it before the
-      // channel existed would be a `readyToLoad` nobody heard.
-      await webview.executeJavaScript(
-        "window.dispatchEvent(new Event('flutterInAppWebViewPlatformReady'));",
-      );
-
       if (!mounted) {
         await webview.dispose();
         return;
       }
 
+      // Handed to the host before the glue is woken, and deliberately: the
+      // glue answers the event below with `readyToLoad`, which is what lets
+      // `open()` send the book, and the send refuses when the host holds no
+      // webview yet. Dispatching first would be a race the reader loses on a
+      // fast machine.
       widget.host._webview.value = webview;
+
+      // Last: the glue announces itself on this event, and the announcement is
+      // what asks for the book. Dispatching it before the channel existed would
+      // be a `readyToLoad` nobody heard.
+      await webview.executeJavaScript(
+        "window.dispatchEvent(new Event('flutterInAppWebViewPlatformReady'));",
+      );
     } on Object catch (error, trace) {
       _log.severe('the CEF reader could not be started', error, trace);
 
