@@ -302,7 +302,7 @@ final class SyncScheduler {
   /// the five minutes anyway would be the app disbelieving them.
   Future<void> syncNow() async {
     if (channel.isOpen) {
-      await channel.offer();
+      await _offer();
 
       return;
     }
@@ -317,12 +317,44 @@ final class SyncScheduler {
   /// a reader writing a note does not make an unreachable node reachable.
   Future<void> nudge() async {
     if (channel.isOpen) {
-      await channel.offer();
+      await _offer();
 
       return;
     }
 
     _consider();
+  }
+
+  /// Hands over what this device owes, and keeps what that cost inside the
+  /// loop.
+  ///
+  /// An offer is a message on the bidirectional stream and a **push call of its
+  /// own** in a browser, so on the web it can fail while the channel it belongs
+  /// to is perfectly open. It reaches here from an outbox listener nobody
+  /// awaits and from a reader tapping *synchronize now*, and a transport
+  /// failure out of either is an unhandled error and a screen that never hears
+  /// about it. What a failed offer is worth is the status, which is where it
+  /// goes.
+  Future<void> _offer() async {
+    try {
+      await channel.offer();
+    } on Object catch (error, trace) {
+      final failure = _failureOf(error);
+
+      _log.info(
+        'what this device owes was not handed over: $failure',
+        error,
+        trace,
+      );
+      _publish(
+        SyncStatus(
+          activity: _status.activity,
+          failure: failure,
+          retryIn: _status.retryIn,
+          attempt: _attempt,
+        ),
+      );
+    }
   }
 
   /// Whether the two conditions hold. Reachability is not among them — see the

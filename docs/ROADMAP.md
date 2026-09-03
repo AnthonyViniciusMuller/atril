@@ -1716,9 +1716,15 @@ merged in order, which is why each fix names the section it belongs to and touch
       and the verdicts for a push that moved no cursor. `pulled_at`'s own comment, the DAO's and
       `architecture.md` all said the column moves when a channel opens; all three now say what it
       does
-- [ ] `fix: keep an offer's failure inside the scheduler` — on the web `offer()` is a push RPC
-      and rethrows the transport failure into `unawaited(nudge())` and out of `syncNow()`.
-      Catch it and publish it as the status
+- [x] `fix: keep an offer's failure inside the scheduler` — on the web `offer()` is a push RPC
+      and rethrew the transport failure into `unawaited(nudge())` and out of `syncNow()`.
+      **Both now go through one `_offer`, which publishes the failure as the status** rather than
+      letting it out: the outbox listener is the path that matters, because nothing is holding
+      the future it returns and the failure was an unhandled error rather than something the
+      screen could say. The status keeps the activity, the wait and the attempt it already had —
+      an offer that failed is news about a call and not about the channel, which on the web is a
+      different call and may still be perfectly open. Both tests were run against the old code
+      first, and both failed there
 - [ ] `fix: stand down a channel that was still opening` — a lifecycle or session event while
       `open()` is pending closes nothing, and `_connect` goes on to publish *live* and wait on
       a channel nobody wants. Re-check after `open()` returns, and test it

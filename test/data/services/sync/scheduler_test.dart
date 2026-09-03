@@ -69,6 +69,10 @@ final class _FakeChannel implements SyncChannel {
   /// What opening throws, where a test wants a node that cannot be reached.
   Object? refusesToOpen;
 
+  /// What handing something over throws. On the web an offer is a call of its
+  /// own, so it can fail while the channel is open.
+  Object? refusesToOffer;
+
   Completer<void>? _done;
 
   @override
@@ -93,6 +97,12 @@ final class _FakeChannel implements SyncChannel {
   @override
   Future<void> offer() async {
     offers++;
+
+    final refusal = refusesToOffer;
+
+    if (refusal != null) {
+      throw refusal;
+    }
   }
 
   @override
@@ -435,6 +445,42 @@ void main() {
     await scheduler.nudge();
 
     expect(channel.offers, offered + 1);
+  });
+
+  test('keeps an offer that failed to the status', () async {
+    // On the web an offer is a push call of its own and can fail while the
+    // channel it belongs to is open. A reader who asked for it is owed the
+    // reason rather than an exception out of a future nobody is holding.
+    await scheduler.start();
+    await until(() => channel.isOpen);
+
+    channel.refusesToOffer = const AppException(
+      kind: ErrorKind.unavailable,
+      message: 'the node is not answering',
+    );
+
+    await scheduler.syncNow();
+
+    expect(scheduler.status.failure?.kind, ErrorKind.unavailable);
+  });
+
+  test('keeps an offer nobody is awaiting to the status', () async {
+    // The path that has no caller at all: a change lands in the outbox, the
+    // loop notices the table grew, and what it hands over is handed over from
+    // a stream listener. A failure there is an unhandled error.
+    await scheduler.start();
+    await until(() => channel.isOpen);
+
+    channel.refusesToOffer = const AppException(
+      kind: ErrorKind.unavailable,
+      message: 'the node is not answering',
+    );
+
+    await database.syncDao.appendAll(<Operation>[_change()]);
+
+    await until(() => scheduler.status.failure != null);
+
+    expect(scheduler.status.failure?.kind, ErrorKind.unavailable);
   });
 
   test('does not jump a backoff for a change authored here', () async {
