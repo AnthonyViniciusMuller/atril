@@ -73,6 +73,10 @@ final class _FakeChannel implements SyncChannel {
   /// own, so it can fail while the channel is open.
   Object? refusesToOffer;
 
+  /// Held by a test that wants an open which has not finished yet, which is
+  /// the window a lifecycle or session event can arrive in.
+  Completer<void>? opening;
+
   Completer<void>? _done;
 
   @override
@@ -81,6 +85,8 @@ final class _FakeChannel implements SyncChannel {
   @override
   Future<void> open() async {
     opens++;
+
+    await opening?.future;
 
     final refusal = refusesToOpen;
 
@@ -445,6 +451,29 @@ void main() {
     await scheduler.nudge();
 
     expect(channel.offers, offered + 1);
+  });
+
+  test('stands down a channel that was still opening', () async {
+    // Closing a channel that has not opened closes nothing, so an event
+    // arriving in that window left the loop going on to publish *live* and
+    // wait on a channel nobody wanted — in an app that had gone into the
+    // background.
+    final opening = Completer<void>();
+
+    channel.opening = opening;
+
+    await scheduler.start();
+    await until(() => channel.opens == 1);
+
+    foreground.add(false);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    // And now the open finishes, after the stand-down that could not close it.
+    opening.complete();
+
+    await until(() => !channel.isOpen);
+
+    expect(scheduler.status.activity, SyncActivity.idle);
   });
 
   test('keeps an offer that failed to the status', () async {

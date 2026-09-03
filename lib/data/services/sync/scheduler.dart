@@ -378,6 +378,18 @@ final class SyncScheduler {
     try {
       await channel.open();
 
+      if (!_mayConnect) {
+        // A lifecycle or a session event arrived while the open was in flight.
+        // The stand-down that answered it closed a channel that was not open
+        // yet — a no-op — so this is where it is honoured: the `finally` below
+        // closes what has just opened, and nothing is published as live. A
+        // loop that went on here would wait on a channel nobody wants, in an
+        // app that is no longer in front of the reader or no longer signed in.
+        _log.fine('a channel opened after the loop had stood down');
+
+        return;
+      }
+
       // What ended the channel is caught *here*, on the line after it opened,
       // and read after the writes below. A future completed with an error and
       // not yet listened to is an unhandled error in Dart, and the two writes

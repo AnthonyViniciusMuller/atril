@@ -1725,9 +1725,14 @@ merged in order, which is why each fix names the section it belongs to and touch
       an offer that failed is news about a call and not about the channel, which on the web is a
       different call and may still be perfectly open. Both tests were run against the old code
       first, and both failed there
-- [ ] `fix: stand down a channel that was still opening` — a lifecycle or session event while
-      `open()` is pending closes nothing, and `_connect` goes on to publish *live* and wait on
-      a channel nobody wants. Re-check after `open()` returns, and test it
+- [x] `fix: stand down a channel that was still opening` — a lifecycle or session event while
+      `open()` was pending closed nothing, and `_connect` went on to publish *live* and wait on
+      a channel nobody wanted, in an app that had gone into the background or signed out.
+      **The conditions are re-read on the line after the open returns**, and the `finally` that
+      was already there closes what has just opened — so the fix is a check and a `return`
+      rather than a second close to keep in step with the first. The fake channel grew a
+      completer a test holds the open on, which is the window the whole bug lives in and the
+      only way to land an event inside it
 - [ ] `fix: let the scheduler start twice` — the lifecycle listener is a `late final` assigned
       in `onListen`, which a broadcast controller fires again after `stop()`. Make it nullable
 - [ ] `feat: prune the applied operations` — the table grows by one row per pulled operation
