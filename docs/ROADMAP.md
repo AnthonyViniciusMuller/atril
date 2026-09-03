@@ -1592,10 +1592,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       reads, seeds a work with no size over it, downloads — which the downloader answers from
       the store without a node — and asserts the bytes were never asked for and no cover was
       saved; a second test with a true length asserts the cover still is
-- [ ] `fix: refuse a refresh that lands after sign-out` — `end()` does not invalidate a refresh
+- [x] `fix: refuse a refresh that lands after sign-out` — `end()` does not invalidate a refresh
       in flight, so the late reply writes a live credential back and announces the device signed
       in. A generation bumped by `end()` and checked before adopting, with a test whose refresher
-      completes after the sign-out
+      completes after the sign-out. **The generation is checked on both sides of the store
+      write**, which is what the obvious single check misses: `end()` clears the store, the
+      clear and the write are two futures that can land in either order, and a clear that ran
+      first would leave the refreshed credential as the newest thing in the store. So a refresh
+      that finds the generation moved *after* its write clears the store again, and the outcome
+      is the same whichever order they landed in. The counter is bumped before `end()` awaits
+      anything, so a refresh is stale from that line rather than from whenever the store
+      answers. Two tests: a refresher held open across a sign-out, which must answer `null`,
+      leave the store empty and announce `[true, false]` and not a third transition — it
+      answered `access-2` before — and its opposite, a refresh nothing outlived, which must
+      still take
 - [ ] `fix: keep every failure inside the boundary` — three repositories catch `on Exception`
       where the others catch `on Object`, so a `StateError` from a DAO reaches a view model; in
       the federation repository it also skips the point-back and strands the device on the new

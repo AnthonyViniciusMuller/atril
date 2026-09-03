@@ -173,6 +173,61 @@ void main() {
       expect(await store.read(), isNull);
     });
 
+    test('refuses a refresh that lands after a sign-out', () async {
+      // `end()` cannot cancel a call already in the air, so the reply arrives
+      // for a session the reader has ended — by signing out, or by a password
+      // change that ends every session of every device. Adopting it would
+      // write a live credential back and announce a signed-out device as
+      // signed in, which the shell's redirect reads: the reader would be put
+      // back into the library they had just left.
+      final store = MemorySessionStore();
+      final refresher = _Refresher()..gate = Completer<void>();
+      final holder = SessionHolder(store: store, refresher: () => refresher);
+
+      final announced = <bool>[];
+      final listening = holder.signedIn.listen(announced.add);
+
+      await holder.begin(_sessionNamed(1, const Duration(seconds: 1)));
+
+      // In flight, and held there.
+      final refreshing = holder.accessToken();
+
+      await holder.end();
+
+      refresher.gate!.complete();
+
+      expect(await refreshing, isNull);
+      expect(refresher.calls, 1);
+      expect(await store.read(), isNull);
+      expect(holder.current, isNull);
+      expect(await holder.isSignedIn, isFalse);
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Signed in, then out, and not in again.
+      expect(announced, <bool>[true, false]);
+
+      await listening.cancel();
+    });
+
+    test('adopts a refresh that lands while the session is live', () async {
+      // The other side of the generation check: a refresh that was not
+      // outlived by anything still takes.
+      final store = MemorySessionStore();
+      final refresher = _Refresher()..gate = Completer<void>();
+      final holder = SessionHolder(store: store, refresher: () => refresher);
+
+      await holder.begin(_sessionNamed(1, const Duration(seconds: 1)));
+
+      final refreshing = holder.accessToken();
+
+      refresher.gate!.complete();
+
+      expect(await refreshing, 'access-2');
+      expect((await store.read())?.refreshToken, 'refresh-2');
+      expect(await holder.isSignedIn, isTrue);
+    });
+
     test('forgets the credential on logout', () async {
       final store = MemorySessionStore();
       final holder = SessionHolder(store: store, refresher: () => _Refresher());

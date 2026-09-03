@@ -96,6 +96,20 @@ final class SessionHolder {
   /// The refresh in flight, which is what makes a refresh single-flight.
   Future<Session?>? _refreshing;
 
+  /// How many times this device has signed out.
+  ///
+  /// A refresh is a round trip, and [end] can happen in the middle of one: the
+  /// reader signs out while the reply is in the air, or a password change ends
+  /// every session, and the reply then arrives for a credential the node has
+  /// already thrown away. Adopting it would write a live credential back into
+  /// the store and announce a device that had just signed out as signed in —
+  /// which the shell's redirect reads, so the reader would be returned to a
+  /// library they had left.
+  ///
+  /// The counter is what tells the two apart. A refresh remembers the
+  /// generation it started in and adopts nothing if [end] has moved it since.
+  int _generation = 0;
+
   /// What has been announced on [signedIn], so that a refresh — which adopts
   /// a session on a device that was already signed in — does not announce a
   /// transition that did not happen.
@@ -157,6 +171,9 @@ final class SessionHolder {
   /// empty one — and because a device that forgot its identifier would start a
   /// vector-clock entry that never merges with the first.
   Future<void> end() async {
+    // Before anything is awaited, so that a refresh already in flight is
+    // stale from this line on rather than from whenever the store answers.
+    _generation++;
     _session = null;
     _credential = null;
     _loaded = true;
@@ -250,6 +267,8 @@ final class SessionHolder {
 
   /// One exchange of the stored credential for a session.
   Future<Session?> _exchange() async {
+    final generation = _generation;
+
     try {
       final credential = await _readCredential();
 
@@ -265,7 +284,16 @@ final class SessionHolder {
       }
 
       final session = await refresher().refreshSession(credential.refreshToken);
-      await _adopt(session);
+
+      if (!await _adopt(session, generation: generation)) {
+        // The device signed out while this was in the air. The session the
+        // node just issued is not adopted and nothing it carries survives in
+        // the store: what the reader asked for is to be signed out, and the
+        // credential dies with this method.
+        _log.info('a refresh landed after the session had ended');
+
+        return null;
+      }
 
       return session;
     } on GrpcError catch (error) {
@@ -289,16 +317,38 @@ final class SessionHolder {
   /// is already consumed by the time the reply arrives, so a device that
   /// adopted the session and then failed to write its replacement would hold,
   /// in memory only, the sole credential able to obtain another session.
-  Future<void> _adopt(Session session) async {
+  /// It answers whether the session was taken on, which is false for one
+  /// [end] outlived.
+  ///
+  /// [generation] is checked on both sides of the write. Before it, so that a
+  /// device that has already signed out does not write a live credential into
+  /// the store at all; and after it, because `end()` clears the store and the
+  /// two writes can interleave either way — a clear that ran first would
+  /// otherwise leave the credential this method wrote as the newest thing
+  /// there. Clearing again is what makes the outcome the same whichever order
+  /// they landed in.
+  Future<bool> _adopt(Session session, {int? generation}) async {
+    if (generation != null && generation != _generation) {
+      return false;
+    }
+
     final credential = session.credential;
 
     await store.write(credential);
+
+    if (generation != null && generation != _generation) {
+      await store.clear();
+
+      return false;
+    }
 
     _credential = credential;
     _loaded = true;
     _session = session;
 
     _announce(true);
+
+    return true;
   }
 
   /// Announces [signedIn] where it is not what was announced last.
