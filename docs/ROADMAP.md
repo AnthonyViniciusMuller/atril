@@ -2127,7 +2127,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       Dependabot rather than duplicating it: Dependabot proposes one move at a time, this says
       what the whole tree looks like. Verified locally — the command exits 0 with everything
       current-as-constrained; the summary redirection is CI's and was not run
-- [ ] `ci: cache the pub cache on linux` — CEF is 658 MB and is fetched on every Linux job
+- [x] `ci: cache the pub cache on linux` — CEF is 658 MB and is fetched on every Linux job.
+      **The pub cache was already being cached, which is why this needed reading rather than
+      adding**: `cache: true` turns on the action's pub cache too, so the fix is not a cache but
+      a *key*. `setup.sh` expands the default `flutter-pub-:os:-:channel:-:version:-:arch:-:hash:`
+      with `:hash:` as the **Flutter release's** hash — nothing about this project — so every
+      ubuntu job in a workflow shares one key. `check` runs before `build` and finishes first,
+      and it never builds Linux, so what got saved under that key was a pub cache with no CEF in
+      it; `actions/cache` does not re-save on an exact hit, so from then on every Linux job
+      restored the CEF-less copy and downloaded CEF again, permanently. A key of its own carrying
+      `hashFiles('pubspec.lock')` fixes both halves — nothing else writes it, and a `webview_cef`
+      bump becomes a new key instead of a stale unpack. **Only Linux gets one**, in `ci.yml`
+      through a `matrix.target == 'linux'` expression that falls back to the empty string, which
+      the action reads as its default: for the other five, sharing the check job's cache is a hit
+      and a saving, and five private copies of the same packages would spend a repository's 10 GB
+      on nothing. What is being cached is not the 658 MB download but the **3.1 GB it unpacks
+      to**, Debug and Release `libcef.so` together, which is the trade this makes: a larger
+      restore against a bzip2 extraction that has to happen on every run. Reviewed, not measured
+      — running it needs Actions
 - [ ] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,
       `cancel_subscriptions`, `close_sinks`, `avoid_dynamic_calls` and `only_throw_errors`, and
       whatever they find. Landed last, after the other three sections, because it touches all of

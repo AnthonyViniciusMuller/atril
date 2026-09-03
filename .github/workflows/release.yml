@@ -363,11 +363,25 @@ jobs:
           flatpak install --user --noninteractive flathub \
             org.gnome.Platform//49 org.gnome.Sdk//49
 
+      # `pub-cache-key` is the whole of this fix, and the default is what was
+      # wrong. `webview_cef` unpacks CEF *into the pub cache* — 3.1 GB, from a
+      # 658 MB download — and the action's default pub-cache key expands to
+      # `flutter-pub-<os>-<channel>-<version>-<arch>-<sdk hash>`, which names
+      # the Flutter release and nothing about this project. Every ubuntu job in
+      # a workflow therefore shares one key. The job that populates it first
+      # wins, that job is never the one that builds Linux, and `actions/cache`
+      # does not re-save on an exact hit — so the CEF-less cache was restored
+      # forever and CEF was fetched on every Linux run.
+      #
+      # A key of its own, carrying `pubspec.lock`, fixes both halves: nothing
+      # else writes it, and a `webview_cef` bump is a new key rather than a
+      # stale unpack.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+          pub-cache-key: flutter-pub-cef-:os:-:channel:-:version:-:arch:-${{ hashFiles('pubspec.lock') }}
 
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
