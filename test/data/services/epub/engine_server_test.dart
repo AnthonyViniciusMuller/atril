@@ -107,6 +107,22 @@ void main() {
       );
     });
 
+    test('lets a host keep what cannot change under it', () async {
+      // The engine is an asset of this build, served at an origin that exists
+      // only while this process does. `no-cache` asked the host to revalidate
+      // before every use, which is a conditional request per asset per book
+      // against a server with no answer for one.
+      final HttpClientResponse response = await get('/dist/epub.js');
+
+      expect(
+        response.headers.value(HttpHeaders.cacheControlHeader),
+        engineCacheControl,
+      );
+      expect(engineCacheControl, isNot(contains('no-cache')));
+
+      await response.drain<void>();
+    });
+
     test('serves the engine and refuses the rest of the bundle', () async {
       // The page rendering in this webview is a file somebody else wrote. It
       // reaching the reader's own assets by asking for them would be this

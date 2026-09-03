@@ -14,6 +14,7 @@ library;
 import 'package:atril/data/services/epub/desktop_epub_host.dart';
 import 'package:atril/data/services/epub/engine.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
+import 'package:atril/utils/errors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,6 +62,38 @@ void main() {
     });
   });
 
+  group('a message the host does not understand', () {
+    // Everything crossing this bridge is a string somebody else's JavaScript
+    // wrote, and it arrives in a platform callback with no `await` above it:
+    // a decode that threw was an unhandled error in the zone rather than a
+    // message this host declined to read.
+    test('is dropped rather than thrown out of the callback', () {
+      expect(decodeBridgeMessage('{'), isNull);
+      expect(decodeBridgeMessage(''), isNull);
+      expect(decodeBridgeMessage('not json at all'), isNull);
+    });
+
+    test('is dropped when it is json but not an object', () {
+      // A page under the glue can call `callHandler` with anything, and the
+      // shim stringifies whatever it is given.
+      expect(decodeBridgeMessage('[1, 2, 3]'), isNull);
+      expect(decodeBridgeMessage('42'), isNull);
+      expect(decodeBridgeMessage('null'), isNull);
+      expect(decodeBridgeMessage('"a string"'), isNull);
+    });
+
+    test('an object is handed over as it was written', () {
+      expect(
+        decodeBridgeMessage('{"handler":"rendered","args":[]}'),
+        <String, Object?>{'handler': 'rendered', 'args': <Object?>[]},
+      );
+      expect(decodeBridgeMessage('{"reply":7,"value":null}'), <String, Object?>{
+        'reply': 7,
+        'value': null,
+      });
+    });
+  });
+
   group('a host that has been closed', () {
     test('refuses every command rather than failing silently', () async {
       final DesktopEpubHost host = DesktopEpubHost();
@@ -74,6 +107,26 @@ void main() {
       expect(
         () => host.textOf('epubcfi(/6/4!/4,/2,/4)'),
         throwsA(isA<Exception>()),
+      );
+    });
+
+    test('refuses a request as fast as it refuses a command', () async {
+      // A host with no page yet is the same state for both, and it was not
+      // answered the same way: the request path sent through a helper that did
+      // nothing when there was no webview, so a `textOf` waited the full
+      // thirty seconds for a reply nobody was going to send.
+      final DesktopEpubHost host = DesktopEpubHost();
+      addTearDown(host.dispose);
+
+      await expectLater(
+        host.textOf('epubcfi(/6/4!/4,/2,/4)'),
+        throwsA(
+          isA<AppException>().having(
+            (AppException it) => it.code,
+            'code',
+            'epub_not_ready',
+          ),
+        ),
       );
     });
 

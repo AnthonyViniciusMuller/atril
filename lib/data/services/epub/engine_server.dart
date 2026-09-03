@@ -119,7 +119,15 @@ final class EngineServer {
           // The engine cannot change while the process runs — it is an asset —
           // so the page and its scripts are cached for the session and the
           // second book a reader opens does not re-read them off the bundle.
-          ..headers.set(HttpHeaders.cacheControlHeader, 'no-cache')
+          //
+          // It said `no-cache` and meant the opposite: that directive asks the
+          // browser to revalidate before every use, which is a conditional
+          // request per asset per book against a server that cannot answer 304.
+          // A lifetime is what the sentence above describes, and it cannot
+          // outlive the process it is talking about: the port is chosen at bind
+          // time, so the next run of the app is a different origin and nothing
+          // cached here is reachable from it.
+          ..headers.set(HttpHeaders.cacheControlHeader, engineCacheControl)
           ..add(
             bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
           );
@@ -141,6 +149,14 @@ final class EngineServer {
     await _server.close(force: true);
   }
 }
+
+/// How long a host may keep an engine asset without asking again.
+///
+/// An hour is longer than a reading session and shorter than nothing, and the
+/// exact number matters less than the directive: what is being served is an
+/// asset out of this build's own bundle, at an origin that exists only while
+/// this process does.
+const String engineCacheControl = 'max-age=3600, immutable';
 
 /// The media type a browser needs to be told, by extension.
 ///

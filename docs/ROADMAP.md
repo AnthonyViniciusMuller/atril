@@ -1845,10 +1845,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       that owns it is already disposed, and that is sound exactly because a disposed command now
       finishes its action and keeps its result and only stops notifying. It also takes the
       repository out of the widget, which is what the screen was reaching for before
-- [ ] `fix: drop a bridge message the host does not understand` — the CEF host decodes and
-      casts without a guard, `_request` hangs thirty seconds where `_call` refuses at once, a
-      second `readyToLoad` completes a completed completer, and the engine server sends
-      `no-cache` over bytes that cannot change while the process runs
+- [x] `fix: drop a bridge message the host does not understand` — four findings in the Linux
+      host and its server, and the first is the one that matters: **everything crossing the
+      bridge is a string somebody else's JavaScript wrote, and it arrives in a platform callback
+      with no `await` above it**, so a `jsonDecode` that threw was an unhandled error in the zone
+      rather than a message the host declined to read. The decode is now a pure function that
+      logs and answers `null`, which also makes it the one part of this file a test can reach
+      with no CEF; the handler name and the argument list are read rather than cast, and a
+      `progress` that is not a number is a page whose location index has not finished generating
+      rather than a `TypeError`. `_request` sent through a helper that **did nothing at all when
+      there was no webview**, so `textOf` before the page existed waited the full thirty seconds
+      for a reply nobody would send, where a page turn in the same state refused at once — both
+      go through one precondition now, and the pending completer is registered after the send so
+      a refusal leaves nothing in the map. The engine server said `no-cache` under a comment
+      claiming the opposite: that directive asks for revalidation before every use, which is a
+      conditional request per asset per book against a server that cannot answer 304. It is a
+      lifetime now, and it cannot outlive what it describes — the port is chosen at bind time, so
+      the next run is a different origin. The completed-`readyToLoad` guard landed with the mount
+      fix above, since that is where the completer moved
 - [ ] `fix: keep the destination through onboarding` — the guard sends a signed-out device to
       onboarding without remembering where it was going, and sends a signed-in device following
       the password-reset link to the library with the token discarded. Carry the destination and

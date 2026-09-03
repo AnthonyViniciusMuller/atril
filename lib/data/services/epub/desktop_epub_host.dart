@@ -163,6 +163,40 @@ abstract final class EpubGlue {
   };
 }
 
+/// One message from the glue, decoded, or `null` where it was not one.
+///
+/// **Everything crossing this bridge is a string somebody else's JavaScript
+/// wrote.** The glue is pinned by digest and is not the worry; what is, is that
+/// a page under it can call `window.flutter_inappwebview.callHandler` with
+/// anything at all, and that a future version of the glue could answer a shape
+/// this file does not expect. `jsonDecode` on such a string throws, and it was
+/// throwing out of a platform callback — where there is no `await` above it to
+/// catch anything, so it became an unhandled error in the zone rather than a
+/// message the host declined to understand.
+///
+/// It is a function and not a method so that the one part of this file a test
+/// can reach without CEF is the part that reads what CEF hands over.
+@visibleForTesting
+Map<String, Object?>? decodeBridgeMessage(String message) {
+  try {
+    final Object? decoded = jsonDecode(message);
+
+    if (decoded is Map<String, Object?>) {
+      return decoded;
+    }
+
+    _log.warning(
+      'the epub bridge sent a ${decoded.runtimeType}, not an object',
+    );
+
+    return null;
+  } on FormatException catch (error) {
+    _log.warning('the epub bridge sent something that is not json', error);
+
+    return null;
+  }
+}
+
 /// The engine, hosted by CEF and rendered to a Flutter texture.
 final class DesktopEpubHost implements EpubHost {
   /// A host for one book on one screen.
@@ -426,7 +460,17 @@ final class DesktopEpubHost implements EpubHost {
   };
 
   /// Calls a glue function and does not wait for an answer.
-  Future<void> _call(String name, [List<Object?> args = const <Object?>[]]) {
+  Future<void> _call(String name, [List<Object?> args = const <Object?>[]]) =>
+      _evaluate('$name(${_arguments(args)});');
+
+  /// Runs [source] in the page, or refuses because there is no page.
+  ///
+  /// Both kinds of call go through it, and that is the fix rather than the
+  /// tidying it looks like: the request path used to send through a helper that
+  /// did nothing at all when the webview was null, so a `textOf` before the
+  /// page existed waited the full thirty seconds for a reply nobody was ever
+  /// going to send, where the same state refused a page turn at once.
+  Future<void> _evaluate(String source) {
     _refuseIfDisposed();
 
     final cef.WebViewController? webview = _webview.value;
@@ -440,7 +484,7 @@ final class DesktopEpubHost implements EpubHost {
       );
     }
 
-    return webview.executeJavaScript('$name(${_arguments(args)});');
+    return webview.executeJavaScript(source);
   }
 
   /// Calls a glue function and waits for what it answers.
@@ -458,10 +502,11 @@ final class DesktopEpubHost implements EpubHost {
 
     final int id = _nextRequest++;
     final Completer<Object?> reply = Completer<Object?>();
-    _pending[id] = reply;
 
-    unawaited(
-      _call2('''
+    // Sent before the completer is registered, so that a refusal — no page yet,
+    // a host that has been closed — leaves nothing behind in the map waiting
+    // for an answer that was never asked for.
+    final Future<void> sent = _evaluate('''
         Promise.resolve($name(${_arguments(args)})).then(
           function (value) {
             $epubBridgeChannel(JSON.stringify({ reply: $id, value: value }));
@@ -470,8 +515,10 @@ final class DesktopEpubHost implements EpubHost {
             $epubBridgeChannel(JSON.stringify({ reply: $id, error: String(error) }));
           }
         );
-      '''),
-    );
+      ''');
+
+    _pending[id] = reply;
+    unawaited(sent);
 
     return reply.future.timeout(
       epubOpenTimeout,
@@ -488,10 +535,6 @@ final class DesktopEpubHost implements EpubHost {
     );
   }
 
-  Future<void> _call2(String source) async {
-    await _webview.value?.executeJavaScript(source);
-  }
-
   /// The arguments as a JavaScript argument list.
   ///
   /// Every value is JSON, which is what makes an argument safe where the
@@ -503,9 +546,9 @@ final class DesktopEpubHost implements EpubHost {
 
   /// One message from the glue, or one reply to a request.
   void _onMessage(cef.JavascriptMessage message) {
-    final Object? decoded = jsonDecode(message.message);
+    final Map<String, Object?>? decoded = decodeBridgeMessage(message.message);
 
-    if (decoded is! Map<String, Object?>) {
+    if (decoded == null) {
       return;
     }
 
@@ -534,10 +577,19 @@ final class DesktopEpubHost implements EpubHost {
       return;
     }
 
-    _onHandler(
-      decoded['handler'] as String? ?? '',
-      decoded['args'] as List<Object?>? ?? const <Object?>[],
-    );
+    // Read rather than cast. A handler that is not a string and arguments that
+    // are not a list are a message this host does not understand, and `as`
+    // would make that a crash instead of a shrug.
+    final Object? handler = decoded['handler'];
+    final Object? args = decoded['args'];
+
+    if (handler is! String) {
+      _log.warning('the epub bridge sent a message naming no handler');
+
+      return;
+    }
+
+    _onHandler(handler, args is List<Object?> ? args : const <Object?>[]);
   }
 
   /// One `callHandler` from the glue.
@@ -612,11 +664,17 @@ final class DesktopEpubHost implements EpubHost {
       return;
     }
 
+    // A progress that is not a number is a page whose location index has not
+    // finished generating, reported as `null` or as a string by a glue this
+    // file does not get to choose. Zero is what the engine itself reports in
+    // that state, and it is a page rather than a failure.
+    final Object? progress = raw['progress'];
+
     _positions.add(
       EpubPosition(
         startCfi: start,
         endCfi: end,
-        percent: ((raw['progress'] as num? ?? 0) * 100)
+        percent: ((progress is num ? progress : 0) * 100)
             .clamp(0, 100)
             .toDouble(),
       ),
