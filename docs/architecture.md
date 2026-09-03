@@ -645,9 +645,20 @@ guess. `--wasm` does not replace the JavaScript build; it adds a WasmGC one and 
 the fallback, which is 49.5 MB against 45.4 MB — nine percent, not a doubling. What is worth
 knowing is the other number: `--no-web-resources-cdn` copies the whole renderer directory out of
 the web SDK, **36.1 MB of the 45.4**, including variants a JavaScript build never loads and 8.2 MB
-of `.symbols` files. Four fifths of the offline shell is renderers and one of them runs. The flag
-is still right — the default fetches CanvasKit from gstatic, which is a cold load on a train with
-nothing to render with — but its cost is not where anybody would look for it.
+of `.symbols` files. The flag is still right — the default fetches CanvasKit from gstatic, which is
+a cold load on a train with nothing to render with — but its cost is not where anybody would look
+for it.
+
+The deployed build keeps all of it; the offline shell does not. Phase 14 found the worker
+precaching every file the build wrote, and `cache.addAll` is atomic, so one failed fetch among
+forty-four megabytes left the shell not cached at all. `tool/make_service_worker.dart` now holds a
+whitelist for `canvaskit/` — the two pairs the loader can choose between at run time, `canvaskit.*`
+and `chromium/canvaskit.*`, the choice being the browser's and not the build's — and excludes the
+`.symbols` files everywhere. **39 files and 20.5 MB, against 53 and 44.4.** It is a whitelist and
+not a blacklist because the failure modes differ: a variant the engine grows and the list does not
+name is fetched from the network, which is the app online rather than a cache that never installed.
+The build is not pruned and the worker passes any request outside the shell straight through, so a
+wrong guess here is one file not offline, never a blank page.
 
 ### The locale is declared three times, and the ARB is none of them
 

@@ -23,12 +23,51 @@ import 'package:crypto/crypto.dart';
 /// `web/` is copied into the output, so this project's note about the two drift
 /// assets is deployed with the app, and there is no reason to also hold it
 /// offline.
-bool _isExcluded(String path) =>
-    path.endsWith('.map') ||
-    path.endsWith('.md') ||
-    path == 'atril_service_worker.js' ||
-    path == 'flutter_service_worker.js' ||
-    path.startsWith('.');
+///
+/// The renderer directory is the other exclusion, and it is a whitelist rather
+/// than a blacklist. `--no-web-resources-cdn` copies the whole of the web SDK's
+/// `canvaskit/` into the output — 36 MB of a 46 MB build — and most of it is
+/// files this build cannot load: `skwasm`, `skwasm_heavy` and `wimp` are the
+/// renderers of a `--wasm` build, which the loader selects only from a
+/// `dart2wasm` entry in the build configuration and this build has none;
+/// `webparagraph/` is a CanvasKit that is loaded only when `preferWebParagraph`
+/// is configured, and `flutter_bootstrap.js` configures nothing; and the
+/// `.symbols` files are the profiler's symbol maps. What the loader *can* ask
+/// for is two pairs — `chromium/canvaskit.{js,wasm}` on a Chromium browser,
+/// `canvaskit.{js,wasm}` on every other — and the pair is chosen at run time
+/// from the browser, so both are held. Precaching the rest was 25 MB a reader
+/// never fetched, and `cache.addAll` is atomic: one of those fetches failing
+/// left the shell not cached at all.
+///
+/// Whitelist, because the failure modes differ. A renderer the engine grows and
+/// this list does not name is served from the network rather than the cache,
+/// which is the app online and not offline for that one file; a renderer this
+/// list kept and the engine dropped is bytes nobody fetches. The build itself is
+/// untouched either way — every variant is still deployed, and the worker
+/// passes any request outside the shell straight through — so a wrong guess
+/// here is never a blank page.
+bool _isExcluded(String path) {
+  if (path.endsWith('.map') ||
+      path.endsWith('.md') ||
+      path.endsWith('.symbols') ||
+      path == 'atril_service_worker.js' ||
+      path == 'flutter_service_worker.js' ||
+      path.startsWith('.')) {
+    return true;
+  }
+  if (path.startsWith('canvaskit/')) {
+    return !_rendererFiles.contains(path);
+  }
+  return false;
+}
+
+/// The renderer files a JavaScript CanvasKit build can load, and no others.
+const Set<String> _rendererFiles = <String>{
+  'canvaskit/canvaskit.js',
+  'canvaskit/canvaskit.wasm',
+  'canvaskit/chromium/canvaskit.js',
+  'canvaskit/chromium/canvaskit.wasm',
+};
 
 void main(List<String> arguments) {
   final output = Directory(arguments.isEmpty ? 'build/web' : arguments.first);

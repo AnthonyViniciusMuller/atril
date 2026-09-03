@@ -1960,10 +1960,27 @@ merged in order, which is why each fix names the section it belongs to and touch
 
 ### Delivery
 
-- [ ] `fix: cache the renderer that runs` — the worker precaches every file the build wrote,
+- [x] `fix: cache the renderer that runs` — the worker precaches every file the build wrote,
       including the symbol maps and three renderers a JavaScript build never loads, and
       `addAll` is atomic, so one failed fetch of forty-five megabytes leaves the shell not
-      offline at all. Exclude what never loads and record the new size
+      offline at all. Exclude what never loads and record the new size. **The review's premise
+      was half right, and the wrong half is the one that would have blanked a browser.** A
+      JavaScript build does not load only `canvaskit/canvaskit.{js,wasm}`: in the default `auto`
+      mode `flutter.js` picks `canvaskit/chromium/` on a Chromium browser and the full variant
+      everywhere else, and the choice is the browser's at run time rather than the build's, so
+      both pairs stay. What goes is what the loader cannot reach from this build — `skwasm`,
+      `skwasm_heavy` and `wimp` are selected only from a `dart2wasm` entry in the build
+      configuration and there is none; `webparagraph/` only under a `preferWebParagraph` the
+      bootstrap never sets; and the six `.symbols` files are the profiler's. Measured against
+      the build: **53 files and 44.4 MB before, 39 files and 20.5 MB after**, of which the two
+      renderer pairs are 12.3. The renderer directory is a **whitelist and not a blacklist**,
+      because the failure modes are not symmetric: a variant the engine grows and the list does
+      not name is fetched from the network, which is the app online rather than a cache that
+      never installed, where a blacklist would precache it and be back at the atomic `addAll`.
+      Nothing is pruned from the build itself and the worker still passes any request outside
+      the shell through, so a wrong guess costs offline for one file and never a page. The size
+      notes in the Makefile and `architecture.md` now say what is cached rather than what is
+      copied
 - [ ] `fix: stamp the tag's version on every artifact` — `msix:create` reads the pubspec and the
       Flatpak metainfo carries a literal, so two of six artifacts ship `1.0.0` whatever the tag
       says. Pass the derived version to both

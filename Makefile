@@ -331,9 +331,14 @@ build-all: $(addprefix build-,$(HOST_TARGETS))
 #
 # The size that *is* worth knowing about is not the renderer's.
 # `--no-web-resources-cdn` copies the whole renderer directory out of the web
-# SDK — 36.1 MB of 45.4, including variants a JavaScript build never loads and
-# 8.2 MB of `.symbols` files, which are symbol maps for the profiler. Four
-# fifths of the offline shell is renderers, and only one of them runs.
+# SDK — 36.1 MB of 45.4, including the three renderers of a `--wasm` build,
+# which a JavaScript build cannot load, and 8.2 MB of `.symbols` files, which
+# are symbol maps for the profiler. All of it is deployed, because pruning the
+# build by hand is guessing what the engine may ask for; what the worker
+# *precaches* is decided in `tool/make_service_worker.dart`, and it is the
+# shell that runs — the two CanvasKit pairs the loader chooses between at run
+# time, and nothing else under `canvaskit/`. Measured: 39 files and 20.5 MB,
+# against the 53 files and 44.4 MB of caching everything the build wrote.
 build-web:
 	$(FLUTTER) build web --no-web-resources-cdn --pwa-strategy=none
 	$(DART) run tool/make_service_worker.dart
