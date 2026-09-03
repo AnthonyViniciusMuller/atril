@@ -1742,9 +1742,18 @@ merged in order, which is why each fix names the section it belongs to and touch
       lifecycle is watched again rather than watched twice. The test drives a real lifecycle
       message through the binding after re-subscribing, and reproduces the exact error against
       the old code
-- [ ] `feat: prune the applied operations` — the table grows by one row per pulled operation
-      and nothing deletes one; the cursor guards every redelivery except a page re-read after a
-      crash, so rows older than a bounded window are dead weight. Prune when a channel settles
+- [x] `feat: prune the applied operations` — the table grew by one row per pulled operation and
+      nothing deleted one. **The window is thirty days**, and the judgement behind it is worth
+      more than the number: the table makes a redelivery *free* rather than *safe*, because
+      applying an operation twice is already harmless — the merge is idempotent and the second
+      application loses to the version the first one wrote — so what a row buys is a decode
+      avoided and a `duplicate` told apart from a `superseded`. It is therefore sized against the
+      two redeliveries that really happen, a page re-read after a device died between the commit
+      and the cursor, and an operation arriving by a second route from a peer that replicates the
+      same reader; both are days at the outside. It runs where a channel settles, which is the
+      same evidence the exchange is recorded on: connected, and in the middle of nothing. A
+      failure to prune is logged and no more — a table that did not shrink is not a reason to end
+      a channel that is working. No column was added, so the schema is untouched
 - [ ] `fix: report a peer whose clock is far ahead` — `observe` returns whether the peer is
       past `maxClockDrift` and documents that the caller's job is to report it; the reconciler
       discards the answer. Log it once per device

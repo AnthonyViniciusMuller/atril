@@ -125,6 +125,31 @@ void main() {
     });
   });
 
+  group('the operations it has applied', () {
+    test('forgets what it applied before the window', () async {
+      // The table makes a redelivery free rather than safe — applying twice is
+      // harmless, because the merge is idempotent — so a row older than any
+      // redelivery the cursor does not guard is dead weight, and a table that
+      // grew by one row per operation for ever is a replica that never
+      // shrinks.
+      final sync = open().syncDao;
+
+      await sync.markApplied(
+        _id(1),
+        at: _at.subtract(const Duration(days: 40)),
+      );
+      await sync.markApplied(_id(2), at: _at.subtract(const Duration(days: 2)));
+
+      final forgotten = await sync.pruneApplied(
+        before: _at.subtract(appliedOperationsWindow),
+      );
+
+      expect(forgotten, 1);
+      expect(await sync.hasApplied(_id(1)), isFalse);
+      expect(await sync.hasApplied(_id(2)), isTrue);
+    });
+  });
+
   group('a node cursor', () {
     Future<SyncDao> openWithNode() async {
       final database = open();

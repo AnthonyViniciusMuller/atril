@@ -6,10 +6,27 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../../../../domain/models/operation.dart';
+import '../converters.dart';
 import '../database.dart';
 import '../tables/sync.dart';
 
 part 'sync_dao.g.dart';
+
+/// How long an operation is remembered as applied.
+///
+/// The table is what makes a redelivery free rather than what makes it safe:
+/// applying an operation twice is harmless on its own, because the merge is
+/// idempotent and the second application loses to the version the first one
+/// wrote. What the row buys is the decode, and the `duplicate` a reader's
+/// screen can be told apart from a `superseded`.
+///
+/// So the window is chosen against the one redelivery the cursor does not
+/// already guard — a page re-read after a device died between the commit and
+/// the cursor — and against the other route an operation legitimately arrives
+/// by, a peer that also replicates this reader. Both are days at the outside,
+/// not weeks. A month is generous for both and bounds a table that otherwise
+/// grows by a row for every operation this device will ever receive.
+const Duration appliedOperationsWindow = Duration(days: 30);
 
 /// The local operation log and the per-node cursors.
 ///
@@ -163,6 +180,23 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
         AppliedOperationsCompanion.insert(id: id, appliedAt: at),
         mode: InsertMode.insertOrIgnore,
       );
+
+  /// Forgets the operations applied before [before], and answers with how many
+  /// were forgotten.
+  ///
+  /// It is called where a channel settles, which is the moment this device has
+  /// evidence its node is there and nothing it is in the middle of. See
+  /// [appliedOperationsWindow] for why forgetting one is safe at all.
+  Future<int> pruneApplied({required DateTime before}) =>
+      (delete(appliedOperations)..where(
+            // The comparison is in the type the column stores — microseconds —
+            // and it goes through the same converter the row is mapped by
+            // rather than spelling the encoding a second time.
+            (row) => row.appliedAt.isSmallerThanValue(
+              const InstantConverter().toSql(before),
+            ),
+          ))
+          .go();
 
   /// This device's position in the log of the node at [serverDomain], which is
   /// zero for a node it has never pulled from.

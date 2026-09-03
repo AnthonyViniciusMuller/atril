@@ -71,6 +71,7 @@ import '../../../utils/logging.dart';
 import '../api/reachability.dart';
 import '../api/session.dart';
 import '../content/upload_queue.dart';
+import '../local/dao/sync_dao.dart';
 import '../local/database.dart';
 import 'live_channel.dart';
 
@@ -459,6 +460,7 @@ final class SyncScheduler {
         // answered — are the channels' own, because they are what receives
         // them.
         await _recordExchange();
+        await _prune();
       }
 
       _reschedule(lasted: lasted);
@@ -598,6 +600,28 @@ final class SyncScheduler {
     await channel.close();
 
     _publish(SyncStatus(activity: SyncActivity.idle, failure: _status.failure));
+  }
+
+  /// Forgets the operations this device applied long enough ago that no node
+  /// will offer them again.
+  ///
+  /// It runs where a channel settled, and that is the whole of the scheduling
+  /// policy: the housekeeping of a replica belongs to a moment this device is
+  /// connected and idle rather than to a launch, a screen, or a timer of its
+  /// own. A failure is logged and nothing more — a table that did not shrink
+  /// is not a reason to end a channel that is working.
+  Future<void> _prune() async {
+    try {
+      final forgotten = await database.syncDao.pruneApplied(
+        before: _now().subtract(appliedOperationsWindow),
+      );
+
+      if (forgotten > 0) {
+        _log.fine('$forgotten applied operations were forgotten');
+      }
+    } on Object catch (error, trace) {
+      _log.info('the applied operations could not be pruned', error, trace);
+    }
   }
 
   Future<void> _recordExchange() async {

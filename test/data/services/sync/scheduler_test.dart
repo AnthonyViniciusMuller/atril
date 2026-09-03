@@ -211,6 +211,19 @@ void main() {
     ),
   );
 
+  /// Waits until [held] no longer holds, for a row the loop deletes.
+  Future<void> untilGone(Future<bool> Function() held) async {
+    for (var attempt = 0; attempt < 200; attempt++) {
+      if (!await held()) {
+        return;
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+
+    fail('the loop did not forget what the test was waiting for');
+  }
+
   /// Waits until [read] answers with something, for the facts that land in the
   /// database rather than in the loop's own state.
   Future<void> untilStored(Future<Object?> Function() read) async {
@@ -587,6 +600,35 @@ void main() {
     await untilStored(() => database.syncDao.lastExchangeWith(_node));
 
     expect(await database.syncDao.lastExchangeWith(_node), clock.at);
+  });
+
+  test('forgets what it applied long ago when a channel settles', () async {
+    // The housekeeping of a replica belongs to a moment this device is
+    // connected and idle, rather than to a launch or a timer of its own. The
+    // table grows by a row for every operation this device ever receives and
+    // nothing else deletes one.
+    await database.syncDao.markApplied(
+      '00000009-1111-4111-8111-111111111111',
+      at: _at.subtract(const Duration(days: 40)),
+    );
+
+    await scheduler.start();
+    await until(() => channel.isOpen);
+
+    clock.at = _at.add(const Duration(minutes: 1));
+
+    channel.endWith(
+      const AppException(kind: ErrorKind.unavailable, message: 'hung up'),
+    );
+
+    await untilGone(
+      () => database.syncDao.hasApplied('00000009-1111-4111-8111-111111111111'),
+    );
+
+    expect(
+      await database.syncDao.hasApplied('00000009-1111-4111-8111-111111111111'),
+      isFalse,
+    );
   });
 
   test('stops, and closes what it had open', () async {

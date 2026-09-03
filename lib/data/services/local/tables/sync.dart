@@ -100,7 +100,8 @@ class AppliedOperations extends Table {
   TextColumn get id => text().withLength(min: 36, max: 36)();
 
   /// When this device applied it, on a wall clock. It is a diagnostic, and it
-  /// is what a later phase would prune by.
+  /// is what the pruning of a settled channel forgets by — see
+  /// `appliedOperationsWindow`.
   IntColumn get appliedAt => integer().map(const InstantConverter())();
 
   @override
