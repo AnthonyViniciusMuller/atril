@@ -428,6 +428,33 @@ void main() {
     expect(node.hungUp, isTrue);
   });
 
+  test('carries what ended it to a caller that arrives late', () async {
+    // The loop above subscribes to `done` on the line after `open()` returns,
+    // and a transport that fails while this device is still opening completes
+    // it before that. A channel that forgot what ended it would answer that
+    // caller with a clean ending, and the status would never say failure.
+    final dead = NodeConnection(
+      NodeEndpoint(authority: '127.0.0.1:1', transportSecurity: false),
+    );
+
+    addTearDown(dead.shutdown);
+
+    stream = SyncStream(
+      database: database,
+      api: SyncApi(connection: dead, session: session),
+      reconciler: Reconciler(database, HybridClock(wall: () => _at)),
+      now: () => _at,
+    );
+
+    await stream.open();
+
+    // Nothing has asked what ended it, and it has already ended. The answer
+    // still has to be the one the node gave.
+    await until(() async => !stream.isOpen);
+
+    await expectLater(stream.done, throwsA(isA<Object>()));
+  });
+
   test('carries what ended it', () async {
     await stream.open();
 

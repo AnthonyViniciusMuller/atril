@@ -126,6 +126,14 @@ final class SyncStream implements SyncChannel {
     _commands = commands;
     _live = true;
     _ended = ended;
+
+    // Nobody is listening yet, and the channel can end before anybody is: the
+    // scheduler subscribes on the line after `open()` returns. A future
+    // completed with an error and no listener is an unhandled error in Dart,
+    // so one is attached here and the real listener still receives what ended
+    // it when it arrives.
+    unawaited(ended.future.catchError((Object _) {}));
+
     _settled = settled;
     _offered.clear();
 
@@ -157,6 +165,13 @@ final class SyncStream implements SyncChannel {
     await offer();
   }
 
+  /// Completes when the channel ends, carrying whatever ended it.
+  ///
+  /// The completer **survives the end and is replaced by the next [open]**.
+  /// One that was cleared as it completed would answer every caller that
+  /// arrived afterwards with a channel that ended cleanly, and a transport
+  /// that failed while this device was still opening is exactly that caller's
+  /// case: the loop above asks on the line after the open returns.
   @override
   Future<void> get done => _ended?.future ?? Future<void>.value();
 
@@ -307,9 +322,10 @@ final class SyncStream implements SyncChannel {
     final ended = _ended;
 
     // What ends here is the *serving* of the channel. The call itself is hung
-    // up by [close], which is the only place that releases either half.
+    // up by [close], which is the only place that releases either half, and
+    // the completer stays until the next open so that a caller arriving after
+    // the fact is told what ended it.
     _live = false;
-    _ended = null;
     _offered.clear();
 
     if (ended == null || ended.isCompleted) {

@@ -1691,10 +1691,18 @@ merged in order, which is why each fix names the section it belongs to and touch
       and what says it arrived is the node ending the stream, which is the wait that was already
       there. The fake node now records that the device hung up, because the leak is only visible
       from the other end
-- [ ] `fix: report a channel that ended before it was watched` — `done` returns a completed
+- [x] `fix: report a channel that ended before it was watched` — `done` returned a completed
       future when the completer was nulled before the scheduler subscribed, so a transport that
-      fails during `open()` is an unhandled error and a clean end at once, and the status never
-      says failure. Keep the completer until the next `open()`
+      failed during `open()` was an unhandled error and a clean end at once, and the status never
+      said failure. **The completer now survives the end and is replaced by the next `open`**, on
+      both channels. Two things came with it. The watch keyed `isOpen` on that same completer, so
+      keeping it meant giving the watch the `_live` flag the stream had just grown — the two
+      channels answer *am I open* the same way now. And keeping the completer is not by itself
+      enough: a future completed with an error nobody is listening to is an unhandled error in
+      Dart, and the loop above subscribes on the line *after* the open returns, so a no-op
+      handler is attached where the completer is made and the real listener still receives what
+      ended it. The tests were written to fail first — asking for `done` before the channel had
+      ended passed against the old code too, so they wait until it has ended and only then ask
 - [ ] `fix: record an exchange only on evidence` — *last reached the node* is written right
       after `open()`, and `open()` does not reach the node: gRPC dials lazily and the stream's
       open only reads the database. A device whose node has been down a week says *just now*.

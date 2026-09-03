@@ -229,6 +229,39 @@ void main() {
     expect(watch.isOpen, isFalse);
   });
 
+  test('carries what ended it to a caller that arrives late', () async {
+    // The same as the bidirectional stream's: the loop asks after `open()`
+    // returns, and a watch whose transport failed before then must still have
+    // the answer.
+    final dead = NodeConnection(
+      NodeEndpoint(authority: '127.0.0.1:1', transportSecurity: false),
+    );
+
+    addTearDown(dead.shutdown);
+
+    final api = SyncApi(connection: dead, session: session);
+
+    watch = WatchChannel(
+      database: database,
+      api: api,
+      puller: OperationPuller(
+        database: database,
+        api: api,
+        reconciler: Reconciler(database, HybridClock(wall: () => _at)),
+        now: () => _at,
+      ),
+      pusher: OperationPusher(database: database, api: api),
+    );
+
+    await watch.open();
+
+    // Nothing has asked what ended it, and it has already ended. The answer
+    // still has to be the one the node gave.
+    await until(() async => !watch.isOpen);
+
+    await expectLater(watch.done, throwsA(isA<Object>()));
+  });
+
   test('carries what ended it', () async {
     await watch.open();
 

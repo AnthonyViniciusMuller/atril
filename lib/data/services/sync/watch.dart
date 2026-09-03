@@ -73,10 +73,11 @@ final class WatchChannel implements SyncChannel {
 
   StreamSubscription<int>? _events;
   Completer<void>? _ended;
+  bool _live = false;
   String _node = '';
 
   @override
-  bool get isOpen => _ended != null;
+  bool get isOpen => _live;
 
   /// Opens the watch and hands over what this device owes.
   ///
@@ -93,7 +94,16 @@ final class WatchChannel implements SyncChannel {
 
     final cursor = await database.syncDao.cursor(_node);
 
-    _ended = Completer<void>();
+    final ended = Completer<void>();
+
+    _ended = ended;
+    _live = true;
+
+    // A watch can fail before anybody has asked what ended it — the loop above
+    // subscribes on the line after this returns — and a future completed with
+    // an error and no listener is an unhandled error in Dart. The listener
+    // that arrives later still receives it.
+    unawaited(ended.future.catchError((Object _) {}));
 
     _events = api
         .watch(afterPosition: cursor)
@@ -113,6 +123,13 @@ final class WatchChannel implements SyncChannel {
     await offer();
   }
 
+  /// Completes when the watch ends, carrying whatever ended it.
+  ///
+  /// The completer **survives the end and is replaced by the next [open]**, for
+  /// the reason `stream.dart` gives: a transport that failed while this device
+  /// was still opening ends the channel before the loop above has asked, and a
+  /// completer cleared as it completed would answer that loop with a clean
+  /// ending it never had.
   @override
   Future<void> get done => _ended?.future ?? Future<void>.value();
 
@@ -134,6 +151,8 @@ final class WatchChannel implements SyncChannel {
     }
 
     _end();
+
+    _events = null;
 
     await events.cancel();
   }
@@ -168,7 +187,7 @@ final class WatchChannel implements SyncChannel {
   void _end({Object? error, StackTrace? trace}) {
     final ended = _ended;
 
-    _ended = null;
+    _live = false;
 
     if (ended == null || ended.isCompleted) {
       return;
