@@ -59,21 +59,21 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # `android/app/build.gradle.kts` reads this file when it exists and falls
       # back to the debug key when it does not, announcing the fallback. The
@@ -126,7 +126,7 @@ jobs:
           cp build/app/outputs/bundle/release/app-release.aab "artifacts/atril-$v-android$suffix.aab"
           cp build/app/outputs/flutter-apk/app-release.apk "artifacts/atril-$v-android$suffix.apk"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: android
           path: artifacts/
@@ -136,16 +136,16 @@ jobs:
     needs: version
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # Signing an iOS build needs three things and there is no partial credit:
       # a distribution certificate, a provisioning profile that matches the
@@ -199,7 +199,7 @@ jobs:
               "artifacts/atril-$v-ios-unsigned.zip"
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ios
           path: artifacts/
@@ -209,16 +209,16 @@ jobs:
     needs: version
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # The Developer ID identity, and separately the notary credentials. They
       # are separate because they fail separately: a build can be signed and not
@@ -281,7 +281,7 @@ jobs:
             cp "$f" "artifacts/${base/atril-/atril-$v-}.zip"
           done
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: macos
           path: artifacts/
@@ -291,16 +291,16 @@ jobs:
     needs: version
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # The two commands `make package-windows` runs, spelled out: a Windows
       # runner has no make on its PATH, and a job that installed one to save two
@@ -340,7 +340,7 @@ jobs:
           New-Item -ItemType Directory -Force artifacts | Out-Null
           Copy-Item build/windows/packaged/atril-windows.msix "artifacts/$name"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows
           path: artifacts/
@@ -350,7 +350,7 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install the Linux desktop toolchain
         run: |
@@ -363,14 +363,14 @@ jobs:
           flatpak install --user --noninteractive flathub \
             org.gnome.Platform//49 org.gnome.Sdk//49
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # The metainfo carries its release as a literal, because a software centre
       # reads that file and never the tag. It is rewritten here from the version
@@ -397,7 +397,7 @@ jobs:
           cp build/atril-linux.flatpak \
             "artifacts/atril-${{ needs.version.outputs.name }}-linux.flatpak"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux
           path: artifacts/
@@ -407,16 +407,16 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       # Through the make target, because the web build is three flags and the
       # service-worker step afterwards. An archive of `build/web` is the whole
@@ -429,7 +429,7 @@ jobs:
           mkdir -p artifacts
           (cd build/web && zip -qr "$GITHUB_WORKSPACE/artifacts/atril-${{ needs.version.outputs.name }}-web.zip" .)
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: web
           path: artifacts/
@@ -444,7 +444,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: artifacts
 

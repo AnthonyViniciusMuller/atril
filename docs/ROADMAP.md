@@ -2059,9 +2059,27 @@ merged in order, which is why each fix names the section it belongs to and touch
       project needs is a local distrobox workaround and belongs to `release.yml`, not here. Not
       executed: an Android build needs the SDK and a runner, and this machine has neither ready
       — what is verified is that the workflow file still parses
-- [ ] `ci: pin the actions and enforce the lockfile` — two third-party actions run at mutable
+- [x] `ci: pin the actions and enforce the lockfile` — two third-party actions run at mutable
       tags beside the signing secrets, and `pub get` may resolve differently from the lockfile.
-      Pin to commits, add Dependabot for both ecosystems, and pass `--enforce-lockfile`
+      Pin to commits, add Dependabot for both ecosystems, and pass `--enforce-lockfile`.
+      **All twenty-eight `uses:` are pinned, not just the two third-party ones**: a tag is a
+      mutable pointer whoever owns the repository can move, and `actions/checkout` is as able to
+      move `v7` as anyone — the argument for pinning is about who can change what runs beside
+      `MACOS_CERTIFICATE_BASE64`, and that argument does not stop at the `actions` organisation.
+      Every pin carries the version it was resolved from as a comment, which is what makes the
+      diff of a bump readable. One of the six needed care: **`arduino/setup-protoc@v3` is a
+      branch and not a tag**, so the pin is `c65c819`, the commit `v3.0.0` peels to and the head
+      that branch currently points at — resolved with `git ls-remote`, not guessed. The others
+      are `checkout` v7.0.1, `flutter-action` v2.23.0, `setup-java` v5.7.0, `upload-artifact`
+      v4.6.2 and `download-artifact` v4.3.0. `.github/dependabot.yml` is what keeps a pin from
+      quietly ageing: **github-actions weekly, pub monthly and grouped into one pull request**,
+      because twenty-five packages already trail their latest release behind constraints this
+      project set deliberately — `flutter_inappwebview` on a pre-release, `drift` matched to the
+      committed web assets — and a pull request per package weekly would train everybody to
+      ignore the one that matters. `--enforce-lockfile` goes on all eight resolves, and it was
+      **run here rather than assumed**: `flutter pub get --enforce-lockfile` exits 0 in this
+      worktree, path `dependency_overrides` and all, which was the thing worth checking before
+      making it a gate. Verified locally: the resolve, and that all three YAML files parse
 - [ ] `ci: measure coverage and hold a floor` — `make coverage` runs nowhere, its filter keeps
       the generated localizations, and nothing fails when a phase drops coverage
 - [ ] `fix: declare the percent placeholder` — three messages use `{percent}` without declaring

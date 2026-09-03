@@ -1,0 +1,26 @@
+# Two ecosystems, because the workflows now pin every action to a commit and a
+# pin nobody moves is a pin that quietly ages. Dependabot proposes the move and
+# CI decides whether it is safe; a pull request a person reads is the point.
+#
+# The pub schedule is monthly and grouped, since twenty-five packages already
+# trail their latest release behind constraints this project set on purpose —
+# `flutter_inappwebview` at a pre-release, `drift` matched to committed web
+# assets — and a weekly pull request per package would be noise that teaches
+# people to ignore the one that matters.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      pub:
+        patterns: ['*']
+    commit-message:
+      prefix: build
