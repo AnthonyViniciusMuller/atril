@@ -54,13 +54,11 @@ modules:
       # whole and reached through a symlink — $ORIGIN resolves through one.
       - mkdir -p /app/lib/atril
       - cp -a bundle/. /app/lib/atril/
-      # `flutter build linux --release` ships libcef.so exactly as CEF
-      # published it: 1311 MB of unstripped Chromium, in a bundle of 1553 MB.
-      # Stripping takes that file to 244 MB and the bundle to 486 MB. Nothing
-      # else in the build does it, and this line is the first thing in this
-      # project that ever looked at the file's size — `docs/architecture.md`
-      # quoted the stripped number as though something already had.
-      - strip --strip-unneeded /app/lib/atril/lib/libcef.so
+      # libcef.so arrives already stripped: `linux/CMakeLists.txt` does it at
+      # install for every non-debug build, so the bundle copied above is 486 MB
+      # and this manifest does not need to know the file's size. The strip was
+      # first written here, in phase 13, which made the Flatpak the only release
+      # path that stripped it while `make build-linux` and CI shipped 1.5 GB.
       # The setuid sandbox helper CEF ships is inert here: webview_cef's CMake
       # leaves it unprivileged and appends --no-sandbox to the command line, and
       # a Flatpak could not make it setuid in any case. Removing it saves

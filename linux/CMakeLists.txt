@@ -106,6 +106,37 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# webview_cef hands libcef.so to the loop above exactly as CEF published it:
+# 1311 MB of unstripped Chromium, in a bundle of 1553 MB. Stripping it is what
+# takes the bundle to 486 MB, and it happens here — at install, after the copy,
+# in the order install rules of one directory run — so that every release
+# bundle is the same size whether or not something wraps it afterwards. Phase 13
+# put the strip in the Flatpak manifest alone, and `make build-linux`, the CI
+# job and a `flutter build linux --release` on a laptop all shipped the 1.5 GB.
+#
+# Debug builds keep the symbols, for the reason the AOT library below is
+# release-only: a debug build is where a crash inside CEF is worth reading. And
+# it is fatal rather than skipped when there is no strip to run, because a
+# release bundle three times its size with nothing saying so is exactly what
+# this rule exists to prevent. `strip` on a file already stripped exits 0, so
+# the rule is idempotent.
+if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+  if(NOT CMAKE_STRIP)
+    message(FATAL_ERROR "no strip on this host: a release bundle needs one for libcef.so")
+  endif()
+  install(CODE "
+    set(libcef \"${INSTALL_BUNDLE_LIB_DIR}/libcef.so\")
+    if(EXISTS \"\${libcef}\")
+      execute_process(
+        COMMAND \"${CMAKE_STRIP}\" --strip-unneeded \"\${libcef}\"
+        RESULT_VARIABLE strip_result)
+      if(NOT strip_result EQUAL 0)
+        message(FATAL_ERROR \"stripping \${libcef} failed: \${strip_result}\")
+      endif()
+    endif()
+    " COMPONENT Runtime)
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

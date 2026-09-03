@@ -2024,10 +2024,27 @@ merged in order, which is why each fix names the section it belongs to and touch
       `atril-*-*-unsigned.*`, which is the check a person does before publishing. iOS already
       had it in that position and is untouched. Not executed here: the release workflow has
       never run and this is a `cp` inside it
-- [ ] `build: strip libcef in every release bundle` — the strip lives only in the Flatpak
+- [x] `build: strip libcef in every release bundle` — the strip lives only in the Flatpak
       manifest, so `make build-linux` and the CI job still produce the 1.5 GB bundle, and the
       pubspec still quotes the size of a file nothing was stripping. Strip at install in CMake
-      and correct the comment
+      and correct the comment. **An `install(CODE …)` in `linux/CMakeLists.txt`, after the loop
+      that copies the plugins' libraries**, which is the first moment `libcef.so` exists at its
+      bundled path — so the size is a property of every release bundle rather than of whatever
+      wraps one. It is guarded on `NOT CMAKE_BUILD_TYPE MATCHES "Debug"`, beside the rule that
+      installs the AOT library on the same condition: a debug build is where a crash inside CEF
+      is worth reading. Two smaller decisions. It is **fatal when `CMAKE_STRIP` is unset**, not
+      skipped, because a release bundle three times its size with nothing saying so is the exact
+      failure this rule exists to prevent; and `strip` over an already-stripped file exits zero,
+      so the rule is idempotent and a rebuild is a no-op. **The Flatpak strip is now removed
+      rather than kept**: `make package-linux` runs `flutter build linux --release` before
+      flatpak-builder, so the bundle the manifest copies arrives stripped, and a second strip
+      there would be a line whose only effect is to make the manifest look like the place this
+      is decided. Measured on this machine, and one number of phase 13's does not reproduce:
+      CEF publishes `libcef.so` at **1311 MB**, the rule leaves **244 MB** and `file` reports it
+      `stripped`, and the bundle is **391 MB** rather than the 486 MB phase 13 recorded — that
+      figure was read off the Flatpak's `/app` tree and not off `build/linux/x64/release/bundle`,
+      which is what the pubspec and `architecture.md` now quote. Verified by
+      `flutter build linux --release` from a deleted `build/linux`
 - [ ] `ci: build the android release` — the pull-request matrix builds debug, so the release
       configuration and the shrinker run only in a workflow that has never run. The debug-key
       fallback makes a release build safe on a runner with no keystore

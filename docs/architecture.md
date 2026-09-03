@@ -199,8 +199,11 @@ Electron application ships, and the price of the sixth target having a reader at
 That sentence used to end at *stripped*, and phase 13 is where the missing half turned up: it was
 a claim about a step nobody was taking. `flutter build linux --release` copies `libcef.so`
 exactly as CEF published it, which is **1311 MB**, in a bundle of **1553 MB**. The 244 MB was
-always the stripped size of a file that shipped unstripped. The strip is now a line in the
-Flatpak manifest, which is the first thing in this project to have looked. And the
+always the stripped size of a file that shipped unstripped. Phase 13 put the strip in the Flatpak
+manifest, which made the Flatpak the only release path that stripped it: `make build-linux`, the CI
+job and a laptop's `flutter build linux --release` went on shipping the 1.5 GB. Phase 14 moved it
+into the install step of `linux/CMakeLists.txt`, after the rule that copies the plugin's libraries,
+so every non-debug bundle is 486 MB whether or not anything wraps it. And the
 plugin's CMake step patches `linux/runner/main.cc` and `my_application.cc`: a CEF process
 bootstrap runs before `g_application_run`, so on Linux `main` branches before the Flutter
 application is constructed. The patch is idempotent and is committed, which makes it a diff

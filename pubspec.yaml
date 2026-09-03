@@ -287,10 +287,12 @@ dependencies:
   # runs CEF — Chromium, rendered to a Flutter texture — and it is the same
   # engine, page and bridge the other five targets load.
   #
-  # What it costs was measured before the phase began rather than discovered
-  # during it. CEF is fetched at build time (658 MB, into the pub cache, once
-  # per machine) and the `libcef.so` that ships is 244 MB stripped, so a Linux
-  # bundle is about 300 MB. Its CMake step also patches `linux/runner/main.cc`
+  # What it costs was measured before the phase began, and one number in the
+  # measurement was wrong for twelve phases. CEF is fetched at build time
+  # (658 MB, into the pub cache, once per machine), and the `libcef.so` it
+  # ships is 1311 MB as published: `linux/CMakeLists.txt` strips it at install,
+  # to 244 MB, so a release bundle is 486 MB and a debug one, which keeps the
+  # symbols, 1.5 GB. Its CMake step also patches `linux/runner/main.cc`
   # and `my_application.cc` — a CEF process bootstrap and two key handlers — and
   # those patches are committed here, so the build is a no-op over them and the
   # change is a diff somebody reviewed rather than a mutation during a build.
