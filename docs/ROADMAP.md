@@ -1941,10 +1941,22 @@ merged in order, which is why each fix names the section it belongs to and touch
       life of the process; and the host drops its own reference once the page has been told where
       to look, which is the fourth copy and the one nobody had counted. None of this was
       exercised against CEF here — the server half is, and it is the half this project wrote
-- [ ] `test: one fake per repository, and a contract they share` — eleven fakes in a file of
-      1400 lines, each reimplementing the filtering and the refusals of the real repository with
-      nothing asserting the two agree. Split them, and run the methods the screens depend on
-      against both
+- [x] `test: one fake per repository, and a contract they share` — the 1400-line file is nine
+      files under `test/ui/fakes/` and a `fakeProviders()` that composes them, which is the dull
+      half. The contract is the other half and it found three real disagreements, each of which
+      had been holding up a screen test that proved nothing. **The library fake answered every
+      query with the whole list**: the shelf's search, its format filter, its order and its
+      exclusion of tombstoned works were exercised nowhere, because the fake handed back whatever
+      a test had pushed. **The annotation fake answered `watchMarksIn` with every mark it had
+      ever been given**, so a highlight from another book would have been painted over this one's
+      page and no test would have minded. And **neither replayed its last answer to a watch that
+      started afterwards**, which drift's own `watch` does — a difference that reads as a screen
+      stuck on its spinner, and the reason the first run of the contract timed out rather than
+      failing. The fakes now narrow, scope, order and replay as the repositories do, using the
+      same collation for the search — sqlite's `LIKE` is ASCII-insensitive, which is why the real
+      one matches in Dart and why a fake using `contains` would disagree exactly on *sertoes*.
+      The contract is a mixin: a subject says only how it seeds, and twenty-two descriptions run
+      against the fake and against the drift-backed repositories in one file
 
 ### Delivery
 

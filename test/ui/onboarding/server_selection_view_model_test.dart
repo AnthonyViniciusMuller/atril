@@ -8,7 +8,7 @@ import 'package:atril/ui/onboarding/view_model/server_selection_view_model.dart'
 import 'package:atril/utils/errors.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 ServerSelectionViewModel modelOver(
   FakeServerRepository servers, {

@@ -30,7 +30,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 const String _id = 'aaaaaaaa-1111-4111-8111-111111111111';
 

@@ -20,7 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 /// A change this device authored and the node would not take.
 final Operation _change = Operation(
@@ -50,7 +50,7 @@ Future<void> _pump(WidgetTester tester, FakeSyncRepository sync) async {
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(sync: sync),
+      providers: fakeProviders(sync: sync),
       child: const MaterialApp(
         locale: Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

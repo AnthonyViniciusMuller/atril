@@ -18,7 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 final User _reader = User(
   id: '22222222-2222-4222-8222-222222222222',
@@ -79,7 +79,7 @@ Future<void> _pump(
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(federation: federation, auth: reading),
+      providers: fakeProviders(federation: federation, auth: reading),
       child: const MaterialApp(
         locale: Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

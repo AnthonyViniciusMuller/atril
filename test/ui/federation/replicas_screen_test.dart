@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 const KnownServer _origin = KnownServer(
   id: 'origin',
@@ -72,7 +72,7 @@ Future<void> _pump(
 ) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(federation: federation),
+      providers: fakeProviders(federation: federation),
       child: const MaterialApp(
         locale: Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -31,7 +31,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../ui/repository_fakes.dart';
+import '../ui/fakes/fakes.dart';
 
 /// A refresher nothing in this file reaches, since no test lets a token go
 /// stale: the guard reads the stored credential and never exchanges it.
@@ -64,7 +64,7 @@ Future<void> _pump(WidgetTester tester, GoRouter router) async {
       // The onboarding screens read their repositories out of the tree, so a
       // router test that lands on one has to supply them. Nothing here asserts
       // anything about them: what is under test is where the redirect went.
-      providers: repositoryProviders(),
+      providers: fakeProviders(),
       child: MaterialApp.router(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,

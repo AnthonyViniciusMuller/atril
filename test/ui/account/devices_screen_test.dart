@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 const String _thisDevice = '11111111-1111-4111-8111-111111111111';
 const String _otherDevice = '99999999-9999-4999-8999-999999999999';
@@ -45,7 +45,7 @@ const Device _revoked = Device(
 Future<void> _pump(WidgetTester tester, FakeAccountRepository account) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(accountRepository: account),
+      providers: fakeProviders(accountRepository: account),
       child: const MaterialApp(
         locale: Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -22,7 +22,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-import '../../repository_fakes.dart';
+import '../../fakes/fakes.dart';
 
 /// A refresher nothing here reaches.
 final class _NeverAsked implements SessionRefresher {
@@ -51,7 +51,7 @@ Session _session() {
 /// graph, so what it is given is the part of the graph it reads.
 List<SingleChildWidget> _providers(SessionHolder session) =>
     <SingleChildWidget>[
-      ...repositoryProviders(),
+      ...fakeProviders(),
       Provider<SessionHolder>.value(value: session),
       Provider<GoRouter>(
         create: (_) => atrilRouter(session: session),

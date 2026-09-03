@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 Future<void> pump(
   WidgetTester tester, {
@@ -20,10 +20,7 @@ Future<void> pump(
 }) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(
-        servers: servers,
-        environment: environment,
-      ),
+      providers: fakeProviders(servers: servers, environment: environment),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

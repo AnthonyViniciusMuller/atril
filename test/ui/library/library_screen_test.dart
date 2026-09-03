@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
 
@@ -67,7 +67,7 @@ Future<Harness> pump(WidgetTester tester, {double width = 400}) async {
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(library: library, picker: picker),
+      providers: fakeProviders(library: library, picker: picker),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

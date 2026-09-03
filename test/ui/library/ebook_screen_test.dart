@@ -19,7 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../repository_fakes.dart';
+import '../fakes/fakes.dart';
 
 const String _device = '11111111-1111-4111-8111-111111111111';
 const String _work = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -89,7 +89,7 @@ Future<FakeLibraryRepository> pump(WidgetTester tester) async {
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: repositoryProviders(library: library),
+      providers: fakeProviders(library: library),
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

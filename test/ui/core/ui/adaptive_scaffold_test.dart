@@ -29,7 +29,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../repository_fakes.dart';
+import '../../fakes/fakes.dart';
 
 /// A refresher nothing here reaches: the credential below is good for a month.
 final class _NeverAsked implements SessionRefresher {
@@ -79,7 +79,7 @@ Future<GoRouter> _pumpAt(
       // The settings destination reads its repository out of the tree. Nothing
       // here asserts anything about it: what is under test is which branch a
       // tap moves to.
-      providers: repositoryProviders(sync: sync),
+      providers: fakeProviders(sync: sync),
       child: MaterialApp.router(
         routerConfig: router,
         locale: locale,
