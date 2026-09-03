@@ -193,29 +193,40 @@ final class LibraryRepositoryImpl implements LibraryRepository {
         claims.object(fieldExtraMetadata, described.extra);
       }
 
-      await author.write(Change.insert(TargetEntity.ebook, id, claims.fields));
-
-      // After the work exists, because the row references it and is deleted
-      // with it. A cover saved first would be a row pointing at nothing, and
-      // the foreign key would refuse it.
-      if (described?.cover case final EpubCover cover) {
-        await library.saveCover(
-          ebookId: id,
-          mediaType: cover.mediaType,
-          bytes: cover.bytes,
+      // The record, its cover and the debt are one transaction. The author
+      // commits one of its own and drift nests it as a savepoint, so a failure
+      // in either step after it takes the work down too — a work the node is
+      // never owed is a book with no upload, a duplicate on the retry, and a
+      // release that removes the only copy there is. The bytes stay: they were
+      // stored first and a file nothing names is what the retry adopts.
+      await library.transaction(() async {
+        await author.write(
+          Change.insert(TargetEntity.ebook, id, claims.fields),
         );
-      }
 
-      // The node is owed the file from here on, and the queue is a table: an
-      // import made on a train is a transfer that survives closing the app.
-      // It is queued and not sent — C16 refuses an upload for a digest no work
-      // of the reader's names, and the work reaches the node with the log, so
-      // the first attempt of a fresh import is a *not yet* by construction.
-      await uploads.owe(
-        contentHash: stored.contentHash,
-        mediaType: kind.mediaType,
-        sizeBytes: stored.sizeBytes,
-      );
+        // After the work exists, because the row references it and is deleted
+        // with it. A cover saved first would be a row pointing at nothing, and
+        // the foreign key would refuse it.
+        if (described?.cover case final EpubCover cover) {
+          await library.saveCover(
+            ebookId: id,
+            mediaType: cover.mediaType,
+            bytes: cover.bytes,
+          );
+        }
+
+        // The node is owed the file from here on, and the queue is a table: an
+        // import made on a train is a transfer that survives closing the app.
+        // It is queued and not sent — C16 refuses an upload for a digest no
+        // work of the reader's names, and the work reaches the node with the
+        // log, so the first attempt of a fresh import is a *not yet* by
+        // construction.
+        await uploads.owe(
+          contentHash: stored.contentHash,
+          mediaType: kind.mediaType,
+          sizeBytes: stored.sizeBytes,
+        );
+      });
 
       final imported = await library.readEbook(id);
 

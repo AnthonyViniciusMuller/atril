@@ -1549,11 +1549,19 @@ merged in order, which is why each fix names the section it belongs to and touch
       replica's `sqlite_master`, replays them under `user_version = 1`, and opens — which, with
       the clause stripped from the generated file, fails with exactly the sentence a reader's
       device would have logged
-- [ ] `fix: import a work in one transaction` — `author.write` commits, and the cover and the
+- [x] `fix: import a work in one transaction` — `author.write` commits, and the cover and the
       transfer row are written after it. A failure between the two leaves a work the node is
       never owed: no upload, a duplicate on retry, and a release that removes the only copy. The
       three steps join one transaction, and a test fails the bookkeeping after authoring and
-      asserts no row and no outbox entry remain
+      asserts no row and no outbox entry remain. **The transaction is opened on the DAO the
+      repository already holds** — `library.transaction`, which drift resolves through the zone
+      so the author's own `database.transaction` inside it becomes a savepoint rather than a
+      second commit — and nothing new is injected for it. The blob write stays outside on
+      purpose: the bytes go first so that a device interrupted between the two holds a file
+      nothing names, which the retry adopts through the digest, and the test asserts that too.
+      The failing step in the test is `saveCover` on a `LibraryDao` subclass rather than `owe`,
+      because `UploadQueue` is final and the DAO is not; the property is the same for either.
+      Without the transaction the same test finds one `ebooks` row after the failed import
 - [ ] `fix: notice a download from the content watch` — `watchContent` recomputes *on this
       device* only when a transfer or a pin changes, and a completed download writes neither, so
       the book screen keeps saying the file is elsewhere until something unrelated moves. The

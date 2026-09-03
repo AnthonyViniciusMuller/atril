@@ -7,6 +7,7 @@ import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/data/services/content/content_uploader.dart';
 import 'package:atril/data/services/content/upload_queue.dart';
 import 'package:atril/data/services/files/file_source.dart';
+import 'package:atril/data/services/local/dao/library_dao.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/data/services/storage/session_store.dart';
@@ -82,6 +83,7 @@ Future<LibraryRepository> _repository(
   bool bound = true,
   bool keepsByDefault = true,
   int? quota,
+  LibraryDao? library,
 }) async {
   if (bound) {
     await database.identityDao.bindDevice(
@@ -97,7 +99,7 @@ Future<LibraryRepository> _repository(
   blobs = MemoryBlobStore();
 
   return LibraryRepositoryImpl(
-    library: database.libraryDao,
+    library: library ?? database.libraryDao,
     author: OperationAuthor(
       database: database,
       clock: clock,
@@ -147,6 +149,36 @@ final class _File implements FileSource {
     // streaming one fails.
     yield bytes.sublist(0, bytes.length ~/ 2);
     yield bytes.sublist(bytes.length ~/ 2);
+  }
+}
+
+/// A [LibraryDao] whose cover table refuses the first [failures] writes.
+///
+/// It stands in for anything that can go wrong between authoring a work and
+/// finishing its bookkeeping — a full disk, a constraint, a crash — and it is
+/// the cover rather than the transfer because the queue is final and the DAO is
+/// not; the property under test is the same for either.
+final class _FlakyLibraryDao extends LibraryDao {
+  _FlakyLibraryDao(super.database);
+
+  /// How many more writes it refuses.
+  int failures = 1;
+
+  @override
+  Future<void> saveCover({
+    required String ebookId,
+    required String mediaType,
+    required Uint8List bytes,
+  }) {
+    if (failures-- > 0) {
+      throw StateError('the cover table is not writable right now');
+    }
+
+    return super.saveCover(
+      ebookId: ebookId,
+      mediaType: mediaType,
+      bytes: bytes,
+    );
   }
 }
 
@@ -420,6 +452,36 @@ void main() {
       expect(blobs.objects, isEmpty);
       expect(blobs.aborted, 1);
       expect(await database.syncDao.pending(), isEmpty);
+    });
+
+    test('leaves no work behind when its bookkeeping fails', () async {
+      // The record, the cover and the debt are one transaction. Before they
+      // were, a failure between authoring and queueing left a work the node
+      // was never owed: no upload, a second work on the retry, and a release
+      // that would have removed the only copy of the file.
+      final database = _open();
+      final repository = await _repository(
+        database,
+        library: _FlakyLibraryDao(database),
+      );
+
+      final failed = await repository.importEbook(_File('livro.epub', _epub));
+
+      expect(failed, isA<Error<Ebook>>());
+      expect(await database.select(database.ebooks).get(), isEmpty);
+      expect(await database.syncDao.pending(), isEmpty);
+      expect(await database.transfersDao.pending(), isEmpty);
+      // The bytes were stored first and stay: a file nothing names is what the
+      // retry adopts, and the store is keyed by the digest.
+      expect(blobs.objects, hasLength(1));
+
+      final retried = await repository.importEbook(_File('livro.epub', _epub));
+
+      expect(retried, isA<Ok<Ebook>>());
+      expect(await database.select(database.ebooks).get(), hasLength(1));
+      expect(await database.syncDao.pending(), hasLength(1));
+      expect(await database.transfersDao.pending(), hasLength(1));
+      expect(blobs.objects, hasLength(1));
     });
 
     test('refuses to author on a device that has not been bound', () async {
