@@ -36,10 +36,13 @@ import 'package:flutter/widgets.dart';
 /// the four native ones the file lives in a blob store addressed by digest
 /// rather than in a directory the webview could be pointed at.
 ///
-/// It costs a book held in memory while it is open, and on the native hosts a
-/// second transient copy while it crosses the bridge as base64. That is the
-/// price of the engine being the same file on six platforms, and it is paid
-/// once per open rather than per page.
+/// It costs a book held in memory while it is open, and on the four webview
+/// targets a second transient copy while the package's own bridge carries it
+/// across as base64. The Linux host used to pay that twice over and no longer
+/// pays it at all: it offers the bytes on the loopback socket that already
+/// serves the engine, and what crosses the bridge is a URL. That is the price
+/// of the engine being the same file on six platforms, and it is paid once per
+/// open rather than per page.
 final class EpubBook {
   /// The work [bytes] are the file of.
   const EpubBook({required this.ebookId, required this.bytes, this.title});
