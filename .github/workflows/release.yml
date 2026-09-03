@@ -115,12 +115,16 @@ jobs:
             --build-name=${{ needs.version.outputs.name }} \
             --build-number=${{ needs.version.outputs.number }}
 
+      # `atril-<version>-android-unsigned.apk`, with the suffix after the target
+      # as the macOS and Windows jobs put it, so that one glob names the unsigned
+      # artifacts of a release and a listing sorts by version and then by target.
       - name: Name the artifacts
         run: |
           mkdir -p artifacts
-          v="${{ needs.version.outputs.name }}${{ steps.signing.outputs.suffix }}"
-          cp build/app/outputs/bundle/release/app-release.aab "artifacts/atril-$v-android.aab"
-          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/atril-$v-android.apk"
+          v="${{ needs.version.outputs.name }}"
+          suffix="${{ steps.signing.outputs.suffix }}"
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/atril-$v-android$suffix.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/atril-$v-android$suffix.apk"
 
       - uses: actions/upload-artifact@v4
         with:

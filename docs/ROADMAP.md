@@ -2015,8 +2015,15 @@ merged in order, which is why each fix names the section it belongs to and touch
       Nothing was compiled for this commit on this machine: the Linux release build of the strip
       below is what exercises the GTK title, and Android, Windows, iOS and macOS are read and
       left to the four CI jobs — the macOS rename being the one of the five that can fail there
-- [ ] `fix: suffix the artifacts the same way` — Android puts *unsigned* before the target and
-      macOS and Windows after it
+- [x] `fix: suffix the artifacts the same way` — Android puts *unsigned* before the target and
+      macOS and Windows after it. The Android job folded the suffix into the version variable —
+      `atril-1.0.0-unsigned-android.apk` — where the other two append it to the target, and the
+      release page would have sorted the six by version, then by target, with the one exception
+      breaking the run. **The suffix moves to the end**: `atril-<version>-android-unsigned.apk`
+      and `.aab`, so every unsigned artifact of a release answers the one glob
+      `atril-*-*-unsigned.*`, which is the check a person does before publishing. iOS already
+      had it in that position and is untouched. Not executed here: the release workflow has
+      never run and this is a `cp` inside it
 - [ ] `build: strip libcef in every release bundle` — the strip lives only in the Flatpak
       manifest, so `make build-linux` and the CI job still produce the 1.5 GB bundle, and the
       pubspec still quotes the size of a file nothing was stripping. Strip at install in CMake
