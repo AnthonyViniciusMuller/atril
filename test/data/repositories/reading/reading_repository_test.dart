@@ -116,6 +116,7 @@ void main() {
     reading = ReadingRepositoryImpl(
       library: database.libraryDao,
       places: database.readingDao,
+      identity: database.identityDao,
       blobs: blobs,
       author: author,
     );
@@ -218,6 +219,7 @@ void main() {
         final ReadingRepository small = ReadingRepositoryImpl(
           library: database.libraryDao,
           places: database.readingDao,
+          identity: database.identityDao,
           blobs: _CapaciousStore(blobs, reported: readableSizeLimit + 1),
           author: author,
         );

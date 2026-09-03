@@ -1621,12 +1621,25 @@ merged in order, which is why each fix names the section it belongs to and touch
       The test hands the repository an `IdentityDao` whose `watchReader` fails with a
       `StateError`, which is precisely the class `on Exception` walked past, and asserts a
       `Result.error` arrives
-- [ ] `refactor: hoist the row mappers and the stream guard` — `library_repository_impl.dart` is
+- [x] `refactor: hoist the row mappers and the stream guard` — `library_repository_impl.dart` is
       994 lines and two features, and three of its helpers are reached into or copied by the
       annotation and reading repositories. The row mappers move to `data/model`, the guard
       becomes an extension in `utils`, the bytes half becomes its own file, the reading
       repository is handed the identity DAO instead of reaching through another one, and the
-      hand-rolled stream combinator gives way to `package:async`
+      hand-rolled stream combinator gives way to `package:async`. Nothing here changes
+      behaviour: the whole suite passes untouched except where a constructor gained the DAO.
+      `data/model/row_mappers.dart` is the row→domain direction beside the wire→domain
+      mappers already there, and it took `descriptorOfRow` with it — written three times in the
+      server repository and a fourth at the composition root. `Stream<T>.asResults(op)` in
+      `utils/streams.dart` replaces the guard that was copied verbatim into the annotation
+      repository and re-implemented as `_watch` in the reading one. **The bytes half is a mixin
+      and not a second repository**, because a reader importing a book is not acting on a
+      different thing than one renaming it: `LibraryBytes` declares the members it needs as
+      getters and the class provides them, which splits 994 lines into 488 and 493 without
+      either file reaching into the other — the one constant both report under moved to the
+      interface rather than being imported across. `blankIsAbsent` in `utils/collation.dart` is
+      the one rule the two duplicates spelled. The combinator was already gone with the
+      previous commit, which needed three streams where it took two
 - [ ] `feat: reclaim the bytes of a deleted work` — a tombstoned work keeps its blob and its
       pin, the kept list hides it and the budget counts it, so the space is shown and never
       freed. A reclaim pass removes blobs no live work names once the transfer has retired

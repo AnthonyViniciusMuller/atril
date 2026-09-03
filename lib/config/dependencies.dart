@@ -65,6 +65,7 @@ import '../data/services/epub/host/host_factory.dart';
 import '../data/services/files/file_source.dart';
 import '../data/services/files/system_file_picker.dart';
 import '../data/services/files/system_file_saver.dart';
+import '../data/model/row_mappers.dart';
 import '../data/services/local/database.dart';
 import '../data/services/local/hybrid_clock_store.dart';
 import '../data/services/sync/author.dart';
@@ -77,7 +78,6 @@ import '../data/services/sync/seed.dart';
 import '../data/services/sync/stream.dart';
 import '../data/services/sync/watch.dart';
 import '../domain/crdt/hybrid_clock.dart';
-import '../domain/models/server.dart';
 import '../data/services/storage/blob_storage.dart';
 import '../data/services/storage/reader_settings_store.dart';
 import '../data/services/storage/secure_session_store.dart';
@@ -164,7 +164,7 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
       create: (_) => NodeConnection(
         origin == null
             ? environment.initialEndpoint
-            : environment.endpointFor(_descriptorOf(origin)),
+            : environment.endpointFor(descriptorOfRow(origin)),
       ),
       dispose: (_, NodeConnection connection) => connection.shutdown(),
     ),
@@ -390,6 +390,11 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
       create: (BuildContext context) => ReadingRepositoryImpl(
         library: database.libraryDao,
         places: database.readingDao,
+        // Handed in rather than reached through the library DAO's own
+        // database: which device this is is a question about identity, and a
+        // repository that walked back through one accessor to borrow another
+        // had a dependency nothing in its signature declared.
+        identity: database.identityDao,
         blobs: blobs,
         author: context.read<OperationAuthor>(),
       ),
@@ -465,17 +470,3 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     ),
   ];
 }
-
-/// The node a catalogue row describes, as discovery would have returned it.
-///
-/// It is private and it is used once, at the launch that has to know where to
-/// dial. A row is what this device stored; a descriptor is what the rest of the
-/// app speaks, and the four fields that differ between them are the four the
-/// catalogue keeps and a lookup does not carry.
-ServerDescriptor _descriptorOf(ServerRow row) => ServerDescriptor(
-  domain: row.domain,
-  baseUrl: row.baseUrl,
-  jwksUri: row.jwksUri,
-  certificateFingerprint: row.certificateFingerprint,
-  grpcAuthority: row.grpcAuthority,
-);

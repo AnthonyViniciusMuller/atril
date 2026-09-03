@@ -9,6 +9,7 @@ import '../../../utils/result.dart';
 import '../../services/api/errors.dart';
 import '../../services/channel/channel.dart';
 import '../../services/discovery/well_known.dart';
+import '../../model/row_mappers.dart';
 import '../../services/local/dao/identity_dao.dart';
 import 'server_repository.dart';
 
@@ -73,17 +74,7 @@ final class ServerRepositoryImpl implements ServerRepository {
     try {
       final origin = await identity.originServer();
 
-      return Result<ServerDescriptor?>.ok(
-        origin == null
-            ? null
-            : ServerDescriptor(
-                domain: origin.domain,
-                baseUrl: origin.baseUrl,
-                jwksUri: origin.jwksUri,
-                certificateFingerprint: origin.certificateFingerprint,
-                grpcAuthority: origin.grpcAuthority,
-              ),
-      );
+      return Result<ServerDescriptor?>.ok(origin?.let(descriptorOfRow));
     } on Object catch (error) {
       return Result<ServerDescriptor?>.error(
         failureFrom(error, op: opChooseServer),
@@ -128,13 +119,7 @@ final class ServerRepositoryImpl implements ServerRepository {
 
       await identity.markOrigin(wanted);
 
-      final descriptor = ServerDescriptor(
-        domain: row!.domain,
-        baseUrl: row.baseUrl,
-        jwksUri: row.jwksUri,
-        certificateFingerprint: row.certificateFingerprint,
-        grpcAuthority: row.grpcAuthority,
-      );
+      final descriptor = descriptorOfRow(row!);
 
       _chosen = descriptor;
       _log.info('the reader is hosted at ${descriptor.domain}');

@@ -1,22 +1,21 @@
 /// [AnnotationRepository] over the local replica.
 library;
 
-import 'dart:async';
-
-import '../../../domain/crdt/revision.dart';
 import '../../../domain/models/annotation.dart';
 import '../../../domain/models/operation.dart';
 import '../../../utils/errors.dart';
 import '../../../utils/identifiers.dart';
 import '../../../utils/logging.dart';
+import '../../../utils/collation.dart';
 import '../../../utils/result.dart';
+import '../../../utils/streams.dart';
+import '../../model/row_mappers.dart';
 import '../../services/api/errors.dart';
 import '../../services/local/dao/annotations_dao.dart';
 import '../../services/local/dao/library_dao.dart';
 import '../../services/local/database.dart';
 import '../../services/sync/author.dart';
 import '../../services/sync/delta.dart';
-import '../library/library_repository_impl.dart' show ebookOfRow;
 import 'annotation_repository.dart';
 
 final _log = loggerFor('data/annotations');
@@ -26,21 +25,6 @@ const String opReadMarks = 'annotations: read';
 
 /// The operation a mark being made or unmade reports under.
 const String opMark = 'annotations: write';
-
-/// A mark, as the replica holds it.
-Annotation annotationOfRow(AnnotationRow row) => Annotation(
-  id: row.id,
-  ebookId: row.ebookId,
-  kind: AnnotationKind.parse(row.kind),
-  text: row.content,
-  locator: row.locator,
-  revision: Revision(
-    vectorClock: row.vectorClock,
-    updatedAt: row.updatedAt,
-    deviceId: row.deviceId,
-    deleted: row.deleted,
-  ),
-);
 
 /// What the reader marked, read out of the replica and written through the
 /// operation author.
@@ -68,23 +52,23 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
   final String Function() _mint;
 
   @override
-  Stream<Result<List<Annotation>>> watchMarksIn(String ebookId) => _guard(
-    marks
-        .watchMarksIn(ebookId)
-        .map(
-          (List<AnnotationRow> rows) => <Annotation>[
-            for (final AnnotationRow row in rows) annotationOfRow(row),
-          ],
-        ),
-  );
+  Stream<Result<List<Annotation>>> watchMarksIn(String ebookId) => marks
+      .watchMarksIn(ebookId)
+      .map(
+        (List<AnnotationRow> rows) => <Annotation>[
+          for (final AnnotationRow row in rows) annotationOfRow(row),
+        ],
+      )
+      .asResults(opReadMarks);
 
   @override
   Stream<Result<List<MarkedPassage>>> watchMarks({
     String? ebookId,
     AnnotationKind? kind,
-  }) => _guard(
-    marks.watchMarks(ebookId: ebookId, kind: kind?.wireName).map(_passagesOf),
-  );
+  }) => marks
+      .watchMarks(ebookId: ebookId, kind: kind?.wireName)
+      .map(_passagesOf)
+      .asResults(opReadMarks);
 
   @override
   Future<Result<List<MarkedPassage>>> readMarks({
@@ -313,32 +297,12 @@ final class AnnotationRepositoryImpl implements AnnotationRepository {
       return Result<void>.error(failureFrom(error, op: opMark));
     }
   }
-
-  /// [source] as a stream of results.
-  ///
-  /// A stream that failed by ending would be an exception crossing a layer
-  /// boundary with a `Stream` around it, and a list that stops arriving looks
-  /// exactly like an empty one.
-  Stream<Result<T>> _guard<T>(Stream<T> source) => source.transform(
-    StreamTransformer<T, Result<T>>.fromHandlers(
-      handleData: (T value, EventSink<Result<T>> sink) =>
-          sink.add(Result<T>.ok(value)),
-      handleError:
-          (Object error, StackTrace stackTrace, EventSink<Result<T>> sink) {
-            _log.warning('the marks could not be read', error, stackTrace);
-
-            sink.add(Result<T>.error(failureFrom(error, op: opReadMarks)));
-          },
-    ),
-  );
 }
 
 /// [value] trimmed, or `null` where there is nothing in it.
 ///
 /// A field given the empty string and a field given nothing are one claim about
-/// a mark — there is no text — and the column stores `NULL` for both.
-String? _blankIsNothing(String? value) {
-  final String? trimmed = value?.trim();
-
-  return trimmed == null || trimmed.isEmpty ? null : trimmed;
-}
+/// a mark — there is no text — and the column stores `NULL` for both. It is the
+/// same rule the library repository applies to a work's fields, under the name
+/// that fits what a *form* means by an empty field there.
+String? _blankIsNothing(String? value) => blankIsAbsent(value);

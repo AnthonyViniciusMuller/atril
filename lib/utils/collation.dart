@@ -108,3 +108,17 @@ int compareFolded(String a, String b) {
 /// results are sorted would be two answers to one question.
 bool containsFolded(String text, String term) =>
     foldForComparison(text).contains(foldForComparison(term));
+
+/// [value] trimmed, or `null` where there is nothing left of it.
+///
+/// Two callers spell the same rule and mean slightly different things by it,
+/// which is why it is here rather than in either. An edit form has no way to
+/// say *there is no author* other than an empty field, so an empty one is the
+/// reader clearing it — a claim, and not a silence. A mark given the empty
+/// string and a mark given nothing are one claim too: there is no text. Both
+/// are the column storing `NULL`, and both had written it out.
+String? blankIsAbsent(String? value) {
+  final String? trimmed = value?.trim();
+
+  return trimmed == null || trimmed.isEmpty ? null : trimmed;
+}

@@ -337,3 +337,12 @@ abstract interface class LibraryRepository {
   /// format this app does not open.
   Future<Result<EpubCover?>> cover(String ebookId);
 }
+
+/// The operation a failed reading of the collection reports under.
+///
+/// It is here, beside the interface, because both halves of the implementation
+/// report under it — the record half when a shelf cannot be listed, the bytes
+/// half when a work's content state cannot be read — and a constant one of them
+/// imported from the other would make the two files depend on each other for a
+/// string.
+const String opReadLibrary = 'library/collection: read';
