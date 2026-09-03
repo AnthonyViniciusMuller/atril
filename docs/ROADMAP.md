@@ -1606,11 +1606,21 @@ merged in order, which is why each fix names the section it belongs to and touch
       leave the store empty and announce `[true, false]` and not a third transition — it
       answered `access-2` before — and its opposite, a refresh nothing outlived, which must
       still take
-- [ ] `fix: keep every failure inside the boundary` — three repositories catch `on Exception`
+- [x] `fix: keep every failure inside the boundary` — three repositories catch `on Exception`
       where the others catch `on Object`, so a `StateError` from a DAO reaches a view model; in
       the federation repository it also skips the point-back and strands the device on the new
       node. `reader()` returns a raw stream for the same reason. Standardise the catch, return
-      `Stream<Result<User?>>`, and test that an `Error` from below is a `Result`
+      `Stream<Result<User?>>`, and test that an `Error` from below is a `Result`. **Five
+      repositories and not three**: the server and sync repositories caught `on Exception` too,
+      and the review had named the three it read — so all thirty-one catch clauses across
+      `data/repositories` are now `on Object`, which `failureFrom` already accepted. Nothing
+      about the failures changes shape; what changes is which ones are caught at all. `reader()`
+      wraps its stream the way the other watches do, and the four view models that listen
+      unwrap it — **a failure leaves the reader as they were rather than blanking the surface
+      that names them**, since the row is still in the replica and the next answer carries it.
+      The test hands the repository an `IdentityDao` whose `watchReader` fails with a
+      `StateError`, which is precisely the class `on Exception` walked past, and asserts a
+      `Result.error` arrives
 - [ ] `refactor: hoist the row mappers and the stream guard` — `library_repository_impl.dart` is
       994 lines and two features, and three of its helpers are reached into or copied by the
       annotation and reading repositories. The row mappers move to `data/model`, the guard

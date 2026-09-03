@@ -14,6 +14,7 @@ import 'package:atril/domain/models/user.dart';
 import 'package:atril/ui/account/widgets/account_screen.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/utils/errors.dart';
+import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,7 @@ Future<void> _pump(
   );
 
   await tester.pumpAndSettle();
-  auth.readers.add(reader ?? _reader);
+  auth.readers.add(Result<User?>.ok(reader ?? _reader));
   await tester.pumpAndSettle();
 }
 

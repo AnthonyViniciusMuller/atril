@@ -105,7 +105,7 @@ void main() {
     final auth = FakeAuthRepository();
 
     await pump(tester, auth);
-    auth.readers.add(_reader);
+    auth.readers.add(Result<User?>.ok(_reader));
     await tester.pumpAndSettle();
 
     // Both halves: the identifier says which node the library is on, and a
@@ -122,10 +122,10 @@ void main() {
     final auth = FakeAuthRepository();
 
     await pump(tester, auth);
-    auth.readers.add(_reader);
+    auth.readers.add(Result<User?>.ok(_reader));
     await tester.pumpAndSettle();
 
-    auth.readers.add(null);
+    auth.readers.add(const Result<User?>.ok(null));
     await tester.pumpAndSettle();
 
     expect(find.text('Ana Maria'), findsNothing);

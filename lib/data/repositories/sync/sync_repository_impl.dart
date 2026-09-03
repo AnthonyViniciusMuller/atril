@@ -121,7 +121,7 @@ final class SyncRepositoryImpl implements SyncRepository {
       _log.info('a refused change was discarded: $operationId');
 
       return const Result<void>.ok(null);
-    } on Exception catch (error, trace) {
+    } on Object catch (error, trace) {
       _log.warning('discarding a refused change failed', error, trace);
 
       return Result<void>.error(failureFrom(error, op: opDiscard));
@@ -134,7 +134,7 @@ final class SyncRepositoryImpl implements SyncRepository {
       await scheduler.syncNow();
 
       return const Result<void>.ok(null);
-    } on Exception catch (error, trace) {
+    } on Object catch (error, trace) {
       final failure = failureFrom(error, op: opSyncNow);
 
       _log.warning('synchronizing now failed', error, trace);

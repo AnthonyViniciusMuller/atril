@@ -129,7 +129,13 @@ abstract interface class AuthRepository {
   /// It is read from the local database and not from the node, which is what
   /// makes it correct offline. A logged-out device still has a row here, and
   /// that is deliberate — see [signOut].
-  Stream<User?> reader();
+  ///
+  /// Each answer is a [Result] for the reason every other boundary in this app
+  /// carries one: the database can fail, and a raw stream has nowhere to say
+  /// so — the failure would either be thrown into whatever is listening or
+  /// arrive as a stream that simply stopped, which looks exactly like a device
+  /// where nobody is signed in.
+  Stream<Result<User?>> reader();
 
   /// Ends the session on this device, and on this device alone (RN07).
   ///

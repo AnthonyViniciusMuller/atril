@@ -23,6 +23,10 @@ import '../../../data/repositories/account/account_repository.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../../domain/models/user.dart';
 import '../../../utils/command.dart';
+import '../../../utils/logging.dart';
+import '../../../utils/result.dart';
+
+final _log = loggerFor('ui/account');
 
 /// What a reader hands over to change their address.
 final class EmailChange {
@@ -96,16 +100,25 @@ final class AccountViewModel extends ChangeNotifier {
   /// Changes the password, which ends every session of every device.
   late final Command1<void, PasswordChange> changePassword;
 
-  late final StreamSubscription<User?> _reader;
+  late final StreamSubscription<Result<User?>> _reader;
 
   User? _signedIn;
 
   /// The reader, as this device holds them.
   User? get signedIn => _signedIn;
 
-  void _onReader(User? reader) {
-    _signedIn = reader;
-    notifyListeners();
+  void _onReader(Result<User?> reader) {
+    // A failure here leaves the reader as they were rather than blanking the
+    // surface that names them: the row is still in the replica and the next
+    // answer will carry it, and a screen that forgot who was signed in
+    // because one query failed would be the worse of the two wrong answers.
+    switch (reader) {
+      case Ok<User?>(:final User? value):
+        _signedIn = value;
+        notifyListeners();
+      case Error<User?>(:final Exception error):
+        _log.warning('the signed-in reader could not be read', error);
+    }
   }
 
   @override

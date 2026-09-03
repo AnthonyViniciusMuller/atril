@@ -168,15 +168,16 @@ final class FakeAuthRepository implements AuthRepository {
   int signOuts = 0;
 
   /// The reader it reports as signed in, which nothing changes on its own.
-  final StreamController<User?> readers = StreamController<User?>.broadcast();
+  final StreamController<Result<User?>> readers =
+      StreamController<Result<User?>>.broadcast();
 
   @override
-  Stream<User?> reader() => readers.stream;
+  Stream<Result<User?>> reader() => readers.stream;
 
   @override
   Future<Result<void>> signOut() async {
     signOuts++;
-    readers.add(null);
+    readers.add(const Result<User?>.ok(null));
 
     return const Result<void>.ok(null);
   }

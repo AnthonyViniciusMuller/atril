@@ -2,6 +2,8 @@
 /// and the session holder.
 library;
 
+import 'dart:async';
+
 import '../../../domain/models/device.dart';
 import '../../../domain/models/server.dart';
 import '../../../domain/models/user.dart';
@@ -134,7 +136,7 @@ final class AuthRepositoryImpl implements AuthRepository {
       _log.info('${user.federatedId} was created');
 
       return Result<User>.ok(user);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<User>.error(failureFrom(error, op: opRegisterUser));
     }
   }
@@ -156,7 +158,7 @@ final class AuthRepositoryImpl implements AuthRepository {
 
     try {
       await replica.seed(deviceId: deviceId);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       _log.warning('the replica of $deviceId was not seeded', error);
     }
   }
@@ -181,7 +183,7 @@ final class AuthRepositoryImpl implements AuthRepository {
       await auth.requestPasswordRecovery(address);
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opRecoverPassword));
     }
   }
@@ -225,25 +227,43 @@ final class AuthRepositoryImpl implements AuthRepository {
       await session.end();
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opResetPassword));
     }
   }
 
   @override
-  Stream<User?> reader() => identity.watchReader().map(
-    (ReaderRow? row) => row == null
-        ? null
-        : User(
-            id: row.id,
-            localName: row.localName,
-            displayName: row.displayName,
-            originServerDomain: row.originServerDomain,
-            federatedId: row.federatedId,
-            createdAt: row.createdAt,
-            email: row.email,
-          ),
-  );
+  Stream<Result<User?>> reader() => identity
+      .watchReader()
+      .map(
+        (ReaderRow? row) => row == null
+            ? null
+            : User(
+                id: row.id,
+                localName: row.localName,
+                displayName: row.displayName,
+                originServerDomain: row.originServerDomain,
+                federatedId: row.federatedId,
+                createdAt: row.createdAt,
+                email: row.email,
+              ),
+      )
+      .transform(
+        StreamTransformer<User?, Result<User?>>.fromHandlers(
+          handleData: (User? reader, EventSink<Result<User?>> sink) =>
+              sink.add(Result<User?>.ok(reader)),
+          handleError:
+              (
+                Object error,
+                StackTrace stackTrace,
+                EventSink<Result<User?>> sink,
+              ) {
+                _log.warning('the reader could not be read', error, stackTrace);
+
+                sink.add(Result<User?>.error(failureFrom(error, op: opSignIn)));
+              },
+        ),
+      );
 
   @override
   Future<Result<void>> signOut() async {
@@ -255,7 +275,7 @@ final class AuthRepositoryImpl implements AuthRepository {
     if (held != null && !held.hasExpiredAt(_clock())) {
       try {
         await auth.logout(held.refreshToken);
-      } on Exception catch (error) {
+      } on Object catch (error) {
         // Reported and not returned. The reader asked to sign out, and a node
         // that could not be told is a node holding a credential that will
         // exist nowhere else a moment from now.
@@ -333,7 +353,7 @@ final class AuthRepositoryImpl implements AuthRepository {
       }
 
       return Result<User>.ok(signIn.user);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<User>.error(failureFrom(error, op: opSignIn));
     }
   }

@@ -119,7 +119,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       await _mirror(catalogue);
 
       return Result<List<KnownServer>>.ok(catalogue);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<List<KnownServer>>.error(
         failureFrom(error, op: opCatalogue),
       );
@@ -153,7 +153,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       _log.info('${added.descriptor.domain} was added to the catalogue');
 
       return Result<KnownServer>.ok(added);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<KnownServer>.error(failureFrom(error, op: opAddServer));
     }
   }
@@ -172,7 +172,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       await _mirror(<KnownServer>[changed]);
 
       return Result<KnownServer>.ok(changed);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<KnownServer>.error(failureFrom(error, op: opCatalogue));
     }
   }
@@ -195,7 +195,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       }
 
       return Result<ServerRefresh>.ok(refreshed);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<ServerRefresh>.error(
         failureFrom(error, op: opRefreshServer),
       );
@@ -214,7 +214,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       _log.info('${server.descriptor.domain} was forgotten');
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opForgetServer));
     }
   }
@@ -228,7 +228,7 @@ final class FederationRepositoryImpl implements FederationRepository {
         // grants would answer *nobody* about a node that has a copy.
         await federation.listReplicaAuthorizations(includeInactive: true),
       );
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<List<ReplicaAuthorization>>.error(
         failureFrom(error, op: opReplicas),
       );
@@ -252,7 +252,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       );
 
       return Result<ReplicaAuthorization>.ok(granted);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<ReplicaAuthorization>.error(
         failureFrom(error, op: opAuthorizeReplica),
       );
@@ -265,7 +265,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       await federation.revokeReplica(serverId);
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opRevokeReplica));
     }
   }
@@ -292,7 +292,7 @@ final class FederationRepositoryImpl implements FederationRepository {
 
     try {
       named = await auth!.listDevices();
-    } on Exception catch (error) {
+    } on Object catch (error) {
       _log.info('the node being left did not name the devices', error);
     }
 
@@ -430,7 +430,7 @@ final class FederationRepositoryImpl implements FederationRepository {
       _log.info('the reader is now ${moved.user.federatedId}');
 
       return Result<User>.ok(moved.user);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       await _pointBack(previous);
 
       return Result<User>.error(failureFrom(error, op: opMigrate));
@@ -538,7 +538,7 @@ final class FederationRepositoryImpl implements FederationRepository {
     for (final server in catalogue) {
       try {
         await identity.rememberKnownServer(server, at: at);
-      } on Exception catch (error) {
+      } on Object catch (error) {
         _log.warning(
           '${server.descriptor.domain} was not recorded locally',
           error,

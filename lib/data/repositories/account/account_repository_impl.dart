@@ -82,7 +82,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       await _remember(reader);
 
       return Result<User>.ok(reader);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<User>.error(failureFrom(error, op: opReadAccount));
     }
   }
@@ -109,7 +109,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       await _remember(reader);
 
       return Result<User>.ok(reader);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<User>.error(failureFrom(error, op: opChangeDisplayName));
     }
   }
@@ -139,7 +139,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       await _remember(reader);
 
       return Result<User>.ok(reader);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<User>.error(failureFrom(error, op: opChangeEmail));
     }
   }
@@ -177,7 +177,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       _log.info('the password changed; every session ended with it');
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opChangePassword));
     }
   }
@@ -199,7 +199,7 @@ final class AccountRepositoryImpl implements AccountRepository {
         createdAt: reader.createdAt,
         email: reader.email,
       );
-    } on Exception catch (error) {
+    } on Object catch (error) {
       _log.warning('the reader row was not brought into step', error);
     }
   }
@@ -216,7 +216,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       _log.info('the reader was removed from this node');
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opDeleteAccount));
     }
   }
@@ -232,7 +232,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       return Result<BoundDevices>.ok(
         BoundDevices(devices: bound, thisDevice: await identity.deviceId()),
       );
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<BoundDevices>.error(failureFrom(error, op: opDevices));
     }
   }
@@ -274,7 +274,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       }
 
       return Result<Device>.ok(renamed);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<Device>.error(failureFrom(error, op: opRenameDevice));
     }
   }
@@ -300,7 +300,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       _log.info('$deviceId may no longer write');
 
       return const Result<void>.ok(null);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<void>.error(failureFrom(error, op: opRevokeDevice));
     }
   }

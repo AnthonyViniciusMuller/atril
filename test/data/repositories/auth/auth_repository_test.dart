@@ -12,6 +12,7 @@ import 'package:atril/data/services/api/auth_api.dart';
 import 'package:atril/data/services/api/session.dart';
 import 'package:atril/data/services/channel/channel.dart';
 import 'package:atril/data/services/discovery/well_known.dart';
+import 'package:atril/data/services/local/dao/identity_dao.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/data/services/sync/seed.dart';
@@ -357,13 +358,38 @@ void main() {
     );
 
     test('reports the reader the shell should name', () async {
-      expect(await auth.reader().first, isNull);
+      expect((await auth.reader().first).valueOrNull, isNull);
 
       await auth.signIn(credentials);
 
       expect(
-        (await auth.reader().first)?.federatedId,
+        (await auth.reader().first).valueOrNull?.federatedId,
         '@reader:quire-a.example',
+      );
+    });
+
+    test('reports a failure below it as a result, not as a throw', () async {
+      // Every boundary in this app carries a `Result`, and this one used to
+      // hand back a raw stream: a failure would either be thrown into the view
+      // model listening or arrive as a stream that stopped, which looks
+      // exactly like a device nobody is signed in on. The failure raised here
+      // is an `Error` and not an `Exception` on purpose — the catch used to be
+      // `on Exception`, which a `StateError` from a DAO walks straight past.
+      final broken = AuthRepositoryImpl(
+        auth: AuthApi(connection: connection, session: session),
+        identity: _BrokenIdentityDao(database),
+        servers: servers,
+        session: session,
+        platform: 'linux',
+        clock: () => _at,
+      );
+
+      final answer = await broken.reader().first;
+
+      expect(answer, isA<Error<User?>>());
+      expect(
+        ((answer as Error<User?>).error as AppException).kind,
+        ErrorKind.unknown,
       );
     });
   });
@@ -515,4 +541,17 @@ final class _RecordingSeeder implements ReplicaSeed {
       positions: 0,
     );
   }
+}
+
+/// An identity DAO whose reader stream fails with an `Error`.
+///
+/// It is an `Error` and not an `Exception` deliberately: `dart:core`'s `Error`
+/// hierarchy is what a `StateError` from a query belongs to, and it is exactly
+/// what a catch written `on Exception` lets past.
+final class _BrokenIdentityDao extends IdentityDao {
+  _BrokenIdentityDao(super.database);
+
+  @override
+  Stream<ReaderRow?> watchReader() =>
+      Stream<ReaderRow?>.error(StateError('the replica is not readable'));
 }

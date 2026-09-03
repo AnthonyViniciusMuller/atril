@@ -13,6 +13,7 @@ import 'package:atril/domain/models/user.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/federation/widgets/migration_screen.dart';
 import 'package:atril/utils/errors.dart';
+import 'package:atril/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -89,7 +90,7 @@ Future<void> _pump(
   );
 
   await tester.pumpAndSettle();
-  reading.readers.add(_reader);
+  reading.readers.add(Result<User?>.ok(_reader));
   await tester.pumpAndSettle();
 }
 

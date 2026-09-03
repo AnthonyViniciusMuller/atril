@@ -84,7 +84,7 @@ final class ServerRepositoryImpl implements ServerRepository {
                 grpcAuthority: origin.grpcAuthority,
               ),
       );
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<ServerDescriptor?>.error(
         failureFrom(error, op: opChooseServer),
       );
@@ -140,7 +140,7 @@ final class ServerRepositoryImpl implements ServerRepository {
       _log.info('the reader is hosted at ${descriptor.domain}');
 
       return Result<ServerDescriptor>.ok(descriptor);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<ServerDescriptor>.error(
         failureFrom(error, op: opAdoptOrigin),
       );
@@ -167,7 +167,7 @@ final class ServerRepositoryImpl implements ServerRepository {
       _log.info('this device now talks to ${descriptor.domain}');
 
       return Result<ServerDescriptor>.ok(descriptor);
-    } on Exception catch (error) {
+    } on Object catch (error) {
       return Result<ServerDescriptor>.error(
         failureFrom(error, op: opChooseServer),
       );

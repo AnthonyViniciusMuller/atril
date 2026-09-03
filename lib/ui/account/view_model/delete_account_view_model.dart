@@ -17,7 +17,10 @@ import '../../../data/repositories/federation/federation_repository.dart';
 import '../../../domain/models/server.dart';
 import '../../../domain/models/user.dart';
 import '../../../utils/command.dart';
+import '../../../utils/logging.dart';
 import '../../../utils/result.dart';
+
+final _log = loggerFor('ui/account');
 
 /// The state of the account deletion screen.
 final class DeleteAccountViewModel extends ChangeNotifier {
@@ -45,7 +48,7 @@ final class DeleteAccountViewModel extends ChangeNotifier {
   /// Removes the reader from this node, proved with their password.
   late final Command1<void, String> delete;
 
-  late final StreamSubscription<User?> _reader;
+  late final StreamSubscription<Result<User?>> _reader;
 
   User? _signedIn;
 
@@ -74,9 +77,18 @@ final class DeleteAccountViewModel extends ChangeNotifier {
     }
   }
 
-  void _onReader(User? reader) {
-    _signedIn = reader;
-    notifyListeners();
+  void _onReader(Result<User?> reader) {
+    // A failure here leaves the reader as they were rather than blanking the
+    // surface that names them: the row is still in the replica and the next
+    // answer will carry it, and a screen that forgot who was signed in
+    // because one query failed would be the worse of the two wrong answers.
+    switch (reader) {
+      case Ok<User?>(:final User? value):
+        _signedIn = value;
+        notifyListeners();
+      case Error<User?>(:final Exception error):
+        _log.warning('the signed-in reader could not be read', error);
+    }
   }
 
   @override
