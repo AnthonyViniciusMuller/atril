@@ -88,7 +88,13 @@ final _log = loggerFor('data/sync');
 /// looked away.
 Stream<bool> appForeground() {
   late final StreamController<bool> lifecycle;
-  late final AppLifecycleListener listener;
+
+  // Nullable, and not a `late final`, because a broadcast controller runs
+  // `onListen` again for the subscription after its last one was cancelled —
+  // and a loop that was stopped and started again is exactly that. A `late
+  // final` assigned there throws on the second start, which is the one moment
+  // an app is least able to report anything.
+  AppLifecycleListener? listener;
 
   lifecycle = StreamController<bool>.broadcast(
     onListen: () {
@@ -99,7 +105,10 @@ Stream<bool> appForeground() {
         ),
       );
     },
-    onCancel: () => listener.dispose(),
+    onCancel: () {
+      listener?.dispose();
+      listener = null;
+    },
   );
 
   return lifecycle.stream;

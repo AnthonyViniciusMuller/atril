@@ -1733,8 +1733,15 @@ merged in order, which is why each fix names the section it belongs to and touch
       rather than a second close to keep in step with the first. The fake channel grew a
       completer a test holds the open on, which is the window the whole bug lives in and the
       only way to land an event inside it
-- [ ] `fix: let the scheduler start twice` — the lifecycle listener is a `late final` assigned
-      in `onListen`, which a broadcast controller fires again after `stop()`. Make it nullable
+- [x] `fix: let the scheduler start twice` — the lifecycle listener was a `late final` assigned
+      in `onListen`, which a broadcast controller runs again for the subscription following a
+      cancelled one. **A loop stopped and started again therefore threw a
+      `LateInitializationError` from inside a stream callback**, which is the one place nothing
+      is able to report it — and stopping and starting is what a sign-out and a sign-in do. It
+      is nullable now, created in `onListen` and disposed and cleared in `onCancel`, so the
+      lifecycle is watched again rather than watched twice. The test drives a real lifecycle
+      message through the binding after re-subscribing, and reproduces the exact error against
+      the old code
 - [ ] `feat: prune the applied operations` — the table grows by one row per pulled operation
       and nothing deletes one; the cursor guards every redelivery except a page re-read after a
       crash, so rows older than a bounded window are dead weight. Prune when a channel settles

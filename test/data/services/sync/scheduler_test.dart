@@ -21,6 +21,7 @@ import 'package:atril/domain/models/session.dart';
 import 'package:atril/domain/models/sync_state.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../storage/memory_blob_store.dart';
@@ -451,6 +452,32 @@ void main() {
     await scheduler.nudge();
 
     expect(channel.offers, offered + 1);
+  });
+
+  test('watches the lifecycle again after it was let go', () async {
+    // The controller behind `appForeground` is a broadcast one, so `onListen`
+    // runs again for the subscription that follows a cancelled one — and the
+    // listener it assigned was a `late final`. A loop stopped and started
+    // again is that case, and it threw where nothing could report it.
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    final foreground = appForeground();
+    final seen = <bool>[];
+
+    await foreground.listen(seen.add).cancel();
+
+    final second = foreground.listen(seen.add);
+
+    addTearDown(second.cancel);
+
+    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .handlePlatformMessage(
+          'flutter/lifecycle',
+          const StringCodec().encodeMessage('AppLifecycleState.inactive'),
+          (ByteData? _) {},
+        );
+
+    expect(seen, <bool>[true]);
   });
 
   test('stands down a channel that was still opening', () async {
