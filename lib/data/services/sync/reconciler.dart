@@ -23,14 +23,19 @@ library;
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:drift/isolate.dart' show DriftRemoteException;
+import 'package:sqlite3/common.dart' show SqliteException;
 
 import '../../../domain/crdt/hybrid_clock.dart';
 import '../../../domain/crdt/revision.dart';
 import '../../../domain/crdt/vector_clock.dart';
+import '../../../domain/models/annotation.dart';
 import '../../../domain/models/operation.dart';
 import '../../../domain/models/record_key.dart';
 import '../../../utils/logging.dart';
 import '../local/database.dart';
+import '../local/tables/library.dart';
+import '../local/tables/reading.dart';
 import 'delta.dart';
 
 final _log = loggerFor('data/sync');
@@ -179,7 +184,49 @@ final class Reconciler {
       };
     } on DeltaException catch (failure) {
       return Verdict.rejected('$failure');
+    } on InvalidDataException catch (failure) {
+      // drift checks a column's declared length in Dart before the statement
+      // is built, so a locator past its bound or a digest of the wrong length
+      // never reaches sqlite — and is the same kind of fact about the
+      // operation as the constraints that do.
+      return Verdict.rejected('the replica cannot hold it: ${failure.message}');
+    } on SqliteException catch (failure) {
+      return _refusedByTheSchema(failure);
+    } on DriftRemoteException catch (failure) {
+      // The replica runs on a background isolate on the five native targets,
+      // and what the isolate threw arrives wrapped.
+      final cause = failure.remoteCause;
+
+      if (cause is SqliteException) {
+        return _refusedByTheSchema(cause);
+      }
+
+      rethrow;
     }
+  }
+
+  /// A constraint the schema enforced and the readers above did not, turned
+  /// into the verdict it should have been.
+  ///
+  /// The readers pre-validate every `CHECK` this build knows to name — a
+  /// format, a kind, a note's text, a percent — so that the refusal names the
+  /// field. This is the net under them: a constraint added to the schema and
+  /// not to a reader is still a delivery the replica cannot hold, and the
+  /// alternative to answering for it is throwing out of the transaction, which
+  /// aborts the page with the cursor unmoved and has the device reconnect into
+  /// the same operation for ever.
+  ///
+  /// Only a constraint is caught. A disk that is full or a database that is
+  /// locked also arrives as a [SqliteException], and neither is a fact about
+  /// the operation: answering *rejected* to one of those would move the cursor
+  /// past a change this device never applied, so anything else is rethrown and
+  /// the page is retried.
+  Verdict _refusedByTheSchema(SqliteException failure) {
+    if (failure.resultCode != _sqliteConstraint) {
+      throw failure;
+    }
+
+    return Verdict.rejected('the replica cannot hold it: ${failure.message}');
   }
 
   // --- the three records addressed by their own identifier -------------------
@@ -204,7 +251,7 @@ final class Reconciler {
             EbooksCompanion.insert(
               id: id,
               title: delta.requiredText(fieldTitle),
-              format: delta.requiredText(fieldFormat),
+              format: delta.requiredOneOf(fieldFormat, ebookFormats),
               contentHash: delta.requiredId(fieldContentHash),
               author: _optionalText(delta, fieldAuthor),
               publisher: _optionalText(delta, fieldPublisher),
@@ -277,9 +324,7 @@ final class Reconciler {
             CollectionsCompanion.insert(
               id: id,
               name: delta.requiredText(fieldName),
-              kind: delta.claims(fieldKind)
-                  ? Value<String>(delta.requiredText(fieldKind))
-                  : const Value<String>.absent(),
+              kind: _claimedOneOf(delta, fieldKind, collectionKinds),
               description: _optionalText(delta, fieldDescription),
               createdAt: delta.instant(fieldCreatedAt) ?? operation.createdAt,
               vectorClock: operation.vectorClock,
@@ -305,7 +350,7 @@ final class Reconciler {
     )..where((row) => row.id.equals(id))).write(
       CollectionsCompanion(
         name: _claimedText(delta, fieldName),
-        kind: _claimedText(delta, fieldKind),
+        kind: _claimedOneOf(delta, fieldKind, collectionKinds),
         description: _optionalText(delta, fieldDescription),
         vectorClock: Value<VectorClock>(operation.vectorClock),
         updatedAt: Value<DateTime>(operation.createdAt),
@@ -343,15 +388,22 @@ final class Reconciler {
         );
       }
 
+      final kind = delta.requiredOneOf(fieldKind, annotationKinds);
+      final content = _optionalText(delta, fieldText);
+
+      if (_isAnEmptyNote(kind, content.present ? content.value : null)) {
+        return const Verdict.rejected('a note cannot be without text');
+      }
+
       await _database
           .into(_database.annotations)
           .insert(
             AnnotationsCompanion.insert(
               id: id,
               ebookId: work,
-              kind: delta.requiredText(fieldKind),
+              kind: kind,
               locator: delta.requiredText(fieldLocator),
-              content: _optionalText(delta, fieldText),
+              content: content,
               vectorClock: operation.vectorClock,
               updatedAt: operation.createdAt,
               deviceId: operation.deviceId,
@@ -370,6 +422,19 @@ final class Reconciler {
       return const Verdict.superseded();
     }
 
+    final kind = _claimedOneOf(delta, fieldKind, annotationKinds);
+    final content = _optionalText(delta, fieldText);
+
+    // The row after the write, not the delta alone: a change that turns a
+    // highlight into a note without saying what the note says, or clears the
+    // text of one, is refused for the same reason an empty note is.
+    if (_isAnEmptyNote(
+      kind.present ? kind.value : existing.kind,
+      content.present ? content.value : existing.content,
+    )) {
+      return const Verdict.rejected('a note cannot be without text');
+    }
+
     await (_database.update(
       _database.annotations,
     )..where((row) => row.id.equals(id))).write(
@@ -377,9 +442,9 @@ final class Reconciler {
         // The work is not among them. A mark is made in a work and stays in it;
         // a note that moved between books would be a note about a passage that
         // is not there.
-        kind: _claimedText(delta, fieldKind),
+        kind: kind,
         locator: _claimedText(delta, fieldLocator),
-        content: _optionalText(delta, fieldText),
+        content: content,
         vectorClock: Value<VectorClock>(operation.vectorClock),
         updatedAt: Value<DateTime>(operation.createdAt),
         deviceId: Value<String>(operation.deviceId),
@@ -501,7 +566,7 @@ final class Reconciler {
               ebookId: work,
               deviceId: device,
               locator: delta.requiredText(fieldLocator),
-              percent: _optionalNumber(delta, fieldPercent),
+              percent: _optionalPercent(delta),
               vectorClock: operation.vectorClock,
               updatedAt: operation.createdAt,
             ),
@@ -528,7 +593,7 @@ final class Reconciler {
     )..where((row) => row.id.equals(existing.id))).write(
       ProgressCompanion(
         locator: _claimedText(delta, fieldLocator),
-        percent: _optionalNumber(delta, fieldPercent),
+        percent: _optionalPercent(delta),
         vectorClock: Value<VectorClock>(operation.vectorClock),
         updatedAt: Value<DateTime>(operation.createdAt),
       ),
@@ -630,13 +695,34 @@ Value<String> _claimedText(Delta delta, String field) => delta.claims(field)
     ? Value<String>(delta.requiredText(field))
     : const Value<String>.absent();
 
+/// A column the schema closes over [allowed]: absent where the delta does not
+/// claim the field, and refused where it claims something outside the set.
+Value<String> _claimedOneOf(
+  Delta delta,
+  String field,
+  Iterable<String> allowed,
+) => delta.claims(field)
+    ? Value<String>(delta.requiredOneOf(field, allowed))
+    : const Value<String>.absent();
+
 Value<int?> _optionalInteger(Delta delta, String field) => delta.claims(field)
     ? Value<int?>(delta.integer(field))
     : const Value<int?>.absent();
 
-Value<double?> _optionalNumber(Delta delta, String field) => delta.claims(field)
-    ? Value<double?>(delta.number(field))
+/// How far through a work, bounded as the column is.
+Value<double?> _optionalPercent(Delta delta) => delta.claims(fieldPercent)
+    ? Value<double?>(delta.numberWithin(fieldPercent, min: 0, max: 100))
     : const Value<double?>.absent();
+
+/// Whether a mark of [kind] carrying [text] is a note that says nothing, which
+/// the schema refuses and the reconciler therefore refuses first.
+bool _isAnEmptyNote(String kind, String? text) =>
+    kind == AnnotationKind.note.wireName && (text ?? '').trim().isEmpty;
+
+/// sqlite's primary result code for a constraint violation, which is the one
+/// failure of a statement that is a fact about the operation rather than about
+/// the device.
+const int _sqliteConstraint = 19;
 
 /// A JSON object column, stored as the text it travelled as.
 Value<String?> _optionalObject(Delta delta, String field) {

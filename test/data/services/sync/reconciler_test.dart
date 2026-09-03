@@ -221,6 +221,232 @@ void main() {
     });
   });
 
+  group('a delivery the replica cannot hold', () {
+    // Every one of these is a `CHECK` on a table. Left to the schema, each
+    // would throw out of the reconciler, the page would abort with the cursor
+    // unmoved, and the device would reconnect into the same operation for
+    // ever. Refused here, each is a verdict the batch goes on past.
+    Future<Verdict> ebook(Map<String, Object?> delta) =>
+        open().reconciler.reconcile(
+          _op(entity: TargetEntity.ebook, targetId: _work, delta: delta),
+        );
+
+    test('a work in a format this build cannot name', () async {
+      final verdict = await ebook(<String, Object?>{
+        fieldTitle: 'Sagarana',
+        fieldFormat: 'txt',
+        fieldContentHash: _hash,
+      });
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains(fieldFormat));
+    });
+
+    test('a grouping of a kind this build cannot name', () async {
+      final verdict = await open().reconciler.reconcile(
+        _op(
+          entity: TargetEntity.collection,
+          targetId: _shelf,
+          delta: const <String, Object?>{
+            fieldName: 'Para reler',
+            fieldKind: 'shelf',
+          },
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains(fieldKind));
+    });
+
+    test('a mark of a kind this build cannot name', () async {
+      final (:database, :reconciler) = open();
+
+      await reconciler.reconcile(_import());
+
+      final verdict = await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.annotation,
+          targetId: _mark,
+          delta: const <String, Object?>{
+            fieldEbookId: _work,
+            fieldKind: 'underline',
+            fieldLocator: _locator,
+          },
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains(fieldKind));
+      expect(await database.select(database.annotations).get(), isEmpty);
+    });
+
+    test('a note with nothing in it', () async {
+      final (:database, :reconciler) = open();
+
+      await reconciler.reconcile(_import());
+
+      final verdict = await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.annotation,
+          targetId: _mark,
+          delta: const <String, Object?>{
+            fieldEbookId: _work,
+            fieldKind: 'note',
+            fieldLocator: _locator,
+            fieldText: '   ',
+          },
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(await database.select(database.annotations).get(), isEmpty);
+    });
+
+    test('an update that leaves a note with nothing in it', () async {
+      // The row after the write is what the schema checks, so the change is
+      // read against the row: clearing the text of a note, or turning a
+      // highlight into a note without saying what it says.
+      final (:database, :reconciler) = open();
+
+      await reconciler.reconcile(_import());
+      await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.annotation,
+          targetId: _mark,
+          delta: const <String, Object?>{
+            fieldEbookId: _work,
+            fieldKind: 'highlight',
+            fieldLocator: _locator,
+          },
+          counter: 2,
+        ),
+      );
+
+      final verdict = await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.annotation,
+          targetId: _mark,
+          kind: OperationKind.update,
+          delta: const <String, Object?>{fieldKind: 'note'},
+          counter: 3,
+          at: const Duration(minutes: 1),
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+
+      final stored = await database.select(database.annotations).getSingle();
+
+      expect(stored.kind, 'highlight');
+    });
+
+    test('a position past the end of the work', () async {
+      final (:database, :reconciler) = open();
+
+      await reconciler.reconcile(_import());
+
+      final verdict = await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.readingProgress,
+          targetId: _spot,
+          delta: const <String, Object?>{
+            fieldEbookId: _work,
+            fieldLocator: _locator,
+            fieldPercent: 101,
+          },
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains(fieldPercent));
+      expect(await database.select(database.progress).get(), isEmpty);
+    });
+
+    test('a constraint the readers do not know is still a verdict', () async {
+      // The net under the readers. The digest's alphabet is a `CHECK` nothing
+      // above the table validates, so this reaches sqlite — and comes back as
+      // a refusal rather than an exception, with the transaction intact and
+      // the next operation applied.
+      final (:database, :reconciler) = open();
+
+      final verdicts = await reconciler.reconcileAll(<Operation>[
+        _op(
+          entity: TargetEntity.ebook,
+          targetId: _shelf,
+          delta: <String, Object?>{
+            fieldTitle: 'Sagarana',
+            fieldFormat: 'epub',
+            fieldContentHash: 'z' * 64,
+          },
+        ),
+        _import(),
+      ]);
+
+      expect(verdicts.first.isRejected, isTrue);
+      expect(verdicts.first.detail, contains('content_hash'));
+      expect(verdicts.last.isApplied, isTrue);
+      expect(await database.select(database.ebooks).get(), hasLength(1));
+    });
+
+    test('a value past the length its column declares', () async {
+      // drift checks a declared length in Dart before the statement is built,
+      // which is a third way out of the reconciler and is closed the same way.
+      final (:database, :reconciler) = open();
+
+      await reconciler.reconcile(_import());
+
+      final verdict = await reconciler.reconcile(
+        _op(
+          entity: TargetEntity.annotation,
+          targetId: _mark,
+          delta: <String, Object?>{
+            fieldEbookId: _work,
+            fieldKind: 'bookmark',
+            fieldLocator: 'epubcfi(${'/2' * 200})',
+          },
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains('locator'));
+      expect(await database.select(database.annotations).get(), isEmpty);
+    });
+
+    test('a column the row is too long for is still a verdict', () async {
+      // The other half of the net: a length drift checks before the statement
+      // runs, which arrives as its own exception and not as sqlite's.
+      final verdict = await open().reconciler.reconcile(
+        _op(
+          entity: TargetEntity.ebook,
+          targetId: 'short',
+          delta: _import().delta,
+        ),
+      );
+
+      expect(verdict.isRejected, isTrue);
+      expect(verdict.detail, contains('id'));
+    });
+
+    test('is refused again when it is delivered again', () async {
+      // A refusal is not recorded as applied: the same operation by two
+      // routes is refused twice, at the cost of one decode, so that a build
+      // that grows the field would not skip it.
+      final reconciler = open().reconciler;
+      final refused = _op(
+        entity: TargetEntity.ebook,
+        targetId: _work,
+        delta: const <String, Object?>{
+          fieldTitle: 'Sagarana',
+          fieldFormat: 'txt',
+          fieldContentHash: _hash,
+        },
+      );
+
+      expect((await reconciler.reconcile(refused)).isRejected, isTrue);
+      expect((await reconciler.reconcile(refused)).isRejected, isTrue);
+    });
+  });
+
   group('the merge', () {
     test('leaves the record alone when the change is superseded', () async {
       final (:database, :reconciler) = open();

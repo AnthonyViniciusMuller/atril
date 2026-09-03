@@ -1660,12 +1660,24 @@ merged in order, which is why each fix names the section it belongs to and touch
 
 ### Synchronization
 
-- [ ] `fix: reject a delivery the replica cannot hold` — `_apply` catches `DeltaException`
+- [x] `fix: reject a delivery the replica cannot hold` — `_apply` caught `DeltaException`
       alone; an operation violating a CHECK — an unknown format, a note with no text, a percent
-      past a hundred — throws out of the reconciler, the page aborts with the cursor unmoved, and
-      the scheduler reconnects into the same operation forever. `seed.dart` says the reconciler
-      rejects such a delivery, and it does not. Turn the constraint failure into a rejection,
-      and test each CHECK; add the missing test for `Change.restore` while in the author's tests
+      past a hundred — threw out of the reconciler, the page aborted with the cursor unmoved, and
+      the scheduler reconnected into the same operation for ever. `seed.dart` said the reconciler
+      rejects such a delivery, and it did not; now it does. **The closed sets are checked by the
+      delta readers first**, so that the refusal names the field: `requiredOneOf` for a format
+      and the two kinds, `numberWithin` for the percent, and the note's text is read against the
+      row the write would leave — an update that turns a highlight into a note without saying
+      what it says is refused as an empty note is. Under the readers is a net for the constraints
+      this build does not name, and it is narrower than *any sqlite failure*: only result code 19,
+      a constraint, becomes a verdict, because a full disk or a locked file also arrives as a
+      `SqliteException` and answering *rejected* to one of those would move the cursor past a
+      change this device never applied. Two things the probe turned up. On the five native
+      targets the replica runs on a background isolate and the exception arrives wrapped in
+      `DriftRemoteException`, so the net unwraps it; and drift checks a column's declared length
+      in Dart before the statement is built, so `InvalidDataException` is the same fact and is
+      caught too. The transaction survives a failed statement, which the test proves by applying
+      the next operation of the same batch
 - [ ] `fix: release the stream when a delivery fails` — a failure in `_handle` ends the channel
       with the subscription still held and the controller still open, and `close()` returns
       early because the commands sink is already null. Key `close()` on the subscription, as the

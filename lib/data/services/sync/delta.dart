@@ -144,6 +144,26 @@ extension type const Delta(Map<String, Object?> fields) {
     return value;
   }
 
+  /// The text [field] claims, refusing one that is not among [allowed].
+  ///
+  /// It is [requiredText] for a column the schema closes over a set — a
+  /// format, a kind. The column's own `CHECK` would refuse the same value, but
+  /// it would do so by throwing out of the reconciler rather than by answering
+  /// for the operation, and a delivery that throws is one the device comes
+  /// back to at the same cursor for ever. Refusing it here makes it a verdict.
+  String requiredOneOf(String field, Iterable<String> allowed) {
+    final value = requiredText(field);
+
+    if (!allowed.contains(value)) {
+      throw DeltaException(
+        field,
+        'is $value, and the record admits only ${allowed.join(', ')}',
+      );
+    }
+
+    return value;
+  }
+
   /// The whole number [field] claims, or `null` where it is cleared.
   int? integer(String field) {
     final value = fields[field];
@@ -179,6 +199,26 @@ extension type const Delta(Map<String, Object?> fields) {
     }
 
     throw DeltaException(field, 'is not a number');
+  }
+
+  /// The number [field] claims, refusing one outside [min] to [max]
+  /// inclusive, or `null` where it is cleared.
+  ///
+  /// It is [number] for a column the schema bounds, and it exists for the
+  /// reason [requiredOneOf] does: the bound is a `CHECK`, and a `CHECK` refuses
+  /// by throwing.
+  double? numberWithin(
+    String field, {
+    required double min,
+    required double max,
+  }) {
+    final value = number(field);
+
+    if (value != null && (value < min || value > max)) {
+      throw DeltaException(field, 'is $value, outside $min to $max');
+    }
+
+    return value;
   }
 
   /// The instant [field] claims, as the microseconds the wire carries.

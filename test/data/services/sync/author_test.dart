@@ -240,6 +240,32 @@ void main() {
       expect(stored.deleted, isTrue);
       expect(stored.title, 'Grande Sertão: Veredas');
     });
+
+    test('lifts a tombstone with a change that claims nothing', () async {
+      // The one update an empty delta is allowed to be: the tombstone is the
+      // claim, and it travels on the revision rather than in the fields.
+      final fixture = await _open();
+
+      await fixture.author.write(
+        Change.insert(TargetEntity.ebook, _work, _import),
+      );
+      await fixture.author.write(Change.delete(TargetEntity.ebook, _work));
+
+      final restoration = await fixture.author.write(
+        Change.restore(TargetEntity.ebook, _work),
+      );
+
+      expect(restoration.kind, OperationKind.update);
+      expect(restoration.delta, isEmpty);
+
+      final stored = await fixture.database
+          .select(fixture.database.ebooks)
+          .getSingle();
+
+      expect(stored.deleted, isFalse);
+      expect(stored.title, 'Grande Sertão: Veredas');
+      expect(await fixture.database.syncDao.pendingCount(), 3);
+    });
   });
 
   group('the instant a change carries', () {
