@@ -143,8 +143,13 @@ class SignedInReader extends Table {
   // At most one node may be the origin, and sqlite is what says so. A device
   // with two would have two answers to the second half of the reader's own
   // identifier.
-  'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) '
-  'WHERE is_origin',
+  //
+  // `IF NOT EXISTS`, because the schema's upgrade is `createAll` and drift
+  // adds the clause to tables and views and not to indexes: an index issued
+  // without it fails the upgrade of every database that already has it, which
+  // is every database that was ever at version one.
+  'CREATE UNIQUE INDEX IF NOT EXISTS known_servers_origin '
+  'ON known_servers (is_origin) WHERE is_origin',
 )
 class KnownServers extends Table {
   /// The federation domain, which is the authority a lookup is addressed to,

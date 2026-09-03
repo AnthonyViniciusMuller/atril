@@ -1532,12 +1532,23 @@ merged in order, which is why each fix names the section it belongs to and touch
 
 ### The replica and the repositories
 
-- [ ] `fix: create indexes the upgrade can repeat` — `onUpgrade` calls `createAll` trusting
+- [x] `fix: create indexes the upgrade can repeat` — `onUpgrade` calls `createAll` trusting
       that every statement is `IF NOT EXISTS`; drift adds the clause to tables and views and not
       to indexes, and all four indexes existed at version 1, so any real database moving to
       version 5 fails to open with *index already exists*. The migration test upgrades an empty
       database and never sees it. Issue the index statements with the clause, and test the
-      upgrade from a database that holds the version 1 schema *and* its indexes
+      upgrade from a database that holds the version 1 schema *and* its indexes. Checked against
+      drift 2.34.3 before it was fixed: `Migrator.createIndex` is `_issueQueryByDialect` over the
+      statement the generator wrote, with no clause added, and the four in `database.g.dart` had
+      none. **The clause is written into the declarations rather than into `onUpgrade`**: the
+      three indexes declared by column became `@TableIndex.sql` with `IF NOT EXISTS` spelled out,
+      beside the one that already was, so `createAll` stays the whole of both hooks and the
+      upgrade needs no second code path that lists indexes by hand and misses the next one.
+      drift_dev parses the statement and re-emits it, and the regenerated file carries the
+      clause on all four. The test reads the version-one tables and indexes out of a fresh
+      replica's `sqlite_master`, replays them under `user_version = 1`, and opens — which, with
+      the clause stripped from the generated file, fails with exactly the sentence a reader's
+      device would have logged
 - [ ] `fix: import a work in one transaction` — `author.write` commits, and the cover and the
       transfer row are written after it. A failure between the two leaves a work the node is
       never owed: no upload, a duplicate on retry, and a release that removes the only copy. The

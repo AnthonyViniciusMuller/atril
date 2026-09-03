@@ -7931,19 +7931,19 @@ abstract class _$AtrilDatabase extends GeneratedDatabase {
   late final $ContentPinsTable contentPins = $ContentPinsTable(this);
   late final Index knownServersOrigin = Index(
     'known_servers_origin',
-    'CREATE UNIQUE INDEX known_servers_origin ON known_servers (is_origin) WHERE is_origin',
+    'CREATE UNIQUE INDEX IF NOT EXISTS known_servers_origin ON known_servers (is_origin) WHERE is_origin',
   );
   late final Index ebooksContentHash = Index(
     'ebooks_content_hash',
-    'CREATE INDEX ebooks_content_hash ON ebooks (content_hash)',
+    'CREATE INDEX IF NOT EXISTS ebooks_content_hash ON ebooks (content_hash)',
   );
   late final Index ebookCollectionsCollection = Index(
     'ebook_collections_collection',
-    'CREATE INDEX ebook_collections_collection ON ebook_collections (collection_id)',
+    'CREATE INDEX IF NOT EXISTS ebook_collections_collection ON ebook_collections (collection_id)',
   );
   late final Index annotationsEbook = Index(
     'annotations_ebook',
-    'CREATE INDEX annotations_ebook ON annotations (ebook_id)',
+    'CREATE INDEX IF NOT EXISTS annotations_ebook ON annotations (ebook_id)',
   );
   late final IdentityDao identityDao = IdentityDao(this as AtrilDatabase);
   late final LibraryDao libraryDao = LibraryDao(this as AtrilDatabase);

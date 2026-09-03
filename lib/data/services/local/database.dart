@@ -119,6 +119,15 @@ class AtrilDatabase extends _$AtrilDatabase {
   /// and touches nothing that is there, which is the whole of the difference
   /// between one version and the next.
   ///
+  /// That sentence is true of the tables because drift writes it, and true of
+  /// the indexes only because every one of them is declared in SQL with the
+  /// clause spelled out: `Migrator.createIndex` issues the statement verbatim,
+  /// and a `@TableIndex` declared by column generates one without it. All four
+  /// indexes existed at version one, so an upgrade that re-created one of them
+  /// bare would fail to open every database this app has ever written. The
+  /// test beside this file upgrades from a database holding the version one
+  /// schema *and* its indexes for that reason.
+  ///
   /// It is written this way deliberately rather than as a `case` per step. A
   /// switch would claim there is a decision to make at each version, and there
   /// is not — the day a column changes, this becomes a stepped migration and

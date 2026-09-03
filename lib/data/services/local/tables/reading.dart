@@ -30,7 +30,11 @@ const List<String> annotationKinds = <String>['note', 'highlight', 'bookmark'];
 
 /// Something the reader wrote, and the passage it is attached to.
 @DataClassName('AnnotationRow')
-@TableIndex(name: 'annotations_ebook', columns: <Symbol>{#ebookId})
+// In SQL for the clause, as every index in this schema is — see
+// `known_servers_origin`.
+@TableIndex.sql(
+  'CREATE INDEX IF NOT EXISTS annotations_ebook ON annotations (ebook_id)',
+)
 class Annotations extends Table with RevisionColumns {
   /// The identifier the device that made the mark minted.
   TextColumn get id => text().withLength(min: 36, max: 36)();

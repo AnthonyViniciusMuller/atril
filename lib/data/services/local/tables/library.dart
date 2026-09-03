@@ -38,7 +38,12 @@ const List<String> collectionKinds = <String>['collection', 'category'];
 
 /// A work in the reader's collection.
 @DataClassName('EbookRow')
-@TableIndex(name: 'ebooks_content_hash', columns: <Symbol>{#contentHash})
+// Spelled in SQL rather than by column so that the statement can carry
+// `IF NOT EXISTS`, which the generated form does not and the upgrade needs —
+// see `known_servers_origin`.
+@TableIndex.sql(
+  'CREATE INDEX IF NOT EXISTS ebooks_content_hash ON ebooks (content_hash)',
+)
 class Ebooks extends Table with RevisionColumns {
   /// The identifier the device that imported the work minted, and the one
   /// every annotation and every reading position references. It travels: a
@@ -147,9 +152,9 @@ class Collections extends Table with RevisionColumns {
 /// tombstone and all — dropping it would file the work again the moment this
 /// device heard about the filing the deletion undid.
 @DataClassName('EbookCollectionRow')
-@TableIndex(
-  name: 'ebook_collections_collection',
-  columns: <Symbol>{#collectionId},
+@TableIndex.sql(
+  'CREATE INDEX IF NOT EXISTS ebook_collections_collection '
+  'ON ebook_collections (collection_id)',
 )
 class EbookCollections extends Table with RevisionColumns {
   /// The surrogate identifier this device minted for the pair. It is

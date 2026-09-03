@@ -33,6 +33,34 @@ AtrilDatabase open({int? userVersion, List<String> before = const <String>[]}) {
   return database;
 }
 
+/// The tables the schema had at version one: the identity, the library, what
+/// the reader wrote and where they stopped, the log and the causal state. Every
+/// version since has only added tables, so a device that was at one holds
+/// exactly these — and, with them, the four indexes below.
+const Set<String> _versionOneTables = <String>{
+  'bound_device',
+  'signed_in_reader',
+  'known_servers',
+  'clock_floor',
+  'ebooks',
+  'collections',
+  'ebook_collections',
+  'annotations',
+  'progress',
+  'pending_operations',
+  'node_cursors',
+  'applied_operations',
+  'record_versions',
+};
+
+/// The indexes version one created, none of which said `IF NOT EXISTS`.
+const Set<String> _versionOneIndexes = <String>{
+  'known_servers_origin',
+  'ebooks_content_hash',
+  'ebook_collections_collection',
+  'annotations_ebook',
+};
+
 void main() {
   group('AtrilDatabase', () {
     test('opens at the schema version this build expects', () async {
@@ -64,6 +92,57 @@ void main() {
       await database.customSelect('SELECT 1').get();
 
       expect(await database.select(database.ebookCovers).get(), isEmpty);
+    });
+
+    test('re-creates nothing a version one database already has', () async {
+      // The upgrade is `createAll`, and drift writes `IF NOT EXISTS` into a
+      // table's statement and not into an index's — so the test that upgraded
+      // an *empty* database at version one passed while every real one failed
+      // with *index already exists*. This one holds what a device that was at
+      // version one actually holds: the tables of that version, and their
+      // indexes. It reads that schema off a fresh replica rather than spelling
+      // it out, because no column of those tables has changed since and the
+      // statement drift generates is the statement the old install ran.
+      final current = open();
+      final rows = await current
+          .customSelect(
+            'SELECT type, name, sql FROM sqlite_master '
+            "WHERE sql IS NOT NULL AND type IN ('table', 'index')",
+          )
+          .get();
+
+      await current.close();
+
+      final versionOne = <String>[
+        for (final row in rows)
+          if (row.read<String>('type') == 'table' &&
+              _versionOneTables.contains(row.read<String>('name')))
+            row.read<String>('sql'),
+        for (final row in rows)
+          if (row.read<String>('type') == 'index' &&
+              _versionOneIndexes.contains(row.read<String>('name')))
+            row.read<String>('sql'),
+      ];
+
+      expect(versionOne, hasLength(_versionOneTables.length + 4));
+
+      final database = open(userVersion: 1, before: versionOne);
+
+      // The open itself is the assertion that matters: it is where the bare
+      // `CREATE INDEX` used to fail.
+      await database.customSelect('SELECT 1').get();
+
+      final indexes = await database
+          .customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'index' "
+            'AND sql IS NOT NULL ORDER BY name',
+          )
+          .map((row) => row.read<String>('name'))
+          .get();
+
+      expect(indexes, _versionOneIndexes.toList()..sort());
+      expect(await database.select(database.ebookCovers).get(), isEmpty);
+      expect(await database.select(database.contentPins).get(), isEmpty);
     });
 
     test('does not empty a table an older version already had', () async {
