@@ -2113,7 +2113,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       template it finds exactly the three the review named and nothing else across **460
       messages**, and removing one declaration was checked to fail it. Verified: `make gen-l10n`,
       the regenerated output committed, `make l10n-check`, the analyzer and 1,215 tests
-- [ ] `ci: surface outdated dependencies` — a non-blocking `pub outdated` on every pull request
+- [x] `ci: surface outdated dependencies` — a non-blocking `pub outdated` on every pull request.
+      **Reported, never enforced, and no dependency is bumped here.** This project pins
+      deliberately in two places — `flutter_inappwebview` at an exact pre-release because the
+      stable one does not build for Android, `drift` matched to the committed `sqlite3.wasm` and
+      worker — so a step that went red on a newer release would be a red build for a decision
+      somebody already made. Measured while writing it: **16 packages are held below a resolvable
+      version by the lockfile and 6 by a constraint in the pubspec**, which is the shape of a
+      project that pins on purpose and exactly why this is a summary and not a gate. It writes
+      `$GITHUB_STEP_SUMMARY` rather than the log, since a report nobody opens is a report nobody
+      reads, and it carries `continue-on-error` with `if: always()` so it is there precisely when
+      a build is red and somebody is wondering whether a dependency is the reason. It sits beside
+      Dependabot rather than duplicating it: Dependabot proposes one move at a time, this says
+      what the whole tree looks like. Verified locally — the command exits 0 with everything
+      current-as-constrained; the summary redirection is CI's and was not run
 - [ ] `ci: cache the pub cache on linux` — CEF is 658 MB and is fetched on every Linux job
 - [ ] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,
       `cancel_subscriptions`, `close_sinks`, `avoid_dynamic_calls` and `only_throw_errors`, and

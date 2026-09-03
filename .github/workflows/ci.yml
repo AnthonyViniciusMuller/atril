@@ -173,6 +173,30 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: error
 
+      # Reported and never enforced. This project pins on purpose — an exact
+      # `flutter_inappwebview` pre-release, a `drift` matched to the committed
+      # web assets — so a step that failed on a newer release would be a red
+      # build for a decision somebody already made, and the pull request that
+      # proposes the move is Dependabot's job. What this adds is the thing
+      # neither of those gives: the whole picture, on the run somebody is
+      # already looking at.
+      #
+      # It writes the summary rather than the log, because a report nobody
+      # opens is a report nobody reads, and `continue-on-error` with
+      # `if: always()` so that it is present exactly when a build is red and
+      # somebody is wondering whether a dependency is why.
+      - name: Report the outdated dependencies
+        if: always()
+        continue-on-error: true
+        run: |
+          {
+            echo '## Outdated dependencies'
+            echo
+            echo '```'
+            flutter pub outdated || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # Six targets, and a commit that builds on five is not done. Each one is a
   # job rather than a step so that a failure names the platform it belongs to.
   #
