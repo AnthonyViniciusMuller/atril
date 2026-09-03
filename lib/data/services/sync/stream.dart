@@ -270,6 +270,12 @@ final class SyncStream implements SyncChannel {
   }
 
   Future<void> _handle(SyncEvent event) async {
+    // Anything arriving on the stream is the node answering, and that is what
+    // *last reached the node* is a fact about. Opening is not: gRPC dials
+    // lazily, so a channel this device has set up is not a channel anybody has
+    // replied on.
+    await database.syncDao.recordExchange(_node, at: _now());
+
     switch (event) {
       case SyncDelivery(:final operations, :final lastPosition):
         await reconciler.reconcileAll(operations);

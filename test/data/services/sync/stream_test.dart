@@ -372,6 +372,21 @@ void main() {
     expect(node.pushes, hasLength(1));
   });
 
+  test('records that it reached the node when the node answers', () async {
+    // *Last reached the node* is a fact about the node answering, and the
+    // verdicts for a push are an answer even though no operation came back and
+    // the cursor never moved.
+    await owe(1);
+
+    unawaited(stream.open());
+
+    await until(
+      () async => await database.syncDao.lastExchangeWith(_node) != null,
+    );
+
+    expect(await database.syncDao.lastExchangeWith(_node), _at);
+  });
+
   test('ends when it is closed, and says nothing went wrong', () async {
     await stream.open();
 

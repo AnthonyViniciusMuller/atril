@@ -502,11 +502,19 @@ outbox as dumb as its own comment asks for.
 
 ### `node_cursors.pulled_at` answers a reader's question, not the cursor's
 
-It moves when the cursor does *and* when a live channel opens onto a log with nothing new in it.
-A device that is up to date exchanges no operations, so a timestamp that only moved on a pull
-would tell a reader their last synchronization was whenever somebody last happened to write
-something. What the sync surface shows is *when this device last reached its node*, and that is
-the fact the column now holds.
+It moves when the cursor does *and* whenever this device has evidence its node answered. A device
+that is up to date exchanges no operations, so a timestamp that only moved on a pull would tell a
+reader their last synchronization was whenever somebody last happened to write something. What the
+sync surface shows is *when this device last reached its node*, and that is the fact the column
+holds.
+
+Evidence is the word that matters, and it is why this is not written when a channel opens. `open()`
+does not reach the node — gRPC dials lazily, and the stream's own open only reads the cursor out of
+the database — so a device whose node had been down for a week would say *just now*. The three
+things that are evidence are an event received on the channel, a push the node answered for, and a
+channel that stayed up as long as `settledFor`. The first two belong to the channels, because they
+are what receives them; the third is the scheduler's, because it is the only one this layer can see
+for itself.
 
 ## The federation and the account
 

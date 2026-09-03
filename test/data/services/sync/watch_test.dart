@@ -118,6 +118,7 @@ void main() {
         now: () => _at,
       ),
       pusher: OperationPusher(database: database, api: api),
+      now: () => _at,
     );
   });
 
@@ -187,6 +188,25 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     expect(node.pulls, hasLength(asked));
+  });
+
+  test('records that it reached the node when it is notified', () async {
+    // A notification about a position this device already holds asks for no
+    // pull and is still the node answering, which is what the column means.
+    unawaited(watch.open());
+
+    await until(() async => watch.isOpen);
+
+    // The node subscribes to its own notifications when the call is
+    // established, which is after `open()` has returned, so the position is
+    // offered until one lands.
+    await until(() async {
+      node.heads.add(Int64(0));
+
+      return await database.syncDao.lastExchangeWith(_node) != null;
+    });
+
+    expect(await database.syncDao.lastExchangeWith(_node), _at);
   });
 
   test('hands over what this device owes when it opens', () async {

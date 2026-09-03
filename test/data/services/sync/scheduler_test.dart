@@ -29,6 +29,17 @@ const String _node = 'quire.example';
 
 final DateTime _at = DateTime.utc(2026, 3, 14, 15, 9, 26);
 
+/// A wall clock the test moves by hand.
+///
+/// The loop reads it to decide how long a channel lasted, which is the only
+/// evidence this layer has that a node was on the other end of one, so a test
+/// about lasting has to be able to say how long.
+final class _Clock {
+  DateTime at = _at;
+
+  DateTime read() => at;
+}
+
 /// One change in the outbox, as the operation author would have left it.
 Operation _change() => Operation(
   id: '00000001-1111-4111-8111-111111111111',
@@ -113,6 +124,7 @@ void main() {
   late _FakeChannel channel;
   late SyncScheduler scheduler;
   late NodeConnection connection;
+  late _Clock clock;
 
   /// A holder that already carries a credential, so that `isSignedIn` is true
   /// without a node behind it.
@@ -129,6 +141,7 @@ void main() {
 
   setUp(() async {
     database = AtrilDatabase(NativeDatabase.memory());
+    clock = _Clock();
     session = signedIn();
     radio = StreamController<bool>.broadcast();
     reachability = NodeReachability(radio: radio.stream);
@@ -156,7 +169,7 @@ void main() {
       firstDelay: const Duration(milliseconds: 20),
       longestDelay: const Duration(milliseconds: 80),
       settledFor: const Duration(milliseconds: 200),
-      now: () => _at,
+      now: clock.read,
     );
   });
 
@@ -169,6 +182,31 @@ void main() {
     await session.dispose();
     await database.close();
   });
+
+  /// Remembers the node this device is signed in at, which is what an exchange
+  /// is recorded against.
+  Future<void> knownNode() => database.identityDao.rememberServer(
+    ServerRow(
+      domain: _node,
+      baseUrl: 'https://$_node',
+      isOrigin: true,
+      active: true,
+    ),
+  );
+
+  /// Waits until [read] answers with something, for the facts that land in the
+  /// database rather than in the loop's own state.
+  Future<void> untilStored(Future<Object?> Function() read) async {
+    for (var attempt = 0; attempt < 200; attempt++) {
+      if (await read() != null) {
+        return;
+      }
+
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+
+    fail('the loop did not write what the test was waiting for');
+  }
 
   Future<void> until(bool Function() ready, {String? what}) async {
     for (var attempt = 0; attempt < 400; attempt++) {
@@ -416,29 +454,37 @@ void main() {
     expect(channel.opens, opened);
   });
 
-  test('records that it reached the node', () async {
-    // What a reader is shown, and what a pull alone would not move on a log
-    // that has not grown.
-    await database.identityDao.rememberServer(
-      ServerRow(
-        domain: _node,
-        baseUrl: 'https://$_node',
-        isOrigin: true,
-        active: true,
-      ),
-    );
+  test('records nothing for a channel that only opened', () async {
+    // Opening does not reach the node. gRPC dials lazily and the stream's own
+    // open only reads the cursor out of the database, so a device whose node
+    // had been down for a week would otherwise be told it synchronized just
+    // now — which is the one thing this column is asked.
+    await knownNode();
 
     await scheduler.start();
+    await until(() => channel.isOpen);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
 
-    for (var attempt = 0; attempt < 100; attempt++) {
-      if (await database.syncDao.lastExchangeWith(_node) != null) {
-        break;
-      }
+    expect(await database.syncDao.lastExchangeWith(_node), isNull);
+  });
 
-      await Future<void>.delayed(const Duration(milliseconds: 5));
-    }
+  test('records that it reached the node when a channel lasted', () async {
+    // The evidence this layer can see for itself. What ended the channel is
+    // not the node refusing to be reached: it was there for a minute.
+    await knownNode();
 
-    expect(await database.syncDao.lastExchangeWith(_node), isNotNull);
+    await scheduler.start();
+    await until(() => channel.isOpen);
+
+    clock.at = _at.add(const Duration(minutes: 1));
+
+    channel.endWith(
+      const AppException(kind: ErrorKind.unavailable, message: 'hung up'),
+    );
+
+    await untilStored(() => database.syncDao.lastExchangeWith(_node));
+
+    expect(await database.syncDao.lastExchangeWith(_node), clock.at);
   });
 
   test('stops, and closes what it had open', () async {

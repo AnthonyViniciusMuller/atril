@@ -207,7 +207,9 @@ class SyncDao extends DatabaseAccessor<AtrilDatabase> with _$SyncDaoMixin {
   /// It moves [NodeCursors.pulledAt] and nothing else, and it is the other half
   /// of what that column means: a device that is up to date pulls nothing, and
   /// a timestamp that only moved on a pull would tell a reader their last sync
-  /// was whenever somebody last wrote something.
+  /// was whenever somebody last wrote something. What its callers pass is
+  /// evidence the node answered, and never the fact that a channel was opened
+  /// — opening one does not reach it.
   Future<void> recordExchange(String serverDomain, {required DateTime at}) =>
       into(nodeCursors).insert(
         NodeCursorsCompanion.insert(

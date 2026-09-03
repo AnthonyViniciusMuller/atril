@@ -1703,10 +1703,19 @@ merged in order, which is why each fix names the section it belongs to and touch
       handler is attached where the completer is made and the real listener still receives what
       ended it. The tests were written to fail first — asking for `done` before the channel had
       ended passed against the old code too, so they wait until it has ended and only then ask
-- [ ] `fix: record an exchange only on evidence` — *last reached the node* is written right
+- [x] `fix: record an exchange only on evidence` — *last reached the node* was written right
       after `open()`, and `open()` does not reach the node: gRPC dials lazily and the stream's
-      open only reads the database. A device whose node has been down a week says *just now*.
-      Record it on the first event received, a push answered, or a channel that settled
+      open only reads the database. A device whose node had been down a week said *just now*.
+      **The three things that count as evidence are an event received, a push the node answered
+      for, and a channel that lasted `settledFor`**, and where each is recorded follows from who
+      can see it: the first two belong to the channels, because they are what receives them, and
+      the third is the scheduler's, because it is the only one this layer can see for itself. The
+      watch grew the injectable clock the stream already had, so that a test can name the instant
+      rather than assert *not null*. Two cases are deliberately evidence: a notification about a
+      position this device already holds, which asks for no pull and is still the node answering,
+      and the verdicts for a push that moved no cursor. `pulled_at`'s own comment, the DAO's and
+      `architecture.md` all said the column moves when a channel opens; all three now say what it
+      does
 - [ ] `fix: keep an offer's failure inside the scheduler` — on the web `offer()` is a push RPC
       and rethrows the transport failure into `unawaited(nudge())` and out of `syncNow()`.
       Catch it and publish it as the status

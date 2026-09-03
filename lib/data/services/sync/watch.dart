@@ -55,7 +55,8 @@ final class WatchChannel implements SyncChannel {
     required this.api,
     required this.puller,
     required this.pusher,
-  });
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now;
 
   /// Where the cursor lives.
   final AtrilDatabase database;
@@ -70,6 +71,8 @@ final class WatchChannel implements SyncChannel {
   /// here and a message on the native stream, which is the whole difference
   /// between the two channels.
   final OperationPusher pusher;
+
+  final DateTime Function() _now;
 
   StreamSubscription<int>? _events;
   Completer<void>? _ended;
@@ -139,7 +142,14 @@ final class WatchChannel implements SyncChannel {
       return;
     }
 
-    await pusher.run();
+    final run = await pusher.run();
+
+    if (!run.isEmpty) {
+      // The node answered for what this device offered, which is the other
+      // evidence that it is there. A pass that handed nothing over made no
+      // call and is evidence of nothing.
+      await database.syncDao.recordExchange(_node, at: _now());
+    }
   }
 
   @override
@@ -175,6 +185,10 @@ final class WatchChannel implements SyncChannel {
   /// be written — and the scheduler above reopens, which asks from the cursor
   /// and is answered at once.
   Future<void> _catchUp(int head) async {
+    // Being notified at all is the node answering, whether or not the position
+    // it reports is one this device already holds.
+    await database.syncDao.recordExchange(_node, at: _now());
+
     if (head <= await database.syncDao.cursor(_node)) {
       // The node is telling this device about a position it already holds,
       // which is what a notification that crossed a pull looks like.

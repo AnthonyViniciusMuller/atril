@@ -370,13 +370,10 @@ final class SyncScheduler {
         ),
       );
 
-      // The two things a connection is worth beyond the channel itself: the
-      // files this device owes, which C16 refuses until the record has been
-      // pushed, and the note that this device reached its node — which is what
-      // a reader is shown and what a pull alone would not move on a log that
-      // has not grown.
+      // What a connection is worth beyond the channel itself: the files this
+      // device owes, which C16 refuses until the record that names them has
+      // been pushed.
       await uploads.run();
-      await _recordExchange();
 
       await ended;
 
@@ -400,7 +397,18 @@ final class SyncScheduler {
 
       await channel.close();
 
-      _reschedule(lasted: _now().difference(openedAt));
+      final lasted = _now().difference(openedAt);
+
+      if (lasted >= settledFor) {
+        // The third kind of evidence, and the only one this layer can see for
+        // itself: a channel that stayed up that long was a channel a node was
+        // on the other end of. The first two — an event received, a push
+        // answered — are the channels' own, because they are what receives
+        // them.
+        await _recordExchange();
+      }
+
+      _reschedule(lasted: lasted);
     }
   }
 
