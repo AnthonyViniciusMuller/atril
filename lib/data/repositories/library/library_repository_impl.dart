@@ -4,6 +4,8 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:async/async.dart' show StreamGroup;
+
 import '../../../domain/crdt/revision.dart';
 import '../../../domain/models/collection.dart';
 import '../../../domain/models/ebook.dart';
@@ -295,19 +297,36 @@ final class LibraryRepositoryImpl implements LibraryRepository {
         );
       }
 
-      return Rx.combine(
-        transfers.watchTransfer(row.contentHash),
-        transfers.watchDecision(row.contentHash),
-      ).asyncMap(
-        (pair) async => ContentState(
-          onThisDevice: await blobs.contains(row.contentHash),
-          kept: pair.$2 ?? keepsByDefault,
-          owedBytes: pair.$1?.sizeBytes,
-          sentBytes: pair.$1?.sentBytes ?? 0,
-        ),
-      );
+      final contentHash = row.contentHash;
+
+      // Three things move the answer and none of them is the row: the
+      // transfer, the reader's decision, and the store itself. A download
+      // writes to the store and to no table, so a watch that woke only on the
+      // two tables kept saying *not here* after the bytes had landed. The
+      // three are merged as wake-ups and the state is re-read whole on each,
+      // rather than combined as latest values: a read is two point queries,
+      // and it cannot pair a file's state with a decision about another
+      // moment.
+      return StreamGroup.merge<void>(<Stream<void>>[
+        transfers.watchTransfer(contentHash).map((_) {}),
+        transfers.watchDecision(contentHash).map((_) {}),
+        blobs.changes.where((digest) => digest == contentHash).map((_) {}),
+      ]).asyncMap((_) => _contentOf(contentHash));
     }),
   );
+
+  /// The state of the file [contentHash] names, read now.
+  Future<ContentState> _contentOf(String contentHash) async {
+    final transfer = await transfers.transfer(contentHash);
+    final decision = await transfers.decision(contentHash);
+
+    return ContentState(
+      onThisDevice: await blobs.contains(contentHash),
+      kept: decision ?? keepsByDefault,
+      owedBytes: transfer?.sizeBytes,
+      sentBytes: transfer?.sentBytes ?? 0,
+    );
+  }
 
   @override
   Future<Result<void>> keepEbook(
@@ -415,7 +434,13 @@ final class LibraryRepositoryImpl implements LibraryRepository {
 
   @override
   Stream<Result<List<Ebook>>> watchKeptEbooks() => _guard(
-    library.watchEbooks().asyncMap((rows) async {
+    // Woken by the rows and by the store, for the reason `watchContent` is: a
+    // file that arrives or goes changes this list and changes no row.
+    StreamGroup.merge<void>(<Stream<void>>[
+      library.watchEbooks().map((_) {}),
+      blobs.changes.map((_) {}),
+    ]).asyncMap((_) async {
+      final rows = await library.readEbooks();
       final held = (await blobs.digests()).toSet();
 
       return <Ebook>[
@@ -953,53 +978,6 @@ Map<String, Object?> _metadataOf(String? encoded) {
 /// It is here so that a nullable row maps to a nullable model without the
 /// call site restating the null check, and it is private because it is a
 /// convenience of this file rather than a utility of the app.
-/// Combining two streams into one that carries the latest of each.
-///
-/// It is four lines rather than a dependency because it is used once, and
-/// because the semantics that matter here are narrow: nothing is emitted until
-/// both have spoken, and after that every change on either side is a new pair.
-/// A screen fed by a combinator with any other rule would show a file's state
-/// and a decision taken about a different moment.
-abstract final class Rx {
-  /// [first] and [second], as pairs of their latest values.
-  static Stream<(A?, B?)> combine<A, B>(Stream<A?> first, Stream<B?> second) {
-    late StreamController<(A?, B?)> controller;
-    StreamSubscription<A?>? left;
-    StreamSubscription<B?>? right;
-    A? a;
-    B? b;
-    var hasA = false;
-    var hasB = false;
-
-    void emit() {
-      if (hasA && hasB) {
-        controller.add((a, b));
-      }
-    }
-
-    controller = StreamController<(A?, B?)>(
-      onListen: () {
-        left = first.listen((A? value) {
-          a = value;
-          hasA = true;
-          emit();
-        }, onError: controller.addError);
-        right = second.listen((B? value) {
-          b = value;
-          hasB = true;
-          emit();
-        }, onError: controller.addError);
-      },
-      onCancel: () async {
-        await left?.cancel();
-        await right?.cancel();
-      },
-    );
-
-    return controller.stream;
-  }
-}
-
 extension on EbookRow {
   T let<T>(T Function(EbookRow row) transform) => transform(this);
 }

@@ -76,6 +76,17 @@ abstract interface class BlobStore {
 
   /// What the store is holding, in bytes.
   Future<int> usedBytes();
+
+  /// The digest of every object as it is published or removed.
+  ///
+  /// It is what lets a screen watching a work notice its file arriving. The
+  /// replica announces a row changing and the store announced nothing, so a
+  /// completed download — which writes here and to no table — left the book
+  /// screen saying the file was elsewhere until something unrelated moved.
+  /// The stream is broadcast, carries only the digest, and says nothing about
+  /// a commit that found the object already here: the set of what is held did
+  /// not change, and that is the fact a listener is waiting on.
+  Stream<String> get changes;
 }
 
 /// An object being written, before it has a name.

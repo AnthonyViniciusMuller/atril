@@ -12,6 +12,7 @@
 /// alternative is a promise about a train the app cannot keep.
 library;
 
+import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:math';
@@ -69,6 +70,12 @@ final class OpfsBlobStore implements BlobStore {
   }
 
   final web.FileSystemDirectoryHandle _root;
+
+  final StreamController<String> _changes =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get changes => _changes.stream;
 
   @override
   Future<bool> contains(String contentHash) async =>
@@ -131,6 +138,7 @@ final class OpfsBlobStore implements BlobStore {
     }
 
     await _removeEntry(contentHash);
+    _changes.add(contentHash);
 
     return true;
   }
@@ -250,6 +258,7 @@ final class _OpfsBlobWrite implements BlobWrite {
     final size = (await _handle.getFile().toDart).size;
 
     await _publishAs(contentHash);
+    _store._changes.add(contentHash);
 
     return size;
   }

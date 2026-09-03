@@ -22,6 +22,9 @@ import 'package:atril/domain/models/library_query.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
+import 'package:grpc/grpc.dart' show Server, Service;
+
 import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/domain/models/operation.dart';
 import 'package:atril/data/services/sync/delta.dart';
@@ -33,6 +36,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../services/content/fake_content_service.dart';
 import '../../services/epub/epub_metadata_test.dart';
 import '../../services/storage/memory_blob_store.dart';
 
@@ -84,6 +88,7 @@ Future<LibraryRepository> _repository(
   bool keepsByDefault = true,
   int? quota,
   LibraryDao? library,
+  LibraryApi? api,
 }) async {
   if (bound) {
     await database.identityDao.bindDevice(
@@ -107,7 +112,7 @@ Future<LibraryRepository> _repository(
       mint: _nextId,
     ),
     blobs: blobs,
-    downloads: ContentDownloader(api: _api(), blobs: blobs),
+    downloads: ContentDownloader(api: api ?? _api(), blobs: blobs),
     transfers: database.transfersDao,
     keepsByDefault: keepsByDefault,
     budget: (BlobStore store) async =>
@@ -236,6 +241,7 @@ Future<void> _work(
   bool deleted = false,
   String? extraMetadata,
   String format = 'epub',
+  String? contentHash,
 }) => database
     .into(database.ebooks)
     .insert(
@@ -244,7 +250,7 @@ Future<void> _work(
         title: title,
         author: Value<String?>(author),
         format: format,
-        contentHash: _hashOf(seed),
+        contentHash: contentHash ?? _hashOf(seed),
         extraMetadata: Value<String?>(extraMetadata),
         importedAt: importedAt ?? _at,
         vectorClock: VectorClock.empty.tick(_device),
@@ -1340,6 +1346,111 @@ void main() {
       expect((budget as Ok<StorageBudget>).value.used, 300);
       expect(budget.value.available, 700);
     });
+  });
+
+  group('the content watch', () {
+    late FakeContentService node;
+    late Server server;
+    late NodeConnection connection;
+
+    setUp(() async {
+      node = FakeContentService();
+      server = Server.create(services: <Service>[node]);
+      await server.serve(address: InternetAddress.loopbackIPv4, port: 0);
+      connection = NodeConnection(
+        NodeEndpoint(
+          authority: '127.0.0.1:${server.port}',
+          transportSecurity: false,
+        ),
+      );
+    });
+
+    tearDown(() async {
+      await server.shutdown();
+      await connection.shutdown();
+    });
+
+    /// A work whose file is on the node and not here, as synchronization
+    /// leaves one, and the repository that can fetch it.
+    Future<(LibraryRepository, String)> elsewhere(
+      AtrilDatabase database,
+    ) async {
+      final bytes = List<int>.generate(200, (int index) => index % 256);
+      final digest = sha256.convert(bytes).toString();
+      final id = _id('aaaa', 1);
+
+      node.held[digest] = Uint8List.fromList(bytes);
+      node.works[id] = digest;
+
+      final repository = await _repository(
+        database,
+        api: LibraryApi(
+          connection: connection,
+          session: SessionHolder(
+            store: MemorySessionStore(),
+            refresher: () => throw StateError('a download needs no refresh'),
+          ),
+        ),
+      );
+
+      await _work(database, id: id, title: 'Baixado', contentHash: digest);
+
+      return (repository, id);
+    }
+
+    test('notices a download the moment the bytes land', () async {
+      // A download writes to the store and to no table, so a watch woken only
+      // by the transfer and the pin kept saying *not here* after the file had
+      // arrived — until something unrelated moved. The store now announces
+      // what it publishes and the watch listens.
+      final database = _open();
+      final (repository, id) = await elsewhere(database);
+
+      final here = repository
+          .watchContent(id)
+          .map(
+            (Result<ContentState> state) => (state as Ok<ContentState>).value,
+          )
+          .map((ContentState state) => state.onThisDevice);
+
+      final flips = expectLater(
+        here,
+        emitsInOrder(<Object>[false, emitsThrough(true)]),
+      );
+
+      expect(await repository.downloadEbook(id), isA<Ok<EbookContent>>());
+
+      await flips;
+    });
+
+    test(
+      'drops a released file from the kept list without a row moving',
+      () async {
+        final database = _open();
+        final (repository, id) = await elsewhere(database);
+
+        await repository.downloadEbook(id);
+
+        // Broadcast so that the first answer can be awaited on the same
+        // subscription the rest is watched on: a second subscription would
+        // read the store after the removal below and never see the book.
+        final kept = repository
+            .watchKeptEbooks()
+            .map((Result<List<Ebook>> list) => (list as Ok<List<Ebook>>).value)
+            .map((List<Ebook> works) => works.length)
+            .asBroadcastStream();
+
+        expect(await kept.first, 1);
+
+        final emptied = expectLater(kept, emitsThrough(0));
+
+        // Straight out of the store, as a release does: no row of any table is
+        // written by it.
+        await blobs.remove(node.works[id]!);
+
+        await emptied;
+      },
+    );
   });
 
   group('a search', () {

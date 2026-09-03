@@ -579,4 +579,7 @@ final class _CapaciousStore implements BlobStore {
 
   @override
   Future<int> usedBytes() => _inner.usedBytes();
+
+  @override
+  Stream<String> get changes => _inner.changes;
 }

@@ -122,6 +122,39 @@ void main() {
     );
   });
 
+  group('what the store announces', () {
+    test('is what it published and what it removed, by digest', () async {
+      // A download writes here and to no table, so this is the only way a
+      // screen watching a work can learn that its file has arrived.
+      final store = open();
+      final heard = <String>[];
+      final listening = store.changes.listen(heard.add);
+
+      await _store(store, work);
+      await store.remove(_digest(work));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(heard, <String>[_digest(work), _digest(work)]);
+      await listening.cancel();
+    });
+
+    test('is nothing for a write that changed nothing', () async {
+      // A second import of a file already here is discarded, and the set of
+      // what is held did not move — which is the fact a listener waits on.
+      final store = open();
+      final heard = <String>[];
+      final listening = store.changes.listen(heard.add);
+
+      await _store(store, work);
+      await _store(store, work);
+      await store.remove(_digest('never stored'));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(heard, <String>[_digest(work)]);
+      await listening.cancel();
+    });
+  });
+
   group('a staged write', () {
     test('is not addressable until it is published', () async {
       final store = open();

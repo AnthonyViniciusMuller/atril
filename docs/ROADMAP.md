@@ -1562,11 +1562,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       The failing step in the test is `saveCover` on a `LibraryDao` subclass rather than `owe`,
       because `UploadQueue` is final and the DAO is not; the property is the same for either.
       Without the transaction the same test finds one `ebooks` row after the failed import
-- [ ] `fix: notice a download from the content watch` — `watchContent` recomputes *on this
+- [x] `fix: notice a download from the content watch` — `watchContent` recomputes *on this
       device* only when a transfer or a pin changes, and a completed download writes neither, so
       the book screen keeps saying the file is elsewhere until something unrelated moves. The
       blob store announces what it commits and removes, the watches merge that in, and a test
-      downloads mid-stream and expects the flag to flip
+      downloads mid-stream and expects the flag to flip. `BlobStore.changes` is a broadcast
+      stream of digests, fed by all three stores — the filesystem, the origin-private file
+      system and the test's memory one — on a publish and on a removal, and deliberately not on
+      a commit that found the object already there: the set of what is held did not move, and
+      that is the fact a listener waits on. **The watches merge wake-ups and re-read, rather
+      than combining latest values**: `StreamGroup.merge` over the transfer, the pin and the
+      store's announcements, and two point queries per wake-up, which is what let the
+      hand-rolled `Rx.combine` — two streams, no room for a third — go now rather than in the
+      refactor below. `package:async` is promoted from transitive for it, with the pubspec
+      saying why. `watchKeptEbooks` gets the same treatment, since a release changes that list
+      and changes no row. The test runs the real downloader against the fake content service on
+      a loopback port and watches the flag go from `false` to `true`; with the old watch it
+      never does. The web store is compile-checked by `flutter build web`; the other five
+      targets could not be built here
 - [ ] `fix: measure the file before extracting its cover` — `_keepCoverOf` passes the row's
       nullable size as zero, which `_describe` reads as *under the limit*, and a seeded work of
       unknown size is read whole into memory on a phone. Ask the blob store for the size it has

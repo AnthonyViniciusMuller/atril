@@ -2,6 +2,7 @@
 /// own support directory.
 library;
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -50,6 +51,12 @@ final class FileBlobStore implements BlobStore {
 
   final Directory _root;
 
+  final StreamController<String> _changes =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get changes => _changes.stream;
+
   // It is `async` rather than a bare `Future` for a reason a caller would
   // otherwise meet as a crash: a digest that is not one is refused by
   // [_fileOf], and a method that returned the future of a call that had
@@ -90,7 +97,7 @@ final class FileBlobStore implements BlobStore {
       ),
     );
 
-    return _FileBlobWrite(staged, _fileOf);
+    return _FileBlobWrite(staged, _fileOf, _changes.add);
   }
 
   @override
@@ -102,6 +109,7 @@ final class FileBlobStore implements BlobStore {
     }
 
     await file.delete();
+    _changes.add(contentHash);
 
     return true;
   }
@@ -166,10 +174,11 @@ final class FileBlobStore implements BlobStore {
 }
 
 final class _FileBlobWrite implements BlobWrite {
-  _FileBlobWrite(this._staged, this._destination);
+  _FileBlobWrite(this._staged, this._destination, this._announce);
 
   final File _staged;
   final File Function(String contentHash) _destination;
+  final void Function(String contentHash) _announce;
 
   IOSink? _sink;
   bool _closed = false;
@@ -203,6 +212,7 @@ final class _FileBlobWrite implements BlobWrite {
 
     await destination.parent.create(recursive: true);
     await _staged.rename(destination.path);
+    _announce(contentHash);
 
     return destination.length();
   }

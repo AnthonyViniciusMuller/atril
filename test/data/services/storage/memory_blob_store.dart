@@ -11,6 +11,7 @@
 /// failure an offline-first app cannot explain away.
 library;
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:atril/data/services/storage/blob_storage.dart';
@@ -23,6 +24,12 @@ final class MemoryBlobStore implements BlobStore {
   /// How many writes were staged and never published, which is what a failed
   /// import must leave behind and nothing else.
   int aborted = 0;
+
+  final StreamController<String> _changes =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get changes => _changes.stream;
 
   @override
   Future<bool> contains(String contentHash) async =>
@@ -46,8 +53,15 @@ final class MemoryBlobStore implements BlobStore {
   Future<BlobWrite> beginWrite() async => _MemoryWrite(this);
 
   @override
-  Future<bool> remove(String contentHash) async =>
-      objects.remove(contentHash) != null;
+  Future<bool> remove(String contentHash) async {
+    if (objects.remove(contentHash) == null) {
+      return false;
+    }
+
+    _changes.add(contentHash);
+
+    return true;
+  }
 
   @override
   Future<List<String>> digests() async => objects.keys.toList();
@@ -89,6 +103,7 @@ final class _MemoryWrite implements BlobWrite {
     final bytes = _staged.takeBytes();
 
     _store.objects[contentHash] = bytes;
+    _store._changes.add(contentHash);
 
     return bytes.length;
   }

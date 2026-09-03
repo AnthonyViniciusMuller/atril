@@ -215,6 +215,15 @@ dependencies:
   # It was a dev dependency until this phase, where the import needs it.
   crypto: ^3.0.7
 
+  # Merging streams. A work's content state is moved by three things — its
+  # transfer row, its pin row and the blob store — and the watch re-reads the
+  # answer whenever any of them speaks, which is `StreamGroup.merge` and
+  # nothing more. It replaced a hand-rolled combinator that took two streams
+  # and could not take the third. Promoted from transitive rather than added:
+  # `flutter_test` and `build_runner` already resolve it, and it is named here
+  # because `data/repositories` is written against its API.
+  async: ^2.13.1
+
   # The EPUB engine, and the reason this line is pinned to one version rather
   # than to a range.
   #
