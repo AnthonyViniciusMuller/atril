@@ -10,6 +10,8 @@
 /// the state of one running action, and there is one of these per device.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/account/account_repository.dart';
@@ -21,7 +23,9 @@ import '../../../utils/result.dart';
 final class DevicesViewModel extends ChangeNotifier {
   /// The view model over [account].
   DevicesViewModel({required this.account}) {
-    load = Command0<BoundDevices>(_load)..execute();
+    load = Command0<BoundDevices>(_load);
+
+    unawaited(load.execute());
   }
 
   /// Where the devices come from.

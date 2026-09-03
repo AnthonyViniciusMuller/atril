@@ -85,14 +85,14 @@ Level logLevelFrom(String? name, {Level fallback = Level.INFO}) =>
 void installLogging({Level? level, LogSink? sink}) {
   Logger.root.level = level ?? logLevelFrom(configuredLogLevel);
 
-  _subscription?.cancel();
+  unawaited(_subscription?.cancel());
   _subscription = Logger.root.onRecord.listen(sink ?? _emit);
 }
 
 /// Removes the listener and returns the root logger to its default level, so
 /// that one test's logging cannot reach the next one's sink.
 void resetLogging() {
-  _subscription?.cancel();
+  unawaited(_subscription?.cancel());
   _subscription = null;
   Logger.root.level = Level.INFO;
 }

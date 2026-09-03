@@ -6,6 +6,8 @@
 /// device. Each screen builds its own instance and uses the command it needs.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
@@ -39,7 +41,9 @@ final class RecoveryViewModel extends ChangeNotifier {
   RecoveryViewModel({required this.auth, required this.servers}) {
     request = Command1<void, String>(_request);
     reset = Command1<void, PasswordReset>(_reset);
-    load = Command0<ServerDescriptor?>(_load)..execute();
+    load = Command0<ServerDescriptor?>(_load);
+
+    unawaited(load.execute());
   }
 
   /// Where the request and the reset go.

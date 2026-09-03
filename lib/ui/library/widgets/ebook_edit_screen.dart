@@ -20,6 +20,8 @@
 /// and written back exactly as it was.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -136,17 +138,19 @@ class _EbookEditScreenState extends State<EbookEditScreen> {
       return;
     }
 
-    _model.save.execute(
-      EbookEdits(
-        title: _title.text,
-        author: _author.text,
-        publisher: _publisher.text,
-        language: _language.text,
-        extraMetadata: <String, Object?>{
-          for (final row in _extra)
-            if (row.name.text.trim().isNotEmpty)
-              row.name.text.trim(): row.value,
-        },
+    unawaited(
+      _model.save.execute(
+        EbookEdits(
+          title: _title.text,
+          author: _author.text,
+          publisher: _publisher.text,
+          language: _language.text,
+          extraMetadata: <String, Object?>{
+            for (final row in _extra)
+              if (row.name.text.trim().isNotEmpty)
+                row.name.text.trim(): row.value,
+          },
+        ),
       ),
     );
   }

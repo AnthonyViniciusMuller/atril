@@ -176,7 +176,7 @@ final class _StreamingNode extends FakeSyncService {
       onDone: () {
         hungUp = true;
 
-        out.close();
+        unawaited(out.close());
       },
     );
 

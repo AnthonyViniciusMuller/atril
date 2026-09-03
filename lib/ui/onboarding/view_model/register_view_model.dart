@@ -1,6 +1,8 @@
 /// What the registration screen knows.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
@@ -18,7 +20,9 @@ final class RegisterViewModel extends ChangeNotifier {
   /// The view model over [auth], naming the node [servers] is pointed at.
   RegisterViewModel({required this.auth, required this.servers}) {
     register = Command1<User, Registration>(_register);
-    load = Command0<ServerDescriptor?>(_load)..execute();
+    load = Command0<ServerDescriptor?>(_load);
+
+    unawaited(load.execute());
   }
 
   /// Where the registration goes.

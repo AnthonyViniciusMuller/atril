@@ -32,7 +32,9 @@ final _log = loggerFor('ui/federation');
 final class MigrationViewModel extends ChangeNotifier {
   /// The view model over [federation], naming the reader out of [auth].
   MigrationViewModel({required this.federation, required this.auth}) {
-    devices = Command0<CarriedDevices>(federation.devicesToCarry)..execute();
+    devices = Command0<CarriedDevices>(federation.devicesToCarry);
+
+    unawaited(devices.execute());
     migrate = Command1<User, HomeServerMigration>(federation.migrate);
     _reader = auth.reader().listen(_onReader);
   }

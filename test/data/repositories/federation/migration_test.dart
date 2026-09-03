@@ -132,7 +132,7 @@ void main() {
   });
 
   tearDown(() async {
-    session.dispose();
+    await session.dispose();
     await connection.shutdown();
     await server.shutdown();
     await database.close();

@@ -2145,10 +2145,26 @@ merged in order, which is why each fix names the section it belongs to and touch
       to**, Debug and Release `libcef.so` together, which is the trade this makes: a larger
       restore against a bzip2 extraction that has to happen on every run. Reviewed, not measured
       — running it needs Actions
-- [ ] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,
-      `cancel_subscriptions`, `close_sinks`, `avoid_dynamic_calls` and `only_throw_errors`, and
-      whatever they find. Landed last, after the other three sections, because it touches all of
-      them
+- [x] `style: add the lints the boundaries need` — `unawaited_futures`, `discarded_futures`,
+      `cancel_subscriptions`, `avoid_dynamic_calls` and `only_throw_errors`, landed last so that
+      they ran over the other three sections rather than over the tree that had the bugs in it.
+      **`close_sinks` is not among them, and the configuration says why.** Every sink here is a
+      field closed by its object's own `close`, and the rule only recognises a close in the
+      function that opened the sink: on the merged tree it reported the blob write, the sync
+      stream's command channel and the lifecycle broadcast, all three correct and none of them
+      the leak phase 14 actually found — which was a subscription, and which `cancel_subscriptions`
+      covers. A rule carried as a standing list of ignores records the decision worse than a
+      paragraph does. `cancel_subscriptions` and `avoid_dynamic_calls` were already clean; the
+      other three found **nineteen** places. Sixteen are a command run from a constructor or a
+      submit handler, which is the pattern the architecture asks for — the screen listens to the
+      command rather than awaiting it — and `unawaited()` now says so at each one instead of
+      leaving a reader to infer it. Two were real: `Session.dispose` closes a sink and returns
+      the future, and two teardowns dropped it, so a test could shut its connection down while
+      the session was still closing. The last is a fake hanging up. The tests carry their own
+      `test/analysis_options.yaml`, which includes this one and turns off `only_throw_errors`
+      alone: a fake refuses with the `Object` it was handed on purpose, because the boundaries
+      widened to `on Object` earlier in this phase and a fake that could only throw an `Error`
+      could not exercise what they were widened for
 
 ## Open questions
 

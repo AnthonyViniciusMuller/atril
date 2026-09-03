@@ -11,6 +11,8 @@
 /// builds.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -95,14 +97,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     if (forward.contains(event.logicalKey)) {
       _model.showChrome();
-      _model.turnForward.execute();
+      unawaited(_model.turnForward.execute());
 
       return KeyEventResult.handled;
     }
 
     if (back.contains(event.logicalKey)) {
       _model.showChrome();
-      _model.turnBack.execute();
+      unawaited(_model.turnBack.execute());
 
       return KeyEventResult.handled;
     }

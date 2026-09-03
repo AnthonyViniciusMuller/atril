@@ -24,7 +24,9 @@ final class StorageViewModel extends ChangeNotifier {
   StorageViewModel({required this.library}) {
     release = Command1<void, String>(_release);
     _kept = library.watchKeptEbooks().listen(_onKept);
-    refresh = Command0<StorageBudget>(_read)..execute();
+    refresh = Command0<StorageBudget>(_read);
+
+    unawaited(refresh.execute());
   }
 
   /// Where the files and the decisions live.

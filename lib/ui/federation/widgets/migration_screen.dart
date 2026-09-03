@@ -27,6 +27,8 @@
 /// being migrated.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -206,14 +208,16 @@ class _MigrationScreenState extends State<MigrationScreen> {
       return;
     }
 
-    _model.migrate.execute(
-      HomeServerMigration(
-        domain: _domain.text,
-        localName: _localName.text,
-        displayName: _displayName.text,
-        email: _email.text,
-        password: _password.text,
-        devices: _model.carrying(_nameOf),
+    unawaited(
+      _model.migrate.execute(
+        HomeServerMigration(
+          domain: _domain.text,
+          localName: _localName.text,
+          displayName: _displayName.text,
+          email: _email.text,
+          password: _password.text,
+          devices: _model.carrying(_nameOf),
+        ),
       ),
     );
   }

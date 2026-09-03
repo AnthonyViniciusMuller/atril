@@ -1,6 +1,8 @@
 /// What the sign-in screen knows.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/auth/auth_repository.dart';
@@ -18,7 +20,9 @@ final class SignInViewModel extends ChangeNotifier {
   /// The view model over [auth], naming the node [servers] is pointed at.
   SignInViewModel({required this.auth, required this.servers}) {
     signIn = Command1<User, Credentials>(_signIn);
-    load = Command0<ServerDescriptor?>(_load)..execute();
+    load = Command0<ServerDescriptor?>(_load);
+
+    unawaited(load.execute());
   }
 
   /// Where the credentials go.

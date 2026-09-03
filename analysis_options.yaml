@@ -48,3 +48,31 @@ linter:
     # One argument per line, so that adding a field is a one-line diff and a
     # review sees the field rather than the reflow around it.
     - require_trailing_commas
+    # A future nobody waits for is a failure nobody sees. `discarded_futures`
+    # names the call in a synchronous body and `unawaited_futures` the one in
+    # an asynchronous body; between them they cover every place a `Result` can
+    # be dropped on the floor. A command deliberately runs unawaited — the
+    # screen listens to it instead — and `unawaited()` is how that is said out
+    # loud rather than left to the reader.
+    - discarded_futures
+    - unawaited_futures
+    # A subscription this project opens is one it has to cancel. The replica's
+    # watches and the sync channels both outlive the call that creates them,
+    # and phase 14 found two channels that had stopped being read without
+    # anybody hanging up.
+    - cancel_subscriptions
+    # `dynamic` reaches this project through the bridge and through protobuf.
+    # A call on one is the implicit downcast `strict-casts` forbids, arriving a
+    # layer later and at run time.
+    - avoid_dynamic_calls
+    # `Result<T>` carries the failure across a boundary. What is thrown in
+    # spite of it, inside a layer, should still be something with a stack
+    # trace attached.
+    - only_throw_errors
+    # `close_sinks` is deliberately absent. Every sink here is a field closed
+    # by its object's own `close`, and the rule only recognises a close in the
+    # function that opened the sink: on this tree it reports the blob write,
+    # the sync stream's command channel and the lifecycle broadcast, all three
+    # correct, and nothing else. It is a rule that would be carried as a
+    # standing list of ignores, which is a worse record of the decision than
+    # this paragraph.

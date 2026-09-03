@@ -15,6 +15,8 @@
 /// against every row.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/federation/federation_repository.dart';
@@ -27,7 +29,9 @@ import '../../../utils/result.dart';
 final class KnownServersViewModel extends ChangeNotifier {
   /// The view model over [federation].
   KnownServersViewModel({required this.federation}) {
-    load = Command0<List<KnownServer>>(_load)..execute();
+    load = Command0<List<KnownServer>>(_load);
+
+    unawaited(load.execute());
     add = Command1<KnownServer, String>(_add);
   }
 

@@ -1,0 +1,14 @@
+# The tests inherit every rule the application is held to. What follows is the
+# short list of places where a test is doing, on purpose, the thing the rule
+# exists to stop.
+
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # A fake refuses with whatever it was handed, `Object` and all. That is the
+    # point of it: phase 14 made every repository catch `on Object` rather than
+    # `on Exception`, because a `TypeError` from a mapper is not an `Exception`
+    # and was crossing the boundary uncaught. A fake that could only throw an
+    # `Error` could not exercise the case the catch was widened for.
+    only_throw_errors: false

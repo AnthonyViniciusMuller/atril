@@ -11,6 +11,8 @@
 /// with no catalogue behind it would offer nothing to grant.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/federation/federation_repository.dart';
@@ -22,7 +24,9 @@ import '../../../utils/result.dart';
 final class ReplicasViewModel extends ChangeNotifier {
   /// The view model over [federation].
   ReplicasViewModel({required this.federation}) {
-    load = Command0<void>(_load)..execute();
+    load = Command0<void>(_load);
+
+    unawaited(load.execute());
     authorize = Command1<ReplicaAuthorization, ReplicaGrant>(_authorize);
   }
 

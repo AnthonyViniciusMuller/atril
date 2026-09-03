@@ -11,6 +11,8 @@
 /// it would be a repository reading the configuration.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../../config/environment.dart';
@@ -30,7 +32,9 @@ final class ServerSelectionViewModel extends ChangeNotifier {
     required Environment environment,
   }) : federation = environment.federation {
     choose = Command1<ServerDescriptor, ServerChoice>(_choose);
-    load = Command0<ServerDescriptor?>(_load)..execute();
+    load = Command0<ServerDescriptor?>(_load);
+
+    unawaited(load.execute());
   }
 
   /// Where the choice is made and recorded.

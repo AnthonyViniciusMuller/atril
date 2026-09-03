@@ -65,7 +65,9 @@ final class PasswordChange {
 final class AccountViewModel extends ChangeNotifier {
   /// The view model over [account], naming the reader out of [auth].
   AccountViewModel({required this.account, required this.auth}) {
-    refresh = Command0<User>(account.readAccount)..execute();
+    refresh = Command0<User>(account.readAccount);
+
+    unawaited(refresh.execute());
     rename = Command1<User, String>(account.changeDisplayName);
     changeEmail = Command1<User, EmailChange>(
       (EmailChange change) =>
