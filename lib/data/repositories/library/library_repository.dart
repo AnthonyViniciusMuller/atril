@@ -324,6 +324,24 @@ abstract interface class LibraryRepository {
   /// The works whose files this device is holding, newest decision first.
   Stream<Result<List<Ebook>>> watchKeptEbooks();
 
+  /// Removes the bytes of works this device has tombstoned, and answers with
+  /// how many files went.
+  ///
+  /// A deletion is a tombstone — it has to be, or the next replica that had
+  /// not heard about it would bring the work back — and the file it named
+  /// stayed behind it: the kept list hides the work while the budget goes on
+  /// counting its bytes, so the space was shown to the reader and never freed.
+  ///
+  /// It removes a digest only when **no live work names it and the node is not
+  /// still owed it**. The second half is `releaseEbook`'s rule and the same
+  /// argument: a file the node has not received is on this device and nowhere
+  /// else. Bytes that no work names *at all* are left alone too, because that
+  /// is what an interrupted import leaves and what its retry adopts.
+  ///
+  /// It never fails the caller. Reclaiming space is housekeeping, and a file
+  /// that could not be removed this time is one the next pass finds.
+  Future<Result<int>> reclaimBytes();
+
   /// The cover this device extracted for one work, or `null`.
   ///
   /// It is a `Future` and not a stream, and the difference is what a cover is:

@@ -369,21 +369,38 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     ),
 
     Provider<LibraryRepository>(
-      create: (BuildContext context) => LibraryRepositoryImpl(
-        library: database.libraryDao,
-        author: context.read<OperationAuthor>(),
-        blobs: blobs,
-        uploads: context.read<UploadQueue>(),
-        downloads: context.read<ContentDownloader>(),
-        transfers: database.transfersDao,
-        // Read at the edge, like every other thing this app learns from the
-        // platform rather than from the reader — and it is a *default* and not
-        // a rule: a native install keeps every book and offers to release one,
-        // a browser keeps nothing until it is asked, and the question the
-        // reader answers is the same on both.
-        keepsByDefault: devicePlatform != 'web',
-        budget: readStorageBudget,
-      ),
+      create: (BuildContext context) {
+        final library = LibraryRepositoryImpl(
+          library: database.libraryDao,
+          author: context.read<OperationAuthor>(),
+          blobs: blobs,
+          uploads: context.read<UploadQueue>(),
+          downloads: context.read<ContentDownloader>(),
+          transfers: database.transfersDao,
+          // Read at the edge, like every other thing this app learns from the
+          // platform rather than from the reader — and it is a *default* and
+          // not a rule: a native install keeps every book and offers to
+          // release one, a browser keeps nothing until it is asked, and the
+          // question the reader answers is the same on both.
+          keepsByDefault: devicePlatform != 'web',
+          budget: readStorageBudget,
+        );
+
+        // The second of the two moments the bytes of a deleted work are
+        // reclaimed. The first is the deletion itself, which covers a work
+        // this reader deleted here; this one covers the tombstone that
+        // arrived from another device, which the sync loop applies and
+        // deliberately does not act on — a reconciler that deleted a reader's
+        // files would be the synchronization path removing something, and the
+        // whole design keeps that one gesture in the repository.
+        //
+        // It is not awaited: the library screen must not wait on a directory
+        // listing to render, and a pass that does not finish is one the next
+        // launch or the next deletion repeats.
+        unawaited(library.reclaimBytes());
+
+        return library;
+      },
     ),
 
     Provider<ReadingRepository>(

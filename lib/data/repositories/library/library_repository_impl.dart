@@ -332,8 +332,22 @@ final class LibraryRepositoryImpl
   }
 
   @override
-  Future<Result<void>> deleteEbook(String ebookId) =>
-      _tombstone(ebookId, Change.delete(TargetEntity.ebook, ebookId));
+  Future<Result<void>> deleteEbook(String ebookId) async {
+    final tombstoned = await _tombstone(
+      ebookId,
+      Change.delete(TargetEntity.ebook, ebookId),
+    );
+
+    if (tombstoned case Ok<void>()) {
+      // The moment the bytes become reclaimable, and the moment the reader is
+      // looking at the number that has to move. A failure here is not the
+      // deletion's — the work is tombstoned either way — and `reclaimBytes`
+      // reports rather than throws.
+      await reclaimBytes();
+    }
+
+    return tombstoned;
+  }
 
   @override
   Future<Result<void>> restoreEbook(String ebookId) =>

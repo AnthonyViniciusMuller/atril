@@ -1640,9 +1640,23 @@ merged in order, which is why each fix names the section it belongs to and touch
       interface rather than being imported across. `blankIsAbsent` in `utils/collation.dart` is
       the one rule the two duplicates spelled. The combinator was already gone with the
       previous commit, which needed three streams where it took two
-- [ ] `feat: reclaim the bytes of a deleted work` — a tombstoned work keeps its blob and its
+- [x] `feat: reclaim the bytes of a deleted work` — a tombstoned work keeps its blob and its
       pin, the kept list hides it and the budget counts it, so the space is shown and never
-      freed. A reclaim pass removes blobs no live work names once the transfer has retired
+      freed. A reclaim pass removes blobs no live work names once the transfer has retired.
+      **It runs after a deletion and at the launch that builds the graph**, and the second is
+      not belt-and-braces: a tombstone that arrived from another device is applied by the
+      reconciler, and a reconciler that deleted a reader's files would put that one destructive
+      gesture on the synchronization path — so the sync side touches nothing and the next
+      launch is what frees the space. The launch pass is not awaited, since the library screen
+      must not wait on a directory listing. Three digests are deliberately left: one a live
+      work still names (two works over one file are one file), one the node has not received —
+      `releaseEbook`'s rule, because that file is on this device and nowhere else — and one *no*
+      work names at all, which is what an interrupted import leaves and what its retry adopts.
+      The last of those is why `holdsContent` is asked as well as `readWorksNaming`; neither
+      needed a new query, so no drift regeneration. The pin row survives on purpose: it is
+      keyed by the digest, and a reader who restores the work should not have to say again that
+      they keep it. Six tests, including the restore, which is what makes an undo a download
+      rather than an import
 
 ### Synchronization
 

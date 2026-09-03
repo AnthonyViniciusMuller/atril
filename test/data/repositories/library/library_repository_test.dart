@@ -1394,6 +1394,114 @@ void main() {
     });
   });
 
+  group('reclaiming the bytes of a deleted work', () {
+    /// An imported work whose file the node has already received.
+    Future<(LibraryRepository, AtrilDatabase, Ebook)> sent() async {
+      final database = _open();
+      final repository = await _repository(database);
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      // The transfer finished, as a pass over the queue would have left it.
+      await database.transfersDao.retire(work.contentHash);
+
+      return (repository, database, work);
+    }
+
+    test('frees the space the deletion left counted', () async {
+      // A tombstone is what a deletion has to be, and the file stayed behind
+      // it: the kept list hid the work while the budget went on counting its
+      // bytes, so the space was shown to the reader and never freed.
+      final (repository, _, work) = await sent();
+
+      expect(await repository.deleteEbook(work.id), isA<Ok<void>>());
+
+      expect(await blobs.contains(work.contentHash), isFalse);
+      expect(((await repository.storage()) as Ok<StorageBudget>).value.used, 0);
+    });
+
+    test('leaves the file the node has not received', () async {
+      // `releaseEbook`'s rule and the same argument: a file still owed is on
+      // this device and nowhere else, and this is the one pass in the app
+      // that removes something the reader did not name.
+      final database = _open();
+      final repository = await _repository(database);
+      final result = await repository.importEbook(
+        _File('Vidas Secas.epub', <int>[1, 2, 3]),
+      );
+      final work = (result as Ok<Ebook>).value;
+
+      await repository.deleteEbook(work.id);
+
+      expect(await blobs.contains(work.contentHash), isTrue);
+    });
+
+    test('leaves a file another work still names', () async {
+      // Two works imported from one file are one file. One of them surviving
+      // keeps the bytes for both.
+      final (repository, _, first) = await sent();
+      final second = await repository.importEbook(
+        _File('Vidas Secas (cópia).epub', <int>[1, 2, 3]),
+      );
+
+      expect((second as Ok<Ebook>).value.contentHash, first.contentHash);
+
+      await repository.deleteEbook(first.id);
+
+      expect(await blobs.contains(first.contentHash), isTrue);
+    });
+
+    test('leaves bytes no work names at all', () async {
+      // What an interrupted import leaves, and what its retry adopts through
+      // the digest. This pass is about the files of deleted works.
+      final database = _open();
+      final repository = await _repository(database);
+
+      await blobs.put(_hashOf(42), Stream<List<int>>.value(<int>[9, 9]));
+
+      final reclaimed = await repository.reclaimBytes();
+
+      expect((reclaimed as Ok<int>).value, 0);
+      expect(await blobs.contains(_hashOf(42)), isTrue);
+      expect(database.libraryDao, isNotNull);
+    });
+
+    test('reclaims a tombstone that arrived from another device', () async {
+      // The case a delete-triggered pass cannot see: the reconciler applied
+      // the deletion, and it deliberately touches no file — so the launch
+      // that follows is what frees the space.
+      final (repository, database, work) = await sent();
+
+      await (database.update(database.ebooks)
+            ..where((row) => row.id.equals(work.id)))
+          .write(const EbooksCompanion(deleted: Value<bool>(true)));
+
+      expect(await blobs.contains(work.contentHash), isTrue);
+
+      final reclaimed = await repository.reclaimBytes();
+
+      expect((reclaimed as Ok<int>).value, 1);
+      expect(await blobs.contains(work.contentHash), isFalse);
+    });
+
+    test('brings the work back with its record when it is restored', () async {
+      // The record survives the reclaim, which is what makes an undo a
+      // download rather than an import: the work is on the shelf again and
+      // its file comes back from the node.
+      final (repository, _, work) = await sent();
+
+      await repository.deleteEbook(work.id);
+      await repository.restoreEbook(work.id);
+
+      expect((await repository.watchEbooks().first).titles, <String>[
+        'Vidas Secas',
+      ]);
+      expect(await blobs.contains(work.contentHash), isFalse);
+    });
+  });
+
   group('the content watch', () {
     late FakeContentService node;
     late Server server;

@@ -408,6 +408,54 @@ mixin LibraryBytes implements LibraryRepository {
           })
           .asResults(opReadLibrary);
 
+  @override
+  Future<Result<int>> reclaimBytes() async {
+    try {
+      var reclaimed = 0;
+
+      for (final digest in await blobs.digests()) {
+        // A digest no work names at all is not this pass's business: an import
+        // stores the bytes before it writes the record, so that is what an
+        // interrupted one leaves and what its retry adopts through the digest.
+        if (!await library.holdsContent(digest)) {
+          continue;
+        }
+
+        // Some work still names it. Two works sharing one file is one file,
+        // so one of them surviving keeps the bytes for both.
+        if ((await library.readWorksNaming(digest)).isNotEmpty) {
+          continue;
+        }
+
+        // Still owed. It is `releaseEbook`'s rule and the same argument: a
+        // file the node has not received is on this device and nowhere else,
+        // and this is the one pass in the app that removes something without
+        // the reader asking for it by name.
+        if (await transfers.transfer(digest) != null) {
+          continue;
+        }
+
+        if (await blobs.remove(digest)) {
+          reclaimed++;
+        }
+      }
+
+      if (reclaimed > 0) {
+        _log.info('$reclaimed file(s) of deleted works were reclaimed');
+      }
+
+      return Result<int>.ok(reclaimed);
+    } on Object catch (error, stackTrace) {
+      _log.warning(
+        'the deleted works\' files were not reclaimed',
+        error,
+        stackTrace,
+      );
+
+      return Result<int>.error(failureFrom(error, op: opKeep));
+    }
+  }
+
   /// Extracts and keeps the cover of [work], if this device can read one.
   ///
   /// It never throws: the file is on the device either way, and failing a

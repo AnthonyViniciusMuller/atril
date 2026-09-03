@@ -658,6 +658,16 @@ final class FakeLibraryRepository implements LibraryRepository {
   /// What the next import fails with, or `null` to let it succeed.
   Exception? refusal;
 
+  /// How many times the screen asked for the deleted works' files back.
+  int reclaims = 0;
+
+  @override
+  Future<Result<int>> reclaimBytes() async {
+    reclaims++;
+
+    return const Result<int>.ok(0);
+  }
+
   @override
   Future<Result<Ebook>> importEbook(FileSource file) async {
     imports.add(file);
