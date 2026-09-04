@@ -33,6 +33,21 @@
 
   <title>Atril</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- The webview's bridge, and the only line the browser target needs that
+       the other five do not. `flutter_inappwebview` reaches a native webview
+       on the four native targets, and in a browser it drives a same-origin
+       `<iframe>` from JavaScript this file has to load: the plugin's Dart half
+       registers against `window.flutter_inappwebview_plugin`, and without it
+       the registration prints that the plugin is not available and the reader
+       opens on a webview that was never created.
+
+       Relative, so that it resolves against the `<base href>` above: a build
+       served from a sub-path with `--base-href` would not find an absolute
+       `/assets/...`, and the reader would fail on the deployed site and
+       nowhere else. -->
+  <script type="application/javascript" defer
+          src="assets/packages/flutter_inappwebview_web/assets/web/web_support.js"></script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

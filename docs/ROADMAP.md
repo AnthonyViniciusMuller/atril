@@ -2271,6 +2271,15 @@ merged in order, which is why each fix names the section it belongs to and touch
       set — so the injection is a no-op when the served copy got there first. The shim and its
       channel name move to `engine_server.dart` with the serving, since that is now where they
       are used, and the two tests that named them follow the move.
+- [x] `fix: load the webview plugin's web support` — `flutter_inappwebview` reaches a native
+      webview on the four native targets, and in a browser its Dart half registers against a
+      `window.flutter_inappwebview_plugin` that a script in the page has to define. Nothing
+      loaded it, so the registration printed **`window.flutter_inappwebview_plugin is not
+      available!`** on every start of the web build. The script is the package's own asset and is
+      loaded from `web/index.html`, **relative** so that it resolves against the `<base href>`:
+      a build served from a sub-path with `--base-href` would not find an absolute
+      `/assets/…`, and the reader would fail on the deployed site and nowhere else. It is the
+      only line the browser target needs that the other five do not.
 
 ## Open questions
 
