@@ -117,6 +117,10 @@ final class DesktopEpubHost implements EpubHost {
   /// fetched it can take the offer back.
   String? _offered;
 
+  /// The page this host was given, so a screen closed before that page loaded
+  /// does not leave the server holding an announcement nobody will make.
+  EngineSession? _session;
+
   /// Whether a book has been handed to the engine.
   bool _sent = false;
 
@@ -279,13 +283,23 @@ final class DesktopEpubHost implements EpubHost {
     _pending.clear();
 
     final String? offered = _offered;
+    final EngineSession? session = _session;
 
-    if (offered != null) {
-      // A book nobody fetched — a reader who closed the screen while the page
-      // was still coming up — is taken back rather than left on the server for
-      // the life of the process.
-      (await EngineServer.shared()).withdraw(offered);
-      _offered = null;
+    if (offered != null || session != null) {
+      // A book nobody fetched and a page that never announced itself — a reader
+      // who closed the screen while it was all still coming up — are taken back
+      // rather than left on the server for the life of the process.
+      final EngineServer server = await EngineServer.shared();
+
+      if (offered != null) {
+        server.withdraw(offered);
+        _offered = null;
+      }
+
+      if (session != null) {
+        server.closeSession(session);
+        _session = null;
+      }
     }
 
     await _webview.value?.dispose();
@@ -356,10 +370,10 @@ final class DesktopEpubHost implements EpubHost {
             ${EpubGlue.loadBook}(new Uint8Array(bytes), ${jsonEncode(options)});
           })
           .catch(function (error) {
-            $epubBridgeChannel(JSON.stringify({
+            $epubBridgeChannel({
               handler: 'displayError',
               args: [String(error)]
-            }));
+            });
           });
       ''');
   }
@@ -447,10 +461,10 @@ final class DesktopEpubHost implements EpubHost {
     final Future<void> sent = _evaluate('''
         Promise.resolve($name(${_arguments(args)})).then(
           function (value) {
-            $epubBridgeChannel(JSON.stringify({ reply: $id, value: value }));
+            $epubBridgeChannel({ reply: $id, value: value });
           },
           function (error) {
-            $epubBridgeChannel(JSON.stringify({ reply: $id, error: String(error) }));
+            $epubBridgeChannel({ reply: $id, error: String(error) });
           }
         );
       ''');
@@ -750,6 +764,17 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
   }
 
   /// Brings up CEF, the engine's server and the bridge, in that order.
+  ///
+  /// **Everything that touches the document waits for the document.** CEF is
+  /// given a URL and navigates to it on its own time: `initialize()` answers a
+  /// browser, not a page. So the page is asked to say when it is there — over
+  /// the engine's own socket, which needs nothing but the document — and the
+  /// two things that have to happen *to* a live page happen after it does.
+  /// Both used to be guesses against a fifty-millisecond delay inside the
+  /// plugin, and both lost: `setJavaScriptChannels` is an assignment to a
+  /// global that the navigation then discarded, and the readiness event was
+  /// dispatched before `epubView.js` had registered the listener for it. A
+  /// reader saw a blank page and, thirty seconds later, a timeout.
   Future<void> _start() async {
     try {
       // The manager is a singleton and initializing it twice is not an error,
@@ -759,6 +784,10 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
       await manager.initialize();
 
       final EngineServer server = await EngineServer.shared();
+      final EngineSession session = server.openSession();
+
+      widget.host._session = session;
+
       final cef.WebViewController webview = manager.createWebView(
         injectUserScripts: cef.InjectUserScripts()
           ..add(
@@ -766,7 +795,16 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
           ),
       );
 
-      await webview.initialize(server.hostPageUrl);
+      await webview.initialize(session.pageUrl);
+
+      // The page, saying so itself. Nothing below this line would reach the
+      // document that is going to render the book without it.
+      await session.loaded;
+
+      // Installed now rather than above, because the plugin installs a channel
+      // by assigning a global in whatever context exists when it is asked, and
+      // before this the context was the one CEF was about to navigate away
+      // from.
       await webview.setJavaScriptChannels(<cef.JavascriptChannel>{
         cef.JavascriptChannel(
           name: epubBridgeChannel,
@@ -787,8 +825,8 @@ class _DesktopEpubViewState extends State<_DesktopEpubView> {
       widget.host._webview.value = webview;
 
       // Last: the glue announces itself on this event, and the announcement is
-      // what asks for the book. Dispatching it before the channel existed would
-      // be a `readyToLoad` nobody heard.
+      // what asks for the book. The listener it reaches was registered while
+      // the page was loading, which is what the wait above is for.
       await webview.executeJavaScript(
         "window.dispatchEvent(new Event('flutterInAppWebViewPlatformReady'));",
       );

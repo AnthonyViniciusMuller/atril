@@ -58,6 +58,48 @@ final class EngineServer {
   /// The books on offer, by the path each was offered under.
   final Map<String, Uint8List> _books = <String, Uint8List>{};
 
+  /// The pages handed out, by the identifier each was handed out under.
+  ///
+  /// A host waits on its own entry and the page itself completes it, by asking
+  /// for [_readyPath] as the last thing the document does.
+  final Map<String, Completer<void>> _sessions = <String, Completer<void>>{};
+
+  /// A page for one host, and the moment that page has finished loading.
+  ///
+  /// **It is a handshake and not a guess, and that is the whole of it.**
+  /// `webview_cef` offers Dart no dependable moment at which the document
+  /// exists: `initialize()` returns fifty milliseconds after the browser was
+  /// created and long before it has navigated, and the load callbacks arrive
+  /// through a method channel whose bookkeeping the plugin fills in *after* the
+  /// first of them can already have fired. Both of the things a host must do to
+  /// a *live* document were being done against that guess, and both lost:
+  ///
+  /// * the JavaScript channel, which the plugin installs by assigning a global
+  ///   in the current context — so a navigation afterwards throws it away and
+  ///   nothing the page says is ever heard;
+  /// * the `flutterInAppWebViewPlatformReady` event, which the glue answers
+  ///   with `readyToLoad` — and which is heard by nobody until `epubView.js`
+  ///   has run, because that is where the listener is registered.
+  ///
+  /// So the page says when it is there, over the socket that is already serving
+  /// it, and the host does both of those things afterwards.
+  EngineSession openSession() {
+    final Completer<void> loaded = Completer<void>();
+    final String id = _token();
+
+    _sessions[id] = loaded;
+
+    return EngineSession._(
+      id,
+      '$hostPageUrl?$engineSessionQuery=$id',
+      loaded.future,
+    );
+  }
+
+  /// Forgets a session, so a reader who closed the screen before the page came
+  /// up is not an entry held for the life of the process.
+  void closeSession(EngineSession session) => _sessions.remove(session.id);
+
   /// A URL the page can fetch [bytes] from, once.
   ///
   /// **It is how a book crosses to the engine without being copied three
@@ -75,9 +117,7 @@ final class EngineServer {
   /// once it has been used is one that cannot be replayed by a page that
   /// outlived the reader who opened it.
   String offer(Uint8List bytes) {
-    final String path =
-        '$_bookPathPrefix/${_random.nextInt(1 << 32).toRadixString(16)}'
-        '${_random.nextInt(1 << 32).toRadixString(16)}';
+    final String path = '$_bookPathPrefix/${_token()}';
 
     _books[path] = bytes;
 
@@ -149,6 +189,24 @@ final class EngineServer {
         continue;
       }
 
+      // The page announcing that it has loaded. It carries no body and it is
+      // not a file: what it is for is the completer on the other side of it.
+      if (request.method == 'GET' && request.uri.path == _readyPath) {
+        final Completer<void>? loaded = _sessions.remove(
+          request.uri.queryParameters[engineSessionQuery] ?? '',
+        );
+
+        if (loaded != null && !loaded.isCompleted) {
+          loaded.complete();
+        }
+
+        request.response.statusCode = loaded == null
+            ? HttpStatus.notFound
+            : HttpStatus.noContent;
+        await request.response.close();
+        continue;
+      }
+
       // Only what the engine is. The map is the closure `engine.dart` pins, so
       // a request for anything else is not a file this server has decided to
       // withhold — it is a file that is not part of the engine, and answering
@@ -167,7 +225,10 @@ final class EngineServer {
       try {
         final ByteData bytes = await loadEngineAsset(key, bundle: bundle);
         final Uint8List body = key == EpubEngine.hostPage
-            ? withBridgeShim(bytes)
+            ? withBridgeShim(
+                bytes,
+                session: request.uri.queryParameters[engineSessionQuery],
+              )
             : bytes.buffer.asUint8List(
                 bytes.offsetInBytes,
                 bytes.lengthInBytes,
@@ -205,6 +266,7 @@ final class EngineServer {
   Future<void> close() async {
     _starting = null;
     _books.clear();
+    _sessions.clear();
     await _server.close(force: true);
   }
 }
@@ -216,8 +278,41 @@ final class EngineServer {
 /// attributes resolve to, and none of them starts here.
 const String _bookPathPrefix = '/book';
 
-/// Where the unguessable half of a book's path comes from.
+/// Where a page says that it has loaded.
+///
+/// As with a book, it is a path no engine asset has, so the announcement and
+/// the engine cannot be asking for the same thing.
+const String _readyPath = '/ready';
+
+/// The query parameter naming which host a page belongs to.
+///
+/// It is a query and not a path because the page is still the pinned document
+/// at the pinned path — the server reads this to know whose announcement to
+/// write into it, and the asset lookup, which reads the path alone, is
+/// untouched.
+const String engineSessionQuery = 'session';
+
+/// Where the unguessable half of a book's or a session's path comes from.
 final Random _random = Random.secure();
+
+/// An identifier no page can guess.
+String _token() =>
+    '${_random.nextInt(1 << 32).toRadixString(16)}'
+    '${_random.nextInt(1 << 32).toRadixString(16)}';
+
+/// One host's page, and the moment that page announced itself.
+final class EngineSession {
+  const EngineSession._(this.id, this.pageUrl, this.loaded);
+
+  /// The identifier the page announces under.
+  final String id;
+
+  /// The URL the host opens.
+  final String pageUrl;
+
+  /// Completed when the document exists and every script under it has run.
+  final Future<void> loaded;
+}
 
 /// How long a host may keep an engine asset without asking again.
 ///
@@ -283,6 +378,15 @@ const String epubBridgeChannel = 'AtrilEpubBridge';
 /// which is safe: the reference is resolved inside the call and the first call
 /// cannot happen until the readiness event is dispatched, which the host does
 /// last.
+///
+/// **What crosses is an object and never a string.** `webview_cef` implements a
+/// channel as `external.JavaScriptChannel`, which `JSON.stringify`s whatever it
+/// is handed before the message leaves the render process. A string handed to
+/// it therefore arrived as JSON *containing* JSON, `jsonDecode` answered with a
+/// `String` rather than a map, and [decodeBridgeMessage] dropped every message
+/// the page ever sent — a page that rendered, a book that never opened and one
+/// line in the log per position. Handing over the object is what makes the
+/// encoding happen once.
 const String epubBridgeShim =
     '''
 (function () {
@@ -291,7 +395,7 @@ const String epubBridgeShim =
     callHandler: function (name) {
       var args = Array.prototype.slice.call(arguments, 1);
       try {
-        $epubBridgeChannel(JSON.stringify({ handler: name, args: args }));
+        $epubBridgeChannel({ handler: name, args: args });
       } catch (e) {
         console.log('the epub bridge is not installed yet: ' + e);
       }
@@ -303,28 +407,76 @@ const String epubBridgeShim =
 })();
 ''';
 
-/// [page] with the bridge shim inlined ahead of everything it loads.
+/// The script by which a page tells its host that it is there.
+///
+/// **It is a request and not a bridge call**, because the bridge is one of the
+/// two things this announcement exists to order: the channel it would go over
+/// is installed by the host *after* this arrives. A `fetch` needs nothing but
+/// the document, and the document is the thing being announced.
+///
+/// It is added at the end of the body, after `<script src="epubView.js">`, so
+/// that by the time the host answers by dispatching the readiness event the
+/// glue's listener for it has been registered.
+///
+/// The retries are for a socket that refused one connection, not for a server
+/// that is not there: a page that cannot reach its own origin is a book that
+/// will not open, and the host's deadline is what says so.
+String epubReadyAnnouncement(String session) {
+  final String url = jsonEncode('$_readyPath?$engineSessionQuery=$session');
+
+  return '''
+(function () {
+  function announce(left) {
+    fetch($url).catch(function () {
+      if (left > 0) { setTimeout(function () { announce(left - 1); }, 100); }
+    });
+  }
+  announce(10);
+})();
+''';
+}
+
+/// [page] with the bridge shim inlined ahead of everything it loads, and — for
+/// a page a host is waiting on — the announcement that it has.
 ///
 /// The shim goes immediately after `<head>`, which is before the script tags
 /// that follow it, so `window.flutter_inappwebview` exists by the time the glue
-/// runs. A page with no `<head>` is served unchanged rather than guessed at:
-/// the host page is pinned by digest, so that case is a bundle that is not the
-/// engine, and the load will fail loudly on its own.
-Uint8List withBridgeShim(ByteData page) {
-  final String html = utf8.decode(
-    page.buffer.asUint8List(page.offsetInBytes, page.lengthInBytes),
+/// runs. The announcement goes immediately before `</body>`, which is *after*
+/// them, so the glue's listener is registered by the time the host answers it.
+/// The two ends of the document are the two ends of the ordering.
+///
+/// A page with no `<head>` is served unchanged rather than guessed at: the host
+/// page is pinned by digest, so that case is a bundle that is not the engine,
+/// and the load will fail loudly on its own. A page asked for with no session —
+/// a browser pointed at the origin, a test — is served without an announcement,
+/// because there is nobody waiting for one.
+Uint8List withBridgeShim(ByteData page, {String? session}) {
+  final Uint8List bytes = page.buffer.asUint8List(
+    page.offsetInBytes,
+    page.lengthInBytes,
   );
+  final String html = utf8.decode(bytes);
   final int head = html.indexOf('<head>');
 
   if (head < 0) {
-    return page.buffer.asUint8List(page.offsetInBytes, page.lengthInBytes);
+    return bytes;
   }
 
   final int at = head + '<head>'.length;
+  String served =
+      '${html.substring(0, at)}\n<script>$epubBridgeShim</script>'
+      '${html.substring(at)}';
 
-  return Uint8List.fromList(
-    utf8.encode(
-      '${html.substring(0, at)}\n<script>$epubBridgeShim</script>${html.substring(at)}',
-    ),
-  );
+  if (session != null) {
+    final int body = served.lastIndexOf('</body>');
+
+    if (body >= 0) {
+      served =
+          '${served.substring(0, body)}'
+          '<script>${epubReadyAnnouncement(session)}</script>\n'
+          '${served.substring(body)}';
+    }
+  }
+
+  return Uint8List.fromList(utf8.encode(served));
 }

@@ -1961,6 +1961,28 @@ merged in order, which is why each fix names the section it belongs to and touch
       one matches in Dart and why a fake using `contains` would disagree exactly on *sertoes*.
       The contract is a mixin: a subject says only how it seeds, and twenty-two descriptions run
       against the fake and against the drift-backed repositories in one file
+- [x] `fix: let the page say when it is there` — no book had ever opened on Linux, and three
+      separate faults were each enough on their own. **Every message the page sent was dropped**:
+      `webview_cef` implements a channel as `external.JavaScriptChannel`, which `JSON.stringify`s
+      whatever it is handed before the message leaves the render process, and the shim was
+      handing it a string it had already encoded — so `jsonDecode` answered a `String` rather
+      than a map and the host declined `readyToLoad`, `rendered`, `relocated` and every reply
+      alike. **The channel was installed into a document that no longer existed**: the plugin
+      installs one by assigning a global in whatever context is current, and it was asked
+      immediately after `initialize()`, which answers a *browser* fifty milliseconds after
+      creation and long before it has navigated, so the assignment went into the context CEF was
+      about to leave. And **the readiness event was dispatched before the glue could hear it** —
+      `epubView.js` registers that listener at the end of nine hundred kilobytes of script, and
+      the event went out two method calls after the browser was created. The reader saw an empty
+      page and, thirty seconds later, a timeout. **The page now says when it is there**, over the
+      loopback socket that is already serving it: a host takes an `EngineSession` whose
+      identifier rides in the page URL's query, the server writes a `fetch` of `/ready` in
+      immediately before `</body>` — after `epubView.js`, which is the ordering the dispatch
+      needed — and completes that session when the request arrives. Only then does the host
+      install the channel, publish the webview and dispatch the event. The two ends of the
+      document are the two ends of the ordering, and neither is a delay any more. The session is
+      closed with the host, as a book on offer already was. Confirmed against CEF on a device,
+      which the three commits before it were not
 
 ### Delivery
 

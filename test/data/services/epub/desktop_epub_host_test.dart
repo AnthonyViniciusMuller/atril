@@ -43,7 +43,22 @@ void main() {
       // The name is interpolated rather than written twice, and this is what
       // says so: two literals agree until one of them is edited, and the
       // failure would be a page that renders and never reports a position.
-      expect(epubBridgeShim, contains('$epubBridgeChannel(JSON.stringify('));
+      expect(epubBridgeShim, contains('$epubBridgeChannel({'));
+    });
+
+    test('hands the channel an object and lets it do the encoding', () {
+      // `webview_cef` implements a channel as `external.JavaScriptChannel`,
+      // which `JSON.stringify`s whatever it is handed before the message leaves
+      // the render process. A string handed to it arrived as JSON *containing*
+      // JSON: `jsonDecode` answered with a `String` rather than a map, so
+      // `decodeBridgeMessage` dropped every message the page ever sent and no
+      // book opened on Linux at all.
+      expect(epubBridgeShim, isNot(contains('JSON.stringify')));
+      expect(
+        decodeBridgeMessage('"{\\"handler\\": \\"readyToLoad\\"}"'),
+        isNull,
+        reason: 'encoding it twice is what a dropped message looks like',
+      );
     });
 
     test('survives a channel that is not installed yet', () {

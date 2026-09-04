@@ -10,6 +10,7 @@
 /// through code this project wrote.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -237,6 +238,120 @@ void main() {
               'path',
         );
       }
+    });
+  });
+
+  group('the page a host waits on', () {
+    // The handshake that replaced a guess. CEF is given a URL and navigates on
+    // its own time, so a host that installed the JavaScript channel or
+    // dispatched the readiness event against a delay inside the plugin was
+    // talking to the document it was about to navigate away from — the channel
+    // was thrown away with that context and the readiness event was dispatched
+    // before `epubView.js` had registered its listener. Neither is visible from
+    // Dart, which is why it is the page that speaks.
+
+    test('is served at the pinned path, with the session in its query', () {
+      final EngineSession session = server.openSession();
+
+      expect(
+        Uri.parse(session.pageUrl).path,
+        Uri.parse(server.hostPageUrl).path,
+      );
+      expect(
+        Uri.parse(session.pageUrl).queryParameters[engineSessionQuery],
+        session.id,
+      );
+
+      server.closeSession(session);
+    });
+
+    test('carries its announcement after the glue it has to follow', () async {
+      // The order is the whole point: the shim before every script, so
+      // `callHandler` exists when the glue runs, and the announcement after
+      // them, so the listener exists when the host answers it.
+      final EngineSession session = server.openSession();
+      final HttpClientResponse page = await get(
+        '${Uri.parse(session.pageUrl).path}?$engineSessionQuery=${session.id}',
+      );
+      final String html = utf8.decode(<int>[
+        for (final List<int> chunk in await page.toList()) ...chunk,
+      ]);
+
+      expect(html, contains(session.id));
+      expect(
+        html.indexOf('epubView.js'),
+        lessThan(html.indexOf(session.id)),
+        reason: 'the page announces itself before the glue has run',
+      );
+      expect(html.indexOf(session.id), lessThan(html.indexOf('</body>')));
+    });
+
+    test('is loaded when the page has asked for it, and not before', () async {
+      final EngineSession session = server.openSession();
+      bool loaded = false;
+
+      unawaited(session.loaded.then((void _) => loaded = true));
+      await pumpEventQueue();
+
+      expect(loaded, isFalse);
+
+      final HttpClientResponse response = await get(
+        '/ready?$engineSessionQuery=${session.id}',
+      );
+
+      expect(response.statusCode, HttpStatus.noContent);
+
+      await session.loaded;
+    });
+
+    test(
+      'is not announced twice, and not by a session nobody opened',
+      () async {
+        // The announcement is a page saying it exists, and a page exists once.
+        // A second one — a reload, a request somebody replayed — is not a
+        // completer to complete again.
+        final EngineSession session = server.openSession();
+
+        await get('/ready?$engineSessionQuery=${session.id}');
+        await session.loaded;
+
+        final HttpClientResponse again = await get(
+          '/ready?$engineSessionQuery=${session.id}',
+        );
+
+        expect(again.statusCode, HttpStatus.notFound);
+        expect((await get('/ready')).statusCode, HttpStatus.notFound);
+        expect(
+          (await get('/ready?$engineSessionQuery=nothing')).statusCode,
+          HttpStatus.notFound,
+        );
+      },
+    );
+
+    test('closed, it is not held for the life of the process', () async {
+      // A reader who left the screen before the page came up.
+      final EngineSession session = server.openSession();
+
+      server.closeSession(session);
+
+      final HttpClientResponse response = await get(
+        '/ready?$engineSessionQuery=${session.id}',
+      );
+
+      expect(response.statusCode, HttpStatus.notFound);
+    });
+
+    test('asked for without one, the page is served without one', () async {
+      // A browser pointed at the origin, and every other test in this file.
+      // There is nobody waiting, so there is nothing to announce to.
+      final HttpClientResponse page = await get(
+        Uri.parse(server.hostPageUrl).path,
+      );
+      final String html = utf8.decode(<int>[
+        for (final List<int> chunk in await page.toList()) ...chunk,
+      ]);
+
+      expect(html, isNot(contains('/ready?')));
     });
   });
 
