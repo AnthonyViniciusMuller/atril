@@ -16,8 +16,15 @@
 /// **What this file is, is a mapping.** The package already exposes a CFI for
 /// the position, for navigation, for a highlight and for extracting a range;
 /// none of that is re-implemented here and none of it could be. What is here is
-/// the translation between that vocabulary and the port's, and the two places
-/// the translation is not mechanical are commented where they happen.
+/// the translation between that vocabulary and the port's, and the places the
+/// translation is not mechanical are commented where they happen.
+///
+/// The calls out go by name into the pinned glue rather than through
+/// `EpubController`'s methods, which is the one place this file departs from
+/// the package's Dart API and is argued at [WebviewEpubHost._call]: those
+/// methods drop the future the bridge answers with, and a refusal that nothing
+/// can catch is a crash rather than a mark that did not draw. It is the same
+/// thing the Linux host does, through [EpubGlue], for the same names.
 library;
 
 import 'dart:async';
@@ -138,73 +145,87 @@ final class WebviewEpubHost implements EpubHost {
   }
 
   @override
-  Future<void> goTo(String locator) async {
-    _refuseIfDisposed();
-    // Straight through, unchanged. A CFI and a chapter href are told apart by
-    // the engine and not here: a caller — or a host — that had to distinguish
-    // them would be one parsing a CFI.
-    _controller.display(cfi: locator);
-  }
+  Future<void> goTo(String locator) =>
+      // Straight through, unchanged. A CFI and a chapter href are told apart by
+      // the engine and not here: a caller — or a host — that had to distinguish
+      // them would be one parsing a CFI.
+      _call(EpubGlue.goTo, <Object?>[locator]);
 
   @override
-  Future<void> nextPage() async {
-    _refuseIfDisposed();
-    _controller.next();
-  }
+  Future<void> nextPage() => _call(EpubGlue.next);
 
   @override
-  Future<void> previousPage() async {
-    _refuseIfDisposed();
-    _controller.prev();
-  }
+  Future<void> previousPage() => _call(EpubGlue.previous);
 
   @override
-  Future<void> draw(EpubMark mark) async {
+  Future<void> draw(EpubMark mark) => mark.underline
+      ? _call(EpubGlue.addUnderline, <Object?>[mark.cfiRange])
+      : _call(EpubGlue.addHighlight, <Object?>[
+          mark.cfiRange,
+          cssColor(mark.color),
+          '${mark.opacity}',
+        ]);
+
+  @override
+  Future<void> erase(String cfiRange, {bool underline = false}) => _call(
+    underline ? EpubGlue.removeUnderline : EpubGlue.removeHighlight,
+    <Object?>[cfiRange],
+  );
+
+  /// Calls the glue by name, and waits for it.
+  ///
+  /// **The waiting is the point.** `EpubController`'s own methods hand the
+  /// bridge a call and drop the future it answers with, so a refusal from the
+  /// engine — a CFI it cannot resolve in the section on screen is the ordinary
+  /// one — surfaces as an unhandled asynchronous error rather than as a
+  /// rejected future. Nothing can catch that: it arrives long after the call
+  /// site returned, in whatever zone the app is running in, and on the web it
+  /// takes the page down. Awaiting the same call here makes the refusal a
+  /// thrown exception at the point of the mark, where `ReaderViewModel`'s
+  /// repaint already catches it and writes the line it means to write — the
+  /// book stays on screen and a highlight that would not draw does not banner
+  /// the page.
+  ///
+  /// The names are [EpubGlue]'s, which is where the argument for spelling them
+  /// at all is made: the asset is pinned by digest in `engine.dart` and the
+  /// package to an exact version in the pubspec, and
+  /// `locator_round_trip_test.dart` checks every one of them against the glue
+  /// the bundle actually holds — so a rename upstream is a red build rather
+  /// than a reader whose highlights quietly stopped drawing.
+  Future<Object?> _call(
+    String function, [
+    List<Object?> args = const <Object?>[],
+  ]) {
     _refuseIfDisposed();
 
-    if (mark.underline) {
-      _controller.addUnderline(cfi: mark.cfiRange);
-      return;
+    if (_controller.webViewController == null || _rendering.value == null) {
+      // No book is rendering, so there is nothing to say it to. It is the
+      // refusal `EpubController.checkEpubLoaded` makes, made here because this
+      // file no longer goes through the methods that make it.
+      throw const AppException(
+        kind: ErrorKind.failedPrecondition,
+        message: 'no book is open',
+        code: 'epub_not_open',
+        op: opEpubHost,
+      );
     }
 
-    _controller.addHighlight(
-      cfi: mark.cfiRange,
-      color: mark.color,
-      opacity: mark.opacity,
-    );
-  }
-
-  @override
-  Future<void> erase(String cfiRange, {bool underline = false}) async {
-    _refuseIfDisposed();
-
-    if (underline) {
-      _controller.removeUnderline(cfi: cfiRange);
-      return;
-    }
-
-    _controller.removeHighlight(cfi: cfiRange);
+    return _controller.webViewController!.callAsync(function, args);
   }
 
   @override
   Future<String> textOf(String cfiRange) async {
     _refuseIfDisposed();
 
-    // The one call in this file that reaches past the package's Dart API, and
-    // it is deliberate. `EpubController.extractText` takes a *start* and an
-    // *end* CFI and builds the range itself; what an annotation stores is the
-    // range, already built. Splitting one back into its two ends would be
+    // The call with no counterpart on the controller at all, even now that the
+    // others go by name too. `EpubController.extractText` takes a *start* and
+    // an *end* CFI and builds the range itself; what an annotation stores is
+    // the range, already built. Splitting one back into its two ends would be
     // parsing a CFI in Dart — the single thing this phase exists to prevent —
     // so the range goes to the glue function that takes a range.
-    //
-    // It is safe to name because the glue is pinned by digest in `engine.dart`
-    // and the package by an exact version in the pubspec: this function cannot
-    // be renamed under us without the engine test going red first. The name is
-    // a compile-time constant, which is the invariant the bridge documents.
-    final Object? result = await _controller.webViewController?.callAsync(
-      '_extractText',
-      <Object?>[cfiRange],
-    );
+    final Object? result = await _call(EpubGlue.extractText, <Object?>[
+      cfiRange,
+    ]);
 
     if (result is Map && result['text'] is String) {
       return result['text'] as String;

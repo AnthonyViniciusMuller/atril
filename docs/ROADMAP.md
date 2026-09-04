@@ -2245,6 +2245,19 @@ merged in order, which is why each fix names the section it belongs to and touch
       because the wrapped sheet could finally be dismissed. A widget test pins the two rows, that
       there are exactly two of them, and that both stop intercepting when the chrome goes. Also:
       `flutter analyze`, and 1,233 tests
+- [x] `refactor: spell the glue's names once, and wait for the calls` — `EpubGlue` named every
+      function the pinned glue exposes and lived in `desktop_epub_host.dart`, because Linux was
+      the only host that called the glue by name; the webview host went through
+      `EpubController`'s methods instead. **Those methods drop the future the bridge answers
+      with**, so a refusal from the engine — a CFI it cannot resolve in the section on screen is
+      the ordinary one — arrived as an unhandled asynchronous error rather than a rejected
+      future. Nothing can catch that: it lands long after the call site returned, and on the web
+      it takes the page down. The vocabulary moves to `engine.dart`, where the engine is already
+      pinned by digest, and both hosts now spell it from there and `await` what they call — so a
+      mark that will not draw is an exception where `ReaderViewModel`'s repaint already catches
+      it, and the book stays on screen. One list to check rather than two, which is worth more
+      than it sounds: no compiler catches a wrong name on either side, and
+      `locator_round_trip_test.dart` checks every one of them against the glue the bundle holds.
 
 ## Open questions
 

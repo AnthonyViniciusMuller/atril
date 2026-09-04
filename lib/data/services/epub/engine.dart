@@ -167,3 +167,82 @@ Map<String, String> engineAssetsByPath() => <String, String>{
   for (final String key in EpubEngine.assetDigests.keys)
     key.substring(EpubEngine.assetRoot.length + 1): key,
 };
+
+/// Every function a host calls inside the pinned glue.
+///
+/// They are named here rather than written at the call sites because this is
+/// the one place in the application that spells the glue's own vocabulary, and
+/// both hosts now spell it from here. The webview host used to go through the
+/// package's Dart controller instead, which spells the same names on its side —
+/// but those methods drop the future the bridge answers with, so a refusal from
+/// the engine became an unhandled asynchronous error rather than something a
+/// caller could catch. Calling by name is what lets it be awaited.
+///
+/// A name that is wrong here is a call into nothing on every target, which is
+/// worth more than it sounds: it is one list to check rather than two, and no
+/// compiler would catch either.
+///
+/// `locator_round_trip_test.dart` checks every one of them against the glue the
+/// bundle actually holds, which is a file pinned by digest. A renamed function
+/// upstream is therefore a red build rather than a target that silently stops
+/// turning pages.
+abstract final class EpubGlue {
+  /// Hands the engine a book and the options it is displayed under.
+  static const String loadBook = 'loadBook';
+
+  /// Moves to a CFI or a chapter href — the engine tells them apart.
+  static const String goTo = 'toCfi';
+
+  /// The next page, and the previous one.
+  static const String next = 'next';
+
+  /// As [next], backwards. It is `previous` and not `prev`: the package's
+  /// controller method is `prev` and the function it calls is this, which is
+  /// exactly the kind of near-miss the check exists for.
+  static const String previous = 'previous';
+
+  /// Draws a filled mark over a range, and an underline under one.
+  static const String addHighlight = 'addHighlight';
+
+  /// As [addHighlight], underlined. The capital L is the glue's.
+  static const String addUnderline = 'addUnderLine';
+
+  /// Removes what the two above draw.
+  static const String removeHighlight = 'removeHighlight';
+
+  /// As [removeHighlight], for an underline.
+  static const String removeUnderline = 'removeUnderLine';
+
+  /// Sets the root type size, in CSS pixels.
+  static const String setFontSize = 'setFontSize';
+
+  /// One page or two.
+  static const String setSpread = 'setSpread';
+
+  /// The colours and the custom rules the page is styled with.
+  static const String updateTheme = 'updateTheme';
+
+  /// The text a CFI range covers.
+  ///
+  /// It is the glue's internal helper and not its public `getTextFromCfi`,
+  /// which takes two end CFIs and builds the range itself. What an annotation
+  /// stores is the range, already built, and splitting one back into its ends
+  /// would be parsing a CFI in Dart.
+  static const String extractText = '_extractText';
+
+  /// All of them, for the check that they exist.
+  static const Set<String> all = <String>{
+    loadBook,
+    goTo,
+    next,
+    previous,
+    addHighlight,
+    addUnderline,
+    removeHighlight,
+    removeUnderline,
+    setFontSize,
+    setSpread,
+    updateTheme,
+    extractText,
+  };
+}
