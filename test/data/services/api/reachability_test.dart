@@ -173,6 +173,38 @@ void main() {
       await reachability.dispose();
     });
 
+    // The shape connectivity_plus actually fails in, which the handler above
+    // cannot see: the platform builds its own broadcast controller, opens the
+    // D-Bus client from that controller's `onListen`, and discards the future
+    // it rethrows into. The error then belongs to the zone the controller was
+    // built in and reaches no subscriber — so the radio is built inside the
+    // guarded zone, exactly as `overPlatformRadio` builds the real one.
+    test('a radio that fails outside its own stream is not a crash', () async {
+      late StreamController<bool> radio;
+
+      final reachability = NodeReachability.overRadio(() {
+        radio = StreamController<bool>.broadcast(
+          onListen: () async =>
+              throw const SocketException('there is no system bus'),
+        );
+
+        return radio.stream;
+      });
+
+      await pumpEventQueue();
+
+      expect(reachability.isReachable, isTrue);
+
+      // And it goes on listening: the platform may answer the next one.
+      radio.add(false);
+      await pumpEventQueue();
+
+      expect(reachability.isReachable, isFalse);
+
+      await radio.close();
+      await reachability.dispose();
+    });
+
     test('says nothing once it has been disposed of', () async {
       final reachability = NodeReachability();
 

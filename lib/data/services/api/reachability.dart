@@ -37,6 +37,13 @@ import '../../../utils/logging.dart';
 
 final _log = loggerFor('data/api');
 
+/// What a radio this device cannot read is worth: a line in the log.
+void _radioFailure(Object error, StackTrace stackTrace) => _log.fine(
+  'the platform radio cannot be read; the calls remain the evidence',
+  error,
+  stackTrace,
+);
+
 /// Whether the node this app is dialling can be reached.
 final class NodeReachability {
   /// The state fed by calls, and hinted at by [radio] where one is given.
@@ -47,20 +54,35 @@ final class NodeReachability {
   /// hand it a controller.
   ///
   /// A radio that fails is not a node that failed, so the error is logged and
-  /// the conclusion is left where it was — the calls go on being the evidence,
-  /// which is what this class says they are. It is handled rather than left to
-  /// the zone because the platform's reporting is genuinely absent on hosts
-  /// this app runs on: `connectivity_plus` reaches NetworkManager over the
-  /// system D-Bus, and a Linux container without one answers the subscription
-  /// with a `SocketException` — an unhandled crash report, today, for a signal
-  /// this class is documented not to trust.
+  /// the conclusion is left where it was: the calls go on being the evidence,
+  /// which is what this class says they are.
   NodeReachability({Stream<bool>? radio}) {
-    _radio = radio?.listen(_onRadio, onError: _onRadioFailure);
+    _radio = radio?.listen(_onRadio, onError: _radioFailure);
   }
+
+  /// The state over a radio [build] returns, built where its failures are
+  /// caught.
+  ///
+  /// The zone is not belt-and-braces around the `onError` above, and the two
+  /// catch different things. A platform that reports a failure *through* its
+  /// stream is handled by the handler; `connectivity_plus` does not. Its Linux
+  /// implementation opens a NetworkManager client from the `onListen` of its
+  /// own broadcast controller, in an `async` callback whose future that
+  /// controller discards, and rethrows into it — so a host with no system
+  /// D-Bus, which a container is, produces an unhandled error belonging to the
+  /// zone the *controller* was built in, which no subscriber can catch.
+  ///
+  /// That controller is built lazily, on the first read of
+  /// `onConnectivityChanged`. So [build] is called here rather than passed in
+  /// as a stream: building the radio and subscribing to it in the same guarded
+  /// zone is what puts the controller's zone within reach, and a stream handed
+  /// over ready-made would already belong to somebody else's.
+  factory NodeReachability.overRadio(Stream<bool> Function() build) =>
+      runZonedGuarded(() => NodeReachability(radio: build()), _radioFailure)!;
 
   /// The state over the platform's own connectivity reporting.
   factory NodeReachability.overPlatformRadio() =>
-      NodeReachability(radio: platformRadio());
+      NodeReachability.overRadio(platformRadio);
 
   /// Whether this device has any network interface up.
   ///
@@ -131,12 +153,6 @@ final class NodeReachability {
     await _changes.close();
     await _hints.close();
   }
-
-  void _onRadioFailure(Object error, StackTrace stackTrace) => _log.fine(
-    'the platform radio cannot be read; the calls remain the evidence',
-    error,
-    stackTrace,
-  );
 
   void _onRadio(bool present) {
     if (!present) {

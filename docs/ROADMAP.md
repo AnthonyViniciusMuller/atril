@@ -2310,10 +2310,11 @@ merged in order, which is why each fix names the section it belongs to and touch
 - [x] `fix: survive a radio the platform will not answer` — `NodeReachability` subscribed to
       `connectivity_plus` with no `onError`. The plugin reaches NetworkManager over the **system**
       D-Bus, which a Linux container does not have, so every launch there threw an unhandled
-      `SocketException` out of the subscription — a crash report for the one signal this class is
-      documented not to draw a conclusion from. The failure is logged and the conclusion is left
-      where it was: the calls go on being the evidence, and the subscription survives to hear
-      whatever the platform says next.
+      `SocketException` — a crash report for the one signal this class is documented not to draw
+      a conclusion from. The failure is logged and the conclusion is left where it was: the calls
+      go on being the evidence, and the subscription survives to hear whatever the platform says
+      next. ~~Which is the whole of it.~~ The handler was necessary and not sufficient — the
+      commit below is the rest, and this entry claimed a crash was fixed that was still there.
 - [x] `fix: bind again when the node has forgotten this device` — `signIn` presents the
       identifier the device already writes under, because omitting it is the mistake the design
       is most vulnerable to. The node answers `NOT_FOUND` / `device_not_found` for an identifier
@@ -2328,6 +2329,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       heard of. **Only for that code, and only once.** `device_revoked` is a device the node still
       holds and the reader deliberately unbound, so binding it again would be this client undoing
       their decision; a second `device_not_found` is a refusal.
+- [x] `fix: build the radio where its failures can be caught` — `9c9d939` added an `onError` to
+      the subscription and the `SocketException` went on being an unhandled crash on every Linux
+      launch, because **the platform does not report this failure through its stream**.
+      `connectivity_plus` opens its NetworkManager client from the `onListen` of its own broadcast
+      controller, in an `async` callback whose future that controller discards, and rethrows into
+      it: the error belongs to the zone the *controller* was built in, and no subscriber can see
+      it. That controller is built lazily, on the first read of `onConnectivityChanged` — so the
+      radio is now built and subscribed to inside one `runZonedGuarded`, and `overRadio` takes a
+      *function* rather than a stream for exactly that reason: a stream handed over ready-made
+      already belongs to somebody else's zone. The `onError` stays, because the two catch
+      different things and a platform that does report through its stream is still handled. The
+      test builds its controller inside the same factory, which is the only way to reproduce the
+      shape; it was checked to fail without the zone, and the crash was checked to be gone from a
+      real `make run-linux`.
 
 ## Open questions
 
