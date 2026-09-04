@@ -23,6 +23,7 @@ import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
 import 'contents_sheet.dart';
+import 'over_the_page.dart';
 import 'reader_settings_sheet.dart';
 
 /// The chrome's key, so that a test can name it.
@@ -45,6 +46,13 @@ const Duration readerChromeFade = Duration(milliseconds: 150);
 /// pixels. What changes here is the chrome, so the chrome is what subscribes —
 /// once for whether it is showing, and again inside the row that follows the
 /// page.
+///
+/// The bar and the progress used to be built once and handed to every rebuild,
+/// on the grounds that showing and hiding the chrome does not change what is in
+/// it. It does now: whether each row takes a click away from the book is
+/// exactly what showing and hiding changes, so the two rows are built inside
+/// the listener. What stays outside it is the page, which is the rebuild that
+/// ever mattered.
 class ReaderChrome extends StatelessWidget {
   /// The chrome over the page [model] is showing.
   const ReaderChrome({required this.model, super.key});
@@ -55,23 +63,35 @@ class ReaderChrome extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: model,
-    builder: (BuildContext context, Widget? chrome) => IgnorePointer(
+    builder: (BuildContext context, Widget? _) => IgnorePointer(
       ignoring: !model.chromeVisible,
       child: AnimatedOpacity(
         key: readerChromeKey,
         opacity: model.chromeVisible ? 1 : 0,
         duration: readerChromeFade,
-        child: chrome,
+        // **The two rows are wrapped and the space between them is not.**
+        // `OverThePage` stops a click reaching the engine underneath, which is
+        // what makes these controls work at all on the web — and it would do
+        // the same to the whole height if the column were wrapped, so a tap
+        // anywhere on the book would be swallowed by a `Spacer`.
+        //
+        // They stop intercepting when the chrome is out of the way, for the
+        // same reason: what is faded out is not there, and a bar that kept the
+        // click would leave a strip across the page that never brings it back.
+        child: Column(
+          children: <Widget>[
+            OverThePage(
+              intercepting: model.chromeVisible,
+              child: _ReaderBar(model: model),
+            ),
+            const Spacer(),
+            OverThePage(
+              intercepting: model.chromeVisible,
+              child: _ReaderProgress(model: model),
+            ),
+          ],
+        ),
       ),
-    ),
-    // Built once and handed to every rebuild: showing and hiding the chrome
-    // does not change what is in it.
-    child: Column(
-      children: <Widget>[
-        _ReaderBar(model: model),
-        const Spacer(),
-        _ReaderProgress(model: model),
-      ],
     ),
   );
 }

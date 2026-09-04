@@ -16,6 +16,7 @@ import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
 import 'note_dialog.dart';
+import 'over_the_page.dart';
 
 /// The key of the bar a selection raises, so that a test can name it.
 const Key readerSelectionKey = Key('reader selection');
@@ -50,6 +51,9 @@ class SelectionActions extends StatelessWidget {
     final EpubSelection? selection = model.selection;
 
     if (selection == null) {
+      // Nothing is drawn, so nothing is taken from the book: `OverThePage`
+      // below wraps the bar and not this, and an interceptor over an empty
+      // widget would be a strip of dead page.
       return const SizedBox.shrink();
     }
 
@@ -61,38 +65,43 @@ class SelectionActions extends StatelessWidget {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 96, left: 16, right: 16),
-          child: Material(
-            key: readerSelectionKey,
-            color: theme.colorScheme.surfaceContainerHigh,
-            elevation: 6,
-            borderRadius: BorderRadius.circular(28),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  TextButton.icon(
-                    onPressed: () => _mark(
-                      context,
-                      model,
-                      () => model.highlight.execute(),
-                      model.highlight,
-                      l10n.readerHighlighted,
+          // The `Material` and not the `Align` above it: the align fills the
+          // screen, and an interceptor that size would take every tap on the
+          // book with it.
+          child: OverThePage(
+            child: Material(
+              key: readerSelectionKey,
+              color: theme.colorScheme.surfaceContainerHigh,
+              elevation: 6,
+              borderRadius: BorderRadius.circular(28),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextButton.icon(
+                      onPressed: () => _mark(
+                        context,
+                        model,
+                        () => model.highlight.execute(),
+                        model.highlight,
+                        l10n.readerHighlighted,
+                      ),
+                      icon: const Icon(Icons.brush_outlined),
+                      label: Text(l10n.readerHighlight),
                     ),
-                    icon: const Icon(Icons.brush_outlined),
-                    label: Text(l10n.readerHighlight),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _writeNote(context, model),
-                    icon: const Icon(Icons.edit_note),
-                    label: Text(l10n.readerNote),
-                  ),
-                  IconButton(
-                    onPressed: model.dismissSelection,
-                    icon: const Icon(Icons.close),
-                    tooltip: l10n.readerSelectionDismiss,
-                  ),
-                ],
+                    TextButton.icon(
+                      onPressed: () => _writeNote(context, model),
+                      icon: const Icon(Icons.edit_note),
+                      label: Text(l10n.readerNote),
+                    ),
+                    IconButton(
+                      onPressed: model.dismissSelection,
+                      icon: const Icon(Icons.close),
+                      tooltip: l10n.readerSelectionDismiss,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -127,12 +136,24 @@ Future<void> _mark(
 
   switch (command.result) {
     case Ok<Annotation>(:final Annotation value):
+      // **The undo travels in the content, wrapped.** A snackbar is drawn over
+      // the page like everything else here, so its action takes no click on the
+      // web — and `SnackBar.action` is typed as a `SnackBarAction`, which
+      // leaves nowhere to put the interceptor. Moving it into the content is
+      // what lets the whole bar be wrapped at once, and a reader who cannot
+      // press *undo* has been offered nothing.
       messenger.showSnackBar(
         SnackBar(
-          content: Text(announcement),
-          action: SnackBarAction(
-            label: l10n.readerMarkUndo,
-            onPressed: () => model.removeMark.execute(value.id),
+          content: OverThePage(
+            child: Row(
+              children: <Widget>[
+                Expanded(child: Text(announcement)),
+                SnackBarAction(
+                  label: l10n.readerMarkUndo,
+                  onPressed: () => model.removeMark.execute(value.id),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -153,7 +174,9 @@ Future<void> _mark(
 Future<void> _writeNote(BuildContext context, ReaderViewModel model) async {
   final String? written = await showDialog<String>(
     context: context,
-    builder: (BuildContext context) => const NoteDialog(),
+    // Wrapped like the sheets: a dialog over the page takes no click either,
+    // and this one has a text field the reader has to be able to reach.
+    builder: (BuildContext context) => const OverThePage(child: NoteDialog()),
   );
 
   if (written == null || !context.mounted) {

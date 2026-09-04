@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../../data/services/epub/epub_host.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
+import 'over_the_page.dart';
 
 /// Opens the table of contents.
 ///
@@ -21,7 +22,14 @@ Future<void> showContents(BuildContext context, ReaderViewModel model) async {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (BuildContext context) => _ContentsSheet(model: model),
+    // Wrapped, or nothing in it can be pressed on the web: a sheet over a
+    // platform view takes no click at all, and one that could be neither used
+    // nor dismissed is worse than one that never opened. The drag handle is
+    // inside this, which is what still closes it — the route's barrier is the
+    // route's own and stays out of reach, so tapping the page behind the sheet
+    // does not dismiss it there.
+    builder: (BuildContext context) =>
+        OverThePage(child: _ContentsSheet(model: model)),
   );
 
   if (href != null) {

@@ -2209,6 +2209,42 @@ merged in order, which is why each fix names the section it belongs to and touch
       traversal. **Android was not run**: the emulator demands 7.37 GB free and the machine had
       6.0, so the four native targets rest on the web measurement and on the package's shared
       code path rather than on a run of their own. Also: `flutter analyze`, and 1,232 tests
+- [x] `fix: let the reader touch its own chrome on the web` — the tap fix above landed and the
+      reader still could not be clicked, and the reason was the other half of the same sentence.
+      **A platform view is a hole in Flutter's own surface.** The page is a webview, and on the
+      web the browser hands a pointer event to the `<iframe>` that is really there rather than to
+      the canvas Flutter paints above it — so *everything* the reader draws over the page was
+      dead on that target: the bar, the progress and its chevrons, the actions on a selection,
+      both sheets, the note dialog and the undo. Measured in a browser build of that arrangement:
+      a button over the page counted **zero** clicks. Worse than dead, for the sheets — one
+      opened over the page took no click on its own barrier and Escape never reached Flutter, so
+      a reader who opened the contents could neither use it nor get rid of it, which is exactly
+      what *cannot click* looked like from the outside.
+      **`pointer_interceptor` is the answer and it is the Flutter team's own**, from
+      `flutter/packages`: it puts a real DOM element over the region so the browser has something
+      of Flutter's to deliver the event to. It declares an implementation for **web and iOS
+      only** — the two platforms where a platform view swallows what is over it — and resolves to
+      a widget that returns its child on the other four, so Android, Linux, macOS and Windows
+      carry three transitive packages and none of the behaviour. The pubspec argues the
+      alternative that was refused: laying the chrome out beside the page rather than over it is
+      a different reader, not the same one fixed.
+      **It is a named widget and not a call at six sites.** `OverThePage` says once why the
+      wrapper is there, and the two things easy to get wrong are the reason it needs a name.
+      *What is wrapped is the row and never the column*: an interceptor over the chrome's full
+      height would take every tap on the book with it, which is the same bug facing the other
+      way, so the bar and the progress are wrapped and the `Spacer` between them is not. *And it
+      lets go when the chrome does*: `intercepting` follows `chromeVisible`, because a bar that
+      kept the click after fading out would leave two strips across the page a reader could tap
+      forever without the chrome coming back. The same care picks the `Material` and not the
+      `Align` in the selection bar. The refusal and the spinner are wrapped **whole**, and that
+      is the one place it is right — both are opaque over the page on purpose and are meant to
+      take every tap. The undo travels **inside** the snackbar's content, because
+      `SnackBar.action` is typed as a `SnackBarAction` and leaves nowhere to put a wrapper.
+      **Verified in a browser, one build before and after**: bar, chevron, sheet and dialog each
+      counted 0 clicks unwrapped and 1 wrapped, and the dialog could only be reached at all
+      because the wrapped sheet could finally be dismissed. A widget test pins the two rows, that
+      there are exactly two of them, and that both stop intercepting when the chrome goes. Also:
+      `flutter analyze`, and 1,233 tests
 
 ## Open questions
 

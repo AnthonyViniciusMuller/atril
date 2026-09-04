@@ -22,6 +22,7 @@ import '../../../utils/errors.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
+import 'over_the_page.dart';
 
 /// The page, with whatever is standing in front of it.
 ///
@@ -101,20 +102,25 @@ class _ReaderOpening extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
 
-    return ColoredBox(
-      color: Colors.black,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              l10n.readerOpening,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: Colors.white70),
-            ),
-          ],
+    // Wrapped for the reason the refusal below is: it is opaque over the page
+    // on purpose, so the tap that lands on it is this layer's and not the
+    // book's.
+    return OverThePage(
+      child: ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                l10n.readerOpening,
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: Colors.white70),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -204,34 +210,40 @@ class _ReaderRefusal extends StatelessWidget {
     // Opaque, like the spinner: it covers whatever the engine left on the page
     // and takes the tap that would otherwise hide the chrome — and with it the
     // way back — under a message that says the book is not coming.
-    return ColoredBox(
-      color: Colors.black,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: Colors.white70),
-                ),
-                if (action != null) ...<Widget>[
-                  const SizedBox(height: 20),
-                  action,
+    //
+    // Wrapped whole, and this is the one place that is right: what is under it
+    // is a book that did not open, the layer is meant to take every tap, and
+    // the buttons in the middle of it are the only way on.
+    return OverThePage(
+      child: ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: Colors.white70),
+                  ),
+                  if (action != null) ...<Widget>[
+                    const SizedBox(height: 20),
+                    action,
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

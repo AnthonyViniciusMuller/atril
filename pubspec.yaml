@@ -301,6 +301,30 @@ dependencies:
   # `flutter_inappwebview` like the other three native targets.
   webview_cef: ^0.6.2
 
+  # What makes the reader's own chrome clickable on top of the engine.
+  #
+  # **A platform view is a hole in Flutter's own surface**, and everything the
+  # reader draws over the page — the bar, the progress, the actions on a
+  # selection, the contents and settings sheets, the note dialog — is drawn over
+  # one. On the web the browser hands a pointer event to the `<iframe>` that is
+  # actually there rather than to the canvas painted above it, so those controls
+  # receive nothing at all. Measured, not inferred: in a browser build of that
+  # arrangement a button over the page counted zero clicks, the same button
+  # wrapped in `PointerInterceptor` counted every one, and a modal sheet opened
+  # over the page could neither be used nor dismissed.
+  #
+  # It is the Flutter team's own package, from `flutter/packages`, and it
+  # declares an implementation for **web and iOS only** — the two platforms
+  # where a platform view swallows what is over it. On Android, Linux, macOS and
+  # Windows it resolves to a widget that returns its child, so five of the six
+  # targets carry the three transitive packages and none of the behaviour.
+  #
+  # The alternative was laying the chrome out beside the page instead of over
+  # it, which is not the same reader: the bar floats over the book and clears
+  # itself on a tap, and a column of three fixed rows would be a different
+  # design chosen to work around a hit test.
+  pointer_interceptor: ^0.10.1+2
+
   # How a file this app produced leaves it on Android and iOS, and the reason
   # this is a dependency rather than one more call to `file_selector`.
   #

@@ -23,6 +23,7 @@ import 'package:atril/ui/reader/widgets/reader_screen.dart';
 import 'package:atril/ui/reader/widgets/selection_actions.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:atril/utils/result.dart';
+import 'package:atril/ui/reader/widgets/over_the_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -390,6 +391,53 @@ void main() {
         expect(_chromeOpacity(tester), 1);
       },
     );
+
+    testWidgets('the chrome takes its own clicks back from the page', (
+      WidgetTester tester,
+    ) async {
+      // **The reader's chrome is drawn over a platform view**, and on the web
+      // the browser hands a click to the `<iframe>` that is really there rather
+      // than to the canvas above it — so every control here was dead on that
+      // target: the bar, the progress, the sheets, the dialog. `OverThePage` is
+      // what puts something of Flutter's in the way, and this asserts it is
+      // where it has to be.
+      //
+      // **The two rows are wrapped and the space between them is not.** An
+      // interceptor over the whole column would take the tap on the book with
+      // it, which is the same bug facing the other way.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OverThePage), findsWidgets);
+
+      final Finder column = find.descendant(
+        of: find.byKey(readerChromeKey),
+        matching: find.byType(Column),
+      );
+      expect(
+        find.descendant(of: column, matching: find.byType(OverThePage)),
+        findsNWidgets(2),
+      );
+
+      // And they let go when the chrome is out of the way, or the two strips
+      // they cover would be places a reader could tap forever.
+      for (final OverThePage over in tester.widgetList<OverThePage>(
+        find.descendant(of: column, matching: find.byType(OverThePage)),
+      )) {
+        expect(over.intercepting, isTrue);
+      }
+
+      host.onPage(EpubPageEvent.tapped);
+      await tester.pumpAndSettle();
+
+      for (final OverThePage over in tester.widgetList<OverThePage>(
+        find.descendant(of: column, matching: find.byType(OverThePage)),
+      )) {
+        expect(over.intercepting, isFalse);
+      }
+    });
 
     testWidgets('the keyboard survives a page that takes focus', (
       WidgetTester tester,

@@ -23,6 +23,7 @@ import '../../../data/services/epub/epub_host.dart';
 import '../../../data/services/storage/reader_settings_store.dart';
 import '../../core/localization/localization.dart';
 import '../view_model/reader_view_model.dart';
+import 'over_the_page.dart';
 
 /// Opens the appearance sheet over the page.
 Future<void> showReaderSettings(BuildContext context, ReaderViewModel model) =>
@@ -30,7 +31,9 @@ Future<void> showReaderSettings(BuildContext context, ReaderViewModel model) =>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (BuildContext context) => _ReaderSettingsSheet(model: model),
+      // Wrapped for the reason `contents_sheet.dart` gives at the same line.
+      builder: (BuildContext context) =>
+          OverThePage(child: _ReaderSettingsSheet(model: model)),
     );
 
 class _ReaderSettingsSheet extends StatelessWidget {
