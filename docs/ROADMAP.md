@@ -2258,6 +2258,19 @@ merged in order, which is why each fix names the section it belongs to and touch
       it, and the book stays on screen. One list to check rather than two, which is worth more
       than it sounds: no compiler catches a wrong name on either side, and
       `locator_round_trip_test.dart` checks every one of them against the glue the bundle holds.
+- [x] `fix: serve the bridge shim in the page as well as injecting it` — the shim that gives the
+      pinned glue its `window.flutter_inappwebview.callHandler` was injected at load start and
+      nowhere else, and on Linux that is a dependency on a callback that may not arrive:
+      `webview_cef` delivers `onLoadStart` — the callback it injects load-start user scripts
+      from — off the platform thread, which Flutter warns about and which may drop the message.
+      A dropped `onLoadStart` is a shim that never exists, so the glue's `callHandler` is
+      undefined, `readyToLoad` is never sent, and the book never loads at all. `EngineServer`
+      now inlines the same script into the host page it already serves, so it is there as soon
+      as the document parses and before any script under it runs. **Both paths are kept and the
+      script is idempotent** — it returns early when `window.flutter_inappwebview` is already
+      set — so the injection is a no-op when the served copy got there first. The shim and its
+      channel name move to `engine_server.dart` with the serving, since that is now where they
+      are used, and the two tests that named them follow the move.
 
 ## Open questions
 

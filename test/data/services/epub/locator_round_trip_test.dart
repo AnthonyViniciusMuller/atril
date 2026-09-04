@@ -34,8 +34,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:atril/data/services/epub/desktop_epub_host.dart';
 import 'package:atril/data/services/epub/engine.dart';
+import 'package:atril/data/services/epub/engine_server.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/data/services/epub/webview_epub_host.dart';
 import 'package:flutter_epub_viewer/flutter_epub_viewer.dart' as fev;

@@ -49,47 +49,6 @@ final _log = loggerFor('data/epub');
 /// The operation a failure in this file reports under.
 const String opDesktopEpubHost = 'epub/desktop host';
 
-/// The name the glue's messages arrive under.
-///
-/// `webview_cef` installs a channel as a global function of this name, so it
-/// has to be something no page would define for itself. The glue never sees it:
-/// what the glue calls is `window.flutter_inappwebview.callHandler`, and the
-/// shim below is what turns one into the other.
-const String epubBridgeChannel = 'AtrilEpubBridge';
-
-/// The shim that makes the pinned glue work unchanged under CEF.
-///
-/// `epubView.js` talks to Flutter through `window.flutter_inappwebview
-/// .callHandler(name, ...args)` and waits for a `flutterInAppWebViewPlatformReady`
-/// event before it announces itself. Neither is a webview feature — they are
-/// this one package's convention — so any host can provide them, and the
-/// browser host in `flutter_epub_viewer` provides exactly the same two things
-/// over `dart:js_interop`.
-///
-/// It is injected at load start so that it exists before the glue runs. The
-/// channel function it calls is installed separately and slightly later, which
-/// is safe: the reference is resolved inside the call and the first call cannot
-/// happen until the readiness event is dispatched, which this file does last.
-const String epubBridgeShim =
-    '''
-(function () {
-  if (window.flutter_inappwebview) { return; }
-  window.flutter_inappwebview = {
-    callHandler: function (name) {
-      var args = Array.prototype.slice.call(arguments, 1);
-      try {
-        $epubBridgeChannel(JSON.stringify({ handler: name, args: args }));
-      } catch (e) {
-        console.log('the epub bridge is not installed yet: ' + e);
-      }
-      // The glue never reads this, and returning a promise keeps it honest
-      // about the shape flutter_inappwebview documents.
-      return Promise.resolve(null);
-    }
-  };
-})();
-''';
-
 /// One message from the glue, decoded, or `null` where it was not one.
 ///
 /// **Everything crossing this bridge is a string somebody else's JavaScript

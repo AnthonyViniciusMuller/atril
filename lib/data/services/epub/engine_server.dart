@@ -25,6 +25,7 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -165,6 +166,12 @@ final class EngineServer {
 
       try {
         final ByteData bytes = await loadEngineAsset(key, bundle: bundle);
+        final Uint8List body = key == EpubEngine.hostPage
+            ? withBridgeShim(bytes)
+            : bytes.buffer.asUint8List(
+                bytes.offsetInBytes,
+                bytes.lengthInBytes,
+              );
 
         request.response
           ..statusCode = HttpStatus.ok
@@ -181,9 +188,7 @@ final class EngineServer {
           // time, so the next run of the app is a different origin and nothing
           // cached here is reachable from it.
           ..headers.set(HttpHeaders.cacheControlHeader, engineCacheControl)
-          ..add(
-            bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
-          );
+          ..add(body);
       } on Object catch (error) {
         _log.warning('the engine asset $key could not be read', error);
         request.response.statusCode = HttpStatus.internalServerError;
@@ -241,4 +246,85 @@ ContentType _typeOf(String path) {
   }
 
   return ContentType.binary;
+}
+
+/// The name the glue's messages arrive under.
+///
+/// `webview_cef` installs a channel as a global function of this name, so it
+/// has to be something no page would define for itself. The glue never sees it:
+/// what the glue calls is `window.flutter_inappwebview.callHandler`, and the
+/// shim below is what turns one into the other.
+const String epubBridgeChannel = 'AtrilEpubBridge';
+
+/// The shim that makes the pinned glue work unchanged under CEF.
+///
+/// `epubView.js` talks to Flutter through `window.flutter_inappwebview
+/// .callHandler(name, ...args)` and waits for a `flutterInAppWebViewPlatformReady`
+/// event before it announces itself. Neither is a webview feature — they are
+/// this one package's convention — so any host can provide them, and the
+/// browser host in `flutter_epub_viewer` provides exactly the same two things
+/// over `dart:js_interop`.
+///
+/// **It is served inside the page, and injected at load start as well.** The
+/// injection alone was not enough, and the reason is worth writing down:
+/// `webview_cef` delivers `onLoadStart` — the callback it injects load-start
+/// user scripts from — native-to-Flutter off the platform thread, which Flutter
+/// warns about and which may drop the message. A dropped `onLoadStart` is a
+/// shim that never exists, so the glue's `callHandler` is undefined, so
+/// `readyToLoad` is never sent and the book never loads. Serving it in the
+/// document removes that dependency: the shim is there as soon as the page
+/// parses, before any script under it runs.
+///
+/// It is idempotent — it returns early when `window.flutter_inappwebview` is
+/// already set — so the load-start injection is kept and is simply a no-op when
+/// the served copy got there first.
+///
+/// The channel function it calls is installed separately and slightly later,
+/// which is safe: the reference is resolved inside the call and the first call
+/// cannot happen until the readiness event is dispatched, which the host does
+/// last.
+const String epubBridgeShim =
+    '''
+(function () {
+  if (window.flutter_inappwebview) { return; }
+  window.flutter_inappwebview = {
+    callHandler: function (name) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      try {
+        $epubBridgeChannel(JSON.stringify({ handler: name, args: args }));
+      } catch (e) {
+        console.log('the epub bridge is not installed yet: ' + e);
+      }
+      // The glue never reads this, and returning a promise keeps it honest
+      // about the shape flutter_inappwebview documents.
+      return Promise.resolve(null);
+    }
+  };
+})();
+''';
+
+/// [page] with the bridge shim inlined ahead of everything it loads.
+///
+/// The shim goes immediately after `<head>`, which is before the script tags
+/// that follow it, so `window.flutter_inappwebview` exists by the time the glue
+/// runs. A page with no `<head>` is served unchanged rather than guessed at:
+/// the host page is pinned by digest, so that case is a bundle that is not the
+/// engine, and the load will fail loudly on its own.
+Uint8List withBridgeShim(ByteData page) {
+  final String html = utf8.decode(
+    page.buffer.asUint8List(page.offsetInBytes, page.lengthInBytes),
+  );
+  final int head = html.indexOf('<head>');
+
+  if (head < 0) {
+    return page.buffer.asUint8List(page.offsetInBytes, page.lengthInBytes);
+  }
+
+  final int at = head + '<head>'.length;
+
+  return Uint8List.fromList(
+    utf8.encode(
+      '${html.substring(0, at)}\n<script>$epubBridgeShim</script>${html.substring(at)}',
+    ),
+  );
 }

@@ -73,8 +73,16 @@ void main() {
       // The claim the whole phase rests on, at the one point in the chain where
       // this project's own code touches the file. A server that transcoded, or
       // that served a stale copy, would be a second engine.
+      //
+      // The host page is the one exception and it is checked below rather than
+      // waived: what is added to it is this application's bridge shim and the
+      // engine underneath is still pinned bytes.
       for (final MapEntry<String, String> pinned
           in EpubEngine.assetDigests.entries) {
+        if (pinned.key == EpubEngine.hostPage) {
+          continue;
+        }
+
         final String path = pinned.key.substring(
           EpubEngine.assetRoot.length + 1,
         );
@@ -92,6 +100,43 @@ void main() {
           reason: '$path was not served as it is pinned',
         );
       }
+    });
+
+    test('serves the host page as the pinned bytes plus the shim', () async {
+      // The bridge shim has to be in the document rather than only injected at
+      // load start, because `webview_cef` delivers the callback it injects from
+      // off the platform thread and Flutter warns that such a message may be
+      // dropped. A dropped injection is a shim that never exists, a
+      // `callHandler` that is undefined, a `readyToLoad` that is never sent and
+      // a book that never opens.
+      //
+      // What is checked here is that adding it did not become a licence to
+      // rewrite the page: take the one script back out and what is left has to
+      // hash to the pin, exactly.
+      final HttpClientResponse page = await get(
+        Uri.parse(server.hostPageUrl).path,
+      );
+      final String html = utf8.decode(<int>[
+        for (final List<int> chunk in await page.toList()) ...chunk,
+      ]);
+
+      expect(html, contains('window.flutter_inappwebview'));
+      expect(
+        html.indexOf('window.flutter_inappwebview'),
+        lessThan(html.indexOf('epubView.js')),
+        reason: 'the shim has to be in place before the glue runs',
+      );
+
+      final String stripped = html.replaceFirst(
+        '\n<script>$epubBridgeShim</script>',
+        '',
+      );
+
+      expect(
+        sha256.convert(utf8.encode(stripped)).toString(),
+        EpubEngine.assetDigests[EpubEngine.hostPage],
+        reason: 'the page under the shim is no longer the pinned one',
+      );
     });
 
     test('tells a browser what each file is', () async {

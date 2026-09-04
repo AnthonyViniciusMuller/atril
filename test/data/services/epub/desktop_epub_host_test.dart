@@ -13,6 +13,7 @@ library;
 
 import 'package:atril/data/services/epub/desktop_epub_host.dart';
 import 'package:atril/data/services/epub/engine.dart';
+import 'package:atril/data/services/epub/engine_server.dart';
 import 'package:atril/data/services/epub/epub_host.dart';
 import 'package:atril/utils/errors.dart';
 import 'package:flutter/material.dart';
