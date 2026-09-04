@@ -2373,9 +2373,10 @@ merged in order, which is why each fix names the section it belongs to and touch
       book** — measured at 121s and 8326 locations for the 1182-section work this was found on,
       by running the pinned engine against the reader's own file. Until it resolves,
       `locationFromCfi` answers -1, `percentageFromLocation` returns 0 for want of a total, and
-      the glue reports that 0 in the same field it reports a real one. Both hosts wrote it down.
-      Nothing ever revised it: the index finishing raises no event, so the row keeps the 0 until
-      the next page turn, and replicates it meanwhile to every other device the reader owns.
+      the glue reports that 0 in the same field it reports a real one. Both hosts wrote it down,
+      and the row replicated that 0 to every other device the reader owns. **This entry claimed
+      the index finishing raises no event. It does — `locationLoaded` — and the entry below is
+      what listens for it.**
       `EpubPosition.percent` is nullable now and `epubPercentOf` is the one rule both hosts read
       it through — the column, `ReadingPlace` and the shelf's card were already built for an
       absence, and only the port fabricated the zero. **The engine reports the same 0 for the
@@ -2385,6 +2386,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       line's space while there is no number, so it does not jump under a thumb when the index
       lands, and the bar stays empty rather than indeterminate — a bar sweeping over a book the
       reader is already reading reports a page still loading
+- [x] `fix: ask again when the engine can finally say where the reader is` — the entry above
+      stopped the app writing down a percentage it did not have and left it with no way to learn
+      one: the bar stayed empty, which is what *still not working* meant. **The glue announces its
+      location index on `locationLoaded`, and nothing in this app listened.** Measured by driving
+      the pinned `swipe.html` and `epubView.js` through the sequence the Linux host uses — the
+      readiness event, `readyToLoad`, `loadBook` with that host's own options — against the
+      reader's own file: `readyToLoad`, `chapters`, `rendered`, `displayed`, one `relocated`
+      carrying `progress: 0`, then nothing for 135 seconds, then 8325 locations and
+      `locationLoaded`. **One `relocated`, for the whole two minutes.** The page does not move when
+      the index lands, so no further report is coming on its own, and a reader who stopped to read
+      a page would wait for a number that arrives only when they next turn one. Both hosts answer
+      the message by asking where the reader is again — `getCurrentLocation` on Linux, the
+      controller's own on the other five — and map the answer through `epubPositionOf`, because the
+      edges and the percentage in a report belong to one reading. A failure is a log line: the book
+      is on screen and what is lost is a number that was already missing. The round-trip test pins
+      the message and the reply against the pinned glue, beside the function names it already
+      pinned — the digest stops the engine moving, and this is what notices if a permitted upgrade
+      renames the one signal the percentage now depends on
 
 ## Open questions
 

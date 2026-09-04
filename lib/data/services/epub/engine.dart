@@ -222,6 +222,15 @@ abstract final class EpubGlue {
   /// The colours and the custom rules the page is styled with.
   static const String updateTheme = 'updateTheme';
 
+  /// Where the reader is now, asked rather than waited for.
+  ///
+  /// The engine reports a position when one changes, and the percentage in
+  /// that report is derived from a location index that does not exist for the
+  /// first minutes of a large book. `locationLoaded` says when it does, and
+  /// the answer to that is to ask again — the page has not moved, but what the
+  /// engine can say about it has.
+  static const String currentLocation = 'getCurrentLocation';
+
   /// The text a CFI range covers.
   ///
   /// It is the glue's internal helper and not its public `getTextFromCfi`,
@@ -244,5 +253,6 @@ abstract final class EpubGlue {
     setSpread,
     updateTheme,
     extractText,
+    currentLocation,
   };
 }

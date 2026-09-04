@@ -114,8 +114,11 @@ final class EpubPosition {
 /// computed from it is exactly 0, and the engine reports that 0 as confidently
 /// as any other number. A device that wrote it down would be claiming a
 /// reader had barely started a book they may be halfway through — and the
-/// claim replicates, outlives the session, and is never revised, because the
-/// index finishing raises no event that would prompt a second look.
+/// claim replicates and outlives the session.
+///
+/// What revises it is the engine saying the index is there: the hosts answer
+/// `locationLoaded` by asking where the reader is again, because the page has
+/// not moved and no further report is coming on its own.
 ///
 /// The other thing 0 means is the very first location of the book, and the
 /// report is identical: the payload the glue sends carries the percentage

@@ -304,5 +304,28 @@ void main() {
       expect(epubBridgeShim, contains('window.flutter_inappwebview'));
       expect(epubBridgeShim, contains('callHandler'));
     });
+
+    test('the glue still says when its location index is there', () async {
+      // The percentage beside a reading position comes from that index, and
+      // building it means parsing every section of the book — over two minutes
+      // on a work of a thousand of them, measured. Until then every position
+      // the engine reports carries no percentage at all, and the page does not
+      // move when the index lands, so nothing else is coming: both hosts ask
+      // where the reader is again on this message and would otherwise leave a
+      // reader who stopped to read a page looking at a bar that never fills.
+      final String glue = utf8.decode(
+        (await loadEngineAsset(EpubEngine.glue)).buffer.asUint8List(),
+      );
+
+      expect(glue, contains("callHandler('locationLoaded')"));
+
+      // And it is sent from inside the index's own completion, which is what
+      // makes it the answer to *is there one now* rather than to *has the book
+      // opened*.
+      expect(glue, contains('book.locations.generate('));
+
+      // The Linux host spells the reply itself, as it spells every glue name.
+      expect(defined, contains(EpubGlue.currentLocation));
+    });
   });
 }

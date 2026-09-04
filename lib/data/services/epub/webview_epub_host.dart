@@ -408,6 +408,35 @@ final class WebviewEpubHost implements EpubHost {
     _positions.add(epubPositionOf(location));
   }
 
+  /// Asks the engine where the reader is, now that it can say how far in.
+  ///
+  /// **The engine announces its location index and nothing here used to
+  /// listen.** Building that index means parsing every section of the book —
+  /// over two minutes for a work of a thousand of them — and until it exists
+  /// the percentage in every position report is absent. The page does not move
+  /// when the index lands, so no further report is coming: without this the
+  /// reader's progress stays unknown until they happen to turn a page, and a
+  /// reader who stopped to read one is left looking at a bar that never fills.
+  ///
+  /// It re-reads rather than patching the last position, because the two
+  /// numbers in a report belong together: the controller answers with the
+  /// page's edges and its percentage from one reading, exactly as a relocation
+  /// does, and both go through [epubPositionOf].
+  ///
+  /// A failure is a line in the log. The book is on screen, the reader is
+  /// reading it, and what is lost is a number that was already missing.
+  Future<void> _onLocationsReady() async {
+    if (_disposed || _positions.isClosed) {
+      return;
+    }
+
+    try {
+      _onRelocated(await _controller.getCurrentLocation());
+    } on Object catch (error) {
+      _log.warning('the engine would not say where the reader is', error);
+    }
+  }
+
   void _onSelected(fev.EpubTextSelection selection) {
     if (_selections.isClosed) {
       return;
@@ -560,6 +589,7 @@ class _WebviewEpubViewState extends State<_WebviewEpubView> {
           onEpubLoaded: widget.host._onLoaded,
           onChaptersLoaded: widget.host._onChapters,
           onRelocated: widget.host._onRelocated,
+          onLocationLoaded: () => unawaited(widget.host._onLocationsReady()),
           onTextSelected: widget.host._onSelected,
         );
       },
