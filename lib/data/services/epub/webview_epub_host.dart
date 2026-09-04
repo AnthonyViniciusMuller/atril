@@ -460,15 +460,15 @@ final class _Rendering {
 ///
 /// The engine reports progress from 0 to 1 and `progress.percent` is
 /// constrained to 0..100 on both sides of the federation, so the conversion
-/// happens once, here, rather than at each place a percentage is written down.
-/// The clamp is not defensive tidiness: a book whose location index has not
-/// finished generating reports a progress of 0, and one asked about a page
-/// past the end of a short spine has been seen to report slightly over 1.
+/// happens once, in [epubPercentOf], rather than at each place a percentage is
+/// written down. It is the same function the Linux host reads its own bridge
+/// message through, which is what keeps a percentage on this target and a
+/// percentage on that one the same measurement.
 @visibleForTesting
 EpubPosition epubPositionOf(fev.EpubLocation location) => EpubPosition(
   startCfi: location.startCfi,
   endCfi: location.endCfi,
-  percent: (location.progress * 100).clamp(0, 100).toDouble(),
+  percent: epubPercentOf(location.progress),
 );
 
 /// The package's spread for the port's.

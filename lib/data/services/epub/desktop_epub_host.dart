@@ -677,17 +677,14 @@ final class DesktopEpubHost implements EpubHost {
 
     // A progress that is not a number is a page whose location index has not
     // finished generating, reported as `null` or as a string by a glue this
-    // file does not get to choose. Zero is what the engine itself reports in
-    // that state, and it is a page rather than a failure.
-    final Object? progress = raw['progress'];
-
+    // file does not get to choose. Neither is that number nor the zero the
+    // engine reports in the same state a percentage, and `epubPercentOf` is
+    // where the two hosts agree on saying so.
     _positions.add(
       EpubPosition(
         startCfi: start,
         endCfi: end,
-        percent: ((progress is num ? progress : 0) * 100)
-            .clamp(0, 100)
-            .toDouble(),
+        percent: epubPercentOf(raw['progress']),
       ),
     );
   }

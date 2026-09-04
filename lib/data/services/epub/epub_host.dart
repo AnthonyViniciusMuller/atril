@@ -74,7 +74,7 @@ final class EpubPosition {
   const EpubPosition({
     required this.startCfi,
     required this.endCfi,
-    required this.percent,
+    this.percent,
   });
 
   /// The CFI of the first thing on the page.
@@ -87,16 +87,54 @@ final class EpubPosition {
   /// The CFI of the last thing on the page.
   final String endCfi;
 
-  /// How far through the book, 0 to 100.
+  /// How far through the book, 0 to 100, or `null` where the engine has not
+  /// said.
   ///
   /// Stored beside the locator rather than derived on demand, because a device
   /// that cannot open the format can still show it — which is the whole reason
   /// `progress.percent` is a column.
-  final double percent;
+  ///
+  /// It is nullable because the engine spends the first minutes of a large
+  /// book unable to answer, and [epubPercentOf] is where that is turned into
+  /// an absence rather than a zero.
+  final double? percent;
 
   @override
   String toString() =>
-      'EpubPosition($startCfi, ${percent.toStringAsFixed(1)}%)';
+      'EpubPosition($startCfi, ${percent?.toStringAsFixed(1) ?? '?'}%)';
+}
+
+/// The percentage a report of [progress] carries, or `null` where it carries
+/// none.
+///
+/// **Zero is an absence and not a position.** The engine derives a percentage
+/// from its location index, and building that index means unzipping and
+/// parsing every section of the book: two minutes for a work with a thousand
+/// of them. Until it finishes, `locationFromCfi` answers -1, the percentage
+/// computed from it is exactly 0, and the engine reports that 0 as confidently
+/// as any other number. A device that wrote it down would be claiming a
+/// reader had barely started a book they may be halfway through — and the
+/// claim replicates, outlives the session, and is never revised, because the
+/// index finishing raises no event that would prompt a second look.
+///
+/// The other thing 0 means is the very first location of the book, and the
+/// report is identical: the payload the glue sends carries the percentage
+/// alone, so the two are not distinguishable here. Reading them both as *no
+/// answer* costs a reader on the first page the 0% they could already see
+/// from the bar being empty, and it buys every reader past that point a
+/// percentage that is either right or absent. `progress.percent` is nullable
+/// for exactly this, and the shelf already declines to print a number it does
+/// not have.
+///
+/// A number outside 0..100 is clamped rather than refused: a page past the end
+/// of a short spine has been seen to report slightly over 1, and the column's
+/// CHECK would take the write down with it.
+double? epubPercentOf(Object? progress) {
+  if (progress is! num || progress <= 0) {
+    return null;
+  }
+
+  return (progress * 100).clamp(0, 100).toDouble();
 }
 
 /// An entry in the book's table of contents.

@@ -74,5 +74,53 @@ void main() {
       expect(page.startCfi, startsWith('epubcfi('));
       expect(page.toString(), contains('12.5%'));
     });
+
+    test('says so when it was measured on a page with no percentage', () {
+      const EpubPosition page = EpubPosition(
+        startCfi: 'epubcfi(/6/4[chap01]!/4/2/2[p1]/1:0)',
+        endCfi: 'epubcfi(/6/4[chap01]!/4/2/10[p9]/1:44)',
+      );
+
+      expect(page.percent, isNull);
+      expect(page.toString(), contains('?%'));
+    });
+  });
+
+  group('the percentage a report carries', () {
+    test('is the engine\'s fraction, out of a hundred', () {
+      // The engine answers 0..1 and `progress.percent` is constrained to
+      // 0..100 on both sides of the federation. Getting this wrong stores a
+      // book the reader is half way through as one they have barely started.
+      expect(epubPercentOf(0.5), 50);
+      expect(epubPercentOf(1), 100);
+    });
+
+    test('is nothing at all where the engine reported zero', () {
+      // The state this whole function exists for: the location index takes two
+      // minutes to build on a book of a thousand sections, and until it is
+      // there the engine reports 0 as confidently as any other number. Writing
+      // it down claims a reader has barely started a book they may be halfway
+      // through, and nothing ever revises the claim — the index finishing
+      // raises no event, and the row replicates as it stands.
+      expect(epubPercentOf(0), isNull);
+      expect(epubPercentOf(0.0), isNull);
+    });
+
+    test('is nothing where the report carried no number', () {
+      // Everything crossing the Linux host's bridge is a string somebody
+      // else's JavaScript wrote, so the field can be missing, null, or a word.
+      expect(epubPercentOf(null), isNull);
+      expect(epubPercentOf('0.5'), isNull);
+      expect(epubPercentOf(<String, Object?>{}), isNull);
+    });
+
+    test('clamps a number the engine put outside the range', () {
+      // A page past the end of a short spine has been seen to report slightly
+      // over 1, and the column's CHECK would take the write down with it. A
+      // negative is not clamped to zero but refused, because zero is not a
+      // percentage here either.
+      expect(epubPercentOf(1.02), 100);
+      expect(epubPercentOf(-0.01), isNull);
+    });
   });
 }

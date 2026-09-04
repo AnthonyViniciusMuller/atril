@@ -2365,6 +2365,26 @@ merged in order, which is why each fix names the section it belongs to and touch
       test builds its controller inside the same factory, which is the only way to reproduce the
       shape; it was checked to fail without the zone, and the crash was checked to be gone from a
       real `make run-linux`.
+- [x] `fix: say nothing where the engine cannot say how far through` — the bar and the percentage
+      never moved, on a real book, for a whole session. The position itself was being written:
+      the replica held one `progress` row at vector clock 12, every operation pushed. What was
+      wrong was `percent`, stored as a confident `0.0`. **A percentage comes from epub.js's
+      location index, and building that index means unzipping and parsing every section of the
+      book** — measured at 121s and 8326 locations for the 1182-section work this was found on,
+      by running the pinned engine against the reader's own file. Until it resolves,
+      `locationFromCfi` answers -1, `percentageFromLocation` returns 0 for want of a total, and
+      the glue reports that 0 in the same field it reports a real one. Both hosts wrote it down.
+      Nothing ever revised it: the index finishing raises no event, so the row keeps the 0 until
+      the next page turn, and replicates it meanwhile to every other device the reader owns.
+      `EpubPosition.percent` is nullable now and `epubPercentOf` is the one rule both hosts read
+      it through — the column, `ReadingPlace` and the shelf's card were already built for an
+      absence, and only the port fabricated the zero. **The engine reports the same 0 for the
+      reader's first page**, and the payload the glue sends carries the percentage alone, so the
+      two are not distinguishable without a second script injected into the page; reading both as
+      *no answer* costs the first page a 0% the empty bar already shows. The chrome holds the
+      line's space while there is no number, so it does not jump under a thumb when the index
+      lands, and the bar stays empty rather than indeterminate — a bar sweeping over a book the
+      reader is already reading reports a page still loading
 
 ## Open questions
 

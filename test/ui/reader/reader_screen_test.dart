@@ -140,7 +140,11 @@ final class _FakeHost implements EpubHost {
   void onPage(EpubPageEvent event) => _pageEvents.add(event);
 
   /// Reports where the reader is, as the engine would.
-  void moveTo(double percent) => _positions.add(
+  ///
+  /// A `null` percentage is the state a large book spends its first minutes
+  /// in: the page is laid out and the engine cannot yet say how far through it
+  /// is. `epubPercentOf` is where the hosts turn that into an absence.
+  void moveTo(double? percent) => _positions.add(
     EpubPosition(
       startCfi: 'epubcfi(/6/4!/4/2)',
       endCfi: 'epubcfi(/6/4!/4/8)',
@@ -614,6 +618,74 @@ void main() {
       // Rounded where it is shown and not where it is stored: the record keeps
       // what the engine said.
       expect(find.text(_pt().readerProgress(42)), findsOneWidget);
+    });
+
+    testWidgets('no number is shown while the engine has none', (
+      WidgetTester tester,
+    ) async {
+      // The first minutes of a book whose location index is still being built.
+      // The page is on screen and readable and the app does not know how far
+      // through it is, so it says nothing rather than 0% — which is what it
+      // used to say, for two minutes, and then write down.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(null);
+      await tester.pumpAndSettle();
+
+      // The line keeps its space and shows nothing, so that the chrome does
+      // not jump under the reader's thumb when the index finishes. Held rather
+      // than removed is why this asks the `Visibility` and not the finder.
+      final Visibility number = tester.widget<Visibility>(
+        find
+            .ancestor(
+              of: find.text(_pt().readerProgress(0)),
+              matching: find.byType(Visibility),
+            )
+            .first,
+      );
+
+      expect(number.visible, isFalse);
+      expect(number.maintainSize, isTrue);
+
+      final LinearProgressIndicator bar = tester
+          .widget<LinearProgressIndicator>(
+            find.byType(LinearProgressIndicator),
+          );
+
+      // Empty and not indeterminate: a bar sweeping over a book the reader is
+      // already reading would report a page that is still loading.
+      expect(bar.value, 0);
+      expect(bar.semanticsValue, isNull);
+
+      // And the number comes back the moment the index does, without the
+      // chrome changing height under the reader's thumb.
+      host.moveTo(42.4);
+      await tester.pumpAndSettle();
+
+      expect(find.text(_pt().readerProgress(42)), findsOneWidget);
+    });
+
+    testWidgets('a page with no percentage is recorded without one', (
+      WidgetTester tester,
+    ) async {
+      // The locator is the thing worth keeping and it is known; the percentage
+      // is not, and a row carrying a confident 0 beside it would replicate that
+      // 0 to every other device this reader owns.
+      final _FakeHost host = _FakeHost();
+      final _FakeReading reading = _FakeReading();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.moveTo(null);
+      await tester.pump(readingPositionDebounce);
+      await tester.pumpAndSettle();
+
+      expect(reading.saved.single.locator, 'epubcfi(/6/4!/4/2)');
+      expect(reading.saved.single.percent, isNull);
     });
 
     testWidgets('the contents navigates by href and says when there is none', (

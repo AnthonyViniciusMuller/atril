@@ -322,8 +322,19 @@ final class ReaderViewModel extends ChangeNotifier {
     await settings.write(style);
   }
 
-  /// How far through, 0 to 1, for a control that wants a fraction.
-  double get progress => (_position?.percent ?? 0) / 100;
+  /// How far through, 0 to 1, for a control that wants a fraction, or `null`
+  /// where the engine has not said how far through this is.
+  ///
+  /// It is absent for the whole of a large book's first minutes, while the
+  /// engine builds the location index a percentage is derived from, and
+  /// [epubPercentOf] argues why that is reported as nothing rather than as
+  /// zero. The chrome shows the bar either way and prints the number only
+  /// when there is one.
+  double? get progress {
+    final double? percent = _position?.percent;
+
+    return percent == null ? null : percent / 100;
+  }
 
   /// Whether the bar and the controls are showing.
   ///

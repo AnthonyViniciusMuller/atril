@@ -50,21 +50,35 @@ void main() {
       );
     });
 
-    test('clamps a progress the engine has not finished computing', () {
-      // A book whose location index is still generating reports 0, and one
-      // asked about a page past the end of a short spine has been seen to
-      // report slightly over 1. The column's CHECK would refuse either.
+    test('clamps a progress past the end of a short spine', () {
+      // A page past the end of a short spine has been seen to report slightly
+      // over 1, and the column's CHECK would refuse it.
       expect(
         epubPositionOf(
           fev.EpubLocation(startCfi: 'a', endCfi: 'b', progress: 1.02),
         ).percent,
         100,
       );
+    });
+
+    test('reports nothing where the engine has not finished computing', () {
+      // A book whose location index is still generating reports 0 — for two
+      // minutes, on a book of a thousand sections — and this host used to
+      // write that down as a percentage. `epubPercentOf` says why it is an
+      // absence: the same 0 arrives on the reader's first page, nothing
+      // revises it once the index lands, and the wrong one of the two
+      // replicates to every other device the reader owns.
+      expect(
+        epubPositionOf(
+          fev.EpubLocation(startCfi: 'a', endCfi: 'b', progress: 0),
+        ).percent,
+        isNull,
+      );
       expect(
         epubPositionOf(
           fev.EpubLocation(startCfi: 'a', endCfi: 'b', progress: -0.01),
         ).percent,
-        0,
+        isNull,
       );
     });
   });

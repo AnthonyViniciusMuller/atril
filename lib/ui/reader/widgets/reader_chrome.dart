@@ -129,32 +129,57 @@ class _ReaderProgress extends StatelessWidget {
               Expanded(
                 child: ListenableBuilder(
                   listenable: model,
-                  builder: (BuildContext context, Widget? _) => Column(
-                    children: <Widget>[
-                      LinearProgressIndicator(
-                        value: model.progress,
-                        backgroundColor: Colors.white24,
-                        // The bar is the only thing on this screen that says
-                        // where the reader is, and to a screen reader it said
-                        // nothing at all. The value is the same sentence the
-                        // line under it shows: one number, one wording.
-                        semanticsLabel: l10n.readingProgressLabel,
-                        // The bare percentage and not the sentence beside it:
-                        // the framework reads this value as a number and
-                        // refuses one carrying a word.
-                        semanticsValue: l10n.readingPercentValue(
-                          (model.progress * 100).round(),
+                  builder: (BuildContext context, Widget? _) {
+                    // Absent until the engine's location index can place the
+                    // page, which on a book of a thousand sections is the
+                    // first couple of minutes of reading it. `epubPercentOf`
+                    // is where that is argued.
+                    final double? progress = model.progress;
+
+                    return Column(
+                      children: <Widget>[
+                        LinearProgressIndicator(
+                          // Empty rather than indeterminate while there is no
+                          // number. A bar that swept back and forth over a
+                          // book the reader is already reading would report a
+                          // page still loading, which is not what is happening
+                          // — and it is the flash a reader reads as a failure.
+                          value: progress ?? 0,
+                          backgroundColor: Colors.white24,
+                          // The bar is the only thing on this screen that says
+                          // where the reader is, and to a screen reader it said
+                          // nothing at all. The value is the same sentence the
+                          // line under it shows: one number, one wording.
+                          semanticsLabel: l10n.readingProgressLabel,
+                          // The bare percentage and not the sentence beside it:
+                          // the framework reads this value as a number and
+                          // refuses one carrying a word. There is nothing to
+                          // read out where there is no number.
+                          semanticsValue: progress == null
+                              ? null
+                              : l10n.readingPercentValue(
+                                  (progress * 100).round(),
+                                ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.readerProgress((model.progress * 100).round()),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.white70,
+                        const SizedBox(height: 4),
+                        // The space is held while the number is missing, so
+                        // that the chrome does not jump under the reader's
+                        // thumb at the moment the index finishes.
+                        Visibility(
+                          visible: progress != null,
+                          maintainSize: true,
+                          maintainAnimation: true,
+                          maintainState: true,
+                          child: Text(
+                            l10n.readerProgress(((progress ?? 0) * 100).round()),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
               ),
               IconButton(
