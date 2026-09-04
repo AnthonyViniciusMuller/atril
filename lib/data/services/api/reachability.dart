@@ -45,8 +45,17 @@ final class NodeReachability {
   /// It is a plain `Stream<bool>` rather than the plugin's own type so that
   /// nothing below this file depends on the plugin, and so that a test can
   /// hand it a controller.
+  ///
+  /// A radio that fails is not a node that failed, so the error is logged and
+  /// the conclusion is left where it was — the calls go on being the evidence,
+  /// which is what this class says they are. It is handled rather than left to
+  /// the zone because the platform's reporting is genuinely absent on hosts
+  /// this app runs on: `connectivity_plus` reaches NetworkManager over the
+  /// system D-Bus, and a Linux container without one answers the subscription
+  /// with a `SocketException` — an unhandled crash report, today, for a signal
+  /// this class is documented not to trust.
   NodeReachability({Stream<bool>? radio}) {
-    _radio = radio?.listen(_onRadio);
+    _radio = radio?.listen(_onRadio, onError: _onRadioFailure);
   }
 
   /// The state over the platform's own connectivity reporting.
@@ -122,6 +131,12 @@ final class NodeReachability {
     await _changes.close();
     await _hints.close();
   }
+
+  void _onRadioFailure(Object error, StackTrace stackTrace) => _log.fine(
+    'the platform radio cannot be read; the calls remain the evidence',
+    error,
+    stackTrace,
+  );
 
   void _onRadio(bool present) {
     if (!present) {

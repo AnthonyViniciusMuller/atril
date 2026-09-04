@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:atril/data/services/api/reachability.dart';
 import 'package:atril/utils/errors.dart';
@@ -144,6 +145,30 @@ void main() {
       expect(hints, isEmpty);
 
       await watching.cancel();
+      await radio.close();
+      await reachability.dispose();
+    });
+
+    // A Linux host with no system D-Bus is the case that found this: the
+    // plugin reaches NetworkManager over it, and the subscription answers with
+    // a SocketException. Without a handler that is an unhandled error in the
+    // zone — a crash report for the one signal this class is documented not to
+    // draw a conclusion from.
+    test('a radio that cannot be read is not a node that failed', () async {
+      final radio = StreamController<bool>();
+      final reachability = NodeReachability(radio: radio.stream);
+
+      radio.addError(const SocketException('there is no system bus'));
+      await pumpEventQueue();
+
+      expect(reachability.isReachable, isTrue);
+
+      // And it goes on listening: the platform may answer the next one.
+      radio.add(false);
+      await pumpEventQueue();
+
+      expect(reachability.isReachable, isFalse);
+
       await radio.close();
       await reachability.dispose();
     });
