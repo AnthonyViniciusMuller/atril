@@ -164,6 +164,16 @@
     "description": "Rótulo do campo de senha da tela de entrada."
   },
 
+  "signInPasswordShow": "Mostrar a senha",
+  "@signInPasswordShow": {
+    "description": "Botão dentro do campo de senha que revela o que foi digitado. É o rótulo lido em voz alta pelo leitor de tela e a dica que aparece ao parar o cursor sobre o ícone, então descreve o que o botão faz e não o estado atual do campo."
+  },
+
+  "signInPasswordHide": "Ocultar a senha",
+  "@signInPasswordHide": {
+    "description": "O mesmo botão enquanto a senha está visível, quando tocá-lo volta a escondê-la."
+  },
+
   "signInSubmit": "Entrar",
   "@signInSubmit": {
     "description": "Botão que envia as credenciais ao servidor escolhido. Rótulo curto."

@@ -96,6 +96,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get signInPasswordLabel => 'Senha';
 
   @override
+  String get signInPasswordShow => 'Mostrar a senha';
+
+  @override
+  String get signInPasswordHide => 'Ocultar a senha';
+
+  @override
   String get signInSubmit => 'Entrar';
 
   @override
@@ -1748,6 +1754,12 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get signInPasswordLabel => 'Senha';
+
+  @override
+  String get signInPasswordShow => 'Mostrar a senha';
+
+  @override
+  String get signInPasswordHide => 'Ocultar a senha';
 
   @override
   String get signInSubmit => 'Entrar';

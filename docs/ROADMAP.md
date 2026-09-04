@@ -2446,6 +2446,16 @@ merged in order, which is why each fix names the section it belongs to and touch
       turns is 0.17% of it, the display rounds to 0%, and a bar that barely moves there is the
       truth about a work of 1182 chapters rather than a fault in the measurement
 
+- [x] `feat: let the reader look at the password they typed` — a password typed blind on a phone
+      keyboard is the usual reason a reader is told their credentials are wrong when they are not,
+      and the sign-in screen offered no way to check one. The control is inside the field, carries
+      the tooltip a screen reader also announces, and names *what it does* rather than the state
+      the field is in — `signInPasswordShow` and `signInPasswordHide`, in both locales. **It starts
+      obscured on every visit and is never remembered**: the reason to reveal a password is to
+      check a character that was just typed, and a screen that came back already showing one would
+      put it on a display the reader has not looked at yet. It is disabled while a sign-in is in
+      flight, like the field it sits in
+
 ## Open questions
 
 Recorded rather than answered, and each one should be settled before the phase that needs it.

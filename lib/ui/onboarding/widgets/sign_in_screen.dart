@@ -66,6 +66,14 @@ class _SignInScreenState extends State<SignInScreen> {
   );
   final TextEditingController _password = TextEditingController();
 
+  /// Whether the password is being shown rather than obscured.
+  ///
+  /// It starts obscured on every visit and is never remembered: the reason to
+  /// reveal a password is to check a character that was just typed, and a
+  /// screen that came back already showing one would put it on a display the
+  /// reader has not looked at yet.
+  bool _revealed = false;
+
   @override
   void initState() {
     super.initState();
@@ -136,7 +144,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   TextField(
                     controller: _password,
                     enabled: !running,
-                    obscureText: true,
+                    obscureText: !_revealed,
                     autofillHints: const <String>[AutofillHints.password],
                     textInputAction: TextInputAction.go,
                     onSubmitted: (String _) => _submit(l10n),
@@ -144,6 +152,19 @@ class _SignInScreenState extends State<SignInScreen> {
                       labelText: l10n.signInPasswordLabel,
                       border: const OutlineInputBorder(),
                       errorText: _failure(l10n),
+                      suffixIcon: IconButton(
+                        onPressed: running
+                            ? null
+                            : () => setState(() => _revealed = !_revealed),
+                        icon: Icon(
+                          _revealed
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        tooltip: _revealed
+                            ? l10n.signInPasswordHide
+                            : l10n.signInPasswordShow,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

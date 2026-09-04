@@ -237,6 +237,18 @@ abstract class AppLocalizations {
   /// **'Senha'**
   String get signInPasswordLabel;
 
+  /// Botão dentro do campo de senha que revela o que foi digitado. É o rótulo lido em voz alta pelo leitor de tela e a dica que aparece ao parar o cursor sobre o ícone, então descreve o que o botão faz e não o estado atual do campo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Mostrar a senha'**
+  String get signInPasswordShow;
+
+  /// O mesmo botão enquanto a senha está visível, quando tocá-lo volta a escondê-la.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Ocultar a senha'**
+  String get signInPasswordHide;
+
   /// Botão que envia as credenciais ao servidor escolhido. Rótulo curto.
   ///
   /// In pt_BR, this message translates to:

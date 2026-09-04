@@ -27,6 +27,8 @@
   "signInAt": "Signing in at {domain}.",
   "signInIdentifierLabel": "Username or e-mail",
   "signInPasswordLabel": "Password",
+  "signInPasswordShow": "Show the password",
+  "signInPasswordHide": "Hide the password",
   "signInSubmit": "Sign in",
   "signInInvalidCredentials": "Wrong username or password.",
   "signInDeviceRevoked": "This device was unbound from the account. Ask another device to bind it again.",

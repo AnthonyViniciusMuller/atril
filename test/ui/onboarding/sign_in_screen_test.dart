@@ -128,4 +128,27 @@ void main() {
       isNotNull,
     );
   });
+
+  testWidgets('lets the reader look at the password they typed', (
+    WidgetTester tester,
+  ) async {
+    // A password typed blind on a phone keyboard is the usual reason a reader
+    // is told their credentials are wrong when they are not.
+    await pump(tester, auth: FakeAuthRepository());
+
+    TextField password() =>
+        tester.widget<TextField>(find.byType(TextField).last);
+
+    expect(password().obscureText, isTrue);
+
+    await tester.tap(find.byIcon(Icons.visibility_outlined));
+    await tester.pumpAndSettle();
+
+    expect(password().obscureText, isFalse);
+
+    await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+    await tester.pumpAndSettle();
+
+    expect(password().obscureText, isTrue);
+  });
 }

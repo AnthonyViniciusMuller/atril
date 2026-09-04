@@ -96,6 +96,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInPasswordLabel => 'Password';
 
   @override
+  String get signInPasswordShow => 'Show the password';
+
+  @override
+  String get signInPasswordHide => 'Hide the password';
+
+  @override
   String get signInSubmit => 'Sign in';
 
   @override
