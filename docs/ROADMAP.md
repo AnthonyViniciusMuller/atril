@@ -2165,6 +2165,50 @@ merged in order, which is why each fix names the section it belongs to and touch
       alone: a fake refuses with the `Object` it was handed on purpose, because the boundaries
       widened to `on Object` earlier in this phase and a fake that could only throw an `Error`
       could not exercise what they were widened for
+- [x] `fix: let the page report the reader's taps and keys` — the reader freezes on the web
+      target the moment it is clicked, and the two reasons are both about a platform view.
+      **A `GestureDetector` over one receives nothing**: the browser hands the click to the
+      engine's `<iframe>` and Flutter's glass pane is never told, so `reader_body.dart`'s tap
+      target had never fired once on any of the five webview targets. **And that click takes the
+      keyboard with it**: it moves DOM focus into the book's document, a key event fires in the
+      document that has focus and does not cross into its parent, so `reader_screen.dart`'s
+      `_onKey` — the arrow keys, space, PageUp/PageDown and Escape — goes silent from the first
+      tap onwards and never comes back. On a browser, where the chevrons in the bar are the only
+      other way to turn a page, that is a book that has stopped. Measured rather than reasoned:
+      a Flutter 3.47.1 web build of the reader's own arrangement reports `taps=0 keys=1` before
+      a click and `taps=0 keys=1` after one, with `document.activeElement` an `IFRAME`, and
+      `keys` moves again only when focus is handed back to `flutter-view`.
+      **The fix is that the page reports what happens on it**, over the bridge the hosts already
+      run: `page_input.dart` holds one script, injected per book, that registers through
+      `rendition.hooks.content` — the engine's own door for running something in each rendered
+      document — and sends a tap and a key back as `EpubHost.pageEvents`. The view model
+      dispatches those to the same commands the bar's buttons use, so a page turned from the
+      page, from Flutter's keyboard and from the chrome is one path with three ways in.
+      **It reports less than it sees, and that is the point**: a click on a link is the book's,
+      and a click that ends a selection belongs to the selection, so neither is a tap — which is
+      the argument the old gesture detector made for sitting outside the page, answered better
+      from inside it. The detector is **gone** rather than kept for Linux: the pointer reaches
+      both the CEF texture and Flutter there, so two sources would be a chrome that toggled
+      twice and therefore not at all. **Keys are forwarded on five targets and not on Linux**,
+      for the mirror of that reason — `webview_cef`'s own `Focus` returns `ignored` where the
+      platform has native key support, so Flutter still gets the press and a page that also
+      reported it would turn two pages for one. The script is evaluated through the controller's
+      `callMethod('eval', …)`, which is a property lookup on the frame's window in a browser and
+      an interpolated call on the four native targets — one door for all five, and the package's
+      own. It costs `unsafe-eval` to any future CSP on the web target, which is named where it is
+      spent. Nothing in the engine is patched: `engine.dart`'s digests still cover the bytes that
+      produce a locator.
+      **Verified against the pinned engine in a real browser**, driving the string this file
+      actually generates rather than a sketch of it: a click reports one `atrilTap`; arrow,
+      Escape and `a` with focus inside the book all report `atrilKey`, and `a` is then dropped by
+      `epubPageEventOfKey`; a drag that selects reports the engine's `selection` and **no** tap;
+      and a click on a footnote link reports **nothing at all**. The Linux premise — that
+      `webview_cef`'s autofocusing `Focus` answers `ignored` and the reader's handler still fires
+      above it, which is why keys are not forwarded there — is pinned by a test that reproduces
+      that wrapper rather than describing it, since what decides it is Flutter's own focus
+      traversal. **Android was not run**: the emulator demands 7.37 GB free and the machine had
+      6.0, so the four native targets rest on the web measurement and on the package's shared
+      code path rather than on a run of their own. Also: `flutter analyze`, and 1,232 tests
 
 ## Open questions
 

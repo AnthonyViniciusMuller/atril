@@ -107,6 +107,7 @@ final class ReaderViewModel extends ChangeNotifier {
 
     _positions = host.positions.listen(_onPosition);
     _selections = host.selections.listen(_onSelection);
+    _pageEvents = host.pageEvents.listen(_onPageEvent);
     _marks = annotations
         .watchMarksIn(ebookId)
         .listen(_onMarks, onError: _onMarksError);
@@ -201,6 +202,7 @@ final class ReaderViewModel extends ChangeNotifier {
 
   StreamSubscription<EpubPosition>? _positions;
   StreamSubscription<EpubSelection>? _selections;
+  StreamSubscription<EpubPageEvent>? _pageEvents;
   StreamSubscription<Result<List<Annotation>>>? _marks;
   Timer? _pending;
   EpubPosition? _unsaved;
@@ -504,6 +506,31 @@ final class ReaderViewModel extends ChangeNotifier {
   Future<Result<void>> _restoreMark(String annotationId) =>
       annotations.restoreMark(annotationId);
 
+  /// What the reader did on the page itself.
+  ///
+  /// **It goes to the same commands the chrome's buttons go to**, which is the
+  /// point of routing it here rather than into the widget that drew the page: a
+  /// page turned by the arrow key inside a webview, by the arrow key in
+  /// Flutter, and by the chevron in the bar are one path with three ways in.
+  ///
+  /// The screen's own key handler covers the case where Flutter has focus, and
+  /// the two cannot both fire for one press: a key reaches whichever document
+  /// has focus, and that is either the page or the app.
+  void _onPageEvent(EpubPageEvent event) {
+    switch (event) {
+      case EpubPageEvent.tapped:
+        toggleChrome();
+      case EpubPageEvent.forward:
+        showChrome();
+        unawaited(turnForward.execute());
+      case EpubPageEvent.back:
+        showChrome();
+        unawaited(turnBack.execute());
+      case EpubPageEvent.dismiss:
+        toggleChrome();
+    }
+  }
+
   void _onSelection(EpubSelection selection) {
     _selection = selection;
     // A reader who has just selected something is about to act on it, and the
@@ -625,6 +652,7 @@ final class ReaderViewModel extends ChangeNotifier {
     unawaited(_savePosition());
     unawaited(_positions?.cancel());
     unawaited(_selections?.cancel());
+    unawaited(_pageEvents?.cancel());
     unawaited(_marks?.cancel());
     unawaited(host.dispose());
     open.dispose();

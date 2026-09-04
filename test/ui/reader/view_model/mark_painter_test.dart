@@ -73,6 +73,9 @@ final class _Recorder implements EpubHost {
   Stream<EpubSelection> get selections => const Stream<EpubSelection>.empty();
 
   @override
+  Stream<EpubPageEvent> get pageEvents => const Stream<EpubPageEvent>.empty();
+
+  @override
   Future<String> textOf(String cfiRange) async => '';
 
   @override

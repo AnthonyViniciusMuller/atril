@@ -42,6 +42,7 @@ import '../../../utils/logging.dart';
 import 'engine.dart';
 import 'engine_server.dart';
 import 'epub_host.dart';
+import 'page_input.dart';
 
 final _log = loggerFor('data/epub');
 
@@ -206,6 +207,8 @@ final class DesktopEpubHost implements EpubHost {
       StreamController<EpubPosition>.broadcast();
   final StreamController<EpubSelection> _selections =
       StreamController<EpubSelection>.broadcast();
+  final StreamController<EpubPageEvent> _pageEvents =
+      StreamController<EpubPageEvent>.broadcast();
   final ValueNotifier<cef.WebViewController?> _webview =
       ValueNotifier<cef.WebViewController?>(null);
 
@@ -288,6 +291,9 @@ final class DesktopEpubHost implements EpubHost {
 
   @override
   Stream<EpubSelection> get selections => _selections.stream;
+
+  @override
+  Stream<EpubPageEvent> get pageEvents => _pageEvents.stream;
 
   @override
   Future<List<EpubChapter>> chapters() {
@@ -401,6 +407,7 @@ final class DesktopEpubHost implements EpubHost {
     _webview.dispose();
     await _positions.close();
     await _selections.close();
+    await _pageEvents.close();
   }
 
   /// Hands the book to the engine.
@@ -656,6 +663,7 @@ final class DesktopEpubHost implements EpubHost {
           _opened!.complete();
         }
         unawaited(_applyToEngine());
+        unawaited(_watchPageInput());
       case 'chapters':
         _onChapters(args.isEmpty ? const <Object?>[] : args.first);
       case 'relocated':
@@ -664,8 +672,66 @@ final class DesktopEpubHost implements EpubHost {
         _onSelection(args);
       case 'displayError':
         _failOpening();
+      case pageTapHandler:
+        if (!_pageEvents.isClosed) {
+          _pageEvents.add(EpubPageEvent.tapped);
+        }
+      case pageKeyHandler:
+        _onPageKey(args);
       default:
         break;
+    }
+  }
+
+  /// Makes the page report a tap on it.
+  ///
+  /// **Keys are not forwarded here, and that is the difference between this
+  /// host and the other one.** The engine is a CEF texture inside the Flutter
+  /// tree on this target, so `webview_cef` takes the pointer but the key event
+  /// reaches Flutter first and the reader's screen already binds it — a page
+  /// that also reported it would turn two pages for one press. On the five
+  /// webview targets Flutter receives no key at all once the page has focus,
+  /// which is what [pageInputScript] is for there.
+  ///
+  /// It is injected after the book has rendered rather than with the bridge
+  /// shim at load start, because the script registers a hook on `rendition` and
+  /// there is no rendition until a book has been handed over. Injecting it
+  /// again on a second book is free: the script returns at its first line.
+  ///
+  /// The channel it reports on is this host's own, so there is nothing to
+  /// register — [_onHandler] already answers every message the page sends.
+  Future<void> _watchPageInput() async {
+    final cef.WebViewController? webview = _webview.value;
+
+    if (webview == null || _disposed) {
+      return;
+    }
+
+    try {
+      await webview.executeJavaScript(pageInputScript(withKeys: false));
+    } on Object catch (error) {
+      // Not fatal and not shown, for the reason the webview host gives: the
+      // book is readable and the chrome's controls all work, and what is lost
+      // is one gesture.
+      _log.warning('the page could not be asked to report input', error);
+    }
+  }
+
+  void _onPageKey(List<Object?> args) {
+    if (_pageEvents.isClosed || args.isEmpty) {
+      return;
+    }
+
+    final Object? key = args.first;
+
+    if (key is! String) {
+      return;
+    }
+
+    final EpubPageEvent? event = epubPageEventOfKey(key);
+
+    if (event != null) {
+      _pageEvents.add(event);
     }
   }
 

@@ -126,6 +126,26 @@ final class EpubChapter {
   String toString() => 'EpubChapter($title)';
 }
 
+/// Something the reader did on the page itself.
+///
+/// It is what the page can report and not what the app does about it: the
+/// mapping from a key to an action is Dart's, in `epubPageEventOfKey`, so that
+/// the reader's shortcuts are decided in one place rather than half there and
+/// half in a string of JavaScript.
+enum EpubPageEvent {
+  /// A tap on the page that was not a link and did not end a selection.
+  tapped,
+
+  /// The key for the next page: the right arrow, PageDown or the space bar.
+  forward,
+
+  /// The key for the previous page: the left arrow or PageUp.
+  back,
+
+  /// Escape, which is what a tap is for somebody who is not tapping.
+  dismiss,
+}
+
 /// What the reader has selected in the page.
 final class EpubSelection {
   /// The passage [text] runs over [cfiRange].
@@ -327,6 +347,21 @@ abstract interface class EpubHost {
 
   /// What the reader has selected, as they select it.
   Stream<EpubSelection> get selections;
+
+  /// What the reader did on the page itself: a tap, or a key the controls are
+  /// bound to.
+  ///
+  /// **The page is a platform view on five of the six targets, and Flutter
+  /// hears nothing that happens inside one.** A click goes to the webview and
+  /// never to the glass pane, and it takes the keyboard with it — so a
+  /// `GestureDetector` over the page and a `Focus` above it both go quiet from
+  /// the first tap onwards. `page_input.dart` is the argument in full, and the
+  /// script it injects is what fills this stream.
+  ///
+  /// It carries what the reader *did* and not what should happen about it: the
+  /// view model dispatches these to the same commands the chrome's buttons use,
+  /// so a page turned from the page and one turned from the bar are one path.
+  Stream<EpubPageEvent> get pageEvents;
 
   /// The book's table of contents, once the engine has parsed it.
   Future<List<EpubChapter>> chapters();

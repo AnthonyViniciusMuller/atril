@@ -29,6 +29,7 @@ import '../../../utils/errors.dart';
 import '../../../utils/logging.dart';
 import 'engine.dart';
 import 'epub_host.dart';
+import 'page_input.dart';
 
 final _log = loggerFor('data/epub');
 
@@ -46,6 +47,8 @@ final class WebviewEpubHost implements EpubHost {
       StreamController<EpubPosition>.broadcast();
   final StreamController<EpubSelection> _selections =
       StreamController<EpubSelection>.broadcast();
+  final StreamController<EpubPageEvent> _pageEvents =
+      StreamController<EpubPageEvent>.broadcast();
 
   /// What the view is currently asked to render, or `null` before the first
   /// [open].
@@ -107,6 +110,9 @@ final class WebviewEpubHost implements EpubHost {
 
   @override
   Stream<EpubSelection> get selections => _selections.stream;
+
+  @override
+  Stream<EpubPageEvent> get pageEvents => _pageEvents.stream;
 
   @override
   Future<List<EpubChapter>> chapters() {
@@ -236,6 +242,7 @@ final class WebviewEpubHost implements EpubHost {
     _rendering.dispose();
     await _positions.close();
     await _selections.close();
+    await _pageEvents.close();
   }
 
   /// The style as the engine is told it, with [EpubTheme.followSystem]
@@ -250,6 +257,81 @@ final class WebviewEpubHost implements EpubHost {
     );
     await _controller.setSpread(spread: epubSpreadOf(_style.spread));
     await _controller.updateTheme(theme: _theme());
+  }
+
+  /// Makes the page report what the reader does on it.
+  ///
+  /// **Both halves are needed and the order between them matters.** The
+  /// handlers are what the bridge dispatches a message to — an unregistered
+  /// name is dropped on both branches of the package — and the script is what
+  /// sends one, so registering after injecting would lose whatever the reader
+  /// did in between.
+  ///
+  /// The script is evaluated rather than served, because on these five targets
+  /// the document is the package's own asset and not a file this app writes.
+  /// `eval` is reached through the controller's `callMethod`, which is a
+  /// property lookup on the frame's window in a browser and an interpolated
+  /// call on the four native targets — the same door for all five, and the
+  /// package's own documented one. It costs `unsafe-eval` to any future
+  /// Content-Security-Policy on the web target, which is the trade and is worth
+  /// naming: nothing here is fetched, the script is a compile-time constant of
+  /// this application, and the alternative was reaching into another package's
+  /// `<iframe>` through the DOM on one target and not the others.
+  ///
+  /// Keys are forwarded here and not on Linux, for the reason
+  /// [pageInputScript] gives: a texture inside the Flutter tree gets them
+  /// twice, a webview gets them not at all.
+  Future<void> _watchPageInput() async {
+    // The type is inferred rather than written: `EpubWebViewController` is the
+    // package's own interface and is not among the names its library exports,
+    // so naming it would mean importing a `src/` path.
+    final webview = _controller.webViewController;
+
+    if (webview == null || _disposed) {
+      return;
+    }
+
+    webview.addHandler(pageTapHandler, (List<dynamic> _) => _onPageTap());
+    webview.addHandler(pageKeyHandler, _onPageKey);
+
+    try {
+      await webview.callMethod('eval', <Object?>[
+        pageInputScript(withKeys: true),
+      ]);
+    } on Object catch (error) {
+      // Not fatal and not shown. The book is on screen and every control in
+      // the chrome still works; what is lost is the tap and the keyboard, and
+      // a banner across a page the reader can still read would be worse than
+      // the line this writes.
+      _log.warning('the page could not be asked to report input', error);
+    }
+  }
+
+  void _onPageTap() {
+    if (!_pageEvents.isClosed) {
+      _pageEvents.add(EpubPageEvent.tapped);
+    }
+  }
+
+  void _onPageKey(List<dynamic> args) {
+    if (_pageEvents.isClosed || args.isEmpty) {
+      return;
+    }
+
+    // Read rather than cast, for the reason the Linux host gives about its own
+    // bridge: a key that is not a string is a message this host does not
+    // understand, and `as` would make that a crash instead of a shrug.
+    final Object? key = args.first;
+
+    if (key is! String) {
+      return;
+    }
+
+    final EpubPageEvent? event = epubPageEventOfKey(key);
+
+    if (event != null) {
+      _pageEvents.add(event);
+    }
   }
 
   /// The engine's theme for the current style.
@@ -332,6 +414,10 @@ final class WebviewEpubHost implements EpubHost {
     if (pending != null && !pending.isCompleted) {
       pending.complete();
     }
+
+    // The page cannot report a tap or a key until something is listening for
+    // one, so the handlers go on before the script that calls them.
+    unawaited(_watchPageInput());
 
     // The style the reader chose is applied after the book is on screen and
     // not through the initial display settings, because those carry a type

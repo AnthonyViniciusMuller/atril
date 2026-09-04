@@ -48,24 +48,31 @@ class ReaderBody extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        // The host's own view, and a tap target over it. The gesture is here
-        // and not inside the page because a tap inside the webview is the
-        // book's — a reader following a footnote should follow it.
+        // The host's own view, and **no gesture detector over it**. There was
+        // one, and on five of the six targets it never fired once: the page is
+        // a platform view, the browser or the webview takes the click, and
+        // Flutter's glass pane is never told. What reports a tap now is the
+        // page itself — `page_input.dart` is the argument and the measurement
+        // — which also answers the reason the gesture was put here rather than
+        // inside the page in the first place, and answers it better: the
+        // engine's own document knows whether the reader hit a link or ended a
+        // selection, and says nothing when they did.
         //
-        // The `Semantics` is what makes that gesture exist for a screen
-        // reader. Everything inside the view belongs to the engine and is
-        // announced — or not — by whatever the platform's webview does with
-        // it; this one control is the app's, and without a label it is a tap
-        // target with no name on top of somebody else's document.
+        // One source, and not a detector as well. On Linux the pointer reaches
+        // both the texture and Flutter, so a detector kept "for the target
+        // where it works" would be a chrome that toggled twice and therefore
+        // not at all.
+        //
+        // The `Semantics` stays and is now the only thing here. Everything
+        // inside the view belongs to the engine and is announced — or not — by
+        // whatever the platform's webview does with it; this one control is the
+        // app's, and without a label it is a tap target with no name on top of
+        // somebody else's document.
         Semantics(
           button: true,
           label: AppLocalizations.of(context).readerToggleChrome,
           onTap: model.toggleChrome,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onTap: model.toggleChrome,
-            child: page,
-          ),
+          child: page,
         ),
         ListenableBuilder(
           listenable: model.open,

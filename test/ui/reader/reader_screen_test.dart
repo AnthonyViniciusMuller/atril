@@ -47,6 +47,8 @@ final class _FakeHost implements EpubHost {
       StreamController<EpubPosition>.broadcast();
   final StreamController<EpubSelection> _selections =
       StreamController<EpubSelection>.broadcast();
+  final StreamController<EpubPageEvent> _pageEvents =
+      StreamController<EpubPageEvent>.broadcast();
   final Completer<void> _viewed = Completer<void>();
 
   List<EpubChapter> contents = const <EpubChapter>[];
@@ -57,6 +59,10 @@ final class _FakeHost implements EpubHost {
 
   /// How many times the view was built.
   int viewBuilds = 0;
+
+  /// Whether the page wraps itself in a `Focus` that takes focus, as the Linux
+  /// host's does.
+  bool claimsFocus = false;
 
   @override
   Widget view() => _FakePage(host: this);
@@ -79,6 +85,9 @@ final class _FakeHost implements EpubHost {
 
   @override
   Stream<EpubSelection> get selections => _selections.stream;
+
+  @override
+  Stream<EpubPageEvent> get pageEvents => _pageEvents.stream;
 
   @override
   Future<List<EpubChapter>> chapters() async => contents;
@@ -117,12 +126,17 @@ final class _FakeHost implements EpubHost {
     disposed = true;
     await _positions.close();
     await _selections.close();
+    await _pageEvents.close();
   }
 
   /// Reports a selection, as the engine would when a reader drags over a
   /// passage.
   void select(String cfiRange, String text) =>
       _selections.add(EpubSelection(cfiRange: cfiRange, text: text));
+
+  /// Reports what the reader did on the page, as the engine's own document
+  /// does once `page_input.dart`'s script has been injected into it.
+  void onPage(EpubPageEvent event) => _pageEvents.add(event);
 
   /// Reports where the reader is, as the engine would.
   void moveTo(double percent) => _positions.add(
@@ -158,7 +172,21 @@ class _FakePageState extends State<_FakePage> {
   Widget build(BuildContext context) {
     widget.host.viewBuilds++;
 
-    return const Placeholder(key: Key('the page'));
+    const Widget page = Placeholder(key: Key('the page'));
+
+    if (!widget.host.claimsFocus) {
+      return page;
+    }
+
+    // What `webview_cef` puts around the CEF texture on Linux, reproduced
+    // rather than described: a `Focus` that takes focus as soon as it mounts
+    // and answers a key event with `ignored` — which is what it does on a
+    // platform with native key support, and Linux is one.
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (FocusNode _, KeyEvent _) => KeyEventResult.ignored,
+      child: page,
+    );
   }
 }
 
@@ -345,27 +373,112 @@ void main() {
         await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
         await tester.pumpAndSettle();
 
-        // The tap lands on the gesture detector over the page rather than on
-        // the page itself, which is what a reader's finger does too.
-        await tester.tap(
-          find.byKey(const Key('the page')),
-          warnIfMissed: false,
-        );
+        // Reported by the page and not caught by a detector over it. A tap on
+        // a platform view never reaches Flutter on five of the six targets, so
+        // a test that tapped a widget here would be testing an arrangement the
+        // app does not have.
+        host.onPage(EpubPageEvent.tapped);
         await tester.pumpAndSettle();
 
         // Faded out rather than removed, so that the animation has something to
         // run over — but not reachable, which is what `IgnorePointer` is for.
         expect(_chromeOpacity(tester), 0);
 
-        await tester.tap(
-          find.byKey(const Key('the page')),
-          warnIfMissed: false,
-        );
+        host.onPage(EpubPageEvent.tapped);
         await tester.pumpAndSettle();
 
         expect(_chromeOpacity(tester), 1);
       },
     );
+
+    testWidgets('the keyboard survives a page that takes focus', (
+      WidgetTester tester,
+    ) async {
+      // **The premise the Linux host's `withKeys: false` rests on.** There the
+      // engine is a CEF texture inside the Flutter tree and `webview_cef` wraps
+      // it in a `Focus` that autofocuses — so the reader's own handler sits
+      // above a node that has focus. It still fires, because that `Focus`
+      // answers `ignored` where the platform has native key support and the
+      // event goes on up. If it did not, Linux would need the page to forward
+      // its keys like the other five; because it does, a page that forwarded
+      // them would turn two pages for one press.
+      //
+      // It models the wrapper rather than running CEF, and says so: what
+      // decides this is Flutter's own focus traversal, which is what is here.
+      final _FakeHost host = _FakeHost()..claimsFocus = true;
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+
+      expect(host.turnsForward, 1);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+
+      expect(host.turnsBack, 1);
+    });
+
+    testWidgets('a key pressed inside the page turns it', (
+      WidgetTester tester,
+    ) async {
+      // The case the whole of `page_input.dart` exists for. Once the reader
+      // has touched the page, the webview has the keyboard and Flutter's own
+      // handler never fires again — so the page reports the key instead, and
+      // it reaches the same command the chevron in the bar does.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.onPage(EpubPageEvent.forward);
+      await tester.pumpAndSettle();
+
+      expect(host.turnsForward, 1);
+      expect(host.turnsBack, 0);
+
+      host.onPage(EpubPageEvent.back);
+      await tester.pumpAndSettle();
+
+      expect(host.turnsBack, 1);
+    });
+
+    testWidgets('a key pressed inside the page brings the chrome back', (
+      WidgetTester tester,
+    ) async {
+      // A reader navigating is a reader who wants to see where they are, and
+      // that is true whether the key reached Flutter or the page.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.onPage(EpubPageEvent.tapped);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 0);
+
+      host.onPage(EpubPageEvent.forward);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 1);
+    });
+
+    testWidgets('escape pressed inside the page clears the chrome', (
+      WidgetTester tester,
+    ) async {
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      host.onPage(EpubPageEvent.dismiss);
+      await tester.pumpAndSettle();
+
+      expect(_chromeOpacity(tester), 0);
+    });
 
     testWidgets('escape clears the chrome and brings it back', (
       WidgetTester tester,
@@ -515,9 +628,9 @@ void main() {
 
       final int built = host.viewBuilds;
 
-      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      host.onPage(EpubPageEvent.tapped);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      host.onPage(EpubPageEvent.tapped);
       await tester.pumpAndSettle();
 
       expect(_chromeOpacity(tester), 1);
@@ -931,7 +1044,7 @@ void main() {
       host.select(range, 'A terra é ingrata.');
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('the page')), warnIfMissed: false);
+      host.onPage(EpubPageEvent.tapped);
       await tester.pumpAndSettle();
 
       expect(_chromeOpacity(tester), 0);
