@@ -530,6 +530,57 @@ void main() {
     );
   });
 
+  group('coming back to a book', () {
+    test('answers with the page this device stopped on', () async {
+      // What the reader's screen opens at when the location says nothing. The
+      // row was being written from the first commit of this feature and read
+      // by nothing, so every open started at page one.
+      await _seed(database, blobs, id: 'a', bytes: <int>[1]);
+
+      await reading.saveProgress(
+        ebookId: _id('a'),
+        locator: 'epubcfi(/6/20[ch9]!/4/2/8/1:0)',
+        percent: 44,
+      );
+
+      expect(
+        ((await reading.resumeAt(_id('a'))) as Ok<String?>).value,
+        'epubcfi(/6/20[ch9]!/4/2/8/1:0)',
+      );
+    });
+
+    test('answers with nothing for a book this device has not opened', () async {
+      await _seed(database, blobs, id: 'b', bytes: <int>[1]);
+
+      expect(((await reading.resumeAt(_id('b'))) as Ok<String?>).value, isNull);
+    });
+
+    test('never answers with another device\'s page', () async {
+      // C05 and RN01: a phone and a desktop are two true statements about where
+      // the reader is, and opening a book here at the page the phone reached
+      // would move the reader without being asked. Which position to *offer*
+      // is the shelf's decision, made from all of them.
+      const String other = '22222222-2222-4222-8222-222222222222';
+
+      await _seed(database, blobs, id: 'c', bytes: <int>[1]);
+      await database
+          .into(database.progress)
+          .insert(
+            ProgressCompanion.insert(
+              id: _id('r90'),
+              ebookId: _id('c'),
+              deviceId: other,
+              locator: 'epubcfi(/6/40[ch19]!/4/2/2/1:0)',
+              percent: const Value<double?>(80),
+              vectorClock: VectorClock.of(<String, int>{other: 1}),
+              updatedAt: _at,
+            ),
+          );
+
+      expect(((await reading.resumeAt(_id('c'))) as Ok<String?>).value, isNull);
+    });
+  });
+
   group('the record behind the chrome', () {
     test(
       'is read, and a work that is gone is null rather than an error',

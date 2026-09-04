@@ -109,6 +109,25 @@ abstract interface class ReadingRepository {
   /// `EpubBook` carries the reasoning and the cost.
   Future<Result<EpubBook>> openBook(String ebookId);
 
+  /// UC04. Where this device stopped in [ebookId], or `null` where it has not
+  /// stopped anywhere in it yet.
+  ///
+  /// **It is this device's own row and deliberately not the furthest or the
+  /// most recent of them.** Every device's position is its own answer (RN01,
+  /// C05), and a reader who opens a book on the machine they were reading it
+  /// on expects the page they left — not the one their phone reached on the
+  /// train, which would move them without being asked. Which position to
+  /// *offer* is a decision the shelf makes with all of them, and
+  /// [watchPlacesIn] is what it makes it from.
+  ///
+  /// The locator crosses this layer unchanged, like every other. It is not
+  /// checked against the format here: a position replicated from a device
+  /// reading something else is a legitimate row and a meaningless instruction,
+  /// and the host is where that is recognized — it opens at the beginning and
+  /// reports so, which is the same answer a reader who never opened the book
+  /// gets.
+  Future<Result<String?>> resumeAt(String ebookId);
+
   /// UC04. Records where this device stopped in [ebookId].
   ///
   /// **It is authored as an operation like every other change** — never through

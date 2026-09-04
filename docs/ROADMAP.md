@@ -2405,6 +2405,24 @@ merged in order, which is why each fix names the section it belongs to and touch
       pinned — the digest stops the engine moving, and this is what notices if a permitted upgrade
       renames the one signal the percentage now depends on
 
+- [x] `fix: open a book where the reader left it` — the actual complaint behind the two entries
+      above, and neither of them touched it: read to page ten, close, reopen, page one. **The
+      position was recorded from the first commit of this feature and read by nothing.**
+      `ReaderScreen.at` is documented as *`null` to resume where this device stopped* and the host
+      port's `open` says [at] is *a CFI this reader's device or another one wrote* — the resume was
+      designed at both ends and never wired between them. `ReadingDao.placeOf` had been sitting
+      there since the reading tables landed with one caller, a test. `ReadingRepository.resumeAt`
+      is the missing middle, and the view model asks for it when the location carries no locator;
+      a mark the reader followed still wins, because that is a reader asking to go somewhere.
+      **This device's own row and never the furthest or the most recent** (C05, RN01): a phone and
+      a desktop are two true statements, and opening here at the page the phone reached would move
+      the reader without being asked — which of them to *offer* is the shelf's decision, made from
+      all of them. A place that cannot be read is not a refusal: the book opens at the beginning,
+      which is where it opened before anything remembered a position, and refusing to show a
+      reader their book because the app forgot their page would be the wrong way round. The
+      locator is not checked against the format on the way through, because both hosts already
+      refuse one they cannot resolve and open at the beginning instead
+
 ## Open questions
 
 Recorded rather than answered, and each one should be settled before the phase that needs it.

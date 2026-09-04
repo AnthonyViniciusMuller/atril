@@ -25,6 +25,9 @@ final class FakeReadingRepository implements ReadingRepository {
   /// What [openBook] answers with.
   Result<EpubBook>? book;
 
+  /// Where this device stopped, as [resumeAt] answers it.
+  Result<String?> place = const Result<String?>.ok(null);
+
   /// Emits [places] to whoever is watching.
   void emitPlaces(List<ReadingPlace> places) =>
       _places.add(Result<List<ReadingPlace>>.ok(places));
@@ -43,6 +46,9 @@ final class FakeReadingRepository implements ReadingRepository {
       Result<EpubBook>.ok(
         EpubBook(ebookId: ebookId, bytes: Uint8List(0), title: 'Os Sertões'),
       );
+
+  @override
+  Future<Result<String?>> resumeAt(String ebookId) async => place;
 
   @override
   Future<Result<void>> saveProgress({

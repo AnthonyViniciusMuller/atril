@@ -380,9 +380,20 @@ final class ReaderViewModel extends ChangeNotifier {
           _work = work;
         }
 
+        // Where the route said, and otherwise where this device stopped. A
+        // mark the reader followed is an instruction and wins; nothing in the
+        // location means *open this book*, and the answer to that is the page
+        // they were on. Without this the position was recorded faithfully and
+        // read by nothing, so every open started at page one.
+        final String? start = at ?? await _resumeAt();
+
+        if (_disposed) {
+          return const Result<void>.ok(null);
+        }
+
         try {
           await host.apply(_style);
-          await host.open(value, at: at);
+          await host.open(value, at: start);
         } on Object catch (error) {
           return _refused(_failureOf(error, opReaderOpen));
         }
@@ -407,6 +418,25 @@ final class ReaderViewModel extends ChangeNotifier {
         notifyListeners();
 
         return const Result<void>.ok(null);
+    }
+  }
+
+  /// Where this device stopped in this book, or `null`.
+  ///
+  /// A failure is not one: the book opens at the beginning, which is where it
+  /// opened before anything remembered a position at all, and refusing to show
+  /// a reader their book because the app could not remember their page would
+  /// be the wrong way round.
+  Future<String?> _resumeAt() async {
+    final Result<String?> place = await reading.resumeAt(ebookId);
+
+    switch (place) {
+      case Ok<String?>(:final String? value):
+        return value;
+      case Error<String?>(:final Exception error):
+        _log.warning('where $ebookId was left could not be read', error);
+
+        return null;
     }
   }
 

@@ -146,6 +146,30 @@ final class ReadingRepositoryImpl implements ReadingRepository {
   }
 
   @override
+  Future<Result<String?>> resumeAt(String ebookId) async {
+    try {
+      final String? here = await identity.deviceId();
+
+      if (here == null) {
+        // A device that has not been bound has written no position, so there
+        // is nothing of its own to come back to.
+        return const Result<String?>.ok(null);
+      }
+
+      final ProgressRow? row = await places.placeOf(
+        ebookId: ebookId,
+        deviceId: here,
+      );
+
+      return Result<String?>.ok(row?.locator);
+    } on Object catch (error) {
+      _log.warning('where $ebookId was left could not be read', error);
+
+      return Result<String?>.error(_failure(error));
+    }
+  }
+
+  @override
   Future<Result<void>> saveProgress({
     required String ebookId,
     required String locator,

@@ -205,9 +205,21 @@ final class _FakeHosts implements EpubHostFactory {
 }
 
 final class _FakeReading implements ReadingRepository {
-  _FakeReading({this.failure, this.gate});
+  _FakeReading({this.failure, this.gate, this.place, this.placeFailure});
 
   final Exception? failure;
+
+  /// Where this device stopped in the book, as the replica holds it.
+  final String? place;
+
+  /// The failure [resumeAt] answers with instead, for the case a reader must
+  /// not be shown: the book opens at the beginning and the only trace is a
+  /// line in the log.
+  final Exception? placeFailure;
+
+  /// What [resumeAt] was asked about, so that a test can tell *not asked* from
+  /// *asked and told nothing*.
+  final List<String> resumed = <String>[];
 
   /// What [openBook] waits on before answering, for a test that wants to look
   /// at the screen while the file is still being read.
@@ -231,6 +243,15 @@ final class _FakeReading implements ReadingRepository {
   /// Every position the screen recorded, in order.
   final List<({String locator, double? percent})> saved =
       <({String locator, double? percent})>[];
+
+  @override
+  Future<Result<String?>> resumeAt(String ebookId) async {
+    resumed.add(ebookId);
+
+    return placeFailure != null
+        ? Result<String?>.error(placeFailure!)
+        : Result<String?>.ok(place);
+  }
 
   @override
   Future<Result<void>> saveProgress({
@@ -1456,15 +1477,77 @@ void main() {
       expect(host.openedAt, cfi);
     });
 
-    testWidgets('opens where the host opens when nothing said', (
+    testWidgets('resumes where this device stopped when nothing said', (
       WidgetTester tester,
     ) async {
+      // The whole point of recording a position. Nothing in the location means
+      // *open this book*, and the answer to that is the page the reader was on
+      // — read to page ten, close, reopen, and it used to be page one, because
+      // the row was written faithfully and read by nothing.
+      const String cfi = 'epubcfi(/6/20[chap09]!/4/2/8[p4]/1:0)';
+      final _FakeReading reading = _FakeReading(place: cfi);
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host)));
+      await tester.pumpAndSettle();
+
+      expect(reading.resumed, <String>[_id]);
+      expect(host.openedAt, cfi);
+    });
+
+    testWidgets('the locator a mark led here with beats the saved place', (
+      WidgetTester tester,
+    ) async {
+      // A reader who followed a mark asked to go somewhere. Resuming over the
+      // top of that would answer a question they did not ask.
+      const String mark = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+      final _FakeReading reading = _FakeReading(
+        place: 'epubcfi(/6/20[chap09]!/4/2/8[p4]/1:0)',
+      );
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(_app(reading, _FakeHosts(host), at: mark));
+      await tester.pumpAndSettle();
+
+      expect(host.openedAt, mark);
+    });
+
+    testWidgets('opens where the host opens when there is no place either', (
+      WidgetTester tester,
+    ) async {
+      // A book this device has never opened. The host opens at the beginning
+      // and reports that as the position, which is not a failure.
       final _FakeHost host = _FakeHost();
 
       await tester.pumpWidget(_app(_FakeReading(), _FakeHosts(host)));
       await tester.pumpAndSettle();
 
       expect(host.openedAt, isNull);
+    });
+
+    testWidgets('a place that could not be read still opens the book', (
+      WidgetTester tester,
+    ) async {
+      // Refusing to show a reader their book because the app could not
+      // remember their page would be the wrong way round.
+      final _FakeHost host = _FakeHost();
+
+      await tester.pumpWidget(
+        _app(
+          _FakeReading(
+            placeFailure: const AppException(
+              kind: ErrorKind.internal,
+              message: 'the replica could not be read', // l10n-ignore
+              op: 'test',
+            ),
+          ),
+          _FakeHosts(host),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(host.openedAt, isNull);
+      expect(host.openAsked, isTrue);
     });
   });
 
