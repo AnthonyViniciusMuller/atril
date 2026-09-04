@@ -2280,6 +2280,14 @@ merged in order, which is why each fix names the section it belongs to and touch
       a build served from a sub-path with `--base-href` would not find an absolute
       `/assets/…`, and the reader would fail on the deployed site and nowhere else. It is the
       only line the browser target needs that the other five do not.
+- [x] `fix: read the instants this device already wrote` — `84b5b49` corrected the writer to
+      RFC 3339 and left the reader refusing everything written before it. The microseconds an
+      earlier build emitted are still sitting in **this device's own log**, so a reader that
+      threw on them would strand what came before the upgrade rather than a peer's mistake.
+      `instant()` accepts an integer as microseconds since the epoch beside the text it now
+      expects: one shape is written and both are read, which is the direction that has to be
+      asymmetric. The test that asserted the refusal of a number becomes the test that asserts
+      the number is read, and a map takes its place as the shape nothing can be made of.
 
 ## Open questions
 

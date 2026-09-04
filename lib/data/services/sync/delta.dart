@@ -237,6 +237,14 @@ extension type const Delta(Map<String, Object?> fields) {
       return null;
     }
 
+    // A number is what this device wrote before the encoding was corrected, and
+    // an operation from that time is still sitting in this device's own log. It
+    // is read rather than refused: the writer emits one shape and the reader
+    // accepts what a peer — including this device's past self — actually wrote.
+    if (value is int) {
+      return DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true);
+    }
+
     if (value is! String) {
       throw DeltaException(field, 'is not an instant');
     }

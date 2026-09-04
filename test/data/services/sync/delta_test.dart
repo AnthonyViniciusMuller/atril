@@ -120,16 +120,30 @@ void main() {
       }
     });
 
-    test('refuses an instant that is not RFC 3339 text', () {
-      const asNumber = Delta(<String, Object?>{fieldCreatedAt: 1773500966000000});
+    test('still reads the microseconds this device used to write', () {
+      // An operation authored before the encoding was corrected is still in
+      // this device's log. The writer emits one shape; the reader accepts what
+      // was actually written, or upgrading would strand what came before it.
+      final at = DateTime.utc(2026, 3, 14, 15, 9, 26);
+      final legacy = Delta(<String, Object?>{
+        fieldCreatedAt: at.microsecondsSinceEpoch,
+      });
+
+      expect(legacy.instant(fieldCreatedAt), at);
+    });
+
+    test('refuses an instant it can make nothing of', () {
       const asNonsense = Delta(<String, Object?>{fieldCreatedAt: 'yesterday'});
+      const asObject = Delta(<String, Object?>{
+        fieldCreatedAt: <String, Object?>{},
+      });
 
       expect(
-        () => asNumber.instant(fieldCreatedAt),
+        () => asNonsense.instant(fieldCreatedAt),
         throwsA(isA<DeltaException>()),
       );
       expect(
-        () => asNonsense.instant(fieldCreatedAt),
+        () => asObject.instant(fieldCreatedAt),
         throwsA(isA<DeltaException>()),
       );
     });
