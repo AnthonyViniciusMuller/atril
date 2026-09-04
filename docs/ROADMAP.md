@@ -363,8 +363,12 @@ listenable would be a type no widget and no `provider` could observe.
       `initialEndpoint` carries no address rather than `null` — an absent endpoint and an endpoint
       with no address are the same state, and `NodeEndpoint` already names the second. Two things
       in the graph are lazy on purpose: a device with no session reaches onboarding without
-      dialling a node nobody has chosen, and the session/auth-client cycle is closed by resolving
-      the refresher on first use rather than by a `late final`
+      dialling a node nobody has chosen, and the session/auth-client cycle is closed by
+      ~~resolving the refresher on first use rather than by a `late final`~~ — which was wrong,
+      and is corrected in the fix below. Deferring the lookup defers *when* it runs and not
+      *where* it looks: `provider` resolves upwards, and the client is declared under the holder
+      because it reads the holder, so no context the holder can hold will ever find it. It is a
+      `late final` at the composition root after all
 - [x] `feat: add the desktop window configuration` — a minimum size and a remembered one on
       Linux, macOS and Windows, so the adaptive layout has a floor to be correct at. The floor is
       400×600 and is deliberately *below* the compact threshold: a narrow desktop window is meant
@@ -2288,6 +2292,28 @@ merged in order, which is why each fix names the section it belongs to and touch
       expects: one shape is written and both are read, which is the direction that has to be
       asymmetric. The test that asserted the refusal of a number becomes the test that asserts
       the number is read, and a map takes its place as the shape nothing can be made of.
+- [x] `fix: let the session reach the client that refreshes it` — the composition root closed the
+      session/auth cycle with `refresher: () => context.read<AuthApi>()`, and `provider` resolves
+      **upwards**. `AuthApi` is declared under `SessionHolder` — it has to be, because it reads
+      the holder — so the lookup searched the half of the graph the client is not in. Deferring
+      the read defers *when* it runs and not *where* it looks, which is what the comment beside it
+      and the phase 0 entry above both got wrong. It failed nowhere near itself: a
+      `ProviderNotFoundError` at the first token refresh, caught by the gRPC layer and reported as
+      `UNAVAILABLE`, so **every call the app makes** read as a node that could not be reached —
+      `make run-linux` opened a channel to the local federation and then looped on a sync stream
+      that ended as fast as it opened. A `late final` at the composition root closes it, assigned
+      where `AuthApi` is built, and that provider becomes eager: the call that first meets a stale
+      token is usually not its own, since `SyncScheduler` is already eager and starts making them
+      before a screen is touched. Building it dials nothing — the channel is opened by the first
+      call. `test/architecture/provider_order_test.dart` holds the whole list to the rule, over
+      the shape this bug had; nothing had ever built the graph, which is why it shipped.
+- [x] `fix: survive a radio the platform will not answer` — `NodeReachability` subscribed to
+      `connectivity_plus` with no `onError`. The plugin reaches NetworkManager over the **system**
+      D-Bus, which a Linux container does not have, so every launch there threw an unhandled
+      `SocketException` out of the subscription — a crash report for the one signal this class is
+      documented not to draw a conclusion from. The failure is logged and the conclusion is left
+      where it was: the calls go on being the evidence, and the subscription survives to hear
+      whatever the platform says next.
 
 ## Open questions
 

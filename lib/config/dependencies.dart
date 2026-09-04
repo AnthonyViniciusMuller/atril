@@ -16,13 +16,20 @@
 /// A graph that branched on the flavour would be a second app that nobody runs
 /// and nobody tests.
 ///
-/// **Nearly everything is lazy, and one thing has to be.** `provider` builds a
-/// provider on its first read, and the app depends on that in two places. A
-/// device that has never been bound must reach onboarding without opening a
-/// channel to a node it has not chosen; and the session holds the client that
-/// refreshes it while that client makes its calls under the session, which is
-/// a real cycle — closed here by resolving the refresher when it is first
-/// needed rather than when the holder is built.
+/// **Nearly everything is lazy, and one thing depends on it.** `provider`
+/// builds a provider on its first read, and a device that has never been bound
+/// is what needs that: onboarding must be reachable without opening a channel
+/// to a node nobody has chosen.
+///
+/// **The session cycle is not closed by that laziness**, though it reads as if
+/// it could be. The holder refreshes through the client whose own calls the
+/// holder authorizes, so one of the two has to be reached later — but later is
+/// only *when*, and `provider` resolves a type by walking *up* from the
+/// provider asking. The client is declared under the holder, because it reads
+/// the holder, so no context the holder can hold will ever find it. A variable
+/// declared here closes the cycle instead, assigned where the client is built;
+/// `test/architecture/provider_order_test.dart` is what keeps the next read
+/// pointing upwards.
 library;
 
 import 'dart:async';
@@ -119,6 +126,13 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
   );
   final reconciler = Reconciler(database, clock);
 
+  // The client half of the session cycle, filled when the provider below
+  // builds it. It is a variable and not a lookup because `provider` resolves
+  // *upwards*: `AuthApi` is declared under `SessionHolder` — which is what
+  // lets it read the holder — so the holder cannot reach it through a context
+  // of its own, and the two comments at the providers say the rest.
+  late final AuthApi authApi;
+
   return <SingleChildWidget>[
     Provider<Environment>.value(value: environment),
     Provider<BlobStore>.value(value: blobs),
@@ -178,18 +192,32 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     ),
 
     // The cycle, closed. The holder is given a *function* that resolves the
-    // client, and `provider` builds that client the first time the function is
-    // called — which is the first refresh, long after both exist.
+    // client, so that the client is reached when a refresh needs it rather
+    // than when the holder is built.
+    //
+    // The function reads a variable and not the tree. `context.read` walks
+    // *up* from the provider it is given, and `AuthApi` is below this one —
+    // it has to be, because it reads the holder — so a lookup from here
+    // searches the half of the graph the client is not in. It does not fail
+    // where it is written: it fails at the first refresh, as an `UNAVAILABLE`
+    // on whichever call met a stale token, which is every call the app makes.
     Provider<SessionHolder>(
       create: (BuildContext context) => SessionHolder(
         store: context.read<SessionStore>(),
-        refresher: () => context.read<AuthApi>(),
+        refresher: () => authApi,
       ),
       dispose: (_, SessionHolder session) => session.dispose(),
     ),
 
+    // Eagerly, because this is the assignment the holder above is waiting on
+    // and the call that needs it is not necessarily one of this client's: any
+    // of the five meets the stale token first, and `SyncScheduler` — also
+    // eager, and further down — starts making them before a screen is
+    // touched. Building it dials nothing; the channel is opened by the first
+    // call.
     Provider<AuthApi>(
-      create: (BuildContext context) => AuthApi(
+      lazy: false,
+      create: (BuildContext context) => authApi = AuthApi(
         connection: context.read<NodeConnection>(),
         session: context.read<SessionHolder>(),
         reachability: context.read<NodeReachability>(),
