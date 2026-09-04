@@ -1,7 +1,10 @@
 /// The shelf, its two shapes, and the two things an empty one can mean.
 library;
 
+import 'dart:typed_data';
+
 import 'package:atril/data/repositories/library/library_repository.dart';
+import 'package:atril/data/services/epub/epub_metadata.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
 import 'package:atril/domain/models/collection.dart';
@@ -177,6 +180,32 @@ void main() {
 
     expect(find.byType(GridView), findsOneWidget);
     expect(find.text('Vidas Secas'), findsOneWidget);
+  });
+
+  testWidgets('shows a cover that was extracted after the shelf asked', (
+    WidgetTester tester,
+  ) async {
+    // The order a seeded device meets a book in: the row arrives from the
+    // node, the shelf asks for a cover and is told there is none — truthfully
+    // — and the file lands seconds later. A cell that took that first answer
+    // as final left the reader looking at a placeholder over a book this
+    // device had a picture of, on a screen that is never rebuilt because every
+    // route is pushed over it.
+    final (:library, :picker) = await pump(tester, width: gridWidth + 200);
+
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_work('Vidas Secas')]));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Image), findsNothing);
+
+    library.extractCover(
+      'a',
+      EpubCover(mediaType: 'image/png', bytes: Uint8List.fromList(_onePixel)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Image), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('names a work whose author the file did not say', (
@@ -465,3 +494,17 @@ void main() {
     expect(find.textContaining('no such table'), findsNothing);
   });
 }
+
+/// A one-pixel PNG, which is a picture Flutter will actually decode.
+///
+/// The bytes matter and their content does not: what the assertion is about is
+/// that the cell asked again, and a cover that would not decode would fall
+/// back to the same placeholder for a different reason.
+const List<int> _onePixel = <int>[
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, //
+  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, //
+  0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, //
+  0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, //
+  0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, //
+  0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82, //
+];

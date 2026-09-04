@@ -348,12 +348,28 @@ abstract interface class LibraryRepository {
   /// it is derived from a file this device holds and changes exactly when that
   /// file arrives, so a shelf of two hundred books would otherwise open two
   /// hundred queries that wake on every import. A tile asks once for the work
-  /// it is showing.
+  /// it is showing, and hears about a later one through [coversExtracted].
   ///
   /// `null` is the ordinary answer, not a failure. A work whose file is on the
   /// node and not here has no cover to extract, and neither has one in a
   /// format this app does not open.
   Future<Result<EpubCover?>> cover(String ebookId);
+
+  /// The works whose cover this device has just extracted.
+  ///
+  /// It exists because a work reaches the shelf *before* its bytes do. A
+  /// device that was just bound is seeded with the reader's whole collection
+  /// and downloads the files afterwards, so a tile that asked [cover] the
+  /// moment the row arrived was told `null` — correctly, and then never again.
+  /// The reader was left looking at a placeholder over a book whose cover this
+  /// device had extracted seconds later, on a screen that is kept alive under
+  /// every route pushed over it and so is never rebuilt.
+  ///
+  /// It carries identifiers and not covers, and it is one broadcast rather
+  /// than a query per work: a shelf of two hundred books is two hundred
+  /// listeners on one stream, woken only when a cover is actually written.
+  /// That is the whole reason [cover] can stay a `Future`.
+  Stream<String> get coversExtracted;
 }
 
 /// The operation a failed reading of the collection reports under.

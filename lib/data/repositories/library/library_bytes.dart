@@ -89,6 +89,19 @@ mixin LibraryBytes implements LibraryRepository {
   /// What stamps an import.
   DateTime Function() get now;
 
+  /// Who has been told that a cover was extracted.
+  ///
+  /// It is a field of the mixin and not something the class provides, because
+  /// extracting a cover is what this half does: the record half has nothing to
+  /// announce. It is never closed, and that is deliberate rather than an
+  /// oversight — the composition root builds one repository for the life of
+  /// the app, and it outlives every tile that listens to it.
+  final StreamController<String> _extracted =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get coversExtracted => _extracted.stream;
+
   @override
   Future<Result<Ebook>> importEbook(FileSource file) async {
     try {
@@ -489,6 +502,13 @@ mixin LibraryBytes implements LibraryRepository {
         mediaType: cover.mediaType,
         bytes: cover.bytes,
       );
+
+      // The one place a cover appears *after* the row it belongs to, which is
+      // the ordinary case on a device that was seeded: the shelf asked while
+      // the file was still coming and was told there was none. An import needs
+      // no announcement — the cover is written in the same transaction as the
+      // work, so nothing can have asked yet.
+      _extracted.add(work.id);
     }
   }
 

@@ -455,4 +455,17 @@ final class FakeLibraryRepository implements LibraryRepository {
   @override
   Future<Result<EpubCover?>> cover(String ebookId) async =>
       Result<EpubCover?>.ok(covers[ebookId]);
+
+  final StreamController<String> _extracted =
+      StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get coversExtracted => _extracted.stream;
+
+  /// Puts [cover] on [ebookId] the way a finished download does: the row was
+  /// already on the shelf, and the picture arrives after it.
+  void extractCover(String ebookId, EpubCover cover) {
+    covers[ebookId] = cover;
+    _extracted.add(ebookId);
+  }
 }

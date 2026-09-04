@@ -6,13 +6,16 @@
 /// it is derived from a file this device holds and changes exactly when that
 /// file arrives, so a shelf of two hundred books watching two hundred covers
 /// would be two hundred queries waking on every import, for a picture that did
-/// not change.
+/// not change. It asks again only when the repository says the cover of *this*
+/// work was extracted, which is one broadcast and no second query.
 ///
 /// A work with no cover is the ordinary case and not a gap to apologize for:
 /// its file may be on the node and not here, or a format whose metadata this
 /// app does not read. The placeholder says the one thing that is always known,
 /// which is what format the work is.
 library;
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -108,6 +111,14 @@ class WorkCard extends StatelessWidget {
 /// shelf of two hundred books watching two hundred covers would be two hundred
 /// queries waking on every import — for a picture that did not change.
 ///
+/// **Once is not the same as once and for all.** The row of a work arrives
+/// before its file: a device that was just bound is seeded with the reader's
+/// whole collection and fetches the bytes after it, so the first answer for a
+/// freshly seeded shelf is a truthful `null` that stops being true a moment
+/// later. So the cell listens for the identifier of a work whose cover was
+/// just extracted and asks again for its own — one listener on one broadcast,
+/// which is what keeps this a cell that does not watch the database.
+///
 /// A work with no cover is the ordinary case and not a gap to apologize for:
 /// its file may be on the node and not here, or be a format whose metadata
 /// this app does not read. The placeholder says the one thing that is always
@@ -124,6 +135,40 @@ class _Cover extends StatefulWidget {
 
 class _CoverState extends State<_Cover> {
   late Future<Result<EpubCover?>> _cover = _load();
+
+  late final StreamSubscription<String> _extracted;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Asked once is not the same as asked too early. A work reaches the shelf
+    // before its bytes do — a device that was just bound is seeded with the
+    // collection and downloads the files afterwards — so the first answer for
+    // half a freshly seeded library is a truthful `null` that stops being true
+    // a few seconds later. The repository says which work it just extracted a
+    // cover for; this is one listener on one broadcast and not a second query.
+    _extracted = context.read<LibraryRepository>().coversExtracted.listen(
+      _onExtracted,
+    );
+  }
+
+  @override
+  void dispose() {
+    unawaited(_extracted.cancel());
+    super.dispose();
+  }
+
+  /// Asks again for the work this cell is showing, and ignores every other.
+  void _onExtracted(String ebookId) {
+    if (ebookId != widget.work.id) {
+      return;
+    }
+
+    setState(() {
+      _cover = _load();
+    });
+  }
 
   Future<Result<EpubCover?>> _load() =>
       context.read<LibraryRepository>().cover(widget.work.id);
