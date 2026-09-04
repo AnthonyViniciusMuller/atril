@@ -61,6 +61,28 @@ void main() {
       );
     });
 
+    test('falls back to the spine while the engine cannot answer', () {
+      // What the reader sees for the first minutes of a large book. The
+      // estimate is the section out of the spine, reported by the script this
+      // app injects, and it loses to the engine's own number the moment there
+      // is one.
+      expect(
+        epubPositionOf(
+          fev.EpubLocation(startCfi: 'a', endCfi: 'b', progress: 0),
+          estimate: 0.169,
+        ).percent,
+        0.169,
+      );
+
+      expect(
+        epubPositionOf(
+          fev.EpubLocation(startCfi: 'a', endCfi: 'b', progress: 0.5),
+          estimate: 0.169,
+        ).percent,
+        50,
+      );
+    });
+
     test('reports nothing where the engine has not finished computing', () {
       // A book whose location index is still generating reports 0 — for two
       // minutes, on a book of a thousand sections — and this host used to

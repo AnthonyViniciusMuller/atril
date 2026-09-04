@@ -37,6 +37,7 @@ import '../../../utils/logging.dart';
 import 'engine.dart';
 import 'epub_host.dart';
 import 'page_input.dart';
+import 'page_place.dart';
 
 final _log = loggerFor('data/epub');
 
@@ -314,11 +315,13 @@ final class WebviewEpubHost implements EpubHost {
 
     webview.addHandler(pageTapHandler, (List<dynamic> _) => _onPageTap());
     webview.addHandler(pageKeyHandler, _onPageKey);
+    webview.addHandler(pagePlaceHandler, _onPlace);
 
     try {
       await webview.callMethod('eval', <Object?>[
         pageInputScript(withKeys: true),
       ]);
+      await webview.callMethod('eval', <Object?>[pagePlaceScript()]);
     } on Object catch (error) {
       // Not fatal and not shown. The book is on screen and every control in
       // the chrome still works; what is lost is the tap and the keyboard, and
@@ -400,12 +403,40 @@ final class WebviewEpubHost implements EpubHost {
     }
   }
 
+  /// The page's place in the spine, as the injected reporter last said.
+  ///
+  /// Held rather than asked for, because it arrives with the relocation it
+  /// describes: the reporter is registered synchronously on the engine's own
+  /// event and the glue's handler waits on two promises before it sends, so
+  /// this is already the current page's by the time the position lands.
+  double? _estimate;
+
+  void _onPlace(List<dynamic> args) {
+    final Object? raw = args.isEmpty ? null : args.first;
+
+    if (raw is! Map) {
+      return;
+    }
+
+    final Object? index = raw['index'];
+    final Object? spine = raw['spine'];
+
+    if (index is! num || spine is! num) {
+      return;
+    }
+
+    _estimate = epubSpinePercentOf(
+      index: index.toInt(),
+      spine: spine.toInt(),
+    );
+  }
+
   void _onRelocated(fev.EpubLocation location) {
     if (_positions.isClosed) {
       return;
     }
 
-    _positions.add(epubPositionOf(location));
+    _positions.add(epubPositionOf(location, estimate: _estimate));
   }
 
   /// Asks the engine where the reader is, now that it can say how far in.
@@ -431,6 +462,8 @@ final class WebviewEpubHost implements EpubHost {
     }
 
     try {
+      // Read before the call, so that the answer is judged against the place
+      // the reporter had for the page it describes.
       _onRelocated(await _controller.getCurrentLocation());
     } on Object catch (error) {
       _log.warning('the engine would not say where the reader is', error);
@@ -494,11 +527,14 @@ final class _Rendering {
 /// message through, which is what keeps a percentage on this target and a
 /// percentage on that one the same measurement.
 @visibleForTesting
-EpubPosition epubPositionOf(fev.EpubLocation location) => EpubPosition(
-  startCfi: location.startCfi,
-  endCfi: location.endCfi,
-  percent: epubPercentOf(location.progress),
-);
+EpubPosition epubPositionOf(fev.EpubLocation location, {double? estimate}) =>
+    EpubPosition(
+      startCfi: location.startCfi,
+      endCfi: location.endCfi,
+      // The engine's own answer whenever it has one, and the spine's when it
+      // does not. `page_place.dart` argues the estimate and why it loses.
+      percent: epubPercentOf(location.progress) ?? estimate,
+    );
 
 /// The package's spread for the port's.
 @visibleForTesting

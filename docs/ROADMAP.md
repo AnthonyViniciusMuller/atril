@@ -2423,6 +2423,29 @@ merged in order, which is why each fix names the section it belongs to and touch
       locator is not checked against the format on the way through, because both hosts already
       refuse one they cannot resolve and open at the beginning instead
 
+- [x] `fix: estimate the place from the spine until the index exists` — `b919d7f` stopped the app
+      claiming a percentage it did not have and `db548e9` made it ask again when the engine could
+      finally give one, and between them the number simply stopped appearing: on a book whose
+      index takes over two minutes, a reading session shorter than that now has no percentage at
+      all, which is honest and useless. **The engine knows which section the page is in before it
+      has read a word of any of them.** `location.start.index` out of `book.spine.length` is a
+      real measurement of how far through the book the reader is, available from the first
+      relocation, and `page_place.dart` is the script that reports it — injected through the same
+      door `page_input.dart` uses and argued the same way: the renderer is pinned by digest
+      because a locator is produced by the glue and the engine together, and this reads two
+      numbers the engine already computed rather than resolving anything. It parses no CFI. Every
+      position carries the engine's own answer when there is one and the spine's when there is
+      not, so the estimate is replaced the moment the index lands — and `locationLoaded` is what
+      asks for a fresh position to replace it with. **The coarseness is self-correcting in the
+      direction that matters**: a thousand-section book is where the index takes minutes and where
+      one section is 0.08% of the whole; ten fat chapters is where a section is a tenth of the
+      book and the index lands in about a second. Verified against the reader's own file by
+      injecting the script into the pinned `swipe.html` under the sequence the Linux host uses —
+      `{index: 0, spine: 1182}` on injection, `{index: 2, spine: 1182}` after twelve page turns,
+      with the engine still answering 0. **Which is also the honest news about that book**: twelve
+      turns is 0.17% of it, the display rounds to 0%, and a bar that barely moves there is the
+      truth about a work of 1182 chapters rather than a fault in the measurement
+
 ## Open questions
 
 Recorded rather than answered, and each one should be settled before the phase that needs it.

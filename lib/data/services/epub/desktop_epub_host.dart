@@ -43,6 +43,7 @@ import 'engine.dart';
 import 'engine_server.dart';
 import 'epub_host.dart';
 import 'page_input.dart';
+import 'page_place.dart';
 
 final _log = loggerFor('data/epub');
 
@@ -579,6 +580,8 @@ final class DesktopEpubHost implements EpubHost {
         }
       case pageKeyHandler:
         _onPageKey(args);
+      case pagePlaceHandler:
+        _onPlace(args.isEmpty ? null : args.first);
       default:
         break;
     }
@@ -610,6 +613,7 @@ final class DesktopEpubHost implements EpubHost {
 
     try {
       await webview.executeJavaScript(pageInputScript(withKeys: false));
+      await webview.executeJavaScript(pagePlaceScript());
     } on Object catch (error) {
       // Not fatal and not shown, for the reason the webview host gives: the
       // book is readable and the chrome's controls all work, and what is lost
@@ -690,6 +694,32 @@ final class DesktopEpubHost implements EpubHost {
     }
   }
 
+  /// The page's place in the spine, as the injected reporter last said.
+  ///
+  /// Held rather than asked for, because it arrives with the relocation it
+  /// describes: the reporter is registered synchronously on the engine's own
+  /// event and the glue's handler waits on two promises before it sends, so
+  /// this is already the current page's by the time the position lands.
+  double? _estimate;
+
+  void _onPlace(Object? raw) {
+    if (raw is! Map<Object?, Object?>) {
+      return;
+    }
+
+    final Object? index = raw['index'];
+    final Object? spine = raw['spine'];
+
+    if (index is! num || spine is! num) {
+      return;
+    }
+
+    _estimate = epubSpinePercentOf(
+      index: index.toInt(),
+      spine: spine.toInt(),
+    );
+  }
+
   void _onRelocated(Object? raw) {
     if (raw is! Map<Object?, Object?> || _positions.isClosed) {
       return;
@@ -711,7 +741,9 @@ final class DesktopEpubHost implements EpubHost {
       EpubPosition(
         startCfi: start,
         endCfi: end,
-        percent: epubPercentOf(raw['progress']),
+        // The engine's own answer whenever it has one, and the spine's when it
+        // does not. `page_place.dart` argues the estimate and why it loses.
+        percent: epubPercentOf(raw['progress']) ?? _estimate,
       ),
     );
   }
