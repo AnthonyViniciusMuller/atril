@@ -683,6 +683,16 @@
     "description": "Mostrado no lugar do formato quando o servidor conhece um formato que esta versão do aplicativo não sabe nomear. O livro continua listado e sincronizado; só não dá para dizer o que ele é."
   },
 
+  "ebookPlacesSection": "Onde você parou",
+  "@ebookPlacesSection": {
+    "description": "Título da seção que lista onde cada aparelho do leitor parou neste livro. A tira da biblioteca mostra um cartão por livro; esta seção é onde os aparelhos aparecem um a um, que é o que a RN01 pede."
+  },
+
+  "ebookPlaceNoPercent": "Sem porcentagem",
+  "@ebookPlaceNoPercent": {
+    "description": "Mostrado no lugar da porcentagem quando o aparelho que gravou a posição não conseguiu calcular quanto do livro já foi lido — um aparelho que não abre o formato ainda registra onde parou."
+  },
+
   "ebookShelvesSection": "Estantes",
   "@ebookShelvesSection": {
     "description": "Título da seção que mostra em quais estantes e categorias o livro está arquivado."

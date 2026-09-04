@@ -747,6 +747,18 @@ abstract class AppLocalizations {
   /// **'Formato desconhecido'**
   String get ebookUnknownFormat;
 
+  /// Título da seção que lista onde cada aparelho do leitor parou neste livro. A tira da biblioteca mostra um cartão por livro; esta seção é onde os aparelhos aparecem um a um, que é o que a RN01 pede.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Onde você parou'**
+  String get ebookPlacesSection;
+
+  /// Mostrado no lugar da porcentagem quando o aparelho que gravou a posição não conseguiu calcular quanto do livro já foi lido — um aparelho que não abre o formato ainda registra onde parou.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Sem porcentagem'**
+  String get ebookPlaceNoPercent;
+
   /// Título da seção que mostra em quais estantes e categorias o livro está arquivado.
   ///
   /// In pt_BR, this message translates to:

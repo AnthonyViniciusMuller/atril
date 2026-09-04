@@ -1044,6 +1044,11 @@ and they are recorded here because none of them is visible from the package's RE
       reader is are not in conflict — they are two true statements about two devices. Collapsing
       them would be this application deciding which of a reader's devices counts.
 
+      **Half of this was later reversed** — see `fix: show one card per book in the strip, and the
+      devices on the book's own screen` at the end of this file. The two statements are still two
+      statements and nothing merges them, but the strip is not where they belong: it answers a
+      question about *books*, and the book's own screen is where every device's place is listed.
+
       **It says *another device* and never which one, and that is a finding rather than a
       shortcut.** Nothing in this application stores the reader's other devices: `ListDevices` is
       in the contract and phase 12 is what calls it. Until then the honest answer is that some
@@ -2445,6 +2450,50 @@ merged in order, which is why each fix names the section it belongs to and touch
       with the engine still answering 0. **Which is also the honest news about that book**: twelve
       turns is 0.17% of it, the display rounds to 0%, and a bar that barely moves there is the
       truth about a work of 1182 chapters rather than a fault in the measurement
+
+- [x] `fix: ask again for a cover that arrived after the shelf did` — a shelf of placeholders over
+      books this device had pictures of, on the web, after every sign-in. **The cover was never
+      lost**: the replica held a 316 kB JPEG for the work on screen, the book's own screen drew
+      it, and a cell built fresh — by narrowing the window until the grid becomes a list — drew it
+      too. What was wrong is *when* the grid asked. A device that was just bound is seeded with
+      the reader's whole collection and downloads the files after it, so the row reaches the shelf
+      seconds before the bytes do; `_Cover` asked once, was told `null` — truthfully — and cached
+      that answer for the life of the screen, which under a pushed route is never rebuilt. The
+      work's own screen never had the bug, because `EbookViewModel` already asks again when the
+      file lands. `LibraryRepository.coversExtracted` is the missing signal: identifiers and not
+      pictures, one broadcast rather than a query per work, so a shelf of two hundred books is
+      still two hundred listeners and not two hundred watches on the replica — which is what the
+      tile's comment claimed to be protecting all along. **Found by attaching to the running
+      `flutter run -d chrome`** over Chrome's debugging port and reading the web replica out of
+      IndexedDB, which is how the picture was shown to be there before a line was changed
+
+- [x] `fix: show one card per book in the strip, and the devices on the book's own screen` — seven
+      identical *Circle of Inevitability* cards across the top of the library, each saying *em
+      outro dispositivo*. Six of those devices were an artifact of `flutter run -d chrome` handing
+      the app a fresh Chrome profile every launch, so the client correctly bound a new device each
+      time and the node kept all seven — **but the pile-up is the design and not the accident**:
+      one card per *device* is what the strip was written to do, and a reader with a phone, a
+      tablet and a laptop in one novel would see it on their own machines.
+
+      **This reverses the decision the entry above the reading section states**, and it is worth
+      saying which half of it was wrong. *Where is each of my devices in this book* really is a
+      question with one answer per device, and C05 is why: a position belongs to one work and one
+      device and is written by that device alone, so a phone and a desktop are two true statements
+      and nothing may merge them. What did not follow is that the *strip* is where they belong.
+      The strip answers *what is there to carry on with*, which is a question about books — three
+      appliances in the middle of one novel are one novel — and spending a band with room for
+      twenty books on three views of one is the question being answered wrong, not carefully.
+
+      So `watchContinueReading` is one row per work now, and the collapsing is in SQL where the
+      ordering already was: `limit` counts books, and grouping by the work while asking for the
+      newest instant leans on SQLite's documented rule that a bare column beside `max` comes from
+      the row the maximum came from — the DAO test is what would notice the day that stopped being
+      true. Nothing is merged: the row that survives is one some device actually wrote, and the
+      card still says whether it was this one. **RN01 moves rather than goes**: `watchPlacesIn`
+      existed from phase 7 and was called by nothing, and the book's own screen now lists every
+      device's place under *Onde você parou* — which is where somebody asking that question
+      already is. The card can still name a place this device will not open at, because `resumeAt`
+      opens where *this* machine stopped, and that stays right for the reason it always was
 
 - [x] `feat: let the reader look at the password they typed` — a password typed blind on a phone
       keyboard is the usual reason a reader is told their credentials are wrong when they are not,

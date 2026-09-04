@@ -1,9 +1,10 @@
 /// What the screen of one work knows.
 ///
-/// It watches four things and they change independently: the record, where its
-/// bytes are, which shelves it is on, and the cover this device extracted. The
-/// record arrives by synchronization, the bytes by a transfer, the shelves by
-/// either — so a screen built from one snapshot of all four would be a screen
+/// It watches five things and they change independently: the record, where its
+/// bytes are, which shelves it is on, where each of the reader's devices
+/// stopped in it, and the cover this device extracted. The record arrives by
+/// synchronization, the bytes by a transfer, the shelves and the places by
+/// either — so a screen built from one snapshot of all five would be a screen
 /// that goes stale while the reader is looking at it.
 ///
 /// **The work becomes `null` rather than failing.** Another device can delete
@@ -18,6 +19,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/content/content_downloader.dart';
 import '../../../data/services/epub/epub_metadata.dart';
 import '../../../domain/models/collection.dart';
@@ -31,8 +33,13 @@ final _log = loggerFor('ui/library');
 
 /// The state of one work's screen.
 final class EbookViewModel extends ChangeNotifier {
-  /// The view model over [library], about the work [ebookId] names.
-  EbookViewModel({required this.library, required this.ebookId}) {
+  /// The view model over [library] and [reading], about the work [ebookId]
+  /// names.
+  EbookViewModel({
+    required this.library,
+    required this.reading,
+    required this.ebookId,
+  }) {
     save = Command1<void, EbookEdits>(
       (EbookEdits edits) => library.editEbook(ebookId, edits),
     );
@@ -53,12 +60,17 @@ final class EbookViewModel extends ChangeNotifier {
     _work = library.watchEbook(ebookId).listen(_onWork);
     _content = library.watchContent(ebookId).listen(_onContent);
     _shelves = library.watchCollectionsOf(ebookId).listen(_onShelves);
+    _places = reading.watchPlacesIn(ebookId).listen(_onPlaces);
 
     unawaited(_loadCover());
   }
 
   /// Where the work is read from.
   final LibraryRepository library;
+
+  /// Where reading got to, which is the one thing about this book that is
+  /// answered per device rather than per work.
+  final ReadingRepository reading;
 
   /// The work this screen is about.
   final String ebookId;
@@ -112,6 +124,7 @@ final class EbookViewModel extends ChangeNotifier {
   late final StreamSubscription<Result<ContentState>> _content;
   late final StreamSubscription<Result<List<Collection>>> _shelves;
   late final StreamSubscription<Result<List<Collection>>> _allShelves;
+  late final StreamSubscription<Result<List<ReadingPlace>>> _places;
 
   Ebook? _ebook;
   bool _loaded = false;
@@ -119,6 +132,7 @@ final class EbookViewModel extends ChangeNotifier {
   List<Collection> _collections = const <Collection>[];
   List<Collection> _all = const <Collection>[];
   EpubCover? _cover;
+  List<ReadingPlace> _placesRead = const <ReadingPlace>[];
   DownloadProgress? _progress;
   Cancellation? _cancellation;
 
@@ -137,6 +151,15 @@ final class EbookViewModel extends ChangeNotifier {
 
   /// The shelves this work is filed under.
   List<Collection> get collections => _collections;
+
+  /// Where each of the reader's devices stopped in this work, most recent
+  /// first, and empty for a book nobody has opened.
+  ///
+  /// It is every device's row and not one of them. RN01 asks for that, and
+  /// this screen is where it is answered: the shelf's strip is about books and
+  /// shows one place per book, so *where are all my devices in this one* has
+  /// nowhere else to be asked.
+  List<ReadingPlace> get places => _placesRead;
 
   /// Every shelf the reader has, which is what the chooser offers.
   ///
@@ -168,6 +191,7 @@ final class EbookViewModel extends ChangeNotifier {
     unawaited(_work.cancel());
     unawaited(_content.cancel());
     unawaited(_shelves.cancel());
+    unawaited(_places.cancel());
     unawaited(_allShelves.cancel());
     // The commands are disposed with the model, `restore` included: it may be
     // run after this point, and a disposed command runs and keeps its result.
@@ -279,6 +303,19 @@ final class EbookViewModel extends ChangeNotifier {
     if (result case Ok<List<Collection>>(:final value)) {
       _collections = value;
       notifyListeners();
+    }
+  }
+
+  void _onPlaces(Result<List<ReadingPlace>> result) {
+    switch (result) {
+      case Ok<List<ReadingPlace>>(:final value):
+        _placesRead = value;
+        notifyListeners();
+      case Error<List<ReadingPlace>>(:final error):
+        // Logged and not shown. Where the reader's other devices are is worth
+        // a section and is not worth an error on a screen whose subject — the
+        // book — is on it and readable.
+        _log.warning('the places in $ebookId could not be read', error);
     }
   }
 }

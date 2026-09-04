@@ -1,11 +1,26 @@
-/// The books this reader has already started, and where each device left them.
+/// The books this reader has already started, and where each was last left.
 ///
-/// **It shows every device's place and not one per book.** RN01 asks for that
-/// and C05 makes it correct: a position belongs to one work and one device and
-/// is written by that device alone, so a phone and a desktop disagreeing about
-/// where the reader is are not in conflict — they are two true statements about
-/// two devices. Collapsing them would be this application deciding which of a
-/// reader's devices counts, which is a decision nobody asked it to make.
+/// **It shows one card per book and not one per device.** The strip answers
+/// *what is there to carry on with*, and a reader whose phone and laptop are
+/// both in the middle of one novel has one novel to carry on with — a band
+/// repeating a title six times says nothing six times and pushes five other
+/// books out of the room it had. The card carries the place that work was last
+/// left at, whichever device left it there.
+///
+/// **It is not a merge, and RN01 is not given up.** A position belongs to one
+/// work and one device and is written by that device alone (C05), so nothing
+/// is averaged or reconciled here: the card shows one device's row and says
+/// whose. Where every one of a reader's devices is in a book is a question the
+/// book's own screen asks, and that is where showing them all belongs — beside
+/// the book somebody is asking about, rather than spread across a strip about
+/// every book at once.
+///
+/// **The card can name a place this device will not open at.** Tapping goes
+/// into the reader, and the reader resumes from *this* device's own row: a
+/// book last left at 47% on a phone opens here at whatever page this machine
+/// reached, which may be its first. That is `resumeAt`'s rule and not an
+/// oversight — somebody coming back to the machine they were reading on
+/// expects the page they left, not the one their phone reached on the train.
 ///
 /// **It says *another device* and never which one.** Nothing in this
 /// application stores the reader's other devices: `ListDevices` is in the

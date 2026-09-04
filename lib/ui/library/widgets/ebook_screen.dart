@@ -19,6 +19,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/content/content_downloader.dart';
 import '../../../domain/models/ebook.dart';
 import '../../../routing/routes.dart';
@@ -53,6 +54,7 @@ class EbookScreen extends StatefulWidget {
 class _EbookScreenState extends State<EbookScreen> {
   late final EbookViewModel _model = EbookViewModel(
     library: context.read<LibraryRepository>(),
+    reading: context.read<ReadingRepository>(),
     ebookId: widget.ebookId,
   );
 
@@ -333,6 +335,7 @@ class _Work extends StatelessWidget {
         const SizedBox(height: 24),
         _FileSection(model: model),
         const SizedBox(height: 16),
+        _PlacesSection(places: model.places),
         _Section(title: l10n.ebookMetadataSection),
         if (work.publisher case final String publisher)
           _Fact(label: l10n.ebookPublisher, value: publisher),
@@ -622,6 +625,68 @@ class _Section extends StatelessWidget {
 }
 
 /// One labelled fact about the work.
+/// Where each of the reader's devices stopped in this book.
+///
+/// **This is where RN01 is answered.** A position belongs to one work and one
+/// device and is written by that device alone (C05), so the reader's
+/// appliances do not agree about where they are and are not meant to: they are
+/// several true statements. The shelf's strip is about *books* and shows the
+/// place each was last left at, one card apiece; the question *where are all
+/// of my devices in this one* is about a book, and this is the screen about a
+/// book.
+///
+/// **It is absent and not empty for a book nobody has opened.** A section
+/// headed with a sentence and holding nothing tells the reader there is
+/// something missing, and there is not — they have not started it.
+///
+/// It says *another device* and never which one, for the reason the strip
+/// does: nothing in this application stores the reader's other devices.
+/// `ListDevices` is in the contract and phase 12 is what calls it, and until
+/// then inventing a name would be worse than the shorter sentence.
+class _PlacesSection extends StatelessWidget {
+  const _PlacesSection({required this.places});
+
+  /// Every device's place, most recent first.
+  final List<ReadingPlace> places;
+
+  @override
+  Widget build(BuildContext context) {
+    if (places.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _Section(title: l10n.ebookPlacesSection),
+        for (final place in places)
+          _Fact(
+            label: place.onThisDevice
+                ? l10n.libraryContinueHere
+                : l10n.libraryContinueElsewhere,
+            // The same two sentences the strip uses, and deliberately the same
+            // two messages: one phrase written twice is two places to change
+            // it and two chances for a translator to be handed the same
+            // sentence twice.
+            //
+            // Absent rather than zero where nothing could compute one: a
+            // device that cannot open the format still records where it
+            // stopped, and a confident 0% would be a claim.
+            value: switch (place.percent) {
+              final double percent => l10n.libraryContinuePercent(
+                percent.round(),
+              ),
+              null => l10n.ebookPlaceNoPercent,
+            },
+          ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
 class _Fact extends StatelessWidget {
   const _Fact({required this.label, required this.value});
 

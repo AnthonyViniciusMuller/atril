@@ -119,6 +119,12 @@
   "ebookSize": "Size",
   "ebookImportedAt": "Added on",
   "ebookUnknownFormat": "Unknown format",
+  "ebookPlacesSection": "Where you stopped",
+  "@ebookPlacesSection": {},
+
+  "ebookPlaceNoPercent": "No percentage",
+  "@ebookPlaceNoPercent": {},
+
   "ebookShelvesSection": "Shelves",
   "ebookNoShelves": "It is not on any shelf.",
   "ebookFileSection": "File",

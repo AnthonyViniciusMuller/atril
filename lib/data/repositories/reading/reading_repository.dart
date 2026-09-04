@@ -55,8 +55,16 @@ const String codeEbookTooLarge = 'ebook_too_large';
 /// that and C05 is what makes it correct: a position belongs to one work and
 /// one device and is written by that device alone, so a phone and a desktop
 /// disagreeing about where the reader is are not in conflict — they are two
-/// true statements. Collapsing them here would be this application deciding
-/// which of a reader's devices counts.
+/// true statements. Nothing merges them, and [watchPlacesIn] is where all of
+/// them are answered.
+///
+/// **Which of them a screen shows is the screen's question and not this
+/// one's.** *Where are my devices in this book* wants every row, and the
+/// book's own screen asks it. *What is there to come back to* is a question
+/// about books, and three appliances in the middle of one novel are one thing
+/// to come back to — so [watchContinueReading] answers with the place each
+/// work was last left at. Neither is a merge: both hand back a row exactly one
+/// device wrote.
 final class ReadingPlace {
   /// The place [work] was left at.
   const ReadingPlace({
@@ -150,18 +158,27 @@ abstract interface class ReadingRepository {
     double? percent,
   });
 
-  /// UC04. Where this reader's devices stopped, most recent first.
+  /// UC04. The place each of this reader's books was last left at, most recent
+  /// first — one per work, whichever device left it there.
   ///
-  /// It is what *continue reading* is built from, and it answers with every
-  /// device's row rather than one per work: where each device stopped in each
-  /// book is a question with one answer per device, and showing them all is the
-  /// point (RN01).
+  /// It is what *continue reading* is built from, and one row per work is what
+  /// that question has one of: a reader whose phone and laptop are both in the
+  /// middle of one novel has one novel to carry on with, not two. The row is
+  /// still one device's — [onThisDevice] says whether it is this one's — and
+  /// every device's row is answered by [watchPlacesIn], which is where RN01's
+  /// *show them all* lives.
+  ///
+  /// [limit] therefore counts books. A strip with room for twenty of them
+  /// should hold twenty, and not three views of the same one.
   ///
   /// A tombstoned work is left out. A reader who deleted a book has said they
   /// are not reading it.
   Stream<Result<List<ReadingPlace>>> watchContinueReading({int limit});
 
   /// Where this reader's devices are in one work, most recent first.
+  ///
+  /// Every device that has stopped anywhere in it, and no collapsing: this is
+  /// the answer RN01 asks for, and the book's own screen is what shows it.
   Stream<Result<List<ReadingPlace>>> watchPlacesIn(String ebookId);
 
   /// The record itself, for the chrome around the page.

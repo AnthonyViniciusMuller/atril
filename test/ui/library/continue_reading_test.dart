@@ -1,10 +1,12 @@
 /// The strip of books a reader is part-way through.
 ///
-/// What is worth pinning here is the shape of the claim it makes: one card per
-/// *device*, not one per book, and no name for a device that is not this one.
-/// Both are decisions the roadmap argues and both would be easy to quietly
-/// undo — collapsing the rows would look like tidying, and inventing a device
-/// name would look like a feature.
+/// What is worth pinning here is the shape of the claim it makes: a card for
+/// each place it is handed and no name for a device that is not this one. The
+/// strip is handed one place per *book* — `watchContinueReading` is what
+/// collapses them, and `reading_repository_test.dart` is what holds it to that
+/// — so this file is about what the band does with the list, not about which
+/// list it gets. Inventing a device name would look like a feature, which is
+/// why the second claim is tested at all.
 library;
 
 import 'package:atril/data/repositories/reading/reading_repository.dart';
@@ -131,20 +133,22 @@ void main() {
     expect(find.text(_pt().libraryContinueReading), findsNothing);
   });
 
-  testWidgets('shows one card per device, not one per book', (
+  testWidgets('draws a card for each place and does not group them', (
     WidgetTester tester,
   ) async {
-    // The decision RN01 asks for. A phone and a desktop in the same book are
-    // two true statements, and collapsing them would be this application
-    // choosing which of a reader's devices counts.
+    // The band renders the list it is given and decides nothing: what reaches
+    // it is already one place per book, and a widget that grouped as well
+    // would be a second answer to a question the repository has answered.
+    // Two books, two cards, each saying which device left it there.
     await tester.pumpWidget(
       _app(<ReadingPlace>[
         _place(id: 'a', title: 'Os Sertões', here: false),
-        _place(id: 'a', title: 'Os Sertões', here: true, percent: 12),
+        _place(id: 'b', title: 'Iracema', here: true, percent: 12),
       ]),
     );
 
-    expect(find.text('Os Sertões'), findsNWidgets(2));
+    expect(find.text('Os Sertões'), findsOneWidget);
+    expect(find.text('Iracema'), findsOneWidget);
     expect(find.text(_pt().libraryContinueHere), findsOneWidget);
     expect(find.text(_pt().libraryContinueElsewhere), findsOneWidget);
   });

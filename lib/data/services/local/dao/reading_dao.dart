@@ -6,11 +6,13 @@
 /// nothing a screen can render, and the join is the whole of what this file
 /// does in SQL.
 ///
-/// **Every device's row is kept and every device's row is answered.** Which
-/// position to show a reader — the furthest, the most recent, or a prompt
-/// asking which to resume from — is this application's decision to make, and
-/// it needs them all to make it. RN01 asks for exactly that, and it is why the
-/// rows are not collapsed on the way out of here.
+/// **Every device's row is kept, and which of them is answered depends on the
+/// question.** Where a reader's devices are in *one* book is a question with
+/// one answer per device, and RN01 asks for all of them: [watchPlacesIn] is
+/// that question and collapses nothing. *What is there to come back to* is a
+/// question about books, and one novel three appliances are in the middle of is
+/// one thing to come back to: [watchPlaces] answers with the place each work
+/// was last left at, whichever device left it there.
 library;
 
 import 'package:drift/drift.dart';
@@ -35,7 +37,23 @@ class ReadingDao extends DatabaseAccessor<AtrilDatabase>
   /// The accessor over [database].
   ReadingDao(super.database);
 
-  /// Every position this reader's devices have written, most recent first.
+  /// The place each work was last left at, most recent first — one row per
+  /// work and not one per device.
+  ///
+  /// **The collapsing is here and not above**, because [limit] counts books: a
+  /// reader whose phone, tablet and laptop are all in one novel is one thing to
+  /// come back to, and a limit spent on three rows of it would push two other
+  /// books off a strip that has room for them. Every device's row is still
+  /// kept, and [watchPlacesIn] is what answers with them.
+  ///
+  /// **Which row survives is SQLite's own rule and not an accident.** A bare
+  /// column in a query that aggregates with `max` takes its value from the
+  /// input row the maximum came from, which is stated in SQLite's
+  /// documentation and has held since 3.7.11. So grouping by the work and
+  /// asking for the newest instant answers with *that* device's locator,
+  /// percentage and identifier, rather than with one row's instant beside
+  /// another's place. The test beside this file is what would notice the day
+  /// it stopped being true.
   ///
   /// Ordered in SQL and not in Dart, unlike the shelf: what orders these is an
   /// instant on the hybrid clock, and an integer sorts the same way in every
@@ -45,6 +63,11 @@ class ReadingDao extends DatabaseAccessor<AtrilDatabase>
   /// are not reading it, and a *continue reading* row for it would be the
   /// deletion not having happened.
   Stream<List<ReadingPlaceRow>> watchPlaces({int limit = 20}) {
+    // The column is the hybrid clock's instant in microseconds, so the
+    // aggregate is over an integer and not over a `DateTime`: the converter is
+    // a Dart-side reading of a column sqlite compares as the number it is.
+    final Expression<int> latest = progress.updatedAt.max();
+
     final JoinedSelectStatement<HasResultSet, dynamic> query =
         select(progress).join(<Join<HasResultSet, dynamic>>[
             innerJoin(
@@ -52,7 +75,9 @@ class ReadingDao extends DatabaseAccessor<AtrilDatabase>
               ebooks.id.equalsExp(progress.ebookId) & ebooks.deleted.not(),
             ),
           ])
-          ..orderBy(<OrderingTerm>[OrderingTerm.desc(progress.updatedAt)])
+          ..addColumns(<Expression<Object>>[latest])
+          ..groupBy(<Expression<Object>>[progress.ebookId])
+          ..orderBy(<OrderingTerm>[OrderingTerm.desc(latest)])
           ..limit(limit);
 
     return query.watch().map(

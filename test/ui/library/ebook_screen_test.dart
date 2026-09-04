@@ -3,6 +3,7 @@
 library;
 
 import 'package:atril/data/repositories/library/library_repository.dart';
+import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/services/content/content_downloader.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
@@ -53,7 +54,18 @@ Ebook _ebook({
   revision: _revision,
 );
 
-Future<FakeLibraryRepository> pump(WidgetTester tester) async {
+ReadingPlace _place({required bool here, double? percent}) => ReadingPlace(
+  work: _ebook(),
+  locator: 'epubcfi(/6/4[ch1]!/4/2/2/1:0)',
+  percent: percent,
+  updatedAt: DateTime.utc(2026, 9, 1),
+  onThisDevice: here,
+);
+
+Future<FakeLibraryRepository> pump(
+  WidgetTester tester, {
+  FakeReadingRepository? reading,
+}) async {
   final library = FakeLibraryRepository();
 
   // Tall enough that the whole page is laid out at once. The screen is a list
@@ -89,7 +101,7 @@ Future<FakeLibraryRepository> pump(WidgetTester tester) async {
 
   await tester.pumpWidget(
     MultiProvider(
-      providers: fakeProviders(library: library),
+      providers: fakeProviders(library: library, reading: reading),
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -105,6 +117,68 @@ Future<FakeLibraryRepository> pump(WidgetTester tester) async {
 void main() {
   setUpAll(() async {
     l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
+
+  testWidgets('lists where every one of the reader\'s devices stopped', (
+    WidgetTester tester,
+  ) async {
+    // This is where RN01 is answered. The shelf's strip is about books and
+    // shows one place per book, so *where are all of my devices in this one*
+    // has this screen and nowhere else — and it says which device is this one
+    // without naming any of the others, because nothing here stores them.
+    final reading = FakeReadingRepository();
+    addTearDown(reading.close);
+
+    final library = await pump(tester, reading: reading);
+
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+    reading.emitPlaces(<ReadingPlace>[
+      _place(here: false, percent: 80),
+      _place(here: true, percent: 12),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.ebookPlacesSection), findsOneWidget);
+    expect(find.text(l10n.libraryContinueElsewhere), findsOneWidget);
+    expect(find.text(l10n.libraryContinueHere), findsOneWidget);
+    expect(find.text(l10n.libraryContinuePercent(80)), findsOneWidget);
+    expect(find.text(l10n.libraryContinuePercent(12)), findsOneWidget);
+  });
+
+  testWidgets('says nothing about places in a book nobody has opened', (
+    WidgetTester tester,
+  ) async {
+    // Absent and not empty. A section headed with a sentence and holding
+    // nothing tells the reader something is missing, and nothing is: they have
+    // not started the book.
+    final reading = FakeReadingRepository();
+    addTearDown(reading.close);
+
+    final library = await pump(tester, reading: reading);
+
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+    reading.emitPlaces(const <ReadingPlace>[]);
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.ebookPlacesSection), findsNothing);
+  });
+
+  testWidgets('names no percentage where the device could not compute one', (
+    WidgetTester tester,
+  ) async {
+    // A device that cannot open the format still records where it stopped, so
+    // the row is real and the proportion is not. A confident 0% would be a
+    // claim nobody made.
+    final reading = FakeReadingRepository();
+    addTearDown(reading.close);
+
+    final library = await pump(tester, reading: reading);
+
+    library.works.add(Result<List<Ebook>>.ok(<Ebook>[_ebook()]));
+    reading.emitPlaces(<ReadingPlace>[_place(here: true)]);
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.ebookPlaceNoPercent), findsOneWidget);
   });
 
   testWidgets('shows the work and what the file said about it', (

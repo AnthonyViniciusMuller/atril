@@ -382,11 +382,12 @@ void main() {
           ),
         );
 
-    test('answers one row per device and does not collapse them', () async {
-      // RN01, and C05 is what makes it correct: a phone and a desktop
-      // disagreeing about where the reader is are not in conflict, they are two
-      // true statements. Collapsing them here would be this application
-      // deciding which of a reader's devices counts.
+    test('is one row per work, at the place it was last left', () async {
+      // *What is there to carry on with* is a question about books: a phone
+      // and a desktop in the middle of one novel are one novel to carry on
+      // with, and a strip repeating its title is a strip saying one thing
+      // twice. Nothing is merged to do it — the row that survives is the one
+      // some device actually wrote, and it is the most recent of them.
       const String other = '22222222-2222-4222-8222-222222222222';
 
       await _seed(database, blobs, id: 'a', bytes: <int>[1]);
@@ -406,6 +407,35 @@ void main() {
           )
           .first;
 
+      expect(places, hasLength(1));
+      expect(places.single.percent, 80);
+      expect(places.single.onThisDevice, isFalse);
+    });
+
+    test('answers one row per device for one work, which is RN01', () async {
+      // The half of the decision the strip gave up and the book's own screen
+      // took on. C05 is what makes it correct: a phone and a desktop
+      // disagreeing about where the reader is are not in conflict, they are
+      // two true statements, and both are answered here.
+      const String other = '22222222-2222-4222-8222-222222222222';
+
+      await _seed(database, blobs, id: 'b', bytes: <int>[1]);
+      await seedPlace('b', _device, percent: 20, at: _at);
+      await seedPlace(
+        'b',
+        other,
+        percent: 80,
+        at: _at.add(const Duration(hours: 1)),
+      );
+
+      final List<ReadingPlace> places = await reading
+          .watchPlacesIn(_id('b'))
+          .map(
+            (Result<List<ReadingPlace>> r) =>
+                (r as Ok<List<ReadingPlace>>).value,
+          )
+          .first;
+
       expect(places, hasLength(2));
       expect(places.map((ReadingPlace p) => p.percent), <double>[80, 20]);
     });
@@ -417,17 +447,17 @@ void main() {
         // until then *another device* is the whole honest answer.
         const String other = '22222222-2222-4222-8222-222222222222';
 
-        await _seed(database, blobs, id: 'b', bytes: <int>[1]);
-        await seedPlace('b', _device, percent: 20, at: _at);
+        await _seed(database, blobs, id: 'f', bytes: <int>[1]);
+        await seedPlace('f', _device, percent: 20, at: _at);
         await seedPlace(
-          'b',
+          'f',
           other,
           percent: 80,
           at: _at.add(const Duration(hours: 1)),
         );
 
         final List<ReadingPlace> places = await reading
-            .watchContinueReading()
+            .watchPlacesIn(_id('f'))
             .map(
               (Result<List<ReadingPlace>> r) =>
                   (r as Ok<List<ReadingPlace>>).value,
@@ -549,11 +579,17 @@ void main() {
       );
     });
 
-    test('answers with nothing for a book this device has not opened', () async {
-      await _seed(database, blobs, id: 'b', bytes: <int>[1]);
+    test(
+      'answers with nothing for a book this device has not opened',
+      () async {
+        await _seed(database, blobs, id: 'b', bytes: <int>[1]);
 
-      expect(((await reading.resumeAt(_id('b'))) as Ok<String?>).value, isNull);
-    });
+        expect(
+          ((await reading.resumeAt(_id('b'))) as Ok<String?>).value,
+          isNull,
+        );
+      },
+    );
 
     test('never answers with another device\'s page', () async {
       // C05 and RN01: a phone and a desktop are two true statements about where

@@ -153,6 +153,65 @@ void main() {
       },
     );
 
+    test('is answered per work by the place it was last left at', () async {
+      // What *continue reading* is built from is one row per book, and which
+      // row it is rests on a rule of SQLite's rather than on an accident of
+      // the plan: a bare column in a query that aggregates with `max` takes
+      // its value from the input row the maximum came from. So the strip must
+      // come back with the *other* device's locator and percentage here — not
+      // with one row's instant beside another row's place, which is what a
+      // grouping without that guarantee would be free to answer.
+      final database = await openWithWork();
+
+      await database.into(database.progress).insert(_progress());
+      await database
+          .into(database.progress)
+          .insert(
+            _progress(
+              id: 'dddddddd-1111-4111-8111-111111111111',
+              device: _other,
+              percent: const Value<double?>(72.5),
+            ).copyWith(
+              locator: const Value<String>('epubcfi(/6/20!/4/2/2:0)'),
+              updatedAt: Value<DateTime>(_at.add(const Duration(hours: 1))),
+            ),
+          );
+
+      final places = await database.readingDao.watchPlaces().first;
+
+      expect(places, hasLength(1));
+      expect(places.single.position.deviceId, _other);
+      expect(places.single.position.percent, 72.5);
+      expect(places.single.position.locator, 'epubcfi(/6/20!/4/2/2:0)');
+      expect(places.single.work.id, _work);
+    });
+
+    test('is still answered per device for one work', () async {
+      // The other half of the same decision. RN01 asks for every device's
+      // place to be visible, and collapsing the strip is what moved that
+      // question to the book's own screen rather than what dropped it.
+      final database = await openWithWork();
+
+      await database.into(database.progress).insert(_progress());
+      await database
+          .into(database.progress)
+          .insert(
+            _progress(
+              id: 'dddddddd-1111-4111-8111-111111111111',
+              device: _other,
+            ).copyWith(
+              updatedAt: Value<DateTime>(_at.add(const Duration(hours: 1))),
+            ),
+          );
+
+      final places = await database.readingDao.watchPlacesIn(_work).first;
+
+      expect(places.map((row) => row.deviceId), <String>[
+        _other,
+        _device,
+      ], reason: 'most recent first');
+    });
+
     test('holds a proportion only where one makes sense', () async {
       final database = await openWithWork();
 

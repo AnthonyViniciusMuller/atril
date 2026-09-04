@@ -406,6 +406,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ebookUnknownFormat => 'Unknown format';
 
   @override
+  String get ebookPlacesSection => 'Where you stopped';
+
+  @override
+  String get ebookPlaceNoPercent => 'No percentage';
+
+  @override
   String get ebookShelvesSection => 'Shelves';
 
   @override

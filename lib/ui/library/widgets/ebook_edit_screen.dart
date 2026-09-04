@@ -27,6 +27,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/library/library_repository.dart';
+import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../routing/routes.dart';
 import '../../../utils/result.dart';
 import '../../core/localization/localization.dart';
@@ -47,6 +48,7 @@ class EbookEditScreen extends StatefulWidget {
 class _EbookEditScreenState extends State<EbookEditScreen> {
   late final EbookViewModel _model = EbookViewModel(
     library: context.read<LibraryRepository>(),
+    reading: context.read<ReadingRepository>(),
     ebookId: widget.ebookId,
   );
 

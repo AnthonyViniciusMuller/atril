@@ -408,6 +408,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get ebookUnknownFormat => 'Formato desconhecido';
 
   @override
+  String get ebookPlacesSection => 'Onde você parou';
+
+  @override
+  String get ebookPlaceNoPercent => 'Sem porcentagem';
+
+  @override
   String get ebookShelvesSection => 'Estantes';
 
   @override
@@ -2066,6 +2072,12 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get ebookUnknownFormat => 'Formato desconhecido';
+
+  @override
+  String get ebookPlacesSection => 'Onde você parou';
+
+  @override
+  String get ebookPlaceNoPercent => 'Sem porcentagem';
 
   @override
   String get ebookShelvesSection => 'Estantes';
