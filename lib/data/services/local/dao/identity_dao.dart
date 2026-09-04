@@ -60,6 +60,16 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
     ),
   );
 
+  /// Forgets the identity this device was bound under.
+  ///
+  /// It undoes the one thing [bindDevice] exists to prevent, and it is right in
+  /// exactly one case: the node has answered that it does not know this
+  /// identifier. The clock entry a new identifier could fail to merge with is
+  /// then not there to fork from — the node has no record of the old one — and
+  /// a device that went on presenting it could never sign in again, because
+  /// this row deliberately survives a logout.
+  Future<void> forgetDevice() => delete(boundDevice).go();
+
   /// The reader signed in on this device, or `null` before the first login.
   ///
   /// A logout does not clear it. The replica it describes is still here, and a

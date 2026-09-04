@@ -138,6 +138,72 @@ void main() {
     expect(await database.identityDao.deviceId(), _existing);
   });
 
+  test('binds again when the node has no record of the identifier', () async {
+    await database.identityDao.bindDevice(
+      id: _existing,
+      name: 'the reading tablet',
+      platform: 'android',
+      at: _at,
+    );
+
+    // The account was deleted and made again, or the node was restored from a
+    // backup older than the binding. Either way the identifier this device has
+    // been writing under is one the node cannot find.
+    service.forgottenDevices.add(_existing);
+
+    final result = await auth.signIn(credentials);
+
+    expect(result.errorOrNull, isNull);
+
+    // Presented first, because that is the rule; sent again without it only
+    // once the node had said it does not have it.
+    expect(service.boundAs, <String?>[_existing, null]);
+    expect(await database.identityDao.deviceId(), fakeMintedDeviceId);
+  });
+
+  test('refuses a second time rather than binding in a loop', () async {
+    await database.identityDao.bindDevice(
+      id: _existing,
+      name: 'the reading tablet',
+      platform: 'android',
+      at: _at,
+    );
+
+    // A node answering `device_not_found` to everything, which the real one
+    // cannot do. It is how this asks what the client does when the answer that
+    // provokes a second attempt is also the answer to the second.
+    service.forgetsEveryDevice = true;
+
+    final result = await auth.signIn(credentials);
+
+    expect(result.errorOrNull, isA<AppException>());
+    expect(service.boundAs, hasLength(2));
+    expect(await session.isSignedIn, isFalse);
+  });
+
+  // A revoked device is one the node still holds and has deliberately unbound.
+  // Binding it again would be this client undoing a decision the reader made
+  // on another device, so the refusal is passed to them instead.
+  test('does not bind again when the device was revoked', () async {
+    await database.identityDao.bindDevice(
+      id: _existing,
+      name: 'the reading tablet',
+      platform: 'android',
+      at: _at,
+    );
+
+    service.revokedDevices.add(_existing);
+
+    final result = await auth.signIn(credentials);
+
+    expect(result.errorOrNull, isA<AppException>());
+    expect((result.errorOrNull as AppException?)?.code, 'device_revoked');
+    expect(service.boundAs, <String?>[_existing]);
+
+    // Still the identifier it writes under: nothing was forgotten.
+    expect(await database.identityDao.deviceId(), _existing);
+  });
+
   test('records the reader and the node they are named at', () async {
     await auth.signIn(credentials);
 

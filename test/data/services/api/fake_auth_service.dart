@@ -49,6 +49,33 @@ final class FakeAuthService extends AuthServiceBase {
   /// How many refreshes this node has served.
   int refreshes = 0;
 
+  /// The device identifiers this node has no record of.
+  ///
+  /// A login presenting one is refused the way the node refuses it — `NOT_FOUND`
+  /// under `device_not_found` — which is the answer a device gets when the
+  /// account was deleted and made again, or the node was restored from a backup
+  /// older than the binding. It is empty by default, so a node that has never
+  /// forgotten anything takes whatever identifier it is sent.
+  final Set<String> forgottenDevices = <String>{};
+
+  /// The device identifiers this node still holds and has unbound.
+  ///
+  /// Refused as `PERMISSION_DENIED` under `device_revoked`, which is a
+  /// different answer from [forgottenDevices] and has to stay one: the node
+  /// knows this device and the reader ended its binding on purpose.
+  final Set<String> revokedDevices = <String>{};
+
+  /// Whether this node answers `device_not_found` to every login, including
+  /// one that presents no identifier at all.
+  ///
+  /// The real node cannot do this — a binding it mints itself is one it has —
+  /// and that is the point: it is how a test asks what the client does when the
+  /// answer that provokes a second attempt is also the answer to the second.
+  bool forgetsEveryDevice = false;
+
+  /// Every device binding a login presented, in order.
+  final List<String?> boundAs = <String?>[];
+
   /// Every address a recovery was asked for, in order.
   final List<String> recoveries = <String>[];
 
@@ -113,6 +140,30 @@ final class FakeAuthService extends AuthServiceBase {
   Future<LoginResponse> login(ServiceCall call, LoginRequest request) async {
     _record(call);
 
+    final presentedDevice = request.device.hasDeviceId()
+        ? request.device.deviceId
+        : null;
+
+    boundAs.add(presentedDevice);
+
+    if (presentedDevice != null && revokedDevices.contains(presentedDevice)) {
+      _refuse(
+        StatusCode.permissionDenied,
+        'device_revoked',
+        'that device has been unbound from this account',
+      );
+    }
+
+    if (forgetsEveryDevice ||
+        (presentedDevice != null &&
+            forgottenDevices.contains(presentedDevice))) {
+      _refuse(
+        StatusCode.notFound,
+        'device_not_found',
+        'that device is not bound to this account',
+      );
+    }
+
     return LoginResponse(
       session: _session(),
       user: User(
@@ -128,9 +179,7 @@ final class FakeAuthService extends AuthServiceBase {
       // from now on. A device being bound for the first time sends none and
       // learns it here.
       device: Device(
-        id: request.device.hasDeviceId()
-            ? request.device.deviceId
-            : fakeMintedDeviceId,
+        id: presentedDevice ?? fakeMintedDeviceId,
         name: request.device.name,
         platform: request.device.platform,
         active: true,

@@ -2314,6 +2314,20 @@ merged in order, which is why each fix names the section it belongs to and touch
       documented not to draw a conclusion from. The failure is logged and the conclusion is left
       where it was: the calls go on being the evidence, and the subscription survives to hear
       whatever the platform says next.
+- [x] `fix: bind again when the node has forgotten this device` — `signIn` presents the
+      identifier the device already writes under, because omitting it is the mistake the design
+      is most vulnerable to. The node answers `NOT_FOUND` / `device_not_found` for an identifier
+      it has no record of, and nothing read that code: the sign-in failed, and the row survives a
+      logout by design, so **every retry presented the same dead identifier**. A device in that
+      state could never sign in again, on an account the reader reaches from every other device
+      they own. Found on Linux against `make dev-up` after the federation's database was recreated
+      — the web build signed in and the desktop one could not, on the same account, because
+      browser storage was fresh and the replica was not. The identifier is dropped and the login
+      made once more as a new device, and the replica is seeded as it is for a first binding:
+      what its log can reconstruct is a history written under an identifier the node has never
+      heard of. **Only for that code, and only once.** `device_revoked` is a device the node still
+      holds and the reader deliberately unbound, so binding it again would be this client undoing
+      their decision; a second `device_not_found` is a refusal.
 
 ## Open questions
 

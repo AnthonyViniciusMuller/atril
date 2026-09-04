@@ -43,6 +43,17 @@ const String codeNoCredential = 'no_credential';
 /// caller has not proved anything about.
 const String codeInvalidCredential = 'invalid_credential';
 
+/// The node's code for a device identifier it has no record of.
+///
+/// It is not `device_revoked`, and the difference is the whole reason
+/// [AuthRepositoryImpl.signIn] may act on one and never on the other. A revoked
+/// device is one the node still holds and has deliberately unbound; rebinding
+/// it would be this client undoing a decision the reader made. A device the
+/// node cannot find is one it has no record of at all — the account was
+/// deleted and made again, or the node was restored from a backup older than
+/// the binding — and there is nothing there to defer to.
+const String codeDeviceNotFound = 'device_not_found';
+
 /// The reader signed in on this device.
 final class AuthRepositoryImpl implements AuthRepository {
   /// The repository over [auth], [identity], [servers] and [session].
@@ -298,15 +309,54 @@ final class AuthRepositoryImpl implements AuthRepository {
       // the first.
       final bound = await identity.deviceId();
 
-      final signIn = await auth.login(
-        identifier: credentials.identifier.trim(),
-        password: credentials.password,
-        device: DeviceBinding(
-          deviceId: bound,
-          name: credentials.deviceName,
-          platform: platform,
-        ),
-      );
+      final identifier = credentials.identifier.trim();
+
+      SignIn signIn;
+
+      // Whether this device is being bound as a new one, which is true of a
+      // device that had no identifier and of one whose identifier the node
+      // turned out not to have.
+      var isNew = bound == null;
+
+      try {
+        signIn = await auth.login(
+          identifier: identifier,
+          password: credentials.password,
+          device: DeviceBinding(
+            deviceId: bound,
+            name: credentials.deviceName,
+            platform: platform,
+          ),
+        );
+      } on AppException catch (error) {
+        if (bound == null || error.code != codeDeviceNotFound) {
+          rethrow;
+        }
+
+        // The node has no record of the identifier this device has been
+        // writing under, and it is the node that decides: its answer says the
+        // clock entry this device would be protecting is not there. Presenting
+        // the identifier again is what a retry would do, and this row survives
+        // a logout — so a device that did not do this could never sign in
+        // again, on an account the reader can reach from every other device
+        // they own.
+        //
+        // Once, and only for this code. A second refusal is a refusal.
+        _log.warning('the node has no record of $bound; binding again');
+
+        await identity.forgetDevice();
+
+        signIn = await auth.login(
+          identifier: identifier,
+          password: credentials.password,
+          device: DeviceBinding(
+            name: credentials.deviceName,
+            platform: platform,
+          ),
+        );
+
+        isNew = true;
+      }
 
       final at = _clock();
 
@@ -348,7 +398,10 @@ final class AuthRepositoryImpl implements AuthRepository {
       // Only a device that had no identity a moment ago. One that has signed in
       // here before holds the replica already, and re-seeding it would be this
       // device asking the node to repeat a history its own log can reconstruct.
-      if (bound == null) {
+      // A device that was just bound again is the first case and not the
+      // second: what its log can reconstruct is a history written under an
+      // identifier the node has never heard of.
+      if (isNew) {
         await _seed(signIn.device.id);
       }
 
