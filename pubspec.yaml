@@ -130,7 +130,7 @@ dependencies:
   # build fails at `checkDebugAarMetadata` and the fix would be a toolchain
   # ahead of the pinned Flutter rather than a line in this file. Raise it when
   # `flutter --version` brings an AGP that compiles against 37.
-  flutter_secure_storage: ^10.3.1
+  flutter_secure_storage: ^11.0.0
 
   # Whether this device has a network at all, which is a hint and never the
   # answer: the package reports a radio and not a route, so a device on a
@@ -376,7 +376,7 @@ dev_dependencies:
   # files and looks at where a literal actually lands. The package is already
   # here transitively, under build_runner; it is named so that the tool depends
   # on it rather than on somebody else's dependency.
-  analyzer: ^13.3.0
+  analyzer: ^14.3.0
 
   # The Windows package. `dart run msix:create` wraps the release bundle in an
   # MSIX, which is the only container Windows installs without a warning and
@@ -394,7 +394,7 @@ dev_dependencies:
   # `make gen` runs build_runner as well as protoc. The output is committed for
   # the reason the generated contract is, and CI regenerates and diffs it.
   drift_dev: ^2.34.5
-  build_runner: ^2.16.0
+  build_runner: ^2.16.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
