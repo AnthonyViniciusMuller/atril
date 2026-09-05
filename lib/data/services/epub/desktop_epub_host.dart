@@ -84,6 +84,33 @@ Map<String, Object?>? decodeBridgeMessage(String message) {
   }
 }
 
+/// The glue's `selection` arguments as the port's selection.
+///
+/// **The range comes first and the passage second.** Every call site in
+/// `epubView.js` is `callHandler('selection', cfiRange, text, rect, xpath)`,
+/// and this host read the first two the other way round: a highlight taken on
+/// Linux was stored with the CFI where the passage belongs and the passage
+/// where the CFI belongs, so the annotations list showed a card reading
+/// `epubcfi(/6/8!/4/80,/1:0,/1:108)` and the mark it named could never be
+/// found on the page again. The five webview targets receive the same two
+/// values already named by the package's own model, which is why this was
+/// wrong here and nowhere else.
+///
+/// It is a function and not a method for the reason [decodeBridgeMessage] is.
+@visibleForTesting
+EpubSelection? epubSelectionOf(List<Object?> args) {
+  if (args.length < 2) {
+    return null;
+  }
+
+  final Object? cfi = args[0];
+  final Object? text = args[1];
+
+  return cfi is String && text is String
+      ? EpubSelection(cfiRange: cfi, text: text)
+      : null;
+}
+
 /// The engine, hosted by CEF and rendered to a Flutter texture.
 final class DesktopEpubHost implements EpubHost {
   /// A host for one book on one screen.
@@ -749,15 +776,10 @@ final class DesktopEpubHost implements EpubHost {
   }
 
   void _onSelection(List<Object?> args) {
-    if (args.length < 2 || _selections.isClosed) {
-      return;
-    }
+    final EpubSelection? selected = epubSelectionOf(args);
 
-    final Object? text = args[0];
-    final Object? cfi = args[1];
-
-    if (text is String && cfi is String) {
-      _selections.add(EpubSelection(cfiRange: cfi, text: text));
+    if (selected != null && !_selections.isClosed) {
+      _selections.add(selected);
     }
   }
 

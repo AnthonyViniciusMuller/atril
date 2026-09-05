@@ -164,6 +164,36 @@ void main() {
     );
   });
 
+  group('what the glue calls a selection', () {
+    // The order is the glue's, not this port's: `epubView.js` sends the range
+    // first and the words second at every one of its call sites. Read the
+    // other way round, a highlight taken on Linux stored the CFI as its
+    // passage and the passage as its CFI — the annotations list showed
+    // `epubcfi(...)` where the sentence should be, and the mark led back to
+    // nowhere.
+    test('is the range first and the passage second', () {
+      final EpubSelection? selected = epubSelectionOf(<Object?>[
+        'epubcfi(/6/8!/4/80,/1:0,/1:108)',
+        'the circle of inevitability',
+        null,
+        null,
+      ]);
+
+      expect(selected?.cfiRange, 'epubcfi(/6/8!/4/80,/1:0,/1:108)');
+      expect(selected?.text, 'the circle of inevitability');
+    });
+
+    test('is nothing when the glue sends something else', () {
+      // A future glue calling the same handler with a shape this build does
+      // not know is a selection this build declines, not a crash in a platform
+      // callback and not a mark made out of the wrong two values.
+      expect(epubSelectionOf(<Object?>[]), isNull);
+      expect(epubSelectionOf(<Object?>['epubcfi(/6/4!/4,/2,/4)']), isNull);
+      expect(epubSelectionOf(<Object?>[1, 2]), isNull);
+      expect(epubSelectionOf(<Object?>['epubcfi(/6/4!/4,/2,/4)', null]), isNull);
+    });
+  });
+
   group('the styling both hosts share', () {
     test('is computed from the same palette on either side of the port', () {
       // The two hosts build the same `body` rule from the same colours, because

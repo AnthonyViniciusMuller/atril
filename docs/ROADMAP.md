@@ -2505,6 +2505,29 @@ merged in order, which is why each fix names the section it belongs to and touch
       put it on a display the reader has not looked at yet. It is disabled while a sign-in is in
       flight, like the field it sits in
 
+- [x] `fix: read a selection's range and passage the way the glue sends them` — a highlight taken
+      on Linux appeared in the annotations list as `epubcfi(/6/8!/4/80,/1:0,/1:108)`, in the yellow
+      of a highlight, above the book's name. The card was showing exactly what was stored: the
+      Linux host read the glue's `selection` arguments in the wrong order, so the CFI was saved as
+      the passage and the passage as the CFI. `epubView.js` sends
+      `callHandler('selection', cfiRange, text, rect, xpath)` at every one of its call sites, and
+      `_onSelection` read `args[0]` as the words.
+
+      **It could only ever have been this target.** The five webview hosts receive the same two
+      values already named — `selection.selectionCfi` and `selection.selectedText` off the
+      package's own model — while the Linux host reads a bridge message, which is a list with
+      nothing named on it. Both values are strings, so nothing in Dart was ever going to notice;
+      the compiler had no opinion and neither did the port's own type. So the reading moved out of
+      the method into `epubSelectionOf`, which a test can reach without CEF, and the order is now
+      pinned twice: once against that function and once against the pinned glue itself, in
+      `locator_round_trip_test.dart`, beside the other claims about the one asymmetry this split
+      introduced.
+
+      The marks already written this way are wrong on the device that wrote them and wrong
+      everywhere they replicated to — their locator is a sentence, so they open the book at the
+      beginning, which is what an unresolvable CFI has always done. Repairing them is a separate
+      question and is in *Open questions* below.
+
 ## Open questions
 
 Recorded rather than answered, and each one should be settled before the phase that needs it.
@@ -2555,6 +2578,15 @@ disproved rather than fixed — which is why they are recorded instead of delete
   forbids. It stays here rather than moving to *settled* because a pre-release under the reader
   on five of six targets is a thing to keep watching: drop the pin when a stable 6.2.0 exists.
   *Watch.*
+- **The marks Linux wrote with their range and passage swapped are still swapped.** The bug is
+  fixed and the records are not: a highlight taken on Linux before that commit holds a sentence in
+  `annotations.locator` and a CFI in its text, on this device and on every device it reached. They
+  are visible, they are removable, and they open the book at the beginning like any mark whose CFI
+  no longer resolves — so nothing is broken, and nothing repairs itself either. A repair is
+  identifiable with certainty (a text that begins `epubcfi(` beside a locator that does not) and is
+  still a decision: it is a write authored locally and replicated, over records the reader made, on
+  a heuristic. Decide whether it is worth doing before the marks are old enough to be worth
+  keeping. *Ask.*
 
 ### Watching upstream
 

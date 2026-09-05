@@ -305,6 +305,32 @@ void main() {
       expect(epubBridgeShim, contains('callHandler'));
     });
 
+    test('the glue still sends a selection range-first', () async {
+      // A bridge message is a list and nothing on it is named, so the Linux
+      // host reads the `selection` arguments by position. It read the first two
+      // backwards, and a highlight taken on Linux was stored with the CFI in
+      // its passage and the passage in its CFI: an annotations list of
+      // `epubcfi(...)` where the sentence belongs, and a mark that opened the
+      // book at the beginning because its locator was a sentence. No type in
+      // Dart can catch that — both values are strings — so the order is pinned
+      // here, against the file that decides it.
+      final String glue = utf8.decode(
+        (await loadEngineAsset(EpubEngine.glue)).buffer.asUint8List(),
+      );
+
+      // Both shapes the glue sends it in: spread from a list it builds, and
+      // passed straight at the call.
+      expect(glue, contains('[cfiRange.toString(), selectedText,'));
+      expect(glue, contains("callHandler('selection', cfiRange.toString(),"));
+      expect(
+        glue,
+        isNot(contains("callHandler('selection', text,")),
+        reason:
+            'the range comes first, and the Linux host reads these by '
+            'position',
+      );
+    });
+
     test('the glue still says when its location index is there', () async {
       // The percentage beside a reading position comes from that index, and
       // building it means parsing every section of the book — over two minutes
