@@ -381,7 +381,7 @@ class _ServerTile extends StatelessWidget {
           SwitchListTile(
             value: server.active,
             onChanged: onActive,
-            title: Text(l10n.federationServerActive),
+            title: Text(l10n.federationServerReplicate),
           ),
         OverflowBar(
           alignment: MainAxisAlignment.end,

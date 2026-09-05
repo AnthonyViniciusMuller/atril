@@ -1115,6 +1115,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get federationServerInactive => 'Fora da replicação';
 
   @override
+  String get federationServerReplicate => 'Replicar com este servidor';
+
+  @override
   String federationServerBaseUrl(String url) {
     return 'Responde em $url';
   }
@@ -2779,6 +2782,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get federationServerInactive => 'Fora da replicação';
+
+  @override
+  String get federationServerReplicate => 'Replicar com este servidor';
 
   @override
   String federationServerBaseUrl(String url) {

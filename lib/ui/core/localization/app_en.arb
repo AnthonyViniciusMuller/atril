@@ -647,6 +647,9 @@
   "federationServerInactive": "Not replicating",
   "@federationServerInactive": {},
 
+  "federationServerReplicate": "Replicate with this server",
+  "@federationServerReplicate": {},
+
   "federationServerBaseUrl": "Answers at {url}",
   "@federationServerBaseUrl": {},
 

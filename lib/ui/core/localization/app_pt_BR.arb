@@ -1825,6 +1825,11 @@
     "description": "Subtítulo da linha de um servidor que o leitor desligou. Ele continua no catálogo e nada trafega para ele."
   },
 
+  "federationServerReplicate": "Replicar com este servidor",
+  "@federationServerReplicate": {
+    "description": "Rótulo do interruptor que liga e desliga a participação do servidor na replicação. Diz o que o interruptor faz, e não em que estado o servidor está — isso o subtítulo da linha já diz."
+  },
+
   "federationServerBaseUrl": "Responde em {url}",
   "@federationServerBaseUrl": {
     "description": "Linha que mostra onde o servidor efetivamente responde, que pode ser um endereço diferente do domínio. O parâmetro é a URL base.",

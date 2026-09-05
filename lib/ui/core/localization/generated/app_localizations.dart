@@ -1989,6 +1989,12 @@ abstract class AppLocalizations {
   /// **'Fora da replicação'**
   String get federationServerInactive;
 
+  /// Rótulo do interruptor que liga e desliga a participação do servidor na replicação. Diz o que o interruptor faz, e não em que estado o servidor está — isso o subtítulo da linha já diz.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Replicar com este servidor'**
+  String get federationServerReplicate;
+
   /// Linha que mostra onde o servidor efetivamente responde, que pode ser um endereço diferente do domínio. O parâmetro é a URL base.
   ///
   /// In pt_BR, this message translates to:

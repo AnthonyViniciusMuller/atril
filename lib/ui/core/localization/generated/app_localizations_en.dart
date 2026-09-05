@@ -1114,6 +1114,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get federationServerInactive => 'Not replicating';
 
   @override
+  String get federationServerReplicate => 'Replicate with this server';
+
+  @override
   String federationServerBaseUrl(String url) {
     return 'Answers at $url';
   }
