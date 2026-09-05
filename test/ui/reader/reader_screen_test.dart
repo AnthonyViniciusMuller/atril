@@ -16,6 +16,7 @@ import 'package:atril/data/services/storage/reader_settings_store.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/models/annotation.dart';
 import 'package:atril/domain/models/ebook.dart';
+import 'package:atril/routing/routes.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/reader/view_model/reader_view_model.dart';
 import 'package:atril/ui/reader/widgets/reader_chrome.dart';
@@ -28,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -320,6 +322,45 @@ Widget _app(
     supportedLocales: AppLocalizations.supportedLocales,
     home: ReaderScreen(ebookId: _id, at: at),
   ),
+);
+
+/// The screen under a real router, at the location the route table gives it.
+///
+/// Every other test here builds the screen directly, which is enough for a
+/// screen that does not navigate. Following a mark is the one behaviour that
+/// *is* the location: the locator arrives as a query parameter on a route that
+/// is already on the stack, so a `MaterialApp` with a `home` cannot show it.
+Widget _routed(
+  ReadingRepository reading,
+  EpubHostFactory hosts,
+  GoRouter router,
+) => MultiProvider(
+  providers: <SingleChildWidget>[
+    Provider<ReadingRepository>.value(value: reading),
+    Provider<AnnotationRepository>.value(value: FakeAnnotationRepository()),
+    Provider<EpubHostFactory>.value(value: hosts),
+    Provider<ReaderSettingsStore>.value(value: MemoryReaderSettingsStore()),
+  ],
+  child: MaterialApp.router(
+    locale: const Locale('pt', 'BR'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    routerConfig: router,
+  ),
+);
+
+/// The reader's own route, declared the way the app declares it.
+GoRouter _readerRouter({String? at}) => GoRouter(
+  initialLocation: Routes.readEbook(_id, at: at),
+  routes: <RouteBase>[
+    GoRoute(
+      path: Routes.readEbook(':${Routes.ebookParameter}'),
+      builder: (BuildContext context, GoRouterState state) => ReaderScreen(
+        ebookId: state.pathParameters[Routes.ebookParameter] ?? '',
+        at: state.uri.queryParameters[Routes.locatorParameter],
+      ),
+    ),
+  ],
 );
 
 AppLocalizations _pt() => lookupAppLocalizations(const Locale('pt', 'BR'));
@@ -1548,6 +1589,75 @@ void main() {
 
       expect(host.openedAt, isNull);
       expect(host.openAsked, isTrue);
+    });
+
+    testWidgets('follows a mark that arrives while the book is open', (
+      WidgetTester tester,
+    ) async {
+      // The marks are pushed over the reader, so a mark tapped there navigates
+      // to a route already on the stack: the path is the same and only the
+      // query differs, the page is kept — which is what has to happen, since a
+      // new page is a second webview — and the view model, which read the
+      // locator when it was made, would never hear about this one.
+      const String cfi = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+      final _FakeHost host = _FakeHost();
+      final GoRouter router = _readerRouter();
+
+      await tester.pumpWidget(_routed(_FakeReading(), _FakeHosts(host), router));
+      await tester.pumpAndSettle();
+
+      expect(host.visited, isEmpty);
+
+      router.go(Routes.readEbook(_id, at: cfi));
+      await tester.pumpAndSettle();
+
+      expect(host.visited, <String>[cfi]);
+      // And the book was not reopened on the way: the page is the one that was
+      // built for the first location.
+      expect(host.viewBuilds, 1);
+      expect(host.openedAt, isNull);
+    });
+
+    testWidgets('follows the same mark a second time', (
+      WidgetTester tester,
+    ) async {
+      // A reader who followed a mark, read on, and came back to it. The
+      // locator is spent once it has been acted on, so the location loses it —
+      // a location that still named it would answer the second tap with a
+      // query that had not changed, which is nothing at all.
+      const String cfi = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+      final _FakeHost host = _FakeHost();
+      final GoRouter router = _readerRouter();
+
+      await tester.pumpWidget(_routed(_FakeReading(), _FakeHosts(host), router));
+      await tester.pumpAndSettle();
+
+      router.go(Routes.readEbook(_id, at: cfi));
+      await tester.pumpAndSettle();
+      router.go(Routes.readEbook(_id, at: cfi));
+      await tester.pumpAndSettle();
+
+      expect(host.visited, <String>[cfi, cfi]);
+      expect(host.viewBuilds, 1);
+    });
+
+    testWidgets('a book opened at a mark keeps the page it was given', (
+      WidgetTester tester,
+    ) async {
+      // The other way in: the marks reached from the book's own screen, where
+      // the reader is not on the stack and the locator is read on open. What
+      // is checked here is that clearing it afterwards costs nothing — the
+      // book is not opened twice and the page is not built again.
+      const String cfi = 'epubcfi(/6/14[chap05]!/4/10,/2/1:1,/3:4)';
+      final _FakeHost host = _FakeHost();
+      final GoRouter router = _readerRouter(at: cfi);
+
+      await tester.pumpWidget(_routed(_FakeReading(), _FakeHosts(host), router));
+      await tester.pumpAndSettle();
+
+      expect(host.openedAt, cfi);
+      expect(host.visited, isEmpty);
+      expect(host.viewBuilds, 1);
     });
   });
 

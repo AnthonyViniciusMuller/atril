@@ -15,12 +15,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/annotations/annotation_repository.dart';
 import '../../../data/repositories/reading/reading_repository.dart';
 import '../../../data/services/epub/epub_host.dart';
 import '../../../data/services/storage/reader_settings_store.dart';
+import '../../../routing/routes.dart';
 import '../view_model/reader_view_model.dart';
 import 'reader_body.dart';
 import 'reader_chrome.dart';
@@ -64,6 +66,56 @@ class _ReaderScreenState extends State<ReaderScreen> {
   /// browser with a book in it. Everything else here is chrome over it, and
   /// what a page turn or a selection changes is the chrome.
   late final Widget _page = _model.host.view();
+
+  @override
+  void initState() {
+    super.initState();
+    _forgetLocator();
+  }
+
+  /// Follows a locator that arrived after the screen was built.
+  ///
+  /// A mark navigates to this route, and when the marks were opened **from
+  /// inside the reader** the route is already on the stack: the path is the
+  /// same and only the query differs, so go_router keeps the page — which is
+  /// what must happen, since a new page is a second webview and a book read
+  /// from the beginning — and hands the same state a new widget. The view
+  /// model read the locator when it was created and never hears about this
+  /// one, so the one place a mark did nothing was the book it was taken in.
+  @override
+  void didUpdateWidget(covariant ReaderScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.at case final String locator when locator != oldWidget.at) {
+      unawaited(_model.goTo.execute(locator));
+    }
+
+    _forgetLocator();
+  }
+
+  /// Takes a locator this screen has acted on out of the location.
+  ///
+  /// It is an instruction and not part of the identity of the screen, and one
+  /// that has been carried out is spent: a location still naming it would
+  /// refuse the *same* mark a second time — the query would not have changed,
+  /// so nothing above would fire — and a reload would send the reader back to
+  /// the mark rather than to the page they stopped on. `replace` and not `go`,
+  /// because it reuses the page key: the book is not reopened, which is the
+  /// whole reason this is done here rather than by navigating.
+  ///
+  /// A screen with no router over it has nothing to clear, which is how the
+  /// reader's own tests build it.
+  void _forgetLocator() {
+    if (widget.at == null) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (mounted && GoRouter.maybeOf(context) != null) {
+        context.replace(Routes.readEbook(widget.ebookId));
+      }
+    });
+  }
 
   @override
   void dispose() {
