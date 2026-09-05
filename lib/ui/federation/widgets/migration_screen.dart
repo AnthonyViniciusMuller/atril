@@ -265,17 +265,7 @@ class _MigrationScreenState extends State<MigrationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        TextField(
-          controller: _domain,
-          autocorrect: false,
-          keyboardType: TextInputType.url,
-          decoration: InputDecoration(
-            labelText: l10n.migrationDomainLabel,
-            hintText: l10n.federationAddHint,
-            border: const OutlineInputBorder(),
-            errorText: _faulted('domain', l10n),
-          ),
-        ),
+        _destination(l10n),
         const SizedBox(height: 8),
         Text(
           l10n.migrationConnectsAtTheEnd,
@@ -323,6 +313,61 @@ class _MigrationScreenState extends State<MigrationScreen> {
             errorText: _faulted('password', l10n),
           ),
         ),
+      ],
+    );
+  }
+
+  /// Where the migration goes: the nodes already discovered, and the field
+  /// that takes any other.
+  ///
+  /// One control and not two, because it is one question. A `DropdownMenu` is
+  /// a text field that also drops a list down, so the reader who has added the
+  /// destination to their catalogue picks it and the reader who has not types
+  /// it — and nothing has to decide in advance which of the two they are.
+  ///
+  /// It falls back to a plain field when the catalogue is empty or could not be
+  /// read, rather than offering a list with nothing in it: a menu that opens
+  /// onto nothing reads as a broken control, and the domain was always
+  /// typeable.
+  Widget _destination(AppLocalizations l10n) {
+    final known = _model.destinations;
+    final failure = _faulted('domain', l10n);
+
+    if (known.isEmpty) {
+      return TextField(
+        controller: _domain,
+        autocorrect: false,
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(
+          labelText: l10n.migrationDomainLabel,
+          hintText: l10n.federationAddHint,
+          border: const OutlineInputBorder(),
+          errorText: failure,
+        ),
+      );
+    }
+
+    return DropdownMenu<String>(
+      controller: _domain,
+      enabled: !_model.migrate.running,
+      // The field is the primary way in and the list is the shortcut, so a tap
+      // puts the cursor in it and what is typed narrows what is offered.
+      requestFocusOnTap: true,
+      enableFilter: true,
+      expandedInsets: EdgeInsets.zero,
+      keyboardType: TextInputType.url,
+      label: Text(l10n.migrationDomainLabel),
+      hintText: l10n.federationAddHint,
+      errorText: failure,
+      dropdownMenuEntries: <DropdownMenuEntry<String>>[
+        for (final server in known)
+          DropdownMenuEntry<String>(
+            value: server.descriptor.domain,
+            // A domain is a domain in both languages, and this one is the
+            // reader's own text rather than a message of the app's.
+            label: server.descriptor.domain,
+            leadingIcon: const Icon(Icons.dns_outlined),
+          ),
       ],
     );
   }

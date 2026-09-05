@@ -9,6 +9,7 @@
 library;
 
 import 'package:atril/data/repositories/federation/federation_repository.dart';
+import 'package:atril/domain/models/server.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/ui/core/localization/localization.dart';
 import 'package:atril/ui/federation/widgets/migration_screen.dart';
@@ -62,6 +63,38 @@ const CarriedDevices _unnamed = CarriedDevices(
     ),
   ],
 );
+
+/// A catalogue with the node being left in it, one peer, and one peer the
+/// reader has switched off.
+const List<KnownServer> _known = <KnownServer>[
+  KnownServer(
+    id: 'server-a',
+    descriptor: ServerDescriptor(
+      domain: 'quire-a.example',
+      baseUrl: 'https://quire-a.example',
+    ),
+    isOrigin: true,
+    active: true,
+  ),
+  KnownServer(
+    id: 'server-b',
+    descriptor: ServerDescriptor(
+      domain: 'quire-b.example',
+      baseUrl: 'https://quire-b.example',
+    ),
+    isOrigin: false,
+    active: true,
+  ),
+  KnownServer(
+    id: 'server-c',
+    descriptor: ServerDescriptor(
+      domain: 'quire-c.example',
+      baseUrl: 'https://quire-c.example',
+    ),
+    isOrigin: false,
+    active: false,
+  ),
+];
 
 Future<void> _pump(
   WidgetTester tester,
@@ -265,6 +298,98 @@ void main() {
 
     expect(sent.devices.last.name, 'Aparelho 99999999');
     expect(sent.devices.last.platform, unknownPlatform);
+  });
+
+  testWidgets('offers the nodes already discovered, and not the one left', (
+    WidgetTester tester,
+  ) async {
+    // `ListKnownServers` is a call to the node being left, so it is made when
+    // the wizard opens, beside the devices and for the same reason.
+    final federation = FakeFederationRepository()
+      ..carried = _two
+      ..catalogue = _known;
+
+    await _pump(tester, federation);
+    expect(federation.reads, 1);
+
+    await _walkTo(tester, 1);
+    await tester.tap(find.byType(TextField).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('quire-b.example'), findsOneWidget);
+    // Switched off is about replication and not about where a reader may
+    // move, so it is offered like any other.
+    expect(find.text('quire-c.example'), findsOneWidget);
+    // The node being left is the one destination the operation has nothing to
+    // do with.
+    expect(find.text('quire-a.example'), findsNothing);
+  });
+
+  testWidgets('the node picked from the list is the one moved to', (
+    WidgetTester tester,
+  ) async {
+    final federation = FakeFederationRepository()
+      ..carried = _two
+      ..catalogue = _known;
+
+    await _pump(tester, federation);
+    await _walkTo(tester, 1);
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('quire-c.example').last);
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+
+    await tester.enterText(fields.at(1), 'ana');
+    await tester.enterText(fields.at(2), 'Ana Maria');
+    await tester.enterText(fields.at(3), 'ana@example.com');
+    await tester.enterText(fields.at(4), 'uma senha boa');
+
+    for (final step in <int>[1, 2]) {
+      final next = find.text('Continuar').at(step);
+
+      await tester.ensureVisible(next);
+      await tester.pumpAndSettle();
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+    }
+
+    await tester.ensureVisible(find.text('Mudar de servidor'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mudar de servidor'));
+    await tester.pumpAndSettle();
+
+    expect(federation.migrations.single.domain, 'quire-c.example');
+  });
+
+  testWidgets('a catalogue it could not read still takes a typed domain', (
+    WidgetTester tester,
+  ) async {
+    // A menu that opens onto nothing reads as a broken control, and the
+    // domain was typeable before the list existed.
+    final federation = FakeFederationRepository()
+      ..carried = _two
+      ..catalogue = _known
+      ..refusal = const AppException(
+        kind: ErrorKind.unavailable,
+        message: 'the node did not answer',
+        op: 'federation/servers: known',
+      );
+
+    await _pump(tester, federation);
+    federation.refusal = null;
+
+    expect(find.byType(DropdownMenu<String>), findsNothing);
+
+    await _walkTo(tester, 3);
+    await tester.ensureVisible(find.text('Mudar de servidor'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mudar de servidor'));
+    await tester.pumpAndSettle();
+
+    expect(federation.migrations.single.domain, 'quire-b.example');
   });
 
   testWidgets('a refusal about the form takes the reader back to it', (

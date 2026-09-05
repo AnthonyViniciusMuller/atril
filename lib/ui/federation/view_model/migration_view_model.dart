@@ -7,6 +7,14 @@
 /// the first step. Reading later would make the names depend on how long the
 /// reader spent on a form.
 ///
+/// **The catalogue is read there too, and for the same reason.**
+/// `ListKnownServers` also goes to the node being left, and what it answers is
+/// the list of nodes this reader has already discovered — which is what the
+/// destination field offers instead of making them type a domain they have
+/// already typed once. A catalogue that could not be read is not a failure of
+/// the wizard: the field takes a domain either way, which is what it did
+/// before the list existed.
+///
 /// **Nothing else is read at all.** The wizard holds what the reader typed and
 /// asks the repository once, at the end, because every step before that is
 /// deliberation: the operation cannot be undone, and a screen that had already
@@ -21,6 +29,7 @@ import 'package:flutter/foundation.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../../data/repositories/federation/federation_repository.dart';
 import '../../../domain/models/device.dart';
+import '../../../domain/models/server.dart';
 import '../../../domain/models/user.dart';
 import '../../../utils/command.dart';
 import '../../../utils/logging.dart';
@@ -35,6 +44,9 @@ final class MigrationViewModel extends ChangeNotifier {
     devices = Command0<CarriedDevices>(federation.devicesToCarry);
 
     unawaited(devices.execute());
+    catalogue = Command0<List<KnownServer>>(_catalogue);
+
+    unawaited(catalogue.execute());
     migrate = Command1<User, HomeServerMigration>(federation.migrate);
     _reader = auth.reader().listen(_onReader);
   }
@@ -50,8 +62,27 @@ final class MigrationViewModel extends ChangeNotifier {
   /// is still pointed at the node it is leaving.
   late final Command0<CarriedDevices> devices;
 
+  /// Reads the nodes the reader already knows. It runs once, at construction,
+  /// while this device is still pointed at the node that holds the catalogue.
+  late final Command0<List<KnownServer>> catalogue;
+
   /// Moves the reader. It runs once and it cannot be undone.
   late final Command1<User, HomeServerMigration> migrate;
+
+  List<KnownServer> _destinations = const <KnownServer>[];
+
+  /// The nodes this migration could go to, which is the catalogue without the
+  /// node being left.
+  ///
+  /// The deactivated ones are in it: `active` says whether a node takes part
+  /// in replication, and a reader moving house is not asking about that. The
+  /// origin is not, because moving to the node the reader is already on is the
+  /// one destination the operation has nothing to do with.
+  ///
+  /// It is empty until the catalogue has been read, and stays empty when it
+  /// could not be — the reader types a domain, as they did before the list
+  /// existed.
+  List<KnownServer> get destinations => _destinations;
 
   User? _signedIn;
 
@@ -89,6 +120,26 @@ final class MigrationViewModel extends ChangeNotifier {
           ),
       ];
 
+  Future<Result<List<KnownServer>>> _catalogue() async {
+    final known = await federation.knownServers();
+
+    switch (known) {
+      case Ok<List<KnownServer>>(:final List<KnownServer> value):
+        _destinations = <KnownServer>[
+          for (final server in value)
+            if (!server.isOrigin) server,
+        ];
+        notifyListeners();
+      case Error<List<KnownServer>>(:final Exception error):
+        // A wizard without the shortcut is the wizard as it was, so this is
+        // logged and not surfaced: the step it belongs to is about a domain,
+        // and the reader can type one.
+        _log.warning('the catalogue of nodes could not be read', error);
+    }
+
+    return known;
+  }
+
   late final StreamSubscription<Result<User?>> _reader;
 
   void _onReader(Result<User?> reader) {
@@ -109,6 +160,7 @@ final class MigrationViewModel extends ChangeNotifier {
   void dispose() {
     unawaited(_reader.cancel());
     devices.dispose();
+    catalogue.dispose();
     migrate.dispose();
     super.dispose();
   }
