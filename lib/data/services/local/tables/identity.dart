@@ -78,6 +78,13 @@ class BoundDevice extends Table {
 /// through a logout for the same reason the device is: the replica it describes
 /// is still here, and a reader who signs back in on the same device should find
 /// their library rather than an empty one.
+///
+/// **Which is why a sign-in reads it before it writes it.** The reason to keep
+/// the replica holds for the same reader and for nobody else, so a login that
+/// names somebody other than this row empties the replica first — otherwise the
+/// arriving reader opens the app onto the shelves of the one before them. It is
+/// the sign-in that does the comparing, because this row is where the previous
+/// answer is and the node's reply is where the new one is.
 @DataClassName('ReaderRow')
 class SignedInReader extends Table {
   /// The single row. See [singleRow].

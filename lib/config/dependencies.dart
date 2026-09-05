@@ -81,6 +81,7 @@ import '../data/services/sync/pull.dart';
 import '../data/services/sync/push.dart';
 import '../data/services/sync/reconciler.dart';
 import '../data/services/sync/scheduler.dart';
+import '../data/services/sync/erase.dart';
 import '../data/services/sync/seed.dart';
 import '../data/services/sync/stream.dart';
 import '../data/services/sync/watch.dart';
@@ -502,6 +503,10 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
           library: context.read<LibraryApi>(),
           reading: context.read<ReadingApi>(),
         ),
+        // Its counterpart, for the case the replica surviving a logout does
+        // not cover: a device somebody else signs in on holds a library that
+        // is not theirs to be shown.
+        eraser: ReplicaEraser(database: database, blobs: blobs),
       ),
     ),
 

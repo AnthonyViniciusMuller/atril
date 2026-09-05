@@ -15,6 +15,7 @@ import '../../services/api/errors.dart';
 import '../../services/api/session.dart';
 import '../../services/local/dao/identity_dao.dart';
 import '../../services/local/database.dart';
+import '../../services/sync/erase.dart';
 import '../../services/sync/seed.dart';
 import '../server/server_repository.dart';
 import 'auth_repository.dart';
@@ -54,6 +55,10 @@ const String codeInvalidCredential = 'invalid_credential';
 /// the binding — and there is nothing there to defer to.
 const String codeDeviceNotFound = 'device_not_found';
 
+/// The stable code of a sign-in that would have to empty this device's replica
+/// and has nothing to empty it with.
+const String codeReplicaNotEmptied = 'replica_not_emptied';
+
 /// The reader signed in on this device.
 final class AuthRepositoryImpl implements AuthRepository {
   /// The repository over [auth], [identity], [servers] and [session].
@@ -68,6 +73,7 @@ final class AuthRepositoryImpl implements AuthRepository {
     required this.session,
     required this.platform,
     this.seeder,
+    this.eraser,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 
@@ -97,6 +103,14 @@ final class AuthRepositoryImpl implements AuthRepository {
   /// It is nullable so that a test can sign in without a node's whole library
   /// behind it; the composition root always passes one.
   final ReplicaSeed? seeder;
+
+  /// What empties the replica when a different reader signs in here.
+  ///
+  /// It is nullable for the same reason [seeder] is, and it is not optional in
+  /// the same way: a device with no eraser refuses the sign-in that would need
+  /// one rather than performing it into somebody else's library. See
+  /// [_handOver].
+  final ReplicaErasure? eraser;
 
   final DateTime Function() _clock;
 
@@ -172,6 +186,60 @@ final class AuthRepositoryImpl implements AuthRepository {
     } on Object catch (error) {
       _log.warning('the replica of $deviceId was not seeded', error);
     }
+  }
+
+  /// Empties the replica when [arriving] is not the reader this device already
+  /// holds one for, and reports whether it did.
+  ///
+  /// The replica surviving a logout is deliberate and is why this is needed: a
+  /// reader who signs back in on their own device should find their library
+  /// rather than an empty one, and *the same rule applied to somebody else* is
+  /// a second reader opening the app to the first one's books. Which of the two
+  /// happened is only knowable here, at the one moment a node has said who is
+  /// signing in and nothing has been written yet.
+  ///
+  /// The pair and not the identifier alone. A reader is named at a node, two
+  /// nodes mint identifiers without consulting each other, and the origin is
+  /// the half of the identity that cannot change under an account — a local
+  /// name can be edited, so comparing the federated identifier would empty the
+  /// replica of a reader who had merely renamed themselves.
+  ///
+  /// **A failure here fails the sign-in**, which is the opposite of what a
+  /// failed seed does, and the asymmetry is the point. A seed that did not run
+  /// costs a library that fills in later; an erasure that did not run and was
+  /// signed in over is the reader looking at another account's shelves, which
+  /// is the thing this method exists to make impossible.
+  Future<bool> _handOver(User arriving) async {
+    final previous = await identity.reader();
+
+    if (previous == null ||
+        (previous.id == arriving.id.toLowerCase() &&
+            previous.originServerDomain ==
+                arriving.originServerDomain.toLowerCase())) {
+      return false;
+    }
+
+    final replica = eraser;
+
+    if (replica == null) {
+      throw AppException(
+        kind: ErrorKind.failedPrecondition,
+        message:
+            'this device holds ${previous.federatedId}\'s library and has '
+            'no way to empty it',
+        code: codeReplicaNotEmptied,
+        op: opSignIn,
+      );
+    }
+
+    _log.info(
+      '${previous.federatedId} is being replaced by ${arriving.federatedId}; '
+      'emptying the replica',
+    );
+
+    await replica.erase();
+
+    return true;
   }
 
   @override
@@ -358,6 +426,12 @@ final class AuthRepositoryImpl implements AuthRepository {
         isNew = true;
       }
 
+      // Before a single row below is written. The node has just said who is
+      // signing in, and everything from here on describes them: a device that
+      // held another reader's library empties it now, while there is still
+      // nothing of this reader's to lose.
+      final handedOver = await _handOver(signIn.user);
+
       final at = _clock();
 
       await identity.bindDevice(
@@ -401,7 +475,15 @@ final class AuthRepositoryImpl implements AuthRepository {
       // A device that was just bound again is the first case and not the
       // second: what its log can reconstruct is a history written under an
       // identifier the node has never heard of.
-      if (isNew) {
+      //
+      // A device that has just changed hands is the first case too, and it is
+      // named separately rather than left to the binding to imply. It is the
+      // node that makes the two coincide — it answers `device_not_found` for an
+      // appliance bound to anybody else, so a reader arriving on somebody's
+      // device is always bound anew — and this device should not be reasoning
+      // from that. What it knows for itself is that it just emptied a replica,
+      // and an empty replica is one to fill.
+      if (isNew || handedOver) {
         await _seed(signIn.device.id);
       }
 

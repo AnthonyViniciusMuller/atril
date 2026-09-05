@@ -9,12 +9,15 @@ import 'package:atril/data/repositories/auth/auth_repository_impl.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
 import 'package:atril/data/repositories/server/server_repository_impl.dart';
 import 'package:atril/data/services/api/auth_api.dart';
+import 'package:atril/data/services/api/generated/quire/v1/auth.pb.dart'
+    as node;
 import 'package:atril/data/services/api/session.dart';
 import 'package:atril/data/services/channel/channel.dart';
 import 'package:atril/data/services/discovery/well_known.dart';
 import 'package:atril/data/services/local/dao/identity_dao.dart';
 import 'package:atril/data/services/local/database.dart';
 import 'package:atril/data/services/storage/session_store.dart';
+import 'package:atril/data/services/sync/erase.dart';
 import 'package:atril/data/services/sync/seed.dart';
 import 'package:atril/domain/models/user.dart';
 import 'package:atril/utils/errors.dart';
@@ -24,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 import '../../services/api/fake_auth_service.dart';
 
@@ -368,6 +372,117 @@ void main() {
     });
   });
 
+  group('a device that changes hands', () {
+    /// The second reader, at the same node.
+    ///
+    /// The pair is what identifies them — an account is named at a node, and
+    /// two nodes mint identifiers without consulting each other — so a test
+    /// about a *different* reader has to move the identifier and not only the
+    /// name.
+    final node.User other = node.User(
+      id: fakeOtherReaderId,
+      localName: 'outra',
+      displayName: 'Outra leitora',
+      originServerDomain: 'quire-a.example',
+      federatedId: '@outra:quire-a.example',
+      email: 'outra@quire-a.example',
+      createdAt: Timestamp.fromDateTime(DateTime.utc(2026, 6, 1)),
+    );
+
+    late List<String> erased;
+    late List<String> seeded;
+
+    AuthRepository withReplica({bool erasable = true}) {
+      erased = <String>[];
+      seeded = <String>[];
+
+      return AuthRepositoryImpl(
+        auth: AuthApi(connection: connection, session: session),
+        identity: database.identityDao,
+        servers: servers,
+        session: session,
+        platform: 'linux',
+        seeder: _RecordingSeeder(seeded, false),
+        eraser: erasable ? _RecordingEraser(erased) : null,
+        clock: () => _at,
+      );
+    }
+
+    test('empties the replica the reader before them left', () async {
+      final repository = withReplica();
+      await repository.signIn(credentials);
+      await repository.signOut();
+
+      // A second person signs in on the same device, which the node answers
+      // by refusing the binding the first one wrote under.
+      service.admits = other;
+
+      final result = await repository.signIn(credentials);
+
+      expect(result.valueOrNull?.federatedId, '@outra:quire-a.example');
+      expect(erased, hasLength(1));
+
+      // And the replica is filled again, for the reader who is now here.
+      expect(seeded, hasLength(2));
+      expect((await database.identityDao.reader())?.id, fakeOtherReaderId);
+    });
+
+    test('keeps it for the reader who signs back in', () async {
+      final repository = withReplica();
+      await repository.signIn(credentials);
+      await repository.signOut();
+
+      final result = await repository.signIn(credentials);
+
+      // The replica surviving a logout is the whole point of the rule the
+      // erasure is an exception to: this reader's library is still theirs.
+      expect(result.errorOrNull, isNull);
+      expect(erased, isEmpty);
+    });
+
+    test('keeps it for a reader who has renamed themselves', () async {
+      final repository = withReplica();
+      await repository.signIn(credentials);
+
+      // The same account under another local name, which is a thing UC06 lets
+      // a reader do. Comparing federated identifiers would empty the replica
+      // of somebody who had merely renamed themselves.
+      service.admits = service.admits.deepCopy()
+        ..localName = 'rebatizada'
+        ..federatedId = '@rebatizada:quire-a.example';
+
+      await repository.signIn(credentials);
+
+      expect(erased, isEmpty);
+      expect(
+        (await database.identityDao.reader())?.federatedId,
+        '@rebatizada:quire-a.example',
+      );
+    });
+
+    test('refuses the sign-in it cannot empty the replica for', () async {
+      final repository = withReplica(erasable: false);
+      await repository.signIn(credentials);
+      await repository.signOut();
+
+      service.admits = other;
+
+      final result = await repository.signIn(credentials);
+
+      // The opposite of what a failed seed does, and deliberately: a seed that
+      // did not run costs a library that fills in later, while signing this
+      // reader in over the last one's shelves is the failure the erasure
+      // exists to prevent.
+      expect((result.errorOrNull! as AppException).code, codeReplicaNotEmptied);
+      expect(await session.isSignedIn, isFalse);
+
+      // And nothing was written for the reader who was refused. The device
+      // still holds the first one's identity, which is what it still holds a
+      // library for.
+      expect((await database.identityDao.reader())?.id, fakeReaderId);
+    });
+  });
+
   group('signing out', () {
     test('clears the session and nothing else', () async {
       await auth.signIn(credentials);
@@ -582,6 +697,16 @@ void main() {
       );
     },
   );
+}
+
+/// An eraser that records having been asked to empty the replica.
+final class _RecordingEraser implements ReplicaErasure {
+  _RecordingEraser(this._erased);
+
+  final List<String> _erased;
+
+  @override
+  Future<void> erase() async => _erased.add('erased');
 }
 
 /// A seeder that records the devices it was asked to fill.

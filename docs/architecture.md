@@ -760,3 +760,18 @@ Recorded here because each one shapes a screen rather than a line of code.
 - **The device id survives logout.** A device that forgets it starts a second vector-clock entry
   that never merges with the first. It lives in the local database, not in the session store, and
   logging out clears the session and nothing else.
+- **A sign-in by a different reader empties the replica.** The sentence above is about a logout
+  and was read for a while as though it were about the next login too: the replica stays so that
+  a reader who signs back in finds their library rather than an empty one, which is right for
+  exactly as long as it is the same reader. Somebody else signing in on the device is the other
+  case, and leaving the rows would show them the previous reader's books — as it did, on an
+  account created minutes earlier that opened onto a full shelf. So `AuthRepositoryImpl.signIn`
+  compares the arriving reader against the row this device holds — the identifier *and* the
+  origin domain, since a local name can be edited and two nodes mint identifiers without
+  consulting each other — and `ReplicaEraser` empties the collection, the log, the causal state
+  and the files themselves before anything is written for the arriving reader. The catalogue of
+  nodes, the clock's floor and the binding stay: the first is a directory of servers rather than
+  a fact about a person, and the other two are this device's own. A failed erasure fails the
+  sign-in, which is the opposite of what a failed seed does and for the reason the asymmetry
+  suggests — a library that fills in later is a delay, and a library that belongs to somebody
+  else is the bug.

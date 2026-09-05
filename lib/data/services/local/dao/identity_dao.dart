@@ -74,7 +74,9 @@ class IdentityDao extends DatabaseAccessor<AtrilDatabase>
   ///
   /// A logout does not clear it. The replica it describes is still here, and a
   /// reader signing back in on the same device should find their library
-  /// rather than an empty one.
+  /// rather than an empty one — and a sign-in reads this to find out whether
+  /// the reader arriving *is* that reader, because the replica is emptied when
+  /// they are not.
   Future<ReaderRow?> reader() => select(signedInReader).getSingleOrNull();
 
   /// [reader], as it changes.

@@ -26,6 +26,10 @@ const String fakeReaderId = '22222222-2222-4222-8222-222222222222';
 /// The identifier this node mints for a device being bound for the first time.
 const String fakeMintedDeviceId = '33333333-3333-4333-8333-333333333333';
 
+/// A second reader this node hosts, for the tests about a device that passes
+/// from one to another.
+const String fakeOtherReaderId = '44444444-4444-4444-8444-444444444444';
+
 /// The node, as far as a session is concerned.
 final class FakeAuthService extends AuthServiceBase {
   /// The node issuing tokens numbered from [issued].
@@ -164,22 +168,30 @@ final class FakeAuthService extends AuthServiceBase {
       );
     }
 
+    final owner = presentedDevice == null ? null : _boundTo[presentedDevice];
+
+    if (owner != null && owner != admits.id) {
+      // Answered exactly as an unknown device is, which is what the node does
+      // and for the reason its use case gives: a reply that distinguished them
+      // would tell this reader which identifiers belong to somebody else.
+      _refuse(
+        StatusCode.notFound,
+        'device_not_found',
+        'that device is not bound to this account',
+      );
+    }
+
+    final device = presentedDevice ?? fakeMintedDeviceId;
+    _boundTo[device] = admits.id;
+
     return LoginResponse(
       session: _session(),
-      user: User(
-        id: fakeReaderId,
-        localName: 'reader',
-        displayName: 'A Reader',
-        originServerDomain: 'quire-a.example',
-        federatedId: '@reader:quire-a.example',
-        email: 'reader@quire-a.example',
-        createdAt: Timestamp.fromDateTime(DateTime.utc(2026, 1, 2, 3, 4, 5)),
-      ),
+      user: admits,
       // The device the reader named, with the identifier it must write under
       // from now on. A device being bound for the first time sends none and
       // learns it here.
       device: Device(
-        id: presentedDevice ?? fakeMintedDeviceId,
+        id: device,
         name: request.device.name,
         platform: request.device.platform,
         active: true,
@@ -201,6 +213,30 @@ final class FakeAuthService extends AuthServiceBase {
 
     return RefreshSessionResponse(session: rotate());
   }
+
+  /// The reader a login authenticates.
+  ///
+  /// It is settable because a device that passes from one reader to another is
+  /// a thing the client has to get right, and the only way to ask it is to let
+  /// a second person sign in on the socket the first one used.
+  User admits = User(
+    id: fakeReaderId,
+    localName: 'reader',
+    displayName: 'A Reader',
+    originServerDomain: 'quire-a.example',
+    federatedId: '@reader:quire-a.example',
+    email: 'reader@quire-a.example',
+    createdAt: Timestamp.fromDateTime(DateTime.utc(2026, 1, 2, 3, 4, 5)),
+  );
+
+  /// Which reader each device this node has bound belongs to.
+  ///
+  /// A device presented by anybody else is refused, as the node refuses it:
+  /// `bind` compares the appliance's owner against the reader who has just
+  /// authenticated and answers an unknown device when they differ. A device
+  /// this node has never seen is taken as it always was — it is a binding from
+  /// a run before this one.
+  final Map<String, String> _boundTo = <String, String>{};
 
   /// The reader this node holds, which the account calls read and write.
   ///
