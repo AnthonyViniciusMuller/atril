@@ -302,9 +302,24 @@ listenable would be a type no widget and no `provider` could observe.
       says so. The scale is a modification of the baseline rather than fifteen styles written
       out — a copy of the baseline stops tracking the framework and records nothing this app
       decided; what it decided is a line height on the three body styles and no extra tracking
-      on the titles. There is no third theme and no theme *setting*: the device already knows
-      whether the reader wants dark, and a page's own background belongs to the engine phase 9
-      renders it in
+      on the titles. There is no third theme, ~~and no theme *setting*: the device already knows
+      whether the reader wants dark~~, and a page's own background belongs to the engine phase 9
+      renders it in.
+
+      **The half of that about the setting was wrong, and is now fixed.** The device knows one
+      thing — whether its owner wants dark *everywhere* — and a reading application is precisely
+      the window somebody keeps open at night beside a desktop they leave light, which the
+      platform has no way to express. `ui/core/themes/appearance_view_model.dart` holds the
+      choice, the settings screen's first section changes it, and `ThemeMode.system` is still the
+      default, so the device's answer remains the one nobody has to give twice.
+
+      It also takes the *seed* from the platform where there is one — Android 12 and later, and
+      the accent colour on the three desktops, through `dynamic_color`'s plugin — which is one
+      colour and not a palette: `atrilSchemeOf` derives the forty roles either way, so a
+      wallpaper changes every hue and cannot change the shape of a scheme or the contrast floor
+      the test holds it to. iOS and the browser have no such API, and the switch that turns it on
+      is drawn only where the platform actually answered with a colour rather than wherever a
+      list of targets says it should have
 - [x] `feat: add localization` — `flutter_localizations`, `app_pt_BR.arb` and `app_en.arb`, and
       ~~the lint~~ that fails the build on a hardcoded string: Dart ships no such lint and none
       of the three ways to add one is a lint. A grep cannot tell `Text('Biblioteca')` from

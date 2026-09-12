@@ -1665,4 +1665,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeleteFailed => 'The account could not be deleted.';
+
+  @override
+  String get settingsAppearanceSection => 'Appearance';
+
+  @override
+  String get settingsAppearanceExplanation =>
+      'Applies to this device. It is not synchronized.';
+
+  @override
+  String get settingsAppearanceSystem => 'System';
+
+  @override
+  String get settingsAppearanceLight => 'Light';
+
+  @override
+  String get settingsAppearanceDark => 'Dark';
+
+  @override
+  String get settingsAppearanceSystemColors => 'Use the system\'s colours';
+
+  @override
+  String get settingsAppearanceSystemColorsExplanation =>
+      'Atril takes its colours from your wallpaper or your system\'s accent colour.';
 }

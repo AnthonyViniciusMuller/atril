@@ -25,6 +25,7 @@ import '../../core/localization/localization.dart';
 import '../../federation/widgets/federation_section.dart';
 import '../../sync/widgets/sync_section.dart';
 import '../view_model/settings_view_model.dart';
+import 'appearance_section.dart';
 import 'storage_section.dart';
 
 /// The settings screen.
@@ -67,6 +68,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           return ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: <Widget>[
+              // First, and before the account: it is the only section that
+              // works on a device where nobody is signed in, and the only one
+              // whose effect the reader can see while they are changing it.
+              const AppearanceSection(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(

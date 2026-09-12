@@ -2720,5 +2720,40 @@
   "accountDeleteFailed": "Não foi possível excluir a conta.",
   "@accountDeleteFailed": {
     "description": "Erro mostrado quando a exclusão da conta falha no servidor por um motivo que não é a senha."
+  },
+
+  "settingsAppearanceSection": "Aparência",
+  "@settingsAppearanceSection": {
+    "description": "Título da seção que escolhe se o aplicativo é claro ou escuro e de onde vêm as cores."
+  },
+
+  "settingsAppearanceExplanation": "Vale para este dispositivo. Não é sincronizado.",
+  "@settingsAppearanceExplanation": {
+    "description": "Dito uma vez no alto da seção. A escolha não replica: o papel de parede de um aparelho não diz nada sobre a cor de destaque de outro, e um celular lido na cama e um monitor sob a luz do escritório querem respostas diferentes."
+  },
+
+  "settingsAppearanceSystem": "Do sistema",
+  "@settingsAppearanceSystem": {
+    "description": "Opção que segue o modo claro ou escuro do aparelho. É o padrão: quem já pôs o aparelho no escuro não deveria precisar dizer de novo."
+  },
+
+  "settingsAppearanceLight": "Claro",
+  "@settingsAppearanceLight": {
+    "description": "Opção que deixa o aplicativo claro, mesmo que o aparelho esteja no escuro."
+  },
+
+  "settingsAppearanceDark": "Escuro",
+  "@settingsAppearanceDark": {
+    "description": "Opção que deixa o aplicativo escuro, mesmo que o aparelho esteja no claro. É o motivo de este ajuste existir: um aplicativo de leitura é a janela que fica aberta à noite ao lado de uma área de trabalho clara."
+  },
+
+  "settingsAppearanceSystemColors": "Usar as cores do sistema",
+  "@settingsAppearanceSystemColors": {
+    "description": "Rótulo do interruptor que tira a cor do aplicativo do papel de parede ou da cor de destaque do sistema. Só aparece onde a plataforma tem uma cor a oferecer."
+  },
+
+  "settingsAppearanceSystemColorsExplanation": "O aplicativo se pinta a partir do seu papel de parede ou da cor de destaque do sistema.",
+  "@settingsAppearanceSystemColorsExplanation": {
+    "description": "Explicação do interruptor das cores do sistema. Desligado, o aplicativo usa as cores próprias dele."
   }
 }

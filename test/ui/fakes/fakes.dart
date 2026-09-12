@@ -24,7 +24,10 @@ import 'package:atril/data/repositories/library/library_repository.dart';
 import 'package:atril/data/repositories/reading/reading_repository.dart';
 import 'package:atril/data/repositories/server/server_repository.dart';
 import 'package:atril/data/repositories/sync/sync_repository.dart';
+import 'package:atril/data/services/appearance/system_seed.dart';
 import 'package:atril/data/services/files/file_source.dart';
+import 'package:atril/data/services/storage/appearance_store.dart';
+import 'package:atril/ui/core/themes/appearance_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -66,6 +69,8 @@ List<SingleChildWidget> fakeProviders({
   FilePicker? picker,
   FileSaver? saver,
   Environment? environment,
+  AppearanceStore? appearance,
+  SystemSeed? seed,
 }) => <SingleChildWidget>[
   Provider<Environment>.value(value: environment ?? Environment.production()),
   Provider<ServerRepository>.value(value: servers ?? FakeServerRepository()),
@@ -84,4 +89,17 @@ List<SingleChildWidget> fakeProviders({
   Provider<SyncRepository>.value(value: sync ?? FakeSyncRepository()),
   Provider<FilePicker>.value(value: picker ?? FakeFilePicker()),
   Provider<FileSaver>.value(value: saver ?? FakeFileSaver()),
+
+  // The appearance is read above `MaterialApp` and changed from the settings
+  // screen, so it is in the graph rather than built by either — which means
+  // every test that pumps the app needs it, including the ones that assert
+  // nothing about it. It defaults to a device that offers no colour of its
+  // own: the platform half is a case a test has to ask for, as the development
+  // federation is.
+  ChangeNotifierProvider<AppearanceViewModel>(
+    create: (_) => AppearanceViewModel(
+      store: appearance ?? MemoryAppearanceStore(),
+      system: seed ?? const NoSystemSeed(),
+    ),
+  ),
 ];

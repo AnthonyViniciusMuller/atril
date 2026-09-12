@@ -179,6 +179,39 @@ dependencies:
   # before the database is opened.
   shared_preferences: ^2.5.3
 
+  # The colour the platform draws itself with, and the only way to ask for it:
+  # every one of the four systems that has an answer keeps it behind a native
+  # API, so this is a plugin or it is nothing. It is material-foundation's own,
+  # which is the same publisher as the Material specification the theme is
+  # built to.
+  #
+  # It reaches four of the six targets — Android 12+, where the answer is the
+  # wallpaper's palette, and Linux, macOS and Windows, where it is the desktop's
+  # accent colour. iOS and the browser have no such API at all, and there the
+  # reader gets the seed in `ui/core/themes/colors.dart`, which is why the
+  # switch that turns this on is shown only where there is something to follow.
+  #
+  # **Only `DynamicColorPlugin` is used, and deliberately not
+  # `DynamicColorBuilder`.** The builder hands back a `ColorScheme` from
+  # `package:material_ui`, which is a *different class* from the `ColorScheme`
+  # in `package:flutter/material.dart` that this Flutter still ships — the two
+  # do not assign to each other, and the mismatch would only appear at the line
+  # that hands it to `ThemeData`. The plugin returns a `CorePalette` and a
+  # `Color`, which are the framework's own types, so what Atril takes from the
+  # platform is one *seed* and the forty roles are derived here exactly as they
+  # are from `atrilSeed`. That is also the honest shape of it: `colors.dart`
+  # says the palette is derived from a source colour and not written down, and
+  # a system palette copied role by role would be the one place that stopped
+  # being true.
+  dynamic_color: ^2.1.0
+
+  # What a `CorePalette` is made of. It is the Flutter SDK's own dependency and
+  # the constraint is `any` for the reason `intl`'s is: the SDK pins the version
+  # this resolves to, and a second opinion here can only conflict with it. It is
+  # named because `data/services/appearance` reads a tone off a palette and is
+  # written against its API.
+  material_color_utilities: any
+
   # The browser's own APIs, typed. It is what the web half of the blob store
   # reaches the origin-private file system through, and what the storage budget
   # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`

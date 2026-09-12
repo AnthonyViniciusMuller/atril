@@ -2888,6 +2888,48 @@ abstract class AppLocalizations {
   /// In pt_BR, this message translates to:
   /// **'Não foi possível excluir a conta.'**
   String get accountDeleteFailed;
+
+  /// Título da seção que escolhe se o aplicativo é claro ou escuro e de onde vêm as cores.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Aparência'**
+  String get settingsAppearanceSection;
+
+  /// Dito uma vez no alto da seção. A escolha não replica: o papel de parede de um aparelho não diz nada sobre a cor de destaque de outro, e um celular lido na cama e um monitor sob a luz do escritório querem respostas diferentes.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Vale para este dispositivo. Não é sincronizado.'**
+  String get settingsAppearanceExplanation;
+
+  /// Opção que segue o modo claro ou escuro do aparelho. É o padrão: quem já pôs o aparelho no escuro não deveria precisar dizer de novo.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Do sistema'**
+  String get settingsAppearanceSystem;
+
+  /// Opção que deixa o aplicativo claro, mesmo que o aparelho esteja no escuro.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Claro'**
+  String get settingsAppearanceLight;
+
+  /// Opção que deixa o aplicativo escuro, mesmo que o aparelho esteja no claro. É o motivo de este ajuste existir: um aplicativo de leitura é a janela que fica aberta à noite ao lado de uma área de trabalho clara.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Escuro'**
+  String get settingsAppearanceDark;
+
+  /// Rótulo do interruptor que tira a cor do aplicativo do papel de parede ou da cor de destaque do sistema. Só aparece onde a plataforma tem uma cor a oferecer.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'Usar as cores do sistema'**
+  String get settingsAppearanceSystemColors;
+
+  /// Explicação do interruptor das cores do sistema. Desligado, o aplicativo usa as cores próprias dele.
+  ///
+  /// In pt_BR, this message translates to:
+  /// **'O aplicativo se pinta a partir do seu papel de parede ou da cor de destaque do sistema.'**
+  String get settingsAppearanceSystemColorsExplanation;
 }
 
 class _AppLocalizationsDelegate

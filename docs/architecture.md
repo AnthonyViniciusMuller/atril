@@ -89,6 +89,7 @@ lib/
 │   ├── services/
 │   │   ├── annotations/          what the reader marked, as a file they can take away
 │   │   ├── api/                  one client per gRPC service, over the generated stubs
+│   │   ├── appearance/           the colour the platform draws itself with, where it has one
 │   │   ├── channel/              the platform channel: native gRPC, or gRPC-Web
 │   │   ├── content/              the chunked upload and the download of a work's bytes
 │   │   ├── discovery/            the `.well-known` lookup — the one call that is not gRPC
@@ -96,7 +97,8 @@ lib/
 │   │   ├── files/                the file a reader named and the file they save: two ports
 │   │   ├── local/                the drift database, its tables and its DAOs
 │   │   ├── sync/                 the reconciler, the operation author, the sync loop
-│   │   └── storage/              the session store, the e-book blob store, the window's size
+│   │   └── storage/              the session store, the blob store, the window's size and the
+│   │                             two preferences that never replicate: the page's and the app's
 │   └── model/                    the mappers between the wire and the domain
 ├── ui/
 │   ├── core/{themes,localization,ui}

@@ -438,8 +438,17 @@ final class FakeLibraryRepository implements LibraryRepository {
   Future<Result<StorageBudget>> storage() async =>
       Result<StorageBudget>.ok(storageBudget);
 
+  /// What this device is keeping, out of what a test pushed.
+  ///
+  /// It replays the last answer — [_answers] and not `works.stream` — because
+  /// the storage section is at the foot of a lazily built list and is
+  /// therefore often *created after* a test has pushed its works. drift would
+  /// answer such a watch with the rows as they stand; a fake that waited for
+  /// the next push would leave that section saying this device keeps nothing,
+  /// which is a difference between the fake and the thing rather than a state
+  /// of this application.
   @override
-  Stream<Result<List<Ebook>>> watchKeptEbooks() => works.stream.map(
+  Stream<Result<List<Ebook>>> watchKeptEbooks() => _answers.map(
     (result) => switch (result) {
       Ok<List<Ebook>>(:final value) => Result<List<Ebook>>.ok(<Ebook>[
         for (final work in value)

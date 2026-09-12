@@ -29,8 +29,8 @@ void main() {
       expect(atrilLightScheme.brightness, Brightness.light);
       expect(atrilDarkScheme.brightness, Brightness.dark);
 
-      expect(AtrilTheme.light.colorScheme, atrilLightScheme);
-      expect(AtrilTheme.dark.colorScheme, atrilDarkScheme);
+      expect(AtrilTheme.light().colorScheme, atrilLightScheme);
+      expect(AtrilTheme.dark().colorScheme, atrilDarkScheme);
 
       // Two schemes from one seed cannot drift apart in hue. If somebody
       // hand-tunes one of them, this is what says so.
@@ -40,8 +40,51 @@ void main() {
       );
     });
 
+    test('grow from whatever seed they are given', () {
+      // The system's colour arrives as a seed and leaves as a whole scheme,
+      // derived by the same algorithm with the same contrast guarantees. What
+      // this pins is that it is a *seed* and not a palette: a wallpaper can
+      // change the hue of every role and cannot change the shape of the
+      // scheme, which is what keeps a system palette from producing something
+      // no screen here has been looked at against.
+      const Color wallpaper = Color(0xFF8E4585);
+
+      final ColorScheme light = atrilSchemeOf(
+        brightness: Brightness.light,
+        seed: wallpaper,
+      );
+
+      expect(light, isNot(atrilLightScheme));
+      expect(
+        light,
+        ColorScheme.fromSeed(
+          seedColor: wallpaper,
+          brightness: Brightness.light,
+        ),
+      );
+      expect(AtrilTheme.light(scheme: light).colorScheme, light);
+
+      // And a seed nobody gave is this application's own.
+      expect(
+        atrilSchemeOf(brightness: Brightness.dark, seed: null),
+        atrilDarkScheme,
+      );
+      expect(AtrilTheme.dark(scheme: null).colorScheme, atrilDarkScheme);
+    });
+
     test('keep body text legible on the surface it is read on', () {
-      for (final scheme in <ColorScheme>[atrilLightScheme, atrilDarkScheme]) {
+      // The third and fourth are a system palette: the roles come out of the
+      // same algorithm, so the floor has to hold for a seed this project did
+      // not choose — which is the whole argument for taking one colour off the
+      // platform rather than forty.
+      const Color wallpaper = Color(0xFF8E4585);
+
+      for (final scheme in <ColorScheme>[
+        atrilLightScheme,
+        atrilDarkScheme,
+        atrilSchemeOf(brightness: Brightness.light, seed: wallpaper),
+        atrilSchemeOf(brightness: Brightness.dark, seed: wallpaper),
+      ]) {
         // 4.5:1 is the WCAG AA floor for body text. It is asserted on the
         // pair every screen in this app uses most, because a seed changed for
         // how it looks in a header is a seed changed for the wrong screen.
@@ -74,7 +117,7 @@ void main() {
     });
 
     test('is what the themes hand to a screen', () {
-      for (final theme in <ThemeData>[AtrilTheme.light, AtrilTheme.dark]) {
+      for (final theme in <ThemeData>[AtrilTheme.light(), AtrilTheme.dark()]) {
         expect(theme.textTheme.bodyLarge?.height, atrilParagraphHeight);
         expect(theme.textTheme.titleMedium?.letterSpacing, 0);
       }

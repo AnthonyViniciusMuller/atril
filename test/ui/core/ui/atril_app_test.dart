@@ -8,10 +8,13 @@
 library;
 
 import 'package:atril/data/services/api/session.dart';
+import 'package:atril/data/services/appearance/system_seed.dart';
+import 'package:atril/data/services/storage/appearance_store.dart';
 import 'package:atril/data/services/storage/session_store.dart';
 import 'package:atril/domain/models/session.dart';
 import 'package:atril/routing/router.dart';
 import 'package:atril/ui/core/localization/localization.dart';
+import 'package:atril/ui/core/themes/colors.dart';
 import 'package:atril/ui/core/themes/theme.dart';
 import 'package:atril/ui/core/ui/atril_app.dart';
 import 'package:atril/ui/library/widgets/library_screen.dart';
@@ -49,17 +52,25 @@ Session _session() {
 /// opens a database file, a platform keychain and the device's connectivity,
 /// none of which a widget test has. What is under test is the widget above the
 /// graph, so what it is given is the part of the graph it reads.
-List<SingleChildWidget> _providers(SessionHolder session) =>
-    <SingleChildWidget>[
-      ...fakeProviders(),
-      Provider<SessionHolder>.value(value: session),
-      Provider<GoRouter>(
-        create: (_) => atrilRouter(session: session),
-        dispose: (_, GoRouter router) => router.dispose(),
-      ),
-    ];
+List<SingleChildWidget> _providers(
+  SessionHolder session, {
+  AppearanceStore? appearance,
+  SystemSeed? seed,
+}) => <SingleChildWidget>[
+  ...fakeProviders(appearance: appearance, seed: seed),
+  Provider<SessionHolder>.value(value: session),
+  Provider<GoRouter>(
+    create: (_) => atrilRouter(session: session),
+    dispose: (_, GoRouter router) => router.dispose(),
+  ),
+];
 
-Future<SessionHolder> _pump(WidgetTester tester, {bool signedIn = true}) async {
+Future<SessionHolder> _pump(
+  WidgetTester tester, {
+  bool signedIn = true,
+  AppearanceStore? appearance,
+  SystemSeed? seed,
+}) async {
   final session = SessionHolder(
     store: MemorySessionStore(),
     refresher: _NeverAsked.new,
@@ -72,7 +83,10 @@ Future<SessionHolder> _pump(WidgetTester tester, {bool signedIn = true}) async {
   addTearDown(session.dispose);
 
   await tester.pumpWidget(
-    MultiProvider(providers: _providers(session), child: const AtrilApp()),
+    MultiProvider(
+      providers: _providers(session, appearance: appearance, seed: seed),
+      child: const AtrilApp(),
+    ),
   );
   await tester.pumpAndSettle();
 
@@ -100,16 +114,75 @@ void main() {
     );
   });
 
-  testWidgets('registers both themes and follows the device', (
+  testWidgets('registers both themes and follows the device by default', (
     WidgetTester tester,
   ) async {
     await _pump(tester);
 
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
 
-    expect(app.theme, AtrilTheme.light);
-    expect(app.darkTheme, AtrilTheme.dark);
+    // Both are registered whatever the mode is, because the mode can be the
+    // device's and `MaterialApp` is what watches the platform's brightness.
+    expect(app.theme, AtrilTheme.light());
+    expect(app.darkTheme, AtrilTheme.dark());
     expect(app.themeMode, ThemeMode.system);
+  });
+
+  testWidgets('is drawn the way the reader last left it', (
+    WidgetTester tester,
+  ) async {
+    // A device that chose dark, on a platform with no colour of its own. What
+    // is under test is the one thing a preference cannot do for itself: reach
+    // the widget above every screen.
+    await _pump(
+      tester,
+      appearance: MemoryAppearanceStore(const Appearance(mode: ThemeMode.dark)),
+    );
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    expect(app.themeMode, ThemeMode.dark);
+    expect(app.theme, AtrilTheme.light());
+    expect(app.darkTheme, AtrilTheme.dark());
+  });
+
+  testWidgets('grows both themes from the colour the platform offers', (
+    WidgetTester tester,
+  ) async {
+    const Color wallpaper = Color(0xFF8E4585);
+
+    await _pump(tester, seed: const MemorySystemSeed(wallpaper));
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    expect(
+      app.theme?.colorScheme,
+      atrilSchemeOf(brightness: Brightness.light, seed: wallpaper),
+    );
+    expect(
+      app.darkTheme?.colorScheme,
+      atrilSchemeOf(brightness: Brightness.dark, seed: wallpaper),
+    );
+    expect(app.theme?.colorScheme, isNot(atrilLightScheme));
+  });
+
+  testWidgets('keeps its own colours where the reader turned the others off', (
+    WidgetTester tester,
+  ) async {
+    // The platform has a colour and the reader said no. The preference is what
+    // decides, and it decides the same way on a device that has no colour to
+    // refuse — which is why the store holds what the reader wants rather than
+    // what this device can do.
+    await _pump(
+      tester,
+      appearance: MemoryAppearanceStore(const Appearance(systemColors: false)),
+      seed: const MemorySystemSeed(Color(0xFF8E4585)),
+    );
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    expect(app.theme?.colorScheme, atrilLightScheme);
+    expect(app.darkTheme?.colorScheme, atrilDarkScheme);
   });
 
   testWidgets('registers the delegates and the locales', (

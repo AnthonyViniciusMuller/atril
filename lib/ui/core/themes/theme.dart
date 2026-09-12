@@ -7,11 +7,20 @@
 /// times. Phase 9's reading surface is where a page's own background belongs,
 /// inside the engine that renders it, and not as a third app theme.
 ///
-/// Both are derived from one seed in `colors.dart` and share the type scale in
+/// Both are derived from one seed and share the type scale in
 /// `typography.dart`, so the difference between them is the brightness and
 /// nothing else. That is the property worth protecting: a widget that looks
 /// right in one and wrong in the other is almost always a colour written where
 /// `colors.dart` could not see it.
+///
+/// **Which of the two is shown is the reader's, and the seed may be the
+/// platform's.** Both were once fixed here — `themeMode` was
+/// [ThemeMode.system] and the seed was `atrilSeed` — on the argument that the
+/// device already knows what the reader wants. Half of that argument holds and
+/// is still the default; the other half was wrong. A reading application is
+/// the one window somebody keeps open at night beside a desktop they leave
+/// light, and *this* application darker than the rest of the desktop is a
+/// preference the platform has no way to express.
 library;
 
 import 'package:flutter/material.dart';
@@ -23,16 +32,22 @@ import 'typography.dart';
 ///
 /// It is an abstract final class rather than a pair of top-level getters
 /// because the pair is the point: a screen is never given one of them, it is
-/// given both and the platform chooses. `MaterialApp.themeMode` is
-/// [ThemeMode.system] for that reason — the reader already told their device
-/// which they want, and asking a second time in a settings screen would be
-/// this app disagreeing with the device about a decision the device owns.
+/// given both, and `MaterialApp.themeMode` chooses between them — from the
+/// device, or from what the reader said instead.
 abstract final class AtrilTheme {
-  /// The theme of a light build.
-  static ThemeData get light => _from(atrilLightScheme);
+  /// The theme of a light build, over [scheme].
+  ///
+  /// [scheme] is what the platform's own colour grew — `atrilSchemeOf` is
+  /// where it grew, from one seed and nothing else — and `null` is this
+  /// application's own colours. A scheme and not a seed, because deriving the
+  /// forty roles is real work and the caller is the root of the app: it is
+  /// done once, where the platform answered, rather than on every build.
+  static ThemeData light({ColorScheme? scheme}) =>
+      _from(scheme ?? atrilLightScheme);
 
-  /// The theme of a dark build.
-  static ThemeData get dark => _from(atrilDarkScheme);
+  /// The theme of a dark build, over [scheme].
+  static ThemeData dark({ColorScheme? scheme}) =>
+      _from(scheme ?? atrilDarkScheme);
 
   /// The theme of [scheme], with everything both themes agree on.
   static ThemeData _from(ColorScheme scheme) {

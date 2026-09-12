@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../localization/localization.dart';
+import '../themes/appearance_view_model.dart';
 import '../themes/theme.dart';
 
 /// The root widget.
@@ -23,25 +24,34 @@ class AtrilApp extends StatelessWidget {
   const AtrilApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
-    // `onGenerateTitle` and not `title`: the name is in the ARB like every
-    // other string, and this is the callback that runs with a context the
-    // delegates have already answered for. It is what a task switcher, a
-    // window manager and a browser tab read.
-    onGenerateTitle: (BuildContext context) =>
-        AppLocalizations.of(context).appTitle,
+  Widget build(BuildContext context) {
+    // Watched and not read: this is the one widget in the app that rebuilds
+    // when the reader changes how the app is drawn, and it rebuilds for that
+    // and for nothing else — the appearance is the only listenable above
+    // `MaterialApp`.
+    final AppearanceViewModel appearance = context.watch<AppearanceViewModel>();
 
-    theme: AtrilTheme.light,
-    darkTheme: AtrilTheme.dark,
+    return MaterialApp.router(
+      // `onGenerateTitle` and not `title`: the name is in the ARB like every
+      // other string, and this is the callback that runs with a context the
+      // delegates have already answered for. It is what a task switcher, a
+      // window manager and a browser tab read.
+      onGenerateTitle: (BuildContext context) =>
+          AppLocalizations.of(context).appTitle,
 
-    // The device already knows which the reader wants. Asking again in a
-    // settings screen would be this app disagreeing with the platform about a
-    // decision the platform owns.
-    themeMode: ThemeMode.system,
+      // Both themes are registered whatever the mode is, because the mode can
+      // be the device's: `MaterialApp` is what watches the platform's
+      // brightness, and handing it one theme would be this widget doing that
+      // job worse.
+      theme: AtrilTheme.light(scheme: appearance.lightScheme),
+      darkTheme: AtrilTheme.dark(scheme: appearance.darkScheme),
 
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
+      themeMode: appearance.mode,
 
-    routerConfig: context.read<GoRouter>(),
-  );
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+
+      routerConfig: context.read<GoRouter>(),
+    );
+  }
 }

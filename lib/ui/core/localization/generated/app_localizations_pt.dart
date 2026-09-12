@@ -1672,6 +1672,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get accountDeleteFailed => 'Não foi possível excluir a conta.';
+
+  @override
+  String get settingsAppearanceSection => 'Aparência';
+
+  @override
+  String get settingsAppearanceExplanation =>
+      'Vale para este dispositivo. Não é sincronizado.';
+
+  @override
+  String get settingsAppearanceSystem => 'Do sistema';
+
+  @override
+  String get settingsAppearanceLight => 'Claro';
+
+  @override
+  String get settingsAppearanceDark => 'Escuro';
+
+  @override
+  String get settingsAppearanceSystemColors => 'Usar as cores do sistema';
+
+  @override
+  String get settingsAppearanceSystemColorsExplanation =>
+      'O aplicativo se pinta a partir do seu papel de parede ou da cor de destaque do sistema.';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3341,4 +3364,27 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get accountDeleteFailed => 'Não foi possível excluir a conta.';
+
+  @override
+  String get settingsAppearanceSection => 'Aparência';
+
+  @override
+  String get settingsAppearanceExplanation =>
+      'Vale para este dispositivo. Não é sincronizado.';
+
+  @override
+  String get settingsAppearanceSystem => 'Do sistema';
+
+  @override
+  String get settingsAppearanceLight => 'Claro';
+
+  @override
+  String get settingsAppearanceDark => 'Escuro';
+
+  @override
+  String get settingsAppearanceSystemColors => 'Usar as cores do sistema';
+
+  @override
+  String get settingsAppearanceSystemColorsExplanation =>
+      'O aplicativo se pinta a partir do seu papel de parede ou da cor de destaque do sistema.';
 }

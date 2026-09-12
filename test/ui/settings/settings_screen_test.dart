@@ -2,6 +2,8 @@
 library;
 
 import 'package:atril/data/repositories/library/library_repository.dart';
+import 'package:atril/data/services/appearance/system_seed.dart';
+import 'package:atril/data/services/storage/appearance_store.dart';
 import 'package:atril/data/services/storage/blob_storage.dart';
 import 'package:atril/domain/crdt/revision.dart';
 import 'package:atril/domain/crdt/vector_clock.dart';
@@ -32,10 +34,18 @@ Future<void> pump(
   FakeAuthRepository auth, {
   FakeLibraryRepository? library,
   FakeSyncRepository? sync,
+  AppearanceStore? appearance,
+  SystemSeed? seed,
 }) async {
   await tester.pumpWidget(
     MultiProvider(
-      providers: fakeProviders(auth: auth, library: library, sync: sync),
+      providers: fakeProviders(
+        auth: auth,
+        library: library,
+        sync: sync,
+        appearance: appearance,
+        seed: seed,
+      ),
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -48,6 +58,7 @@ Future<void> pump(
 
 void main() {
   _storage();
+  _appearance();
 
   testWidgets('gives the synchronization one line, and the way to more', (
     WidgetTester tester,
@@ -221,9 +232,9 @@ void _storage() {
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    // The storage section is at the foot of the settings, below the sync and
-    // federation ones, so on a phone-sized surface it has to be scrolled to
-    // before it can be tapped.
+    // The storage section is at the foot of the settings, below the appearance,
+    // sync and federation ones, so on a phone-sized surface it has to be
+    // scrolled to before it can be tapped.
     await tester.scrollUntilVisible(find.text(l10n.storageRelease), 200);
     await tester.ensureVisible(find.text(l10n.storageRelease));
     await tester.pumpAndSettle();
@@ -267,9 +278,9 @@ void _storage() {
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    // The storage section is at the foot of the settings, below the sync and
-    // federation ones, so on a phone-sized surface it has to be scrolled to
-    // before it can be tapped.
+    // The storage section is at the foot of the settings, below the appearance,
+    // sync and federation ones, so on a phone-sized surface it has to be
+    // scrolled to before it can be tapped.
     await tester.scrollUntilVisible(find.text(l10n.storageRelease), 200);
     await tester.ensureVisible(find.text(l10n.storageRelease));
     await tester.pumpAndSettle();
@@ -278,5 +289,81 @@ void _storage() {
     await tester.pumpAndSettle();
 
     expect(find.text(l10n.storageNotYetSent), findsOneWidget);
+  });
+}
+
+/// Light or dark, and whose colours.
+void _appearance() {
+  testWidgets('is drawn first, because it needs no account', (
+    WidgetTester tester,
+  ) async {
+    await pump(tester, FakeAuthRepository());
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(find.text(l10n.settingsAppearanceSection), findsOneWidget);
+    expect(find.text(l10n.settingsAppearanceExplanation), findsOneWidget);
+    expect(find.byType(SegmentedButton<ThemeMode>), findsOneWidget);
+
+    // First on the screen: it is the one section that works on a device where
+    // nobody is signed in, and the only one whose effect is visible while it
+    // is being changed.
+    expect(
+      tester.getTopLeft(find.text(l10n.settingsAppearanceSection)).dy,
+      lessThan(tester.getTopLeft(find.text(l10n.settingsAccountSection)).dy),
+    );
+  });
+
+  testWidgets('draws the application the way it is tapped', (
+    WidgetTester tester,
+  ) async {
+    final MemoryAppearanceStore store = MemoryAppearanceStore();
+
+    await pump(tester, FakeAuthRepository(), appearance: store);
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.tap(find.text(l10n.settingsAppearanceDark));
+    await tester.pumpAndSettle();
+
+    // The choice is the reader's from the moment it is made, and it outlives
+    // the run: there is no *apply*, because what is being changed is what the
+    // reader is looking at.
+    expect(store.appearance.mode, ThemeMode.dark);
+  });
+
+  testWidgets('offers the system colours only where there are any', (
+    WidgetTester tester,
+  ) async {
+    await pump(tester, FakeAuthRepository());
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    // A control that is shown, moves, and changes nothing is worse than a
+    // control that is not there. This is an iPhone, a browser, or an Android
+    // below 12.
+    expect(find.text(l10n.settingsAppearanceSystemColors), findsNothing);
+  });
+
+  testWidgets('turns the system colours off where there are some', (
+    WidgetTester tester,
+  ) async {
+    final MemoryAppearanceStore store = MemoryAppearanceStore();
+
+    await pump(
+      tester,
+      FakeAuthRepository(),
+      appearance: store,
+      seed: const MemorySystemSeed(Color(0xFF8E4585)),
+    );
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(find.text(l10n.settingsAppearanceSystemColors), findsOneWidget);
+
+    await tester.tap(find.text(l10n.settingsAppearanceSystemColors));
+    await tester.pumpAndSettle();
+
+    expect(store.appearance.systemColors, isFalse);
   });
 }

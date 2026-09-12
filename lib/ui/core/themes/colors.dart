@@ -24,20 +24,28 @@ import 'package:flutter/material.dart';
 /// place by staying behind it.
 const Color atrilSeed = Color(0xFF3F6B6B);
 
-/// The scheme a light build draws with.
-final ColorScheme atrilLightScheme = ColorScheme.fromSeed(
-  seedColor: atrilSeed,
+/// The scheme a build draws with at [brightness], grown from [seed].
+///
+/// [seed] is the colour the *platform* offers when the reader has asked for
+/// the system's colours and the platform has one — see
+/// `data/services/appearance/system_seed.dart` — and `null` everywhere else,
+/// which is [atrilSeed]. That is the whole of what a system palette changes
+/// here: one colour goes in, and the forty roles come out of the same
+/// algorithm with the same contrast guarantees, so a wallpaper cannot produce
+/// a scheme this project has never seen the shape of.
+ColorScheme atrilSchemeOf({required Brightness brightness, Color? seed}) =>
+    ColorScheme.fromSeed(seedColor: seed ?? atrilSeed, brightness: brightness);
+
+/// The scheme a light build draws with, in this application's own colours.
+final ColorScheme atrilLightScheme = atrilSchemeOf(
   brightness: Brightness.light,
 );
 
-/// The scheme a dark build draws with.
+/// The scheme a dark build draws with, in this application's own colours.
 ///
 /// It is derived from the same seed rather than hand-tuned, so the two schemes
 /// cannot drift apart: a role that changes hue in one changes in both.
-final ColorScheme atrilDarkScheme = ColorScheme.fromSeed(
-  seedColor: atrilSeed,
-  brightness: Brightness.dark,
-);
+final ColorScheme atrilDarkScheme = atrilSchemeOf(brightness: Brightness.dark);
 
 /// The colour a highlight is painted over the page in.
 ///

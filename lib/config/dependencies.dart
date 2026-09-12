@@ -86,11 +86,14 @@ import '../data/services/sync/seed.dart';
 import '../data/services/sync/stream.dart';
 import '../data/services/sync/watch.dart';
 import '../domain/crdt/hybrid_clock.dart';
+import '../data/services/appearance/system_seed.dart';
+import '../data/services/storage/appearance_store.dart';
 import '../data/services/storage/blob_storage.dart';
 import '../data/services/storage/reader_settings_store.dart';
 import '../data/services/storage/secure_session_store.dart';
 import '../data/services/storage/session_store.dart';
 import '../routing/router.dart';
+import '../ui/core/themes/appearance_view_model.dart';
 import '../utils/logging.dart';
 import 'environment.dart';
 import 'platform.dart';
@@ -471,6 +474,24 @@ Future<List<SingleChildWidget>> providersFor(Environment environment) async {
     // the contract has no field for it.
     Provider<ReaderSettingsStore>(
       create: (_) => PreferencesReaderSettingsStore(),
+    ),
+
+    // How the reader likes the application, and the colour the platform draws
+    // itself with. The store is beside the reader's own for the same reason;
+    // the seed is a platform question, which is why it is a port here and not
+    // a plugin call in a widget — a widget test has no channel to answer it.
+    Provider<AppearanceStore>(create: (_) => PreferencesAppearanceStore()),
+    Provider<SystemSeed>(create: (_) => const PlatformSystemSeed()),
+
+    // The one view model in the graph, and the one thing here a widget could
+    // not build for itself: it is read above `MaterialApp`, to choose the
+    // theme, and read again inside the settings screen, to change it. A screen
+    // that built its own would be a switch that moves and changes nothing.
+    ChangeNotifierProvider<AppearanceViewModel>(
+      create: (BuildContext context) => AppearanceViewModel(
+        store: context.read<AppearanceStore>(),
+        system: context.read<SystemSeed>(),
+      ),
     ),
 
     // The platform's own file dialog, behind a port. It is one implementation

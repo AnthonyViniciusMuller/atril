@@ -1095,5 +1095,26 @@
   "@accountDeleted": {},
 
   "accountDeleteFailed": "The account could not be deleted.",
-  "@accountDeleteFailed": {}
+  "@accountDeleteFailed": {},
+
+  "settingsAppearanceSection": "Appearance",
+  "@settingsAppearanceSection": {},
+
+  "settingsAppearanceExplanation": "Applies to this device. It is not synchronized.",
+  "@settingsAppearanceExplanation": {},
+
+  "settingsAppearanceSystem": "System",
+  "@settingsAppearanceSystem": {},
+
+  "settingsAppearanceLight": "Light",
+  "@settingsAppearanceLight": {},
+
+  "settingsAppearanceDark": "Dark",
+  "@settingsAppearanceDark": {},
+
+  "settingsAppearanceSystemColors": "Use the system's colours",
+  "@settingsAppearanceSystemColors": {},
+
+  "settingsAppearanceSystemColorsExplanation": "Atril takes its colours from your wallpaper or your system's accent colour.",
+  "@settingsAppearanceSystemColorsExplanation": {}
 }
