@@ -54,11 +54,19 @@
 /// the one that gets forgotten is always the one added last.
 ///
 /// **It drives the upload queue too.** `upload_queue.dart` says its passes are
-/// this loop's to schedule, and this is where that happens: a launch, a
-/// reconnection and every reopening run one. C16 is why it matters here rather
-/// than at the import — the bytes of a freshly imported book are refused until
-/// the operation that created the work has been pushed, and the push and the
-/// pass are one connection apart.
+/// this loop's to schedule, and this is where that happens. C16 is why it is
+/// here rather than at the import: the bytes of a freshly imported book are
+/// refused until the operation that created the work has been pushed, so the
+/// pass has to follow the push rather than the file.
+///
+/// **What follows the push is the outbox shrinking**, and that was the missing
+/// half. A launch and every reconnection ran a pass, on the reading that a
+/// device reconnects often enough for one to come round — and a channel that
+/// stays up has no next connection, so a book imported during a live session
+/// was owed for ever, and *synchronize now* handed over the records and not the
+/// bytes. The count falling is this device learning that the node took the
+/// operation that claims the file, which is the first moment C16 stops
+/// refusing and the only one in this loop that means anything of the sort.
 library;
 
 import 'dart:async';
@@ -293,13 +301,41 @@ final class SyncScheduler {
   /// It hands over only when the number went *up*. A count that fell is this
   /// loop's own push retiring what it just delivered, and answering that with
   /// another push would be a device talking to itself.
+  ///
+  /// **A count that fell is exactly when the files become sendable**, though,
+  /// and that is the other half of this listener. C16 refuses the bytes of a
+  /// work until the operation that created it has been pushed; the outbox
+  /// shrinking is this device learning that the node took that operation, and
+  /// it is the only moment in the loop that means so. Driving the queue from
+  /// here is what makes a book imported during a live session arrive — the
+  /// connection-time pass below cannot, because a channel that stays up has no
+  /// next connection and the pass that ran at its opening ran before the push
+  /// it depends on had been answered.
   void _onOwed(int owed) {
     final grew = owed > _owed;
+    final shrank = owed < _owed;
 
     _owed = owed;
 
     if (grew) {
       unawaited(nudge());
+    } else if (shrank) {
+      unawaited(_deliver());
+    }
+  }
+
+  /// Sends what this device owes in bytes, and keeps what that costs inside
+  /// the loop.
+  ///
+  /// The queue answers for every transfer on its own row and never throws, so
+  /// what is guarded here is the query behind it — a database that has been
+  /// closed under a listener nobody awaits — and not a refusal, which is a
+  /// state of a row rather than an error.
+  Future<void> _deliver() async {
+    try {
+      await uploads.run();
+    } on Object catch (error, trace) {
+      _log.warning('the files this device owes were not sent', error, trace);
     }
   }
 
@@ -312,7 +348,12 @@ final class SyncScheduler {
   /// the five minutes anyway would be the app disbelieving them.
   Future<void> syncNow() async {
     if (channel.isOpen) {
+      // Both halves, because *synchronize now* is one word to a reader. An
+      // offer hands over the records and the queue hands over the bytes, and a
+      // reader whose book had not been sent was tapping the only control the
+      // app offers and getting the half that was already done.
       await _offer();
+      await _deliver();
 
       return;
     }
@@ -425,9 +466,12 @@ final class SyncScheduler {
       );
 
       // What a connection is worth beyond the channel itself: the files this
-      // device owes, which C16 refuses until the record that names them has
-      // been pushed.
-      await uploads.run();
+      // device owes from before it, whose records were pushed on a connection
+      // that has already ended. What was imported *since* is delivered by
+      // `_onOwed` instead, when the node takes the operation that claims it —
+      // this pass runs while the backlog it just offered is still in the air,
+      // so C16 would refuse anything newer than the last connection.
+      await _deliver();
 
       await ended;
 

@@ -716,7 +716,13 @@ Recorded here because each one shapes a screen rather than a line of code.
   that is a *not yet* rather than a failure — nothing about the file is wrong and the same call
   succeeds afterwards. The record does not wait for the bytes; the bytes wait for the record.
   `data/services/content/content_uploader.dart` states it where the call is made, and the queue
-  beside it is what leaves such a transfer waiting instead of giving up on it.
+  beside it is what leaves such a transfer waiting instead of giving up on it. **What makes
+  *afterwards* arrive is the outbox shrinking**: `data/services/sync/scheduler.dart` drives a pass
+  when the count of pending operations falls, because that is this device learning that the node
+  took the operation which claims the file, and it is the only event in the loop that means so. A
+  pass at connection time is not enough on its own — a channel that stays up has no next
+  connection, and the pass that runs at its opening runs while the push it depends on is still in
+  the air.
 - **C18**: `ebook_collection` and `reading_progress` are identified across the federation by
   their natural key — `(ebook_id, collection_id)` and `(ebook_id, device_id)` — carried in the
   delta. The surrogate id is a local handle. Atril mints its own and remembers it, exactly as

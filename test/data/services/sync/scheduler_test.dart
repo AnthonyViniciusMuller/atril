@@ -473,6 +473,63 @@ void main() {
     await until(() => channel.offers > offered);
   });
 
+  /// A digest nothing in this test holds the bytes of.
+  const String owedHash =
+      '0000000000000000000000000000000000000000000000000000000000000001';
+
+  /// Tells the loop that the node is owed a file, as an import would.
+  Future<void> oweAFile() => database.transfersDao.enqueue(
+    contentHash: owedHash,
+    mediaType: 'application/epub+zip',
+    sizeBytes: 8,
+    at: _at,
+  );
+
+  /// Whether the file is still owed.
+  Future<bool> stillOwed() async =>
+      await database.transfersDao.transfer(owedHash) != null;
+
+  test('sends a file imported while the channel was already up', () async {
+    // The bug this is written against: the queue was driven at connection time
+    // and nowhere else, so a book imported during a live session was owed for
+    // ever — the channel that would have carried it never reopened, and the
+    // pass that ran when it opened ran before the push it depends on.
+    await scheduler.start();
+    await until(() => scheduler.status.activity == SyncActivity.live);
+
+    // The import: a change in the outbox and a file owed, both after the
+    // connection-time pass has already come and gone.
+    await database.syncDao.appendAll(<Operation>[_change()]);
+    await oweAFile();
+
+    expect(await stillOwed(), isTrue);
+
+    // The node takes the operation, which this device learns as its outbox
+    // shrinking. C16 stops refusing the bytes here and at no earlier moment.
+    await database.syncDao.retire(<String>[_change().id]);
+
+    // Nothing holds the bytes, so the pass retires the row as hopeless — which
+    // is what makes *a pass ran* observable with no node to send to. Before
+    // the fix the row sat there until the process ended.
+    await untilGone(stillOwed);
+  });
+
+  test('sends the files when a reader asks to synchronize now', () async {
+    // *Synchronize now* is one word to a reader, and it handed over the
+    // records and not the bytes: the one control the app offers for a book
+    // that has not arrived did nothing about the book.
+    await scheduler.start();
+    await until(() => channel.isOpen);
+
+    await oweAFile();
+
+    expect(await stillOwed(), isTrue);
+
+    await scheduler.syncNow();
+
+    expect(await stillOwed(), isFalse);
+  });
+
   test('hands a change over on the open channel', () async {
     await scheduler.start();
     await until(() => channel.isOpen);
