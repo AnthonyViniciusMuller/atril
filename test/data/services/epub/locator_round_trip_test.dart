@@ -236,11 +236,12 @@ void main() {
 
   group('both hosts drive that engine through the same names', () {
     late Set<String> defined;
+    late String glue;
 
     setUpAll(() async {
       // Read from the bundle rather than from the pub cache: what a host will
       // load is the asset, and the asset is what is pinned.
-      final String glue = utf8.decode(
+      glue = utf8.decode(
         (await loadEngineAsset(EpubEngine.glue)).buffer.asUint8List(),
       );
 
@@ -274,6 +275,24 @@ void main() {
             'them. Linux would stop turning pages while the other five targets '
             'carried on, which is precisely the divergence this phase forbids.',
       );
+    });
+
+    test('the contents is announced empty-handed and has to be asked for', () {
+      // The bug this check exists for: `epubView.js` parses the navigation
+      // document, keeps the list in the page, and calls `chapters` with **no
+      // argument**. The Linux host read the notification's arguments, found
+      // none, and completed every book with an empty contents — a sumário that
+      // worked on five targets and said *this book has none* on the sixth.
+      // The package's own handler never had the bug because it ignores the
+      // notification's payload and calls `getChapters`, which is what this
+      // host does now.
+      expect(glue, contains("callHandler('chapters')"));
+      expect(
+        glue,
+        isNot(contains("callHandler('chapters',")),
+        reason: 'the notification now carries the list and could be read',
+      );
+      expect(defined, contains(EpubGlue.chapters));
     });
 
     test('the near-miss the naming is most likely to make is checked', () {

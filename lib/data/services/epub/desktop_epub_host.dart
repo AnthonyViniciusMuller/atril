@@ -592,7 +592,7 @@ final class DesktopEpubHost implements EpubHost {
         unawaited(_applyToEngine());
         unawaited(_watchPageInput());
       case 'chapters':
-        _onChapters(args.isEmpty ? const <Object?>[] : args.first);
+        unawaited(_onChapters());
       case 'relocated':
         _onRelocated(args.isEmpty ? null : args.first);
       case 'locationLoaded':
@@ -667,18 +667,45 @@ final class DesktopEpubHost implements EpubHost {
     }
   }
 
-  void _onChapters(Object? raw) {
+  /// Reads the contents, now that the engine says it has parsed one.
+  ///
+  /// **The notification carries nothing.** `epubView.js` parses the navigation
+  /// document, keeps the list in the page, and announces `chapters` with an
+  /// empty argument list; the list itself is fetched with [EpubGlue.chapters].
+  /// This host used to read the notification's arguments, find none, and
+  /// complete every book with an empty contents — which is a contents sheet
+  /// that says the book has none, on Linux and on Linux alone, because the
+  /// other five targets go through the package's own handler and it asks.
+  ///
+  /// A request that fails answers empty rather than leaving the sheet waiting
+  /// out the timeout: the reader is looking at the book either way, and what
+  /// is lost is a list this host could not get.
+  Future<void> _onChapters() async {
     final Completer<List<EpubChapter>>? pending = _chapters;
 
-    if (pending == null || pending.isCompleted || raw is! List<Object?>) {
+    if (pending == null || pending.isCompleted) {
+      return;
+    }
+
+    Object? raw;
+
+    try {
+      raw = await _request(EpubGlue.chapters);
+    } on Object catch (error) {
+      _log.warning('the engine would not say what the contents is', error);
+    }
+
+    if (pending.isCompleted) {
       return;
     }
 
     pending.complete(
-      raw
-          .whereType<Map<Object?, Object?>>()
-          .map(_chapterOf)
-          .toList(growable: false),
+      raw is List<Object?>
+          ? raw
+                .whereType<Map<Object?, Object?>>()
+                .map(_chapterOf)
+                .toList(growable: false)
+          : const <EpubChapter>[],
     );
   }
 

@@ -231,6 +231,15 @@ abstract final class EpubGlue {
   /// engine can say about it has.
   static const String currentLocation = 'getCurrentLocation';
 
+  /// The book's table of contents, asked for rather than delivered.
+  ///
+  /// The glue announces `chapters` with **no argument at all** — the list is
+  /// held in the page and fetched with this — which is what the package's own
+  /// handler does on the five targets it reaches and what the Linux host did
+  /// not: it read the notification's arguments, found none, and answered every
+  /// book with an empty contents.
+  static const String chapters = 'getChapters';
+
   /// The text a CFI range covers.
   ///
   /// It is the glue's internal helper and not its public `getTextFromCfi`,
@@ -254,5 +263,6 @@ abstract final class EpubGlue {
     updateTheme,
     extractText,
     currentLocation,
+    chapters,
   };
 }
