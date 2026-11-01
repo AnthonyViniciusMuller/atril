@@ -54,9 +54,9 @@ dependencies:
   # `fixnum` is a direct dependency and not an incidental one: an int64 field
   # arrives as Int64 and has to stay Int64 until the mapper, so this package is
   # named in the signatures data/model is written against.
-  protobuf: ^6.0.0
+  protobuf: ^6.1.0
   fixnum: ^1.1.1
-  grpc: ^5.1.0
+  grpc: ^5.2.0
 
   # Dependency injection, as the architecture guide's own sample does it: one
   # graph built at the entry point, `context.read<T>()` where a view model is
@@ -90,7 +90,7 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
 
   # The local replica, and the reason architecture.md calls it the mechanism
   # rather than a cache: every change is authored here and pushed, because a
@@ -100,8 +100,8 @@ dependencies:
   # it builds and bundles SQLite itself through Dart's build hooks, which is
   # what retired `sqlite3_flutter_libs`, and the Android temporary directory is
   # set through its API in the connection.
-  drift: ^2.34.3
-  sqlite3: ^3.5.2
+  drift: ^2.35.3
+  sqlite3: ^3.8.0
 
   # Where the database file goes on each of the five native targets, and how a
   # path is joined without assuming a separator. `path_provider` is what knows
@@ -130,7 +130,7 @@ dependencies:
   # build fails at `checkDebugAarMetadata` and the fix would be a toolchain
   # ahead of the pinned Flutter rather than a line in this file. Raise it when
   # `flutter --version` brings an AGP that compiles against 37.
-  flutter_secure_storage: ^10.3.1
+  flutter_secure_storage: ^11.2.0
 
   # Whether this device has a network at all, which is a hint and never the
   # answer: the package reports a radio and not a route, so a device on a
@@ -138,7 +138,7 @@ dependencies:
   # node is unreachable is a call that failed; this is what says a retry has
   # become worth making, and — in the one direction it is reliable — that there
   # is no point in trying at all.
-  connectivity_plus: ^7.3.1
+  connectivity_plus: ^7.3.2
 
   # The one call in this app that is not gRPC: the `.well-known/quire/client`
   # lookup a device makes before it has a node to ask anything else of. It is
@@ -177,7 +177,7 @@ dependencies:
   # next change correct — and how wide somebody left a window on one machine
   # is none of those. It also has to be readable before `runApp`, which is
   # before the database is opened.
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.6
 
   # The colour the platform draws itself with, and the only way to ask for it:
   # every one of the four systems that has an answer keeps it behind a native
@@ -216,7 +216,7 @@ dependencies:
   # reaches the origin-private file system through, and what the storage budget
   # asks `navigator.storage.estimate()` with. Nothing outside a `_web.dart`
   # file imports it: it does not parse for the other five targets.
-  web: ^1.1.1
+  web: ^1.1.2
   # How a reader names the file they are importing. Flutter has no picker of
   # its own on any of the six targets, and this is flutter.dev's — the same
   # publisher as `path_provider` and `shared_preferences`, which is what this
@@ -237,7 +237,7 @@ dependencies:
   # unzipping inside the host. `xml` is promoted from transitive rather than
   # added, and is named here because this app is written against its API.
   archive: ^4.2.0
-  xml: ^7.0.1
+  xml: ^7.1.0
 
   # sha-256, streamed. The digest is what identifies a file across the whole
   # federation, so it is computed as the bytes are read rather than over a
@@ -246,7 +246,7 @@ dependencies:
   # its tests.
   #
   # It was a dev dependency until this phase, where the import needs it.
-  crypto: ^3.0.7
+  crypto: ^3.0.8
 
   # Merging streams. A work's content state is moved by three things — its
   # transfer row, its pin row and the blob store — and the watch re-reads the
@@ -279,7 +279,7 @@ dependencies:
   # It is also what carries the reader on five of the six targets, through
   # `flutter_inappwebview` on the four native ones and a same-origin `<iframe>`
   # in a browser. Linux is the sixth and is the only one it does not reach.
-  flutter_epub_viewer: 2.0.0
+  flutter_epub_viewer: 2.2.1
 
   # The webview under it, named here as a direct dependency and held at a
   # pre-release. Both of those are deliberate and neither is comfortable.
@@ -377,7 +377,7 @@ dependencies:
   # awkward to find on Android. Neither is *the reader chooses where their data
   # goes*, which is what the sovereignty argument this export exists for
   # actually claims.
-  share_plus: ^13.3.0
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:
@@ -427,7 +427,7 @@ dev_dependencies:
   # `make gen` runs build_runner as well as protoc. The output is committed for
   # the reason the generated contract is, and CI regenerates and diffs it.
   drift_dev: ^2.34.5
-  build_runner: ^2.16.0
+  build_runner: ^2.16.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
