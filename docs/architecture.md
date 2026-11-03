@@ -621,9 +621,16 @@ worse than nothing: it registers that file, at the same scope Atril's worker wan
 tombstone would remove Atril's along with itself.
 
 `web/atril_service_worker.js` is this project's own, and `web/flutter_bootstrap.js` is written out
-so that the loader is called with no `serviceWorkerSettings`. Four of the worker's decisions are
-places the obvious answer is wrong, and all four follow from decisions this document already
+so that the loader is called with no `serviceWorkerSettings`. Five of the worker's decisions are
+places the obvious answer is wrong, and all five follow from decisions this document already
 records.
+
+**Only a top-level navigation is answered with `index.html`.** go_router gives the web target real
+URLs, so any navigation in scope is the one document — except that the reader loads the engine's
+page into an `<iframe>`, and loading a frame is a navigation too. Matched on `mode` alone, the
+frame was handed the app and booted a second Atril where epub.js should have been, and every book
+hung at *opening*. `destination === 'document'` is what tells the two apart, and nothing showed it
+locally: `flutter run` registers no worker.
 
 **It caches the shell and never a book.** The books are the per-book opt-in of phase 8, held in
 the origin-private file system against a budget the reader can see. A worker that quietly cached

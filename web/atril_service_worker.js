@@ -85,7 +85,13 @@ self.addEventListener('fetch', (event) => {
 
   // A navigation to any location this app routes — go_router gives the web
   // target real URLs — is the one document there is.
-  if (request.mode === 'navigate') {
+  //
+  // A *top-level* navigation, and the destination is what says so. The reader
+  // loads the engine's page into an `<iframe>`, and an iframe's load is a
+  // navigation too: answered with this document, the frame booted a second
+  // Atril where epub.js should have been and every book stopped at "opening".
+  // A frame asks for a file this build wrote, so it falls to the lookup below.
+  if (request.mode === 'navigate' && request.destination === 'document') {
     event.respondWith(
       caches.match(document_).then((cached) => cached || fetch(request)),
     );
